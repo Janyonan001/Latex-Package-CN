@@ -1,0 +1,1643 @@
+% \iffalse meta-comment
+%
+% Copyright (C) 1993-2026
+%
+% The LaTeX Project and any individual authors listed elsewhere
+% in this file.
+%
+% This file is part of the Standard LaTeX `Tools Bundle'.
+% -------------------------------------------------------
+%
+% It may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3c
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%    https://www.latex-project.org/lppl.txt
+% and version 1.3c or later is part of all distributions of LaTeX
+% version 2008 or later.
+%
+% The list of all files belonging to the LaTeX `Tools Bundle' is
+% given in the file `manifest.txt'.
+%
+% \fi
+%
+%\iffalse   % this is a METACOMMENT !
+%
+%
+%% Package `verbatim' to use with LaTeX2e
+%% Copyright (C) 1989--2003 by Rainer Sch\"opf. All rights reserved.
+%
+% Copying of this file is authorized only if either
+% (1) you make absolutely no changes to your copy, including name, or
+% (2) if you do make changes, you name it something other than
+%     verbatim.dtx.
+% This restriction helps ensure that all styles developed here
+% remain identical.
+%
+%
+%
+% \section{Producing the documentation}
+%
+% We provide a short driver file that can be extracted by the
+% \textsf{DocStrip} program using the conditional `\textsf{driver}'.
+%
+%    \begin{macrocode}
+%<*driver>
+\documentclass{ltxdoc}
+\usepackage[UTF8,scheme=chinese]{ctex}
+\pagestyle{myheadings}
+
+\title{\LaTeX{} \texttt{verbatim} 与 \texttt{verbatim*}\\环境的新实现}
+\author{Rainer Sch\"opf\\
+        \and
+        Bernd Raichle\\
+        \and
+        Chris Rowley}
+
+\date{2023/11/06}
+\begin{document}
+\markboth{Verbatim 宏包}{Verbatim 宏包}
+\MaintainedByLaTeXTeam{tools}
+\maketitle
+  \DocInput{verbatim-zh.dtx}
+\end{document}
+%</driver>
+%    \end{macrocode}
+%
+%
+%\fi
+%
+%
+% 
+% \changes{v1.5x}{2024/01/22}{Added TAB marking support to \cs{verbatiminput*}}
+% \changes{v1.5u}{2020-07-07}{Typo repair and added a missing comment
+%    character}
+% \changes{v1.5q}{2003/08/22}{Reintroduced \cs{@noligs}, by popular
+%                             request.}
+% \changes{v1.5i}{1996/06/04}{Move setting of verbatim font and
+%                             \cs{@noligs}.}
+% \changes{v1.5g}{1995/04/26}{Removed \cs{fileversion} and
+%                             \cs{filedate} from running head in
+%                             driver file, as these are no longer
+%                             defined.}
+% \changes{v1.5f}{1994/10/25}{Removed extra \cs{typeout} commands.}
+% \changes{v1.5e}{1994/06/10}{Added missing closing verbtest guard.}
+% \changes{v1.5d}{1994/05/30}{\cs{NeedsTeXFormat} and
+%                             \cs{ProvidesPackage} added.}
+% \changes{v1.5d}{1994/05/30}{\cs{addto@hook} removed, now in kernel.}
+% \changes{v1.5a}{1993/10/12}{Included \cs{newverbtext} command, as
+%          written by Chris Rowley.}
+% \changes{v1.5}{1993/10/11}{Included vrbinput style option by Bernd
+%          Raichle.}
+%
+% \changes{v1.4j}{1992/06/30}{Used \cs{lowercase}\{\cs{endgroup}
+%    \ldots\} trick proposed by Bernd Raichle; changed all \cs{gdef}
+%    to \cs{def} since no longer necessary.}
+% \changes{v1.4g}{1991/11/21}{Several improvements in the
+%                           documentation.}
+% \changes{v1.4f}{1991/08/05}{Corrected bug in documentation.
+%                           Found by Bernd Raichle.}
+% \changes{v1.4e}{1991/07/24}{Avoid reading this file twice.}
+% \changes{v1.4d}{1991/04/24}{\cs{penalty}\cs{interlinepenalty} added to
+%                           definition of \cs{par} in \cs{@verbatim}.
+%                           Necessary to avoid page breaks in
+%                           the scope of a \cs{samepage} declaration.}
+% \changes{v1.4c}{1990/10/18}{Added \cs{leavevmode} to definition of
+%       backquote macro.}
+% \changes{v1.4b}{1990/07/14}{Converted nearly all \cs{verb}'s to
+%       \texttt{\protect\string!|\ldots\protect\string!|}.}
+% \changes{v1.4a}{1990/04/04}{Added a number of percent characters
+%       to suppress blank space at the end of some code lines.}
+% \changes{v1.4}{1990/03/07}{\cs{verb} rewritten.}
+%
+% \changes{v1.3a}{1990/02/04}{Removed \texttt{verbatimwrite} environment
+%       from the code. Now only shown as an example.}
+%
+% \changes{v1.2g}{1990/02/01}{Revised documentation.}
+% \changes{v1.2e}{1990/01/15}{Added \cs{every@verbatim} hook.}
+% \changes{v1.2d}{1989/11/29}{Use token register \cs{@temptokena}
+%                           instead of macro \cs{@tempb}.}
+% \changes{v1.2d}{1989/11/29}{Use token register \cs{verbatim@line}
+%                           instead of macro \cs{@tempd}.}
+% \changes{v1.2b}{1989/10/25}{\cs{verbatimfile} renamed to
+%           \cs{verbatiminput}. Suggested by Reinhard Wonneberger.}
+%
+% \changes{v1.1a}{1989/10/16}{\cs{verb} added.}
+% \changes{v1.1}{1989/10/09}{Made the code more modular (as suggested by
+%                          Chris Rowley):  introduced
+%                          \cs{verbatim@addtoline}, etc.  Added
+%                          \cs{verbatimwrite} environment.}
+%
+% \changes{v1.0e}{1989/07/17}{Fixed bug in \cs{verbatimfile} (*-form
+%         handling, discovered by Dirk Kreimer).}
+% \changes{v1.0d}{1989/05/16}{Revised documentation, fixed silly bug
+%         in \cs{verbatim@@@}.}
+% \changes{v1.0c}{1989/05/12}{Added redefinition of \cs{@sverb}, change
+%         in end-of-line handling.}
+% \changes{v1.0b}{1989/05/09}{Change in \cs{verbatim@rescan}.}
+% \changes{v1.0a}{1989/05/07}{Change in \cs{verbatim@@testend}.}
+%
+%
+% \DoNotIndex{\ ,\!,\C,\[,\\,\],\^,\`,\{,\},\~}
+% \DoNotIndex{\@M,\@empty,\@flushglue,\@gobble,\@ifstar,\@ifundefined}
+% \DoNotIndex{\@namedef,\@spaces,\@tempa,\@tempb,\@tempc,\@tempd}
+% \DoNotIndex{\@temptokena,\@totalleftmargin,\@warning,\active}
+% \DoNotIndex{\aftergroup,\arabic,\begingroup,\catcode,\char,\closein}
+% \DoNotIndex{\csname,\def,\do,\docdate,\dospecials,\edef,\else}
+% \DoNotIndex{\endcsname,\endgraf,\endgroup,\endinput,\endlinechar}
+% \DoNotIndex{\endtrivlist,\expandafter,\fi,\filedate,\fileversion}
+% \DoNotIndex{\frenchspacing,\futurelet,\if,\ifcat,\ifeof,\ifnum}
+% \DoNotIndex{\ifx,\immediate,\item,\kern,\lccode,\leftskip,\let}
+% \DoNotIndex{\lowercase,\m@ne,\makeatletter,\makeatother,\newread}
+% \DoNotIndex{\newread,\next,\noexpand,\noindent,\openin,\parfillskip}
+% \DoNotIndex{\parindent,\parskip,\penalty,\read,\relax,\rightskip}
+% \DoNotIndex{\sloppy,\space,\string,\the,\toks@,\trivlist,\tt,\typeout}
+% \DoNotIndex{\vskip,\write,\z@}
+%
+% \changes{v1.5x}{2025-06-04}{Add notice pointing to \pkg{fancyvrb}}
+% \begin{flushleft}
+%   \bfseries
+%   本宏包出于稳定性考虑仍保留在 \LaTeX{} \pkg{tools} 宏包集合中。
+%   虽然会继续修复 \pkg{verbatim} 的 bug，但不再考虑添加\emph{新}功能。
+%   对于新的需求，\LaTeX{} 团队建议使用 \pkg{fancyvrb} 代替
+%   \pkg{verbatim}。
+% \end{flushleft}
+%
+% \begin{abstract}
+%   本宏包重新实现了 \LaTeX{} 的 \texttt{verbatim} 和
+%   \texttt{verbatim*} 环境。此外它还提供了一个 \texttt{comment}
+%   环境，用于跳过 |\begin{comment}| 与下一个 |\end{comment}|
+%   之间的所有命令或文本。它还定义了 |\verbatiminput| 命令，
+%   用于以 verbatim 方式包含整个文件。
+% \end{abstract}
+%
+% \section{使用说明}
+%
+% \let\docDescribeMacro\DescribeMacro
+% \let\docDescribeEnv\DescribeEnv
+% \def\DescribeMacro#1{}
+% \def\DescribeEnv#1{}
+% \LaTeX{} 的 \texttt{verbatim} 和 \texttt{verbatim*} 环境
+% 有几个可能引发问题的特性：
+% \begin{itemize}
+%   \item
+%     由于检测 |\end{verbatim}| 的方式（即宏参数定界），
+%     你不能在 |\end| 记号与 |{verbatim}| 之间留空格。
+%   \item
+%     由于 \TeX{} 必须先读取 |\begin{verbatim}| 与
+%     |\end{verbatim}| 之间的全部文本才能输出任何内容，
+%     过长的 verbatim 列表可能会耗尽 \TeX{} 的内存。
+% \end{itemize}
+% 这两点中，前者只能算小麻烦，后者却是真正的限制。
+%
+%
+% \DescribeEnv{verbatim}
+% \DescribeEnv{verbatim*}
+% 本宏包文件包含了对 \texttt{verbatim} 和 \texttt{verbatim*}
+% 环境的重新实现，克服了上述限制。不过新旧实现之间有一处不兼容：
+% 旧版本会把 |\end{verbatim}| 命令同一行上的文本当作单独一行处理。
+% \begin{center}
+%   \bf 新版本则会直接忽略这些文本。
+% \end{center}
+% （这是消除旧 \texttt{verbatim} 环境大小限制所必须付出的代价。）
+% 不过它会发出如下形式的警告信息：
+% \begin{verbatim}
+%LaTeX warning: Characters dropped after \end{verbatim*}!
+%\end{verbatim}
+% 这并不是真正的问题，因为这些文本很容易移到下一行而不影响输出。
+%
+% 新实现还解决了上面提到的第二个问题：现在可以在 |\end| 与
+% |{verbatim}| 或 |{verbatim*}| 之间留空格（但\emph{不能}开始新行）：
+% \begin{verbatim}
+%\begin {verbatim*}
+%   test
+%   test
+%\end {verbatim*}
+%\end{verbatim}
+%
+% \DescribeEnv{comment}
+% 此外我们引入了一个 \texttt{comment} 环境，其效果是：
+% |\begin{comment}| 与 |\end{comment}| 之间的文本无论长什么样都被直接忽略。
+% 乍看之下这与 verbatim 列表的用途大不相同，但实际上这两个概念的
+% 实现非常相似。二者都依赖于这样一个事实：|\begin{...}| 与
+% |\end{...}| 之间的文本由 \TeX{} 读取，不解释任何命令或特殊字符。
+% \texttt{verbatim} 与 \texttt{comment} 之间剩下的唯一区别是：
+% 前者的文本要排版出来，后者的文本则被丢弃。注意这些环境不能嵌套。
+%
+% \DescribeMacro{\verbatiminput}
+% |\verbatiminput| 是一个带一个参数的命令，用于以 verbatim 方式
+% 包含一个文件；也就是说，命令 |\verbatiminput{xx.yy}| 的效果等价于\\[2pt]
+%   \hspace*{\MacroIndent}|\begin{verbatim}|\\
+%   \hspace*{\MacroIndent}\meta{文件 \texttt{xx.yy} 的内容}\\
+%   \hspace*{\MacroIndent}|\end{verbatim}|\\[2pt]
+% 该命令还有一个 |*|-变体，会把空格打印为 \verb*+ +。
+%
+%
+% \MaybeStop{}
+%
+%
+% \section{面向宏包作者的接口}
+%
+% \LaTeXe{} 的 \texttt{verbatim} 环境没有为程序员提供良好的接口。
+% 与之不同，本宏包提供了一个简单的机制来实现类似功能，
+% 这里实现的 \texttt{comment} 环境就是一个示例，展示了能做什么以及怎么做。
+%
+%
+% \subsection{简单示例}
+%
+% 现在可以使用 \texttt{verbatim} 环境来定义你自己的环境了。
+% 例如，
+%\begin{verbatim}
+% \newenvironment{myverbatim}%
+%   {\endgraf\noindent MYVERBATIM:%
+%    \endgraf\verbatim}%
+%   {\endverbatim}
+%\end{verbatim}
+% 之后就可以像 \texttt{verbatim} 环境一样使用它，即
+% \begin{verbatim}
+%\begin {myverbatim}
+%  test
+%  test
+%\end {myverbatim}
+%\end{verbatim}
+% 另一种用法是写
+% \begin{verbatim}
+%\let\foo=\comment
+%\let\endfoo=\endcomment
+%\end{verbatim}
+% 此后环境 \texttt{foo} 就与 comment 环境相同，即其内部的所有内容都被忽略。
+%
+% 你还可以在 |\verbatim| 宏被调用之后添加特殊命令，例如
+%\begin{verbatim}
+%\newenvironment{myverbatim}%
+%  {\verbatim\myspecialverbatimsetup}%
+%  {\endverbatim}
+%\end{verbatim}
+% 不过此时你可能想了解下面要讲的 |\every@verbatim| 钩子。
+% \changes{v1.5h}{1995/09/21}{Clarified documentation on use of other
+%               environments to define new verbatim-type ones.}
+% 不过仍有若干限制：
+% \begin{enumerate}
+%   \item
+%     你不能在定义内部使用 |\begin| 或 |\end| 命令，
+%     例如下面两个示例\emph{不能}工作：
+%\begin{verbatim*}
+%\newenvironment{myverbatim}%
+%{\endgraf\noindent MYVERBATIM:%
+% \endgraf\begin{verbatim}}%
+%{\end{verbatim}}
+%\newenvironment{fred}
+%{\begin{minipage}{30mm}\verbatim}
+%{\endverbatim\end{minipage}}
+%\end{verbatim*}
+%     如果你尝试这些示例，\TeX{} 会报 ``runaway argument'' 错误。
+%     更一般地说，在新环境的定义中不能使用
+%     |\begin|\ldots\allowbreak|\end| 或相关环境。正确的定义方式应该是
+%    \begin{verbatim*}
+%\newenvironment{fred}
+%{\minipage{30mm}\verbatim}
+%{\endverbatim\endminipage}
+%\end{verbatim*}
+%   \item
+%     你\emph{不能}在用户自定义的\emph{命令}内部使用
+%     \texttt{verbatim} 环境；例如
+% \changes{v1.4g}{1991/11/21}{Corrected wrong position of optional
+%        argument to \cs{newcommand}. Discovered by Piet van Oostrum.}
+%     \begin{verbatim*}
+%\newcommand{\verbatimfile}[1]%
+%           {\begin{verbatim}\input{#1}\end{verbatim}}
+%\end{verbatim*}
+%     不\emph{能}工作；下面这个也不行：
+%     \begin{verbatim}
+%\newcommand{\verbatimfile}[1]{\verbatim\input{#1}\endverbatim}
+%\end{verbatim}
+%   \item 新定义环境的名字不能包含字符类别不是 $11$（字母）
+%     或 $12$（其他）的字符，否则将无法工作。
+% \end{enumerate}
+%
+%
+% \subsection{接口}
+%
+% \DescribeMacro{\verbatim@font}
+% 从简单的开始讲起。有时你可能需要为 verbatim 文本使用特殊字体，
+% 或者使用较小字号的计算机现代打字机字体。
+%
+% 你可以通过重定义宏 |\verbatim@font| 来选择字体。
+% 该宏在每段 verbatim 文本开始时被调用，用于选择字体形状。
+% 不要把它用于其他用途；如果你发现自己在滥用它，
+% 可以去看看下面的 |\every@verbatim| 钩子。
+%
+% 默认情况下，|\verbatim@font| 切换到打字机字体并禁用其中的连字。
+%
+%
+% \DescribeMacro{\every@verbatim}
+% \DescribeMacro{\addto@hook}
+% 有一个钩子（即记号寄存器）叫做 |\every@verbatim|，
+% 其内容会在每段 verbatim 文本之前被插入到 \TeX{} 的"嘴"中。
+% 请使用 |\addto@hook| 宏向这个钩子添加内容。用法如下：\\[2pt]
+% \hspace*{\MacroIndent}|\addto@hook|\meta{钩子名}^^A
+%  |{|\meta{要添加的命令}|}|
+% \vspace*{2pt}
+%
+%
+%
+% \DescribeMacro{\verbatim@start}
+% 在完成所有特定设置（如切换字符类别）之后，会调用
+% |\verbatim@start| 宏。它启动本宏包实现的扫描机制主循环。
+% 任何想利用此功能的其他环境都应把该宏作为最后一个动作来执行。
+%
+%
+% \DescribeMacro{\verbatim@startline}
+% \DescribeMacro{\verbatim@addtoline}
+% \DescribeMacro{\verbatim@processline}
+% \DescribeMacro{\verbatim@finish}
+% 这些是与 verbatim 环境启动相关的宏。
+% 完成这些（及其他）设置后，本宏包中的代码按以下方式从输入流中
+% 读取并处理字符：
+% \begin{enumerate}
+%   \item 在读取一行输入的第一个字符之前，
+%     执行宏 |\verbatim@startline|。
+%   \item 读取若干字符后，以这些字符为唯一参数调用宏
+%     |\verbatim@addtoline|。每行可能发生多次
+%     （当该行含有 |\end| 命令时）。
+%   \item 到达行尾时，调用宏 |\verbatim@processline|
+%     来处理 |\verbatim@addtoline| 累积的字符。
+%   \item 最后，在环境被 |\end| 宏调用结束之前，
+%     会调用宏 |\verbatim@finish|。
+% \end{enumerate}
+%
+%
+% 为说明这一点，我们看一下标准 \texttt{verbatim} 环境。
+% 在这种情况下，上述三个宏定义如下：
+% \begin{enumerate}
+%   \item |\verbatim@startline| 清空字符缓冲区（一个记号寄存器）。
+%   \item |\verbatim@addtoline| 把其参数中的记号
+%     添加到字符缓冲区 |\verbatim@line|，不展开它们。
+%   \item |\verbatim@processline| 排版缓冲区中累积的字符。
+% \end{enumerate}
+% 有了这些，实现 \texttt{comment} 环境就非常简单了：
+% 在这种情况下，|\verbatim@startline| 和 |\verbatim@processline|
+% 被定义为空操作，而 |\verbatim@addtoline| 丢弃其参数。
+%
+%
+% 让我们用这个机制来定义一个 |verbatim| 环境的变体，
+% 在左边距打印行号。假设用一个叫 |VerbatimLineNo| 的计数器来实现。
+% 假设该计数器已由环境正确初始化，那么在这种情况下
+% |\verbatim@processline| 定义为：
+% \begin{verbatim}
+%\def\verbatim@processline{%
+%  \addtocounter{VerbatimLineNo}{1}%
+%  \leavevmode
+%  \llap{\theVerbatimLineNo\ \hskip\@totalleftmargin}%
+%  \the\verbatim@line\par}
+%\end{verbatim}
+%
+% 另一种可能是定义一个 |verbatim| 环境的变体，
+% 把整段 verbatim 文本放入盒子并居中。
+% 注意盒子中的文本应少于一页，否则你需要修改这个示例。
+%
+%\begin{verbatim}
+%\def\verbatimboxed#1{\begingroup
+%  \def\verbatim@processline{%
+%    {\setbox0=\hbox{\the\verbatim@line}%
+%     \hsize=\wd0
+%     \the\verbatim@line\par}}%
+%  \setbox0=\vbox{\parskip=0pt\topsep=0pt\partopsep=0pt
+%                 \verbatiminput{#1}}%
+%  \begin{center}\fbox{\box0}\end{center}%
+% \endgroup}
+%\end{verbatim}
+%
+% 最后一个稍有分量的示例是描述一个叫 \texttt{verbatimwrite} 的环境的定义。
+% 它把其内部所有文本写入一个文件，文件名作为参数给出。
+% 我们假设有一个叫 |\verbatim@out| 的流号已经通过 |\newwrite| 宏预留。
+%
+% 从宏 |\verbatimwrite| 的定义开始。
+% \begin{verbatim}
+%\def\verbatimwrite#1{%
+%\end{verbatim}
+% 首先调用 |\@bsphack|，使该环境不影响间距。
+% 然后打开文件并设置所有特殊字符的类别码：
+% \changes{v1.5t}{2020-07-05}{Added quotes around the filename in
+%    order to allow a filename with spaces; also added a space and
+%    comment-character to allow for thespace dlimited argument.}
+% \begin{verbatim}
+%  \@bsphack
+%  \immediate\openout \verbatim@out "#1" %
+%  \let\do\@makeother\dospecials
+%  \catcode`\^^M\active
+%\end{verbatim}
+% 下面几个宏的默认定义
+% \begin{verbatim}
+%  \verbatim@startline
+%  \verbatim@addtoline
+%  \verbatim@finish
+%\end{verbatim}
+% 也在这个环境中使用。只需要在调用 |\verbatim@start| 之前
+% 修改宏 |\verbatim@processline|：
+% \begin{verbatim}
+%  \def\verbatim@processline{%
+%    \immediate\write\verbatim@out{\the\verbatim@line}}%
+%  \verbatim@start}
+%\end{verbatim}
+% |\endverbatimwrite| 的定义非常简单：
+% 关闭流并调用 |\@esphack| 来恢复正确间距。
+% \begin{verbatim}
+%\def\endverbatimwrite{\immediate\closeout\verbatim@out\@esphack}
+%\end{verbatim}
+%
+% \section{实现}
+%
+% \let\DescribeMacro\docDescribeMacro
+% \let\DescribeEnv\docDescribeEnv
+%
+% \changes{v1.4e}{1991/07/24}{Avoid reading this file twice.}
+% 我们做的第一件事是确保本文件不会被读取两次。为此我们检查
+% 宏 |\verbatim@@@| 是否已定义。如果已定义，就停止读取本文件。
+% 这里的"宏包"守卫使得在抽取用于测试本宏包的 driver 文件时，
+% 大部分代码可以被排除。
+%    \begin{macrocode}
+%<*package>
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{verbatim}
+     [2026-08-17 v1.5z LaTeX2e package for verbatim enhancements]
+\@ifundefined{verbatim@@@}{}{\endinput}
+%    \end{macrocode}
+%
+% 我们使用与 \AmSTeX 中 |\comment|\ldots\allowbreak|\endcomment|
+% 宏类似的机制：一次读取一行，检查它是否包含 |\end{...}| 记号。
+% 然后就可以判断是否到达了 verbatim 文本的末尾，还是需要继续。
+%
+%
+% \subsection{预备工作}
+%
+% \begin{macro}{\every@verbatim}
+%    钩子（即记号寄存器）|\every@verbatim| 初始化为 \meta{空}。
+%    \begin{macrocode}
+\newtoks\every@verbatim
+\every@verbatim={}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\@makeother}
+% \changes{v1.1a}{1989/10/16}{\cs{@makeother} added.}
+%    |\@makeother| 以一个字符为参数，把它的类别码改为 $12$（其他）。
+%    \begin{macrocode}
+\def\@makeother#1{\catcode`#112\relax}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\@vobeyspaces}
+% \changes{v1.5}{1993/10/11}{Changed definition to not use \cs{gdef}.}
+% \changes{v1.1a}{1989/10/16}{\cs{@vobeyspaces} added.}
+%    宏 |\@vobeyspaces| 使输入中的空格在输出中打印为空格。
+%    \begin{macrocode}
+\begingroup
+\catcode`\ =\active%
+%    \end{macrocode}
+%    因为空格是活动字符，我们无法把下面的代码整齐缩进——
+%    否则行首的空格会被当作 \cs{@ifl@t@r} 的第三个和第四个参数。
+% \changes{v1.5v}{2023/11/06}{\cs{@vobeytabs} added when available (gh/1160)}
+%    \begin{macrocode}
+\@ifl@t@r\fmtversion{2023-11-01}%
+{\def\x{\def\@vobeyspaces{\catcode`\ \active\let \@xobeysp\@vobeytabs}}}%
+{\def\x{\def\@vobeyspaces{\catcode`\ \active\let \@xobeysp}}}%
+\expandafter\endgroup\x
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\@xobeysp}
+% \changes{v1.1a}{1989/10/16}{\cs{@xobeysp} added.}
+%    宏 |\@xobeysp| 在输出中产生恰好一个空格，
+%    并防止在它之前断行。（|\@M| 是数字 $10000$ 的缩写。）
+%    \begin{macrocode}
+\def\@xobeysp{\leavevmode\penalty\@M\ }
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\verbatim@line}
+% \changes{v1.2d}{1989/11/29}{Introduced token register
+%                \cs{verbatim@line}.}
+%    我们使用一个新定义的记号寄存器 |\verbatim@line|
+%    作为字符缓冲区。
+%    \begin{macrocode}
+\newtoks\verbatim@line
+%    \end{macrocode}
+% \end{macro}
+%
+% 下面四个宏以适合 \texttt{verbatim} 和 \texttt{verbatim*} 环境的方式
+% 全局定义。
+% \begin{macro}{\verbatim@startline}
+% \begin{macro}{\verbatim@addtoline}
+% \begin{macro}{\verbatim@processline}
+%    |\verbatim@startline| 通过清空字符缓冲区（|\verbatim@line|）
+%    来开始处理一行。
+%    \begin{macrocode}
+\def\verbatim@startline{\verbatim@line{}}
+%    \end{macrocode}
+%    |\verbatim@addtoline| 把其参数中的记号添加到缓冲区寄存器
+%    |\verbatim@line|，不展开它们。
+%    \begin{macrocode}
+\def\verbatim@addtoline#1{%
+  \verbatim@line\expandafter{\the\verbatim@line#1}}
+%    \end{macrocode}
+%    在 \texttt{verbatim} 或 \texttt{verbatim*} 环境中处理一行
+%    意味着打印它。
+% \changes{v1.2c}{1989/10/31}{Changed \cs{@@par} to \cs{par} in
+%    \cs{verbatim@processline}.  Removed \cs{leavevmode} and \cs{null}
+%    (i.e.\ the empty \cs{hbox}).}
+%    结束一行意味着我们必须开始新段落。我们用 |\par| 来做这件事。
+%    注意 |\par| 在 |\@verbatim| 中被重定义，以迫使 \TeX{} 进入水平模式
+%    并插入一个空盒子，这样输入中的空行才会在输出中出现。
+% \changes{v1.2f}{1990/01/31}{\cs{verbatim@startline} removed.}
+%    \begin{macrocode}
+\def\verbatim@processline{\the\verbatim@line\par}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\verbatim@finish}
+%    默认情况下，|\verbatim@finish| 处理剩余字符。
+%    调用这个宏时我们面临如下问题：当遇到 |\end{verbatim}| 命令时，
+%    |\verbatim@processline| 被调用来处理该命令同一行上前面的字符。
+%    如果没有字符，而我们不检查这种情况，就会输出一个空行。
+%
+%    如果行为空，|\the\verbatim@line| 展开为空。为检测这一点，
+%    我们使用一个与 \TeX{}book 第 376 页类似的技巧，
+%    但用 |$|\ldots|$| 代替那里的 |!| 记号。这些 |$| 记号的类别码
+%    永远不可能与记号寄存器 |\verbatim@line| 中可能出现的 |$| 记号
+%    相同，因为后者总是以类别码 $12$（其他）读取的。
+%    注意 |\ifcat| 会展开后面的记号，使 |\the\verbatim@line|
+%    被累积的字符替换。
+% \changes{v1.2d}{1989/11/29}{Changed \cs{ifx} to \cs{ifcat} test.}
+% \changes{v1.1b}{1989/10/18}{Corrected bug in if test (found by CRo).}
+%    \begin{macrocode}
+\def\verbatim@finish{\ifcat$\the\verbatim@line$\else
+  \verbatim@processline\fi}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsection{\texttt{verbatim} 与 \texttt{verbatim*} 环境}
+%
+% \begin{macro}{\verbatim@font}
+% \changes{v1.2f}{1990/01/31}{\cs{@lquote} macro removed.}
+% \changes{v1.1b}{1989/10/18}{\cs{@noligs} removed.  Code inserted
+%                           directly into \cs{verbatim@font}.}
+% \changes{v1.1a}{1989/10/16}{\cs{verbatim@font} added.}
+% \changes{v1.1a}{1989/10/16}{\cs{@noligs} added.}
+% \changes{v1.1a}{1989/10/16}{\cs{@lquote} added.}
+%    我们首先定义宏 |\verbatim@font|，用于选择字体并设置与字体相关的参数。
+%    然后展开 |\@noligs|（定义在 \LaTeXe{} 内核中）。它除了做其他事之外，
+%    会遍历 |\verbatim@nolig@list| 以避免某些连字。
+%    |\verbatim@nolig@list| 是 \LaTeXe{} 内核中定义的宏，展开为
+%    \begin{verbatim}
+%    \do\`\do\<\do\>\do\,\do\'\do\-
+%\end{verbatim}
+%    这个列表中的所有字符在某种字体中都可能成为连字的一部分。
+% \changes{v1.2f}{1990/01/31}{\cs{@lquote} macro removed.}
+% \changes{v1.4c}{1990/10/18}{Added \cs{leavevmode}.}
+% \changes{v1.4k}{1992/07/13}{Replaced Blank after $96$ by \cs{relax}.
+%                           (Proposed by Dan Dill.)}
+% \changes{v1.5}{1993/10/11}{Definition changed according to new code
+%          in latex.tex and to avoid global definition.}
+% \changes{v1.5c}{1994/02/07}{Changed to use new font switching
+%                           commands.}
+% \changes{v1.5m}{2000/01/07}{Disable hyphenation even if the font
+%    allows it.}
+% \changes{v1.5q}{2003/08/22}{Use \cs{@noligs}, as it is by now properly
+%    defined in the \LaTeXe{} kernel.}
+%    \begin{macrocode}
+\def\verbatim@font{\normalfont\ttfamily
+                   \hyphenchar\font\m@ne
+                   \@noligs}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\@verbatim}
+% \changes{v1.1a}{1989/10/16}{\cs{@verbatim} added.}
+%    宏 |\@verbatim| 负责做好各项设置。首先，插入
+%    |\every@verbatim| 钩子的记号。然后启动一个 \texttt{trivlist}
+%    环境并插入其第一个 |\item| 命令。\texttt{verbatim} 或
+%    \texttt{verbatim*} 环境的每一行都将被当作独立段落处理。
+% \changes{v1.2e}{1990/01/15}{Added \cs{every@verbatim} hook.}
+% \changes{v1.5b}{1994/01/24}{Removed optional argument of \cs{item}.}
+%    \begin{macrocode}
+\def\@verbatim{\the\every@verbatim
+  \trivlist \item \relax
+%    \end{macrocode}
+% \changes{v1.5b}{1994/01/24}{Set \texttt{@inlabel} switch to false.}
+% \changes{v1.5f}{1994/10/25}{Removed setting of \texttt{@inlabel}
+%                             switch again.}
+% \changes{v1.3c}{1990/02/26}{Removed extra vertical space.
+%           Suggested by Frank Mittelbach.}
+% \changes{v1.5h}{1995/09/21}{Added the space again, since it is
+%           necessary for correct vertical spacing if \texttt{verbatim}
+%           is nested inside \texttt{quote}.}
+%    下面这段额外的垂直间距是为了与 \LaTeX{} 内核兼容：否则，
+%    使用本 |verbatim| 宏包会改变嵌套在 |quote| 环境中的
+%    |verbatim| 环境的垂直间距。
+%    \begin{macrocode}
+  \if@minipage\else\vskip\parskip\fi
+%    \end{macrocode}
+% \changes{v1.4k}{1992/07/13}{Added setting for
+%        \cs{@beginparpenalty}. Suggested by Frank Mittelbach.}
+%    段落参数被适当设置：环境开头的惩罚值、左右边距、段落缩进、
+%    填充最后一行的胶值，以及段落之间的垂直间距。后者必须为零，
+%    因为我们不希望在行与行之间添加额外间距。
+%    \begin{macrocode}
+  \@beginparpenalty \predisplaypenalty
+  \leftskip\@totalleftmargin\rightskip\z@
+  \parindent\z@\parfillskip\@flushglue\parskip\z@
+%    \end{macrocode}
+% \changes{v1.1b}{1989/10/18}{Added resetting of \cs{parshape}
+%                           if at beginning of a list.
+%                           (Problem pointed out by Chris Rowley.)}
+%    这里有一点要说明：\texttt{list} 环境使用 \TeX{} 的 |\parshape|
+%    原语来为列表第一行设置特殊缩进。如果列表以 \texttt{verbatim}
+%    环境开头，这个 |\parshape| 仍然生效。因此我们必须显式重置这个
+%    内部参数。我们可以通过把 $0$ 赋给 |\parshape| 来做到。
+%    不过有一个更简单的办法：直接告诉 \TeX{} 开始新段落。
+%    正如 \TeX{}book 第 103 页所述，这会把 |\parshape| 重置为零。
+% \changes{v1.1c}{1989/10/19}{Replaced explicit resetting of
+%                           \cs{parshape} by \cs{@@par}.}
+%    \begin{macrocode}
+  \@@par
+%    \end{macrocode}
+%    现在我们确保 |\par| 有正确的定义，即迫使 \TeX{} 进入水平模式
+%    并包含一个空盒子。这是为了确保空行确实在输出中出现。
+%    之后我们插入 |\interlinepenalty|，因为 \TeX{} 不会主动在段落
+%    （这里是行）之间添加惩罚值。否则即使存在 |\samepage| 声明，
+%    |verbatim| 环境也可能被跨页拆开。
+%
+%    不过，在顶对齐的 minipage 中，这会导致顶部多出一个空行。
+%    因此需要一个稍复杂的结构。这里重要的一点是把 |\leavevmode|
+%    作为第一行的第一个宏，例如当列表项的第一个内容就是一个空
+%    verbatim 行时。
+% \changes{v1.2c}{1989/10/31}{Definition of \cs{par} added.
+%                           Ensures identical behaviour for
+%                           verbatim and \cs{verbatiminput}.
+%                           Problem pointed out by Chris.}
+% \changes{v1.4d}{1991/04/24}{\cs{penalty}\cs{interlinepenalty} added.
+%                           Necessary to avoid page breaks in
+%                           the scope of a \cs{samepage} declaration.}
+% \changes{v1.5b}{1994/01/24}{Improved definition of \cs{par} to work
+%                           under all circumstances.}
+% \changes{v1.5f}{1994/10/25}{\cs{leavevmode} added for first line.}
+%    \begin{macrocode}
+  \def\par{%
+    \if@tempswa
+      \leavevmode\null\@@par\penalty\interlinepenalty
+    \else
+      \@tempswatrue
+      \ifhmode\@@par\penalty\interlinepenalty\fi
+    \fi}%
+%    \end{macrocode}
+%    为了在环境不包含任何文本时避免错误信息，我们重定义
+%    |\@noitemerr|，它在这种情况下会被 |\endtrivlist| 调用。
+% \changes{v1.4j}{1992/06/30}{Introduced warning instead of error
+%        for empty body of verbatim text.
+%        Suggested by Nelson Beebe.}
+%    \begin{macrocode}
+  \def\@noitemerr{\@warning{No verbatim text}}%
+%    \end{macrocode}
+%    现在调用 |\obeylines| 使行尾字符成为活动字符。
+%    \begin{macrocode}
+  \obeylines
+%    \end{macrocode}
+%    所有特殊字符的类别码都改为 $12$（其他）。
+%    \changes{v1.5i}{1996/06/04}{Moved \cs{verbatim@font} after
+%           \cs{dospecials}.}
+%    \begin{macrocode}
+  \let\do\@makeother \dospecials
+%    \end{macrocode}
+%    我们切换到要使用的字体。
+%    \begin{macrocode}
+  \verbatim@font
+%    \end{macrocode}
+%    为了避免在标签盒子之后断行，我们去掉列表宏在那里放置的惩罚值：
+%    又一次用到了 |\unpenalty|！
+% \changes{v1.5f}{1994/10/25}{Change to \cs{everypar} added.}
+%    \begin{macrocode}
+  \everypar \expandafter{\the\everypar \unpenalty}}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\verbatim}
+% \begin{macro}{\verbatim*}
+%    现在定义顶层宏。|\verbatim| 略有改动：做好设置后调用
+%    |\verbatim@start|。
+% \changes{v1.5l}{1999/12/14}{Added \cs{begingroup} for cases where
+%    \cs{verbatim} is used directly, rather than in \cs{begin}: see
+%    pr/3115.}
+%    这一切都在一个组内完成，这样 |\verbatim| 就可以不通过 |\begin|
+%    而直接使用。
+%    \begin{macrocode}
+\def\verbatim{\begingroup\@verbatim \frenchspacing\@vobeyspaces
+              \verbatim@start}
+%    \end{macrocode}
+%    |\verbatim*| 按类似方式定义。
+%    \begin{macrocode}
+\@namedef{verbatim*}{\begingroup\@verbatim
+%    \end{macrocode}
+%
+% \changes{v1.5r}{2019/11/10}{Support kernel \cs{verbvisiblespace} (gh/212)}
+%    \begin{macrocode}
+  \@setupverbvisiblespace\@vobeyspaces
+  \verbatim@start}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\endverbatim}
+% \begin{macro}{\endverbatim*}
+%    要结束 \texttt{verbatim} 和 \texttt{verbatim*} 环境，
+%    只需结束 |\@verbatim| 中启动的 \texttt{trivlist} 环境并关闭相应的组。
+% \changes{v1.5l}{1999/12/14}{Added \cs{endgroup} for cases where
+%    \cs{endverbatim} is used directly, rather than in \cs{end}: see
+%    pr/3115.}
+% \changes{v1.5n}{2000/08/03}{Added \cs{@endpetrue}: needed when
+%    faking such a \cs{end} (pr/3234).}
+% \changes{v1.5o}{2000/08/23}{Changed \cs{@endpetrue} to \cs{@doendpe}:
+%    see (pr/3234).}
+%    \begin{macrocode}
+\def\endverbatim{\endtrivlist\endgroup\@doendpe}
+\expandafter\let\csname endverbatim*\endcsname =\endverbatim
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
+% \subsection{\texttt{comment} 环境}
+%
+% \begin{macro}{\comment}
+% \begin{macro}{\endcomment}
+% \changes{v1.1c}{1989/10/19}{Added \cs{@bsphack}/\cs{@esphack} to the
+%            \texttt{comment} environment.  Suggested by Chris Rowley.}
+%    |\comment| 宏与 |\verbatim*| 类似。不过我们不需要切换字体或设置
+%    诸如 |\parindent|、|\parskip| 之类的特殊排版参数。
+%    只需把所有特殊字符的类别码设为 $12$（其他），
+%    把 |^^M|（行尾字符）的类别码设为 $13$（活动）。
+%    后者是下面内部宏进行宏参数定界匹配所需要的。
+%    与 |\verbatim|、|\verbatim*| 宏的默认定义不同，
+%    我们把 |\verbatim@addtoline| 定义为丢弃其参数，
+%    把 |\verbatim@processline|、|\verbatim@startline|、
+%    |\verbatim@finish| 定义为空操作。然后调用 |\verbatim@|。
+%    但我们做的第一件事是调用 |\@bsphack|，
+%    使该环境对间距完全没有影响。
+% \changes{v1.1c}{1989/10/19}{Changed \cs{verbatim@start} to
+%                           \cs{verbatim@}.  Suggested by Chris Rowley.}
+% \changes{v1.1c}{1989/10/19}{\cs{verbatim@startline} and
+%                           \cs{verbatim@finish} are now
+%                           also redefined to do nothing.}
+%    \begin{macrocode}
+\def\comment{\@bsphack
+             \let\do\@makeother\dospecials\catcode`\^^M\active
+             \let\verbatim@startline\relax
+             \let\verbatim@addtoline\@gobble
+             \let\verbatim@processline\relax
+             \let\verbatim@finish\relax
+             \verbatim@}
+%    \end{macrocode}
+%    |\endcomment| 非常简单：它只调用 |\@esphack| 来处理间距。
+%    |\end| 宏关闭组，因此负责恢复我们所做的一切更改。
+%    \begin{macrocode}
+\let\endcomment=\@esphack
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
+%
+% \subsection{主循环}
+%
+% 下面是最巧妙的部分：在定义这些宏时，我们不仅需要以正常类别码
+% 使用特殊字符 |\|、|{| 和 |}|，还需要以类别码 $12$（其他）使用它们。
+% 我们通过下面的技巧实现：先告诉 \TeX{}，|\|、|{| 和 |}|
+% 分别是 |!|、|[| 和 |]| 的小写形式。然后把每个应该以类别码 $12$
+% 读取的 |\|、|{|、|}| 分别替换为 |!|、|[|、|]|，
+% 把整串记号交给 |\lowercase|，因为我们知道这个原语不会改变类别码！
+%
+% 但首先我们必须确保 |!|、|[|、|]| 本身有正确的类别码！
+% \changes{v1.3b}{1990/02/07}{Introduced \cs{vrb@catcodes} instead
+%                  of explicit setting of category codes.}
+% 为了允许对这些类别码做特殊设置，我们把它们的设置隐藏在宏
+% |\vrb@catcodes| 中。如果它已经定义，就跳过我们的新定义。
+%    \begin{macrocode}
+\@ifundefined{vrb@catcodes}%
+  {\def\vrb@catcodes{%
+     \catcode`\!12\catcode`\[12\catcode`\]12}}{}
+%    \end{macrocode}
+% 这个技巧使我们的代码可以用于其他类别码生效的场合。
+%
+% 我们启动一个组，使类别码改动局部化。
+%    \begin{macrocode}
+\begingroup
+ \vrb@catcodes
+ \lccode`\!=`\\ \lccode`\[=`\{ \lccode`\]=`\}
+%    \end{macrocode}
+% \changes{v1.2f}{1990/01/31}{Code for TABs removed.}
+%    我们还需要把行尾字符 |^^M| 作为活动字符。
+%    如果直接写 |\catcode`\^^M=\active|，那么在下面每个宏定义行的末尾
+%    都会出现一个不想要的活动行尾字符。因此我们用与上面相同的技巧：
+%    用波浪号 |~| 代替 |^^M|，假装后者是前者的小写形式。
+%    因此我们现在必须确保波浪号字符有类别码 $13$（活动）。
+%    \begin{macrocode}
+ \catcode`\~=\active \lccode`\~=`\^^M
+%    \end{macrocode}
+%    使用 |\lowercase| 原语带来一个问题：下面的代码中需要使用大写字母
+%    |C|，并且必须保持其大小写。因此我们添加如下命令：
+%    \begin{macrocode}
+ \lccode`\C=`\C
+%    \end{macrocode}
+%    现在开始交给 |\lowercase| 的记号表。我们用下面这个小技巧
+%    （由 Bernd Raichle 提出）：交给 |\lowercase| 的记号表中第一个记号
+%    是 |\endgroup| 原语。这意味着 \TeX{} 在 |\lowercase| 完成操作后
+%    立即处理它，从而结束上面 |\begingroup| 启动的组。
+%    这样就避免了所有宏的全局定义。
+%    \begin{macrocode}
+ \lowercase{\endgroup
+%    \end{macrocode}
+% \begin{macro}{\verbatim@start}
+%    |\verbatim@start| 的作用是检查 |\begin{verbatim}| 同一行上
+%    是否还有其他字符，并把它们当作单独一行处理。另一方面，如果当前行
+%    上没有剩余字符，我们只会遇到一个行尾字符。|\verbatim@start|
+%    通过先抓取后面的字符（即其参数）来完成任务。然后把这个参数与
+%    活动的行尾字符 |^^M| 比较。
+%    \begin{macrocode}
+    \def\verbatim@start#1{%
+      \verbatim@startline
+      \if\noexpand#1\noexpand~%
+%    \end{macrocode}
+%    如果为真，我们把控制权交给 |\verbatim@| 来处理下一行。
+%    我们用 |\next| 作为继续工作的宏。
+%    \begin{macrocode}
+        \let\next\verbatim@
+%    \end{macrocode}
+%    否则，我们把 |\next| 定义为展开为对 |\verbatim@| 的调用，
+%    后面紧跟刚读入的字符，使它被重新插回文本。这意味着该行上剩余的
+%    字符被当作单独一行处理。
+%    \begin{macrocode}
+      \else \def\next{\verbatim@#1}\fi
+%    \end{macrocode}
+%    Finally we call |\next|.
+%    \begin{macrocode}
+      \next}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\verbatim@}
+%    The three macros |\verbatim@|, |\verbatim@@|,
+%    三个宏 |\verbatim@|、|\verbatim@@|、|\verbatim@@@| 构成
+%    \texttt{verbatim} 环境的"主循环"。|\verbatim@| 的作用是恰好读取
+%    一行输入。|\verbatim@@| 和 |\verbatim@@@| 协同工作，
+%    找出该行中是否出现四个字符 |\end|（均为类别码 $12$（其他））。
+%    如果出现，|\verbatim@@@| 会调用 |\verbatim@test| 检查这个 |\end|
+%    是否是 |\end{verbatim}| 的一部分，如果是就结束环境。
+%    否则我们就像什么都没发生一样继续。下面看 |\verbatim@| 的定义：
+% \changes{v1.1a}{1989/10/16}{Replaced \cs{verbatim@@@} by \cs{@nil}.}
+%    \begin{macrocode}
+    \def\verbatim@#1~{\verbatim@@#1!end\@nil}%
+%    \end{macrocode}
+%    注意：在这个宏的定义真正生效之前，|!| 字符已经被管辖本代码的
+%    |\lowercase| 原语替换为一个类别码 $12$（其他）的 |\|。
+%    也就是说，它取一行，在后面放上 |\end|（四个字符记号）和
+%    |\@nil|（一个控制序列记号）作为定界符，然后调用 |\verbatim@@|。
+% \end{macro}
+%
+% \begin{macro}{\verbatim@@}
+%    |\verbatim@@| 把直到下一次出现四个字符 |\end| 之前的所有内容
+%    作为其参数。
+%    \begin{macrocode}
+    \def\verbatim@@#1!end{%
+%    \end{macrocode}
+%    也就是说：如果原行中没有出现它们，那么参数 |#1| 就是整行输入，
+%    下一个要处理的记号是 |\@nil|。但是，如果四个字符 |\end|
+%    是原行的一部分，那么 |#1| 由 |\end| 前面的字符组成，
+%    下一个记号是后面的字符（永远记住该行被加长了五个记号）。
+%    无论 |#1| 是什么，它都是 verbatim 文本，所以 |#1| 被添加到
+%    当前正在构建的行中。
+%    \begin{macrocode}
+       \verbatim@addtoline{#1}%
+%    \end{macrocode}
+%    输入流中的下一个记号对我们特别重要。因此在调用 |\verbatim@@@|
+%    之前，|\futurelet| 把 |\next| 定义为等于该记号。
+%    \begin{macrocode}
+       \futurelet\next\verbatim@@@}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\verbatim@@@}
+% \changes{v1.1a}{1989/10/16}{Replaced \cs{verbatim@@@} by
+%                           \cs{@nil} where used as delimiter.}
+%    |\verbatim@@@| 现在读取当前行上剩余的记号，直到最后的 |\@nil| 记号。
+%    \begin{macrocode}
+    \def\verbatim@@@#1\@nil{%
+%    \end{macrocode}
+%    如果上述两种情况中的第一种发生，即该行上没有 |\end| 字符，
+%    那么 |#1| 为空，且 |\next| 等于 |\@nil|。这很容易检查。
+%    \begin{macrocode}
+       \ifx\next\@nil
+%    \end{macrocode}
+%    如果为真，这就是一个简单行。我们处理迄今累积的行来结束它。
+%    然后准备读取下一行。
+% \changes{v1.2f}{1990/01/31}{Added \cs{verbatim@startline}.}
+%    \begin{macrocode}
+         \verbatim@processline
+         \verbatim@startline
+         \let\next\verbatim@
+%    \end{macrocode}
+%    否则我们必须检查这些 |\end| 记号后面跟着什么。
+%    \begin{macrocode}
+       \else
+%    \end{macrocode}
+%    在继续之前，最好停下来想一下我们在哪儿：我们刚读完四个字符记号
+%    |\end|，现在必须检查后面是否跟着环境名（用花括号括起来）。
+%    为此我们定义一个叫 |\@tempa| 的宏，它恰好读取一个字符并决定
+%    下一步做什么。这个宏应该做下面的事：跳过空格，直到遇到左花括号
+%    或行尾。但重要的是记住跳过了哪些字符。|\end|\meta{可选空格}|{|
+%    这些字符可能是 verbatim 文本的一部分，即这些字符必须被打印。
+%
+%    例如，假设当前行包含
+%    \begin{verbatim*}
+%      \end {AVeryLongEnvironmentName}
+%\end{verbatim*}
+%    正如我们很快会看到的，这里实现的扫描机制在读完右花括号之前
+%    不会发现这是要打印的文本。因此我们需要一种累积已读字符的方法，
+%    以便在必要时把它们重新插回。记号寄存器 |\@temptokena| 用于此目的。
+%
+%    在做这件事之前，我们必须先去掉行末多余的 |\end| 记号。
+% \changes{v1.4j}{1992/06/30}{Removed use of \cs{toks@}. Suggested by
+%           Bernd Raichle.}
+%    为此我们定义一个临时宏，其参数由 |\end\@nil|（四个字符记号和一个
+%    控制序列记号）界定，用于下面处理该行剩余部分——先在该行末尾追加一个
+%    |\@nil| 记号。（注意这个记号永远不可能出现在 |#1| 中。）
+%    我们用下面的 |\@tempa| 定义来获取该行（第一个 |\end| 之后）的剩余部分。
+%    \begin{macrocode}
+         \def\@tempa##1!end\@nil{##1}%
+%    \end{macrocode}
+%    我们前面已经提到，用记号寄存器 |\@temptokena| 来记住跳过的字符，
+%    以防再次需要它们。我们用在 |\@tempa| 调用中丢弃的那个 |\end|
+%    来初始化它。
+%    \begin{macrocode}
+         \@temptokena{!end}%
+%    \end{macrocode}
+%    现在我们要调用 |\verbatim@test| 来处理当前行上剩余的字符。
+%    但等一下：我们不能直接调用这个宏，因为我们已经读完了整行。
+%    因此我们必须先展开宏 |\@tempa|，把这些字符重新插回到
+%    |\verbatim@test| 记号之后。末尾追加一个 |^^M| 字符表示行尾。
+%    （记住这个字符伪装成波浪号。）
+% \changes{v1.2}{1989/10/20}{Taken local definition of \cs{@tempa} out
+%                          of \cs{verbatim@@@} and introduced
+%                          \cs{verbatim@test} instead.}
+%    \begin{macrocode}
+         \def\next{\expandafter\verbatim@test\@tempa#1\@nil~}%
+%    \end{macrocode}
+%    差不多就这些了，但我们还需要调用 |\next| 来完成工作。
+%    \begin{macrocode}
+       \fi \next}%
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\verbatim@test}
+% \changes{v1.2}{1989/10/20}{Introduced \cs{verbatim@test}.}
+%    我们定义 |\verbatim@test| 来依次检查每个记号。
+%    \begin{macrocode}
+    \def\verbatim@test#1{%
+%    \end{macrocode}
+%    首先，我们把 |\next| 设为 |\verbatim@test|，
+%    以防这个宏需要递归调用来跳过空格。
+%    \begin{macrocode}
+           \let\next\verbatim@test
+%    \end{macrocode}
+%    我们必须区分四种情况：
+%    \begin{enumerate}
+%      \item 下一个记号是 |^^M|，即我们到达了行尾。这意味着没有发现
+%            任何特殊内容。注意我们在下面的比较中使用 |\if|，
+%            这样字符的类别码就无关紧要了。
+%    \begin{macrocode}
+           \if\noexpand#1\noexpand~%
+%    \end{macrocode}
+%            我们把记号寄存器 |\@temptokena| 中累积的字符添加到当前行。
+%            由于 |\verbatim@addtoline| 不展开其参数，我们必须在此处展开。
+%            然后用 |\let| 把 |\next| 设为 |\verbatim@|，
+%            准备读取下一行。
+% \changes{v1.2f}{1990/01/31}{Added \cs{verbatim@startline}.}
+%    \begin{macrocode}
+             \expandafter\verbatim@addtoline
+               \expandafter{\the\@temptokena}%
+             \verbatim@processline
+             \verbatim@startline
+             \let\next\verbatim@
+%    \end{macrocode}
+%      \item 后面是空格字符。这是允许的，所以我们把它添加到
+%            |\@temptokena| 并继续。
+%    \begin{macrocode}
+           \else \if\noexpand#1
+             \@temptokena\expandafter{\the\@temptokena#1}%
+%    \end{macrocode}
+% \changes{v1.2f}{1990/01/31}{Code for TABs removed.}
+%      \item 后面是左花括号。这是最有趣的情况。我们现在必须收集字符，
+%            直到读到右花括号，并检查它们是否构成环境名。
+%            这将由 |\verbatim@testend| 完成，所以这里我们把
+%            |\next| 设为这个宏。我们将再次逐字符处理该行剩余部分。
+%            构成环境名的字符将累积在 |\@tempc| 中。
+%            我们把这个宏初始化为展开为空。
+% \changes{v1.3b}{1990/02/07}{\cs{noexpand} added.}
+%    \begin{macrocode}
+           \else \if\noexpand#1\noexpand[%
+             \let\@tempc\@empty
+             \let\next\verbatim@testend
+%    \end{macrocode}
+%            注意：当这个宏被定义时，|[| 字符将是一个 |{|。
+%      \item 任何其他字符都意味着这个 |\end| 是 verbatim 文本的一部分。
+%            把这些字符添加到当前行，并准备调用 |\verbatim@|
+%            来处理该行剩余部分。
+%  \changes{v1.0f}{1989/10/09}{Fixed \cs{end} \cs{end} bug
+%                            found by Chris Rowley}
+%    \begin{macrocode}
+           \else
+             \expandafter\verbatim@addtoline
+               \expandafter{\the\@temptokena}%
+             \def\next{\verbatim@#1}%
+           \fi\fi\fi
+%    \end{macrocode}
+%    \end{enumerate}
+%    这个宏做的最后一件事是调用 |\next| 来继续处理。
+%    \begin{macrocode}
+           \next}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\verbatim@testend}
+%    当看到 |\end|\meta{可选空格}|{| 时调用 |\verbatim@testend|。
+%    它的任务是扫描直到下一个 |}| 的所有内容，并调用 |\verbatim@@testend|。
+%    如果没找到 |}|，它必须重新插回所读字符并返回 |\verbatim@|。
+%    下面的定义与 |\verbatim@test| 类似：它取下一个字符并决定做什么。
+% \changes{v1.2}{1989/10/20}{Removed local definition of \cs{@tempa}
+%                          from \cs{verbatim@testend} which now
+%                          does the work itself.}
+%    \begin{macrocode}
+    \def\verbatim@testend#1{%
+%    \end{macrocode}
+%    同样，我们有四种情况：
+%    \begin{enumerate}
+%      \item |^^M|：由于当前行中没有找到 |}|，把这些字符添加到缓冲区。
+%            为避免展开 |\@temptokena| 和 |\@tempc| 的复杂构造，
+%            我们分两步做。然后继续用 |\verbatim@| 处理下一行。
+% \changes{v1.2f}{1990/01/31}{Added \cs{verbatim@startline}.}
+%    \begin{macrocode}
+         \if\noexpand#1\noexpand~%
+           \expandafter\verbatim@addtoline
+             \expandafter{\the\@temptokena[}%
+           \expandafter\verbatim@addtoline
+             \expandafter{\@tempc}%
+           \verbatim@processline
+           \verbatim@startline
+           \let\next\verbatim@
+%    \end{macrocode}
+%      \item |}|：调用 |\verbatim@@testend| 检查这是否是正确的环境名。
+% \changes{v1.3b}{1990/02/07}{\cs{noexpand} added.}
+%    \begin{macrocode}
+         \else\if\noexpand#1\noexpand]%
+           \let\next\verbatim@@testend
+%    \end{macrocode}
+%  \changes{v1.0f}{1989/10/09}{Introduced check for
+%              {\tt\string\verb!\string|!\string\!\string|} to fix
+%              single brace bug found by Chris Rowley}
+%      \item |\|：这个字符不应出现在环境名中。因此我们停止收集字符。
+%            原则上，同样的理由也适用于其他字符，例如 |{|。
+%            不过 |\| 是一种特殊情况，因为它可能是 |\end| 的第一个字符。
+%            这意味着我们必须重新寻找 |\end{|\meta{环境名}|}|。
+%            注意我们在 |!| 前面加了一个 |\noexpand| 原语，
+%            以防止它是一个活动字符。
+% \changes{v1.3b}{1990/02/07}{\cs{noexpand} added.}
+%    \begin{macrocode}
+         \else\if\noexpand#1\noexpand!%
+           \expandafter\verbatim@addtoline
+             \expandafter{\the\@temptokena[}%
+           \expandafter\verbatim@addtoline
+             \expandafter{\@tempc}%
+           \def\next{\verbatim@!}%
+%    \end{macrocode}
+%      \item 任何其他字符：收集它并继续。我们不能用 |\edef| 来定义
+%            |\@tempc|，因为它的替换文本可能包含活动字符记号。
+%    \begin{macrocode}
+         \else \expandafter\def\expandafter\@tempc\expandafter
+           {\@tempc#1}\fi\fi\fi
+%    \end{macrocode}
+%    \end{enumerate}
+%    和前面一样，这个宏最后通过递归调用来处理下一个字符（如果合适的话）。
+%    \begin{macrocode}
+         \next}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\verbatim@@testend}
+%    与前面的宏不同，|\verbatim@@testend| 很简单：
+%    它只需检查 |\begin{|\ldots|}| 是否与对应的
+%    |\end{|\ldots|}| 匹配。
+%    \begin{macrocode}
+    \def\verbatim@@testend{%
+%    \end{macrocode}
+%    我们再次用 |\next| 来定义要做的事。记住当前环境名存放在
+%    |\@currenvir| 中，由 |\verbatim@testend| 累积的字符在 |\@tempc| 中。
+%    所以我们只需比较这两者，如果匹配就准备执行
+%    |\end{|\meta{当前环境}|}| 宏。在做这件事之前，我们调用
+%    |\verbatim@finish| 来处理最后一行。我们通过 |\edef| 定义 |\next|，
+%    这样 |\@currenvir| 就会被其展开替换。因此我们需要 |\noexpand|
+%    来抑制此时 |\end| 的展开。
+%    \begin{macrocode}
+       \ifx\@tempc\@currenvir
+         \verbatim@finish
+         \edef\next{\noexpand\end{\@currenvir}%
+%    \end{macrocode}
+%    没有这个技巧，|\end| 命令将无法正确检查其参数是否与当前环境名匹配，
+%    你会得到一条有趣的 \LaTeX{} 错误信息，例如：
+%    \begin{verbatim}
+%! \begin{verbatim*} ended by \end{verbatim*}.
+%\end{verbatim}
+%    但是，那一行上剩余的字符怎么办？我们调用 |\verbatim@rescan|
+%    来处理。它的第一个参数是刚结束的环境名（以防我们还需要它）。
+%    |\verbatim@rescan| 把待重新处理的字符列表作为第二个参数。
+%    （这个记号表是由 |\verbatim@@@| 插入到当前宏之后的。）
+%    由于我们仍在 |\edef| 中，我们用 |\noexpand| 保护它。
+%    \begin{macrocode}
+                    \noexpand\verbatim@rescan{\@currenvir}}%
+%    \end{macrocode}
+%    如果名称不匹配，我们把迄今读到的所有字符重新插回，并准备调用
+%    |\verbatim@| 来处理该行剩余部分。
+%    \begin{macrocode}
+       \else
+         \expandafter\verbatim@addtoline
+           \expandafter{\the\@temptokena[}%
+           \expandafter\verbatim@addtoline
+             \expandafter{\@tempc]}%
+         \let\next\verbatim@
+       \fi
+%    \end{macrocode}
+%    最后我们调用 |\next|。
+%    \begin{macrocode}
+       \next}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\verbatim@rescan}
+%    原则上，|\verbatim@rescan| 可以用来分析 |\end{...}| 命令之后
+%    剩余的字符，并假装这些字符是在"标准"类别码生效下被"正确"读取的。
+% \footnote{记住它们都是以类别码 $11$（字母）和 $12$（其他）读取的，
+%          这样控制序列就不会被识别为控制序列。}
+%    但这并非总是可行（当该行剩余部分中有不匹配的花括号时）。
+%    此外，我们认为这不值得费力：在 \texttt{verbatim} 或
+%    \texttt{verbatim*} 环境之后，输出反正会开始新行，
+%    而 |\end{comment}| 很容易单独放在一行上。因此这里没有理由
+%    出现任何文本。对于确实在那里放了东西（也许是注释）的用户，
+%    我们简单地发出一条警告并丢弃它们。
+%    测试方法在 \TeX{}book 附录 D 第 376 页有说明。
+%    我们用 |^^M| 代替那里用的 |!| 字符，因为这个字符不可能出现在
+%    |#1| 中。两个 |\noexpand| 原语是必要的，以避免活动字符和宏的展开。
+%
+%    这里还应注意一个额外的微妙之处：记住我们当前正在构建的记号表，
+%    会先被 |\lowercase| 原语处理，然后 \TeX{} 才执行这些定义。
+%    这意味着 |\@warning| 宏参数中的 |C| 字符必须受到保护，
+%    防止被改成 |c|。这就是我们在上面添加 |\lccode`\C=`\C| 赋值的原因。
+%    现在我们可以结束 |\lowercase| 的参数以及改变类别码的那个组了。
+%    \begin{macrocode}
+    \def\verbatim@rescan#1#2~{\if\noexpand~\noexpand#2~\else
+        \@warning{Characters dropped after `\string\end{#1}'}\fi}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \subsection{\cs{verbatiminput} 命令}
+%
+% \begin{macro}{\verbatim@in@stream}
+%    我们首先分配一个输入流（从可用的 16 个输入流中）。
+%\iffalse
+%  Vorstellbar ist auch der Aufruf von |`verbatiminput| innerhalb eines
+%  |`verbatiminput| (z.B: wenn man |`input|-Anweisungen im zu lesenden
+%  File hat und auch diese Files automatisch lesen will).  Dies kann
+%  man jedoch nur ermoeglichen, wenn man einen besseren Mechanismus
+%  verwendet als es das simple, statische |`newread| darstellt.
+%  Vorstellbar fuer eine neuere \LaTeX-Version ist eine (lokale)
+%  Allokation des Streams durch ein |`open| und eine Freigabe des
+%  Streams durch |`close| oder Verlassen der Gruppe.
+%\fi
+%    \begin{macrocode}
+\newread\verbatim@in@stream
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\verbatim@readfile}
+%    宏 |\verbatim@readfile| 通过分别调用 |\verbatim@startline| 和
+%    |\verbatim@finish| 宏来包围主循环。这样可以确保当文件为空或不存在时，
+%    用户仍能正确初始化和结束该命令。\texttt{verbatim} 环境在以空文本
+%    调用时有类似行为。
+%    \begin{macrocode}
+\def\verbatim@readfile#1{%
+  \verbatim@startline
+%    \end{macrocode}
+%    当找不到文件时，我们发出一条警告。
+%    \begin{macrocode}
+  \openin\verbatim@in@stream #1\relax
+  \ifeof\verbatim@in@stream
+    \typeout{No file #1.}%
+  \else
+%    \end{macrocode}
+%    此时我们把文件名传给 |\@addtofilelist|，使它出现在
+%    |\listfiles| 命令的输出中。
+%    此外，我们使用 |\ProvidesFile| 在日志文件中记录一条日志项，
+%    并区分通过 |\verbatiminput| 读入的文件与其他文件。
+%    \begin{macrocode}
+    \@addtofilelist{#1}%
+    \ProvidesFile{#1}[(verbatim)]%
+%    \end{macrocode}
+%    从文件读取时，关闭对行尾字符的识别是有用的。这样我们就不必
+%    从行内容中去掉空格。
+%    \begin{macrocode}
+    \expandafter\endlinechar\expandafter\m@ne
+    \expandafter\verbatim@read@file
+    \expandafter\endlinechar\the\endlinechar\relax
+    \closein\verbatim@in@stream
+  \fi
+  \verbatim@finish
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\verbatim@read@file}
+%    所有工作都在 |\verbatim@read@file| 中完成。它逐行读取输入文件，
+%    并递归调用自己直到文件末尾。
+%    \begin{macrocode}
+\def\verbatim@read@file{%
+  \read\verbatim@in@stream to\next
+  \ifeof\verbatim@in@stream
+  \else
+%    \end{macrocode}
+%    对每一行，我们用该行内容调用 |\verbatim@addtoline|。
+% \hskip0pt plus 3cm\penalty0\hskip0pt plus -3cm
+%    接着调用 |\verbatim@processline|。
+%    \begin{macrocode}
+    \expandafter\verbatim@addtoline\expandafter{\next}%
+    \verbatim@processline
+%    \end{macrocode}
+%    处理完一行后，我们在读取下一行之前调用 |\verbatim@startline|
+%    来重新初始化一切。
+%    \begin{macrocode}
+    \verbatim@startline
+%    \end{macrocode}
+%    如果没有 |\expandafter|，每次调用 |\verbatim@read@file| 都会在
+%    \TeX 的输入栈中占用空间。\footnote{标准 \TeX{} 在你试图读取
+%    超过约 200 行的文件时会报告溢出错误。如果 \textsl{``TeX: The Program''}\S 390
+%    中的第一行代码缺失，也会发生同样的错误。}
+%    \begin{macrocode}
+    \expandafter\verbatim@read@file
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\verbatiminput}
+%    |\verbatiminput| 首先启动一个组，使字体和类别码改动局部化。
+%    然后它根据后面是否跟星号，带附加参数调用宏 |\verbatim@input|。
+%    \begin{macrocode}
+\def\verbatiminput{\begingroup
+%    \end{macrocode}
+% 
+%   \changes{v1.5x}{2024/01/22}{Added TAB marking support into the
+%   starred version (gh/1245)}
+%   如果是星号版本，我们标记空格和 TAB，这两个新增部分与 verbatim* 相同。
+%    \begin{macrocode}
+  \@ifstar{\verbatim@input{\@setupverbvisiblespace\@vobeyspaces}}%
+          {\verbatim@input{\frenchspacing\@vobeyspaces}}}
+%    \end{macrocode}
+% \changes{v1.5z}{2026-08-17}{Add tagging support if format is new.}
+%    \begin{macrocode}
+\IfDocumentMetadataT
+ {
+  \def\verbatiminput{\begingroup
+    \@ifstar{\verbatim@input{final-code=\legacyverbatimsetup{visible}}}%
+            {\verbatim@input{final-code=\legacyverbatimsetup{invisible}}}}
+ }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\verbatim@input}
+% \changes{1.5k}{1997/04/30}{Have \cs{verbatim@input} check for
+%    existence of file.}
+%    |\verbatim@input| 首先用标准宏 |\IfFileExists| 检查文件是否存在，
+%    它会把找到的文件名留在 |\@filef@und| 中。然后像 |\verbatim| 宏一样
+%    做好一切设置。但是，由于 |\@verbatim| 包含对 |\every@verbatim| 的调用，
+%    而后者\emph{可能}包含一条 |\input| 语句，会覆盖 |\@filef@und| 的内容，
+%    我们需要先展开它来保存。使用 |\@swaptwoargs| 使得
+%    |\@filef@und| 的\emph{展开结果}成为 |\verbatim@readfile| 的第二个参数。
+% \changes{v1.5t}{2020-07-06}{Expand \cs{@filef@und} before the call
+%    of \cs{@verbatim} (gh/222)}
+%    \begin{macrocode}
+\def\verbatim@input#1#2{%
+  \IfFileExists {#2}{%
+    \expandafter\@swaptwoargs\expandafter
+      {\expandafter{\@filef@und}}%
+      {\@verbatim #1\relax
+%    \end{macrocode}
+%    然后它读入文件，结束由 |\@verbatim| 启动的 \texttt{trivlist} 环境，
+%    并关闭组。这会把一切恢复到正常设置。
+%    \begin{macrocode}
+        \verbatim@readfile}%
+      \endtrivlist\endgroup\@doendpe}%
+%    \end{macrocode}
+%    如果找不到文件，会打印一条多少有点用的信息。最后的 |\endgroup|
+%    是为了关闭上面 |\verbatiminput| 中启动的组。
+%    \begin{macrocode}
+   {\typeout {No file #2.}\endgroup}}
+%    \end{macrocode}
+% \changes{v1.5z}{2026-08-17}{Add tagging support}
+%    \begin{macrocode}
+\IfDocumentMetadataT
+  {
+    \def\verbatim@input#1#2{%
+      \IfFileExists {#2}{%
+        \expandafter\@swaptwoargs\expandafter
+         {\expandafter{\@filef@und}}%
+         {%
+          \SimpleBlockEnv{verbatim} {#1}\obeyedline       
+          \verbatim@readfile}        
+          \BlockEnvEnd\endgroup
+        }%
+     {\typeout {No file #2.}\endgroup}}
+  }    
+%    \end{macrocode}
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \subsection{把 verbbatim 文本送入参数}
+%
+% 实现这一点的一种方法是定义一个宏（命令），其展开结果就是所需的
+% verbatim 文本。这个命令随后可以在任何需要 verbatim 文本的地方使用。
+% 它可以用在参数中，甚至是移动参数中，但它是脆弱的（至少这里的版本是）。
+%
+% 下面这段代码声称提供了这个功能。它是我（Chris）约两年前所写东西的
+% 大幅修订版。也许还需要进一步修订。
+%
+% 它只打算作为 |\verb| 的扩展，而不是 \texttt{verbatim} 环境的扩展。
+% 因此，它或许应该以对 |\verb| 最合适的方式来处理行尾。
+%
+% \begin{macro}{\newverbtext}
+% 这是产生一个新宏的命令，其展开结果是 verbatim 文本。
+% 这个命令本身当然不能用在参数中！它的用法如下：
+%
+% \begin{verbatim}
+%    \newverbtext{\myverb}"^%{ &~_\}}@ #"
+% \end{verbatim}
+%
+% 界定 verbatim 文本的规则与 |\verb| 相同。
+%
+%    \begin{macrocode}
+%<*verbtext>
+\def \newverbtext {%
+  \@ifstar {\@tempswatrue \@verbtext }{\@tempswafalse \@verbtext *}%
+}
+%    \end{macrocode}
+% \end{macro}
+%    我认为在这里使用一个临时开关是安全的：如果不安全，可以用合适的
+%    |\let|。
+%    \changes{v1.5i}{1996/06/04}{Moved processing of
+%              \cs{verbatim@nolig@list} after \cs{dospecials}.}
+%    \changes{v1.5p}{2001/03/12}{Added missing right brace in
+%               definition of \cs{@verbtext} (PR 3314).}
+%    \begin{macrocode}
+\def \@verbtext *#1#2{%
+   \begingroup
+     \let\do\@makeother \dospecials
+     \let\do\do@noligs \verbatim@nolig@list
+     \@vobeyspaces
+     \catcode`#2\active
+     \catcode`~\active
+     \lccode`\~`#2%
+     \lowercase
+%    \end{macrocode}
+%    我们在这里用一个临时宏和一个技巧，使命令本身的定义可以在组内完成，
+%    并且是局部定义（也许有更好的方法来实现这一点）。
+%    \begin{macrocode}
+     {\def \@tempa ##1~%
+           {\whitespaces
+%    \end{macrocode}
+%    如果这些 |\noexpand| 改成 |\noexpand\protect\noexpand|，
+%    会不会让这些东西变得健壮？
+%    \begin{macrocode}
+            \edef #1{\noexpand \@verbtextmcheck
+                     \bgroup
+                     \if@tempswa
+                       \noexpand \visiblespaces
+                     \fi
+                     \noexpand \@verbtextsetup
+                     ##1%
+                     \egroup}%
+            }%
+      \expandafter\endgroup\@tempa
+     }
+}
+%    \end{macrocode}
+%    这为当前模式设置正确类型的组：它绝不能在定义时被展开！
+%    \begin{macrocode}
+\def \@verbtextmcheck {%
+   \relax\ifmmode
+           \hbox
+         \else
+           \leavevmode
+           \null
+         \fi
+}
+%    \end{macrocode}
+%    这里包含其他一些在定义期间不应展开的东西。
+%    \begin{macrocode}
+\def \@verbtextsetup {%
+   \frenchspacing
+   \verbatim@font
+   \verbtextstyle
+}
+%    \end{macrocode}
+%    命令 |\verbtextstyle| 是一个文档级钩子，可用于覆盖用
+%    |\newverbtext| 命令定义的命令的预定义排版处理。
+%
+%    |\visiblespaces| 和 |\whitespaces| 是这个钩子可能取值的例子。
+%    \begin{macrocode}
+\let \verbtextstyle \relax
+\def \visiblespaces {\chardef \  32\relax}
+\def \whitespaces {\let \ \@@space}
+\let \@@space \ %
+%</verbtext>
+%    \end{macrocode}
+%
+%
+% \section{测试实现}
+%
+% 为了测试实现并做演示，我们提供了一个额外文件。它可以通过条件
+% `\textsf{testdriver}' 抽取。它使用一个单独分发的小输入文件
+% `\texttt{verbtest.tst}'。我们再次使用单独的 `+' 守卫。
+%    \begin{macrocode}
+%<*testdriver>
+\documentclass{article}
+
+\usepackage{verbatim}
+
+\newenvironment{myverbatim}%
+   {\endgraf\noindent MYVERBATIM:\endgraf\verbatim}%
+   {\endverbatim}
+
+\makeatletter
+
+\newenvironment{verbatimlisting}[1]%
+ {\def\verbatim@startline{\input{#1}%
+    \def\verbatim@startline{\verbatim@line{}}%
+    \verbatim@startline}%
+  \verbatim}{\endverbatim}
+
+\newwrite\verbatim@out
+
+\newenvironment{verbatimwrite}[1]%
+ {\@bsphack
+  \immediate\openout \verbatim@out #1
+  \let\do\@makeother\dospecials\catcode`\^^M\active
+  \def\verbatim@processline{%
+    \immediate\write\verbatim@out{\the\verbatim@line}}%
+  \verbatim@start}%
+ {\immediate\closeout\verbatim@out\@esphack}
+
+\makeatother
+
+\addtolength{\textwidth}{30pt}
+
+\begin{document}
+
+\typeout{}
+\typeout{===> Expect ``characters dropped''
+         warning messages in this test! <====}
+\typeout{}
+
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+  \begin{verbatim}
+    test
+    \end{verbatim*}
+    test
+    \end{verbatim
+    test of ligatures: <`!`?`>
+    \endverbatim
+    test
+    \end  verbatim
+    test
+    test of end of line:
+    \end
+    {verbatim}
+  \end{verbatim} Further text to be typeset: $\alpha$.
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+  \begin{verbatim*}
+    test
+    test
+  \end {verbatim*}
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+  \begin{verbatim*}  bla bla
+    test
+    test
+  \end {verbatim*}
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+
+First of Chris Rowley's fiendish tests:
+\begin{verbatim}
+the double end test<text>
+\end\end{verbatim}  or even \end \end{verbatim}
+%
+%not \end\ended??
+%\end{verbatim}
+
+Another of Chris' devils:
+\begin{verbatim}
+the single brace test<text>
+\end{not the end\end{verbatim}
+%
+%not \end}ed??
+%\end{verbatim}
+Back to my own tests:
+  \begin{myverbatim}
+    test
+    test
+  \end {myverbatim} rest of line
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+
+Test of empty verbatim:
+\begin{verbatim}
+\end{verbatim}
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+  \begin {verbatimlisting}{verbtest.tex}
+    Additional verbatim text
+      ...
+  \end{verbatimlisting}
+And here for listing a file:
+  \verbatiminput{verbtest.tex}
+And again, with explicit spaces:
+  \verbatiminput*{verbtest.tex}
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+  \begin{comment}
+    test
+    \end{verbatim*}
+    test
+    \end {comment
+    test
+    \endverbatim
+    test
+    \end  verbatim
+    test
+  \end {comment} Further text to be typeset: $\alpha$.
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+  \begin{comment}  bla bla
+    test
+    test
+  \end {comment}
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+Text Text Text Text Text Text Text Text Text Text Text
+
+\begin{verbatimwrite}{verbtest.txt}
+asfa<fa<df
+sdfsdfasd
+asdfa<fsa
+\end{verbatimwrite}
+
+\end{document}
+%</testdriver>
+%    \end{macrocode}
+%
+%
+% \Finale
+%
+\endinput
+%%

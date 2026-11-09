@@ -1,0 +1,2950 @@
+% This is the manual for the LaTeX hyperref package.
+%
+% Copyright (C) 1998-2003 Sebastian Rahtz.
+% Copyright (C) 2003 Steve Peter and Karl Berry
+% Copyright (C) 2006-2012 Heiko Oberdiek.
+% Copyright (C) 2017-2019 David Carlisle Ulrike Fischer
+% Copyright (C) 2019-2024 The LaTeX Project
+%
+% Permission is granted to copy, distribute and/or modify this document
+% under the terms of the GNU Free Documentation License, Version 1.1 or
+% any later version published by the Free Software Foundation; with no
+% Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+% Texts.  A copy of the license is included in the section entitled
+% ``GNU Free Documentation License.''
+%
+
+\def\mydate{January 2020}
+
+\RequirePackage{iftex}
+
+\documentclass{article}
+\usepackage[UTF8]{ctex}
+
+\usepackage{pifont}
+\usepackage{calc}
+
+\usepackage{hologo}
+
+\newcommand*{\cs}[1]{%
+  \texttt{\textbackslash #1}%
+}
+\newcommand*{\xpackage}[1]{\textsf{#1}}
+\newcommand*{\xoption}[1]{\textsf{#1}}
+
+% from doc.sty
+\makeatletter
+\ifx\l@nohyphenation\@undefined
+\newlanguage\l@nohyphenation
+\fi
+\ifx\l@nohyphenation\@undefined
+  \newlanguage\l@nohyphenation
+\fi
+\DeclareRobustCommand\meta[1]{%
+  \ensuremath\langle
+  \ifmmode \expandafter \nfss@text \fi
+  {%
+    \meta@font@select
+    \edef\meta@hyphen@restore
+      {\hyphenchar\the\font\the\hyphenchar\font}%
+    \hyphenchar\font\m@ne
+    \language\l@nohyphenation
+    #1\/%
+    \meta@hyphen@restore
+  }%
+  \ensuremath\rangle
+}
+\def\meta@font@select{\ttfamily\itshape}
+\makeatother
+
+% Page layout.
+\advance\textwidth by 1.1in
+\advance\oddsidemargin by -.55in
+\advance\evensidemargin by -.55in
+%
+\advance\textheight by 1in
+\advance\topmargin by -.5in
+\advance\footskip by -.5in
+%
+\pagestyle{headings}
+%
+% Avoid some overfull boxes.
+\emergencystretch=.1\hsize
+\hbadness = 3000
+
+% these are from lshort.sty, but lshort.sty pulls in so many other
+% packages it seems cleaner to just include them here.
+%
+\newcommand{\bs}{\symbol{'134}}%Print backslash
+\newcommand{\ci}[1]{\texttt{\bs#1}}
+
+\makeatletter
+\@ifpackageloaded{tex4ht}{%
+  % separate definition for HTML case to avoid
+  % nasty borders with double horizontal lines with
+  % large gaps.
+  \newsavebox{\cmdsyntaxbox}%
+  \newenvironment{cmdsyntax}{%
+    \par
+    % \small
+    \addvspace{3.2ex plus 0.8ex minus 0.2ex}%
+    \vskip -\parskip
+    \noindent
+    \begin{lrbox}{\cmdsyntaxbox}%
+      \begin{tabular}{l}%
+        \rule{0pt}{1em}%
+        \ignorespaces
+  }{%
+      \end{tabular}%
+    \end{lrbox}%
+    \fbox{\usebox{\cmdsyntaxbox}}%
+    \par
+    \nopagebreak
+    \addvspace{3.2ex plus 0.8ex minus 0.2ex}%
+    \vskip -\parskip
+  }%
+}{%
+  \newenvironment{cmdsyntax}{%
+    \par
+    \small
+    \addvspace{3.2ex plus 0.8ex minus 0.2ex}%
+    \vskip -\parskip
+    \noindent
+    \begin{tabular}{|l|}%
+      \hline
+      \rule{0pt}{1em}%
+      \ignorespaces
+  }{%
+      \\%
+      \hline
+    \end{tabular}%
+    \par
+    \nopagebreak
+    \addvspace{3.2ex plus 0.8ex minus 0.2ex}%
+    \vskip -\parskip
+  }%
+}
+\makeatother
+
+\usepackage{array,longtable}
+\usepackage{fontspec}
+\setmonofont{Latin Modern Mono}
+\renewcommand*{\ttdefault}{lmvtt}
+
+\newcommand*{\Quote}[1]{\textquotedblleft#1\textquotedblright}
+
+\ifpdf
+  \usepackage[%
+%    pdftex,% might be luatex, just allow automatic default
+    colorlinks,%
+    hyperindex,%
+    plainpages=false,%
+    bookmarksopen,%
+    bookmarksnumbered,
+    pdfusetitle,%
+  ]{hyperref}
+  %%?? \def\pdfBorderAttrs{/Border [0 0 0] } % No border around Links
+\else
+  \usepackage{hyperref}
+\fi
+
+\makeatletter
+\@ifpackageloaded{tex4ht}{%
+\author{Sebastian Rahtz (deceased)\and
+       Heiko Oberdiek (inactive)\and
+       The \LaTeX3 Project (\url{https://github.com/latex3/hyperref/issues})}
+}{%
+  \usepackage{bmhydoc}%
+\author{Sebastian Rahtz\thanks{deceased}\and
+       Heiko Oberdiek\thanks{inactive}\and
+       The \LaTeX3 Project\thanks{\url{https://github.com/latex3/hyperref/issues}}}
+}
+\makeatother
+\title{\hologo{LaTeX} 中的超文本标记：\xpackage{hyperref} 宏包手册}
+\date{2026-10-09 v7.01s}
+
+\begin{document}
+
+% comes out too close to the toc, and we know it's page one anyway.
+\thispagestyle{empty}
+\maketitle
+\tableofcontents
+\setcounter{tocdepth}{2}% for bookmark levels
+
+\section{序言}
+
+从下面的介绍中可以看出，\xpackage{hyperref} 有着悠久的历史，经历了许多变化。介绍中提到的一些工作流程、驱动程序和问题，现在已经不再相关（或仅在边缘情况下才相关）。文档反映了这段多样的历史：变更、扩展和说明过去分散在各种论文和资料中，后来才陆续整合进来，因此并不总是按连贯的顺序排列，彼此之间也不完全同步。
+
+这段历史仍在继续：如果您正在使用新的 \hologo{LaTeX} PDF 管理模块（目前以测试阶段宏包 \xpackage{pdfmanagement-testphase} 的形式发布），那么 \xpackage{hyperref} 在 PDF 输出时将使用一个新的通用驱动程序，其中包含许多变更和新特性。该驱动程序的文档 \texttt{hyperref-generic.pdf} 目前是 \xpackage{pdfmanagement-testphase} 文档的一部分。新驱动的一个重要变更是，它移除了旧的 \xpackage{hyperref} 书签代码，转而使用 \xpackage{bookmark} 宏包。因此，要了解扩展书签的选项，您还应该查阅 \xpackage{bookmark} 的文档。
+
+\subsection{恢复已移除的补丁}
+
+\xpackage{hyperref} 随着时间推移，为解决冲突和不兼容问题，对相当多的宏包进行了补丁修改。其中许多补丁要么不再需要，要么应该由原始宏包自行处理。这些补丁现在正逐步从 \xpackage{hyperref} 中移除。通常情况下这不会导致问题，但如果需要恢复这些补丁，可以通过本宏包套件中的 \xpackage{hyperref-patches} 宏包来加载。
+
+
+
+\section{简介}
+
+本宏包源自并建立在 Hyper\hologo{TeX} 项目的工作之上，该项目的描述见 \nolinkurl{http://xxx.lanl.gov/hypertex/}\footnote{现为：\url{https://ctan.org/tex-archive/support/hypertex/hypertex}}。它扩展了所有 \hologo{LaTeX} 交叉引用命令（包括目录、参考文献等）的功能，使其生成 \cs{special} 命令，驱动程序可以将这些命令转换为超文本链接；它还提供了新的命令，允许用户编写\emph{临时}超文本链接，包括指向外部文档和 URL 的链接。
+
+本宏包目前在 \url{https://github.com/latex3/hyperref/} 维护，问题应在那里报告。
+
+本手册提供了 \xpackage{hyperref} 宏包的简要概述。更多细节，请阅读随宏包分发的附加文档，以及处理 \texttt{hyperref.dtx} 后生成的完整文档。您还应该阅读《\hologo{LaTeX} Web Companion》中关于 \xpackage{hyperref} 的章节，其中有更多示例。
+
+Hyper\hologo{TeX} 规范\footnote{借用自 Arthur Smith 的一篇文章。}规定，符合规范的查看器/转换器必须识别以下 \cs{special} 构造集：
+
+\begin{description}
+\item[href:] \verb|html:<a href = "href_string">|
+\item[name:] \verb|html:<a name = "name_string">|
+\item[end:] \verb|html:</a>|
+\item[image:] \verb|html:<img src = "href_string">|
+\item[base\_name:] \verb|html:<base href = "href_string">|
+\end{description}
+
+\emph{href}、\emph{name} 和 \emph{end} 命令用于执行基本的超文本操作，即在文档各部分之间建立链接。\emph{image} 命令的目的（与当前的 HTML 查看器一样）是在页面当前位置放置任意图形格式的图像。\emph{base\_name} 命令用于向 DVI 查看器传达当前文档的完整（URL）位置，以便正确检索由相对 URL 指定的文件。
+
+\emph{href} 和 \emph{name} 命令必须在 \TeX 文件后面的某个位置与 \emph{end} 命令配对——一对命令两端之间的 \TeX 命令在文档中形成一个\emph{锚点}。对于 \emph{href} 命令，\emph{锚点}会在 \emph{DVI 查看器}中高亮显示，点击时页面会跳转到 \emph{href\_string} 指定的目标位置。与 name 命令关联的 \emph{锚点}代表一个可能的位置，其他超文本链接可以引用它——可以是本地引用（形式为 \verb|href="#name_string"|，其中 \emph{name\_string} 与 name 命令中的相同），也可以是 URL 的一部分（形式为 \emph{URL\#name\_string}）。这里 \emph{href\_string} 是有效的 URL 或本地标识符，而 \emph{name\_string} 可以是任意字符串：唯一需要注意的是，`$\verb|"|$' 字符应使用反斜杠（$\backslash$）转义，而且如果它看起来像 URL 名称，可能会导致问题。
+
+然而，旨在\emph{仅}生成 PDF 的驱动程序使用字面 PostScript 或 PDF \verb|\special| 命令。这些命令在不同驱动程序的配置文件中定义，由宏包选项选择，或对于大多数当前引擎自动检测；目前支持以下驱动程序：
+
+\begin{description}
+\item[hypertex] 符合 Hyper\TeX 指南的 DVI 处理器（即 \textsf{xdvi}、\textsf{dvips}（带 \textsf{-z} 选项）、\textsf{\hologo{OzTeX}} 和 \textsf{Textures}）
+\item[dvips] 生成专为 \textsf{dvips} 定制的 \verb|\special| 命令。如果检测到 dvi 模式，这是默认驱动程序。
+\item[dvipsone] 生成专为 \textsf{dvipsone} 定制的 \verb|\special| 命令
+\item[ps2pdf] 适合由早期版本 Ghost\-script 的 PDF 编写器处理的输出特例；这与 \textsf{dvips} 基本相同，但在 5.21 版本之前存在一些差异
+\item[tex4ht] 生成供 \textsf{\TeX4ht} 使用的 \verb|\special| 命令，自动检测。
+\item[pdftex] pdf\TeX，\hologo{HanTheThanh} 的 \TeX{} 变体，直接输出 PDF，自动检测。
+\item[luatex] lua\TeX，Unicode \TeX{} 变体，直接输出 PDF，自动检测。
+\item[dvipdfm] 为 Mark Wicks 的 DVI 转 PDF 驱动程序 \textsf{dvipdfm} 生成 \verb|\special| 命令
+\item[dvipdfmx] 为驱动程序 \textsf{dvipdfmx} 生成 \verb|\special| 命令，它是 \textsf{dvipdfm} 的后继者
+\item[dviwindo] 生成 Y\&Y 的 Windows 预览器解释为预览器内超文本跳转的 \verb|\special| 命令
+\item[vtex] 生成 MicroPress 的 HTML 和 PDF 生成 \TeX 变体解释为预览器内超文本跳转的 \verb|\special| 命令，自动检测。
+\item[textures] 生成 \textsf{Textures} 解释为预览器内超文本跳转的 \verb|\special| 命令
+\item[xetex] 为 Xe\TeX{} 生成 \verb|\special| 命令，自动检测。
+\item[hitex]（2023 年新增）用于 Hi\TeX{} 引擎生成的 hint 格式，自动检测。这是一个相当实验性的引擎，驱动文件不是 \xpackage{hyperref} 套件的一部分，而是由 \xpackage{hitex} 宏包提供。问题应报告至 \url{https://github.com/ruckertm/HINT}。
+\end{description}
+
+\textsf{dvips} 或 \textsf{dvipsone} 的输出必须使用 Acrobat Distiller 处理才能获得 PDF 文件。\footnote{请确保关闭 \textsf{dvips} 和 \textsf{dvipsone} 支持的部分字体下载，改用 Distiller 自己的系统。}结果通常优于使用 \textsf{hypertex} 驱动程序然后通过 \textsf{dvips -z} 处理的输出，但 DVI 文件不可移植。使用 Hyper\TeX\ \ci{special} 命令的主要优点是，您还可以在超文本 DVI 查看器（如 \textsf{xdvi}）中使用文档。
+
+\begin{description}
+\item[driverfallback]
+  如果未指定驱动程序且无法自动检测，则使用驱动程序选项的值作为此选项 \textsf{driverfallback} 的值。例如：
+  \begin{quote}
+    \texttt{driverfallback=dvipdfm}
+  \end{quote}
+  自动检测的驱动程序（\textsf{pdftex}、\textsf{luatex}、\textsf{xetex}、\textsf{vtex}、\textsf{vtexpdfmark}、\textsf{hitex}）是在 \TeX 内部识别的，因此不能作为 \textsf{driverfallback} 选项的值。但是 DVI 驱动程序程序是在 \TeX 运行结束后才运行的。因此无法在 \TeX 宏级别检测。此时 \xpackage{hyperref} 宏包使用由 \textsf{driverfallback} 给出的驱动程序。如果驱动程序已指定或可以自动检测，则忽略 \textsf{driverfallback} 选项。
+\end{description}
+
+\section{隐式行为}
+
+本宏包几乎可以与任何普通的 \LaTeX 文档配合使用，只需在文档导言区指定：
+
+\begin{verbatim}
+\usepackage{hyperref}
+\end{verbatim}
+
+请确保它在所有已加载宏包的\emph{最后}，这样它才有机会不被覆盖，因为它的工作是重新定义许多 \LaTeX 命令。\footnote{但已开始减少重新定义的数量，从而减少对加载顺序的依赖。}
+
+\emph{不要在 \ci{AtBeginDocument} 或 \texttt{begindocument} 钩子中加载它！}虽然过去这样做通常有效，但这不受官方支持。由于 \xpackage{hyperref} 和 \xpackage{nameref} 也使用此钩子来初始化命令，如果在那里加载宏包，代码执行的时机就变得微妙且脆弱。如果想延迟加载，请使用 \texttt{begindocument/before} 钩子。
+
+希望您会发现所有交叉引用都能正确地作为超文本工作。例如，\ci{section} 命令会生成书签和链接，而 \ci{section*} 命令只有在与对应的 \ci{addcontentsline} 命令配对时才会显示链接。
+
+此外，\texttt{hyperindex} 选项（见下文）尝试使索引中的条目超链接回正文，\texttt{backref} 选项则在参考文献中为每个条目插入额外的"返回"链接。其他选项控制链接的外观，并提供对 PDF 输出的额外控制。例如，\texttt{colorlinks} 顾名思义，为链接着色而不是使用方框；本文档使用的就是这个选项。
+
+\section{类和宏包作者接口}
+
+超链接功能如今是常见需求。\xpackage{hyperref} 对 \LaTeX{} 核心和其他宏包中的相当多命令进行了补丁修改，以添加此类功能。但这相当脆弱，增加了对加载顺序的依赖，并且如果外部宏包发生变化可能会出错。因此，更好的做法是宏包直接在自己的命令中添加适当的支持。确实有不少宏包这样做了，但由于缺少接口文档，它们往往查看代码然后使用了不打算作为公开命令的内部命令。
+
+下面尝试描述现有的变量和命令，这些可以被视为公开接口，或者是宏包为了与 \xpackage{hyperref} 命令保持兼容而应该或可以设置的。已文档化的用户命令自然也是接口，这里不再明确重复。
+
+本节仍在编写中。欢迎提出建议或意见。
+
+
+\subsection{计数器}
+
+计数器在代码中起着重要作用。它们用于创建目标名称和定义书签等层次结构。要正确工作，通常需要一些额外设置。
+
+\begin{description}
+
+\item[\cs{theH<counter>}]  \xpackage{hyperref} 通常根据计数器名称和 \cs{the<counter>} 值创建链接锚点的目标名称。这可能会失败，例如，如果 \cs{the<counter>} 在整个文档中不唯一，或者它不可展开。在这种情况下，应该定义 \cs{theH<counter>}，使其给出唯一、可展开的值。即使没有加载 \xpackage{hyperref}，定义它也没有坏处。
+
+\item[\cs{toclevel@<counter>}] 这是一个应该包含数字的变量。它用于书签中的级别。应该为所有在目录中使用的计数器（如列表和 \cs{addcontentsline}）定义它。典型值为：
+
+\begin{verbatim}
+\def\toclevel@part{-1}
+\def\toclevel@chapter{0}
+\def\toclevel@section{1}
+\def\toclevel@subsection{2}
+\def\toclevel@subsubsection{3}
+\def\toclevel@paragraph{4}
+\def\toclevel@subparagraph{5}
+\def\toclevel@figure{0}
+\end{verbatim}
+
+\end{description}
+
+\subsection{宏包和 \texorpdfstring{\texttt{\textbackslash hypersetup}}{hypersetup} 选项的值}
+
+当\marginpar{\tiny 7.00s 版本新增}在宏包选项中或通过 \cs{hypersetup} 设置键时，\xpackage{hyperref} 通常将结果存储在内部变量中，或执行某些代码或设置内部布尔值。宏包和类作者在这里\emph{不}应该依赖键处理的名称或细节。
+
+但是，由于其他宏包有时需要知道设置了哪个值，可以通过可展开的 \cs{GetDocumentProperties} 检索某些值。返回的值用 \cs{exp\_not:n} 包围，因此可以安全地在 \cs{edef} 中使用。例如，要获取 pdfauthor，可以这样做：
+
+\begin{verbatim}
+\edef\mypdfauthor{\GetDocumentProperties{hyperref/pdfauthor}}
+\end{verbatim}
+
+返回的值就是用户输入的值！如果要在 PDF 上下文中使用，仍然必须应用 \cs{pdfstringdef} 或等效方法。
+
+目前此接口可用于键 \texttt{pdfauthor}、\texttt{pdftitle}、\texttt{pdfproducer}、\texttt{pdfcreator}、\texttt{pdfsubject} 和 \texttt{pdfkeywords}。如果用于未知键，返回空值。如果通过 \cs{DocumentMetadata} 加载新的 PDF 管理，此接口也能工作，在这种情况下更多键会返回其值。
+
+
+\subsection{链接命令}
+
+所有驱动程序都提供以下命令来创建链接。如果用户命令不够用，宏包可以使用这些命令。新驱动程序必须提供具有相似参数的这些命令。
+
+\begin{verbatim}
+ \hyper@anchor {目标名称}
+ \hyper@anchorstart {目标名称}
+ \hyper@anchorend
+ \hyper@link   {上下文}{目标名称}{链接文本}  %GoTo
+ \hyper@linkstart {上下文} {目标名称}         %GoTo
+ \hyper@linkend                                        %GoTo
+ \hyper@linkfile  {链接文本} {文件名} {目标名}    %GoToR
+ \hyper@linkurl   {链接文本}{url}                     %URI
+ \hyper@linklaunch{文件名} {链接文本} {参数}  %Launch，仅新通用驱动支持
+ \hyper@linknamed {动作}{链接文本}                  %Named，仅新通用驱动支持
+\end{verbatim}
+
+\subsection{创建目标}
+
+内部链接和书签需要可以跳转到的位置。在 PDF 中这通常称为\emph{目标}（因此原语称为 \cs{pdfdest}），在 HTML 中更常称为\emph{锚点}（因此 \xpackage{hyperref} 使用 \cs{hyper@anchor}）。历史无法改变，但未来的命令和描述将使用通用的\emph{目标}，除非指的是 PDF 特定的 destination。
+
+使用 \cs{refstepcounter} 时会自动创建目标，在许多情况下这样做是正确的，不需要额外操作。但也有例外：
+\begin{itemize}
+\item 可能缺少所需的目标，例如分节命令没有编号（使用了带星号版本）或由于 \texttt{secnumdepth} 设置。
+\item \cs{refstepcounter} 创建的目标可能位置不对。
+\item \cs{refstepcounter} 创建的目标可能影响间距。
+\item \cs{refstepcounter} 创建的目标名称不可用，例如在
+\cs{bibitem}，此时需要基于文献键（bib-key）生成目标名称。
+\end{itemize}
+
+宏包作者和用户可以使用以下命令创建和操作目标。这些命令在 \texttt{hyperref-linktarget.pdf} 中有更详细的说明。
+
+\begin{verbatim}
+ \MakeLinkTarget
+ \LinkTargetOff
+ \LinkTargetOn
+ \NextLinkTarget
+ \SetLinkTargetFilter
+\end{verbatim}
+
+前四个命令在 \LaTeX{} 中也直接定义为空操作，因此即使没有加载 \xpackage{hyperref} 也能使用。
+
+在 \LaTeX{} 更新之前，宏包作者也可以直接提供这些定义：
+
+\begin{verbatim}
+\ProvideDocumentCommand\MakeLinkTarget{sO{}m}{}
+\ProvideDocumentCommand\LinkTargetOn{}{}
+\ProvideDocumentCommand\LinkTargetOff{}{}
+\ProvideDocumentCommand\NextLinkTarget{m}{}
+\end{verbatim}
+
+\subsection{补丁及其抑制方法}
+
+\xpackage{hyperref} 对外部命令所做的补丁，可以通过在加载
+\xpackage{hyperref} 时使用 \texttt{implicit=false} 选项来完全避免。但抑制所有补丁通常过于激进。目前正在进行一项工作，对补丁进行分类，并提供更细粒度的抑制接口。
+
+
+
+
+
+\begin{description}
+\item[分节命令]
+\begin{itemize}
+\item \xpackage{hyperref} 补丁修改了 \cs{@sect}、\cs{@ssect}、\cs{@chapter}、\cs{@schapter}、
+\cs{@part}、\cs{@spart}。
+
+\item 它为带星号命令添加了链接目标（章使用前缀 \texttt{chapter*}，其他使用 \texttt{section*}）。
+对于其他命令，当分节无编号时（例如由于 \texttt{secnumdepth} 设置或在 front matter 中），它也添加链接目标。
+
+\item 可以通过定义命令 \cs{hyper@nopatch@sectioning} 来抑制此补丁。
+通常只有自己提供分节命令并自行添加目标的类或宏包才应这样做。
+目标在页面上有具体位置，例如分节命令应考虑缩进。书签和目录需要目标，
+因此在使用 \cs{addcontentsline} 之前，\cs{@currentHref} 应获得正确的含义。
+
+\item 注意 \xpackage{nameref} 宏包也会补丁修改这些命令，
+以添加将标题文本存储到 \cs{@currentlabelname} 的命令。
+请查阅 \xpackage{nameref} 文档了解抑制这些补丁的方法。
+\end{itemize}
+
+\item[脚注] 为（部分）启用脚注的链接，\xpackage{hyperref} 重定义或补丁修改了多个命令，部分依赖于具体宏包。
+\begin{itemize}
+\item \xpackage{hyperref} 重定义了 \cs{@xfootnotenext}、\cs{@xfootnotemark}、\cs{@mpfootnotetext}、
+    \cs{@footnotetext}、\cs{@footnotemark}。
+    如果加载了 \xpackage{tabularx}，它会修改 \cs{TX@endtabularx}。如果加载了 \xpackage{longtable}，它会修改 \cs{LT@p@ftntext}。
+    如果加载了 \xpackage{fancyvfb}，它会重定义 \cs{V@@footnotetext}。它还重定义了 \cs{footref} 和 \cs{maketitle}。
+
+\item \emph{所有}这些重定义都可以通过定义 \cs{hyper@nopatch@footnote} 来抑制。请注意，这既会抑制链接，也可能导致不希望出现的链接出现。
+\end{itemize}
+
+\item[amsmath 标签] \xpackage{hyperref} 重定义了 amsmath 中与 \cs{tag} 命令相关的两个内部命令，以添加锚点。可以通过定义 \cs{hyper@nopatch@amsmath@tag} 来抑制此代码。（这通常在宏包中没有意义，但在数学环境被修改以支持标记（tagging）时可能需要。）
+
+\item[计数器] \xpackage{hyperref} 补丁修改了内核命令 \cs{@definecounter}、
+    \cs{@newctr}、\cs{@addtoreset} 以及 amsmath 命令 \cs{numberwithin}，
+    以确保为每个计数器创建或重置正确的 \cs{theHcounter} 表示。可以通过定义 \cs{hyper@nopatch@counter} 来抑制此代码。（这通常在宏包中没有意义，但在内核命令被修改以支持标记时可能需要。）
+
+\item[数学环境] \xpackage{hyperref} 补丁修改了 \cs{equation}/\cs{endequation}、\cs{eqnarray}、
+    \cs{endeqnarray}。可以通过定义 \cs{hyper@nopatch@mathenv} 来抑制此代码。
+
+\item[目录] \xpackage{hyperref} 重定义了 \cs{contentsline}，以便能够为目录条目添加链接。
+它重定义了 \cs{addcontentsline} 以创建书签并将目标名称传递给目录条目。可以通过定义 \cs{hyper@nopatch@toc} 来抑制此代码。
+
+\item[标题] \xpackage{hyperref} 重定义了 \cs{caption} 和 \cs{@caption} 以插入链接目标。
+可以通过定义 \cs{hyper@nopatch@caption} 来抑制此代码（额外的辅助命令不会被抑制）。由于许多宏包也重定义了标题（例如 \xpackage{caption} 宏包），必须仔细测试副作用！
+
+\item[longtable] \xpackage{hyperref} 重定义了 \cs{LT@start} 和 \cs{LT@array}，以将目标移动到更好的位置。可以通过定义 \cs{hyper@nopatch@longtable} 来抑制此代码。
+
+\item[定理] \xpackage{hyperref} 补丁修改了 \cs{@thm}。可以通过定义 \cs{hyper@nopatch@thm} 来抑制此代码。
+
+\item[引用与参考文献] 如果未加载 \xpackage{natbib}，\xpackage{hyperref} 会重定义 \cs{bibcite}、
+\cs{@lbibitem} 和 \cs{@bibitem}。可以通过定义 \cs{hyper@nopatch@bib} 来抑制这些重定义。
+\end{description}
+
+\section{宏包选项}
+
+\xpackage{hyperref} 的所有用户可配置方面都使用单一的"键=值"方案（使用 \xpackage{keyval} 宏包）设置，键为 \texttt{Hyp}。选项可以在 \cs{usepackage} 命令的可选参数中设置，也可以使用 \cs{hypersetup} 宏设置。加载宏包时，如果能找到 \texttt{hyperref.cfg} 文件，会读取它——这是一个方便的全站级选项设置位置。
+
+但请注意，有些选项（例如 \texttt{unicode}）只能作为宏包选项使用，不能在 \verb|\hypersetup| 中使用，因为选项设置是在宏包读取时处理的。下表列出了（希望是所有）这些选项。请注意，如果使用新的 pdfmanagement 和新的通用 \xpackage{hyperref} 驱动，有些选项不起作用或行为已改变。
+
+\begin{tabular}{>{\ttfamily}l>{\raggedright\arraybackslash}p{5cm}}
+选项     & 说明 \\\hline
+所有驱动选项，例如 \texttt{pdftex} & 通常不需要，会自动检测\\
+implicit   \\
+pdfa       & 新 pdfmanagement 下无效，在 \cs{DocumentMetadata} 中设置标准。\\
+unicode    & 现在已是默认\\
+pdfversion & 新 pdfmanagement 下无效，在 \cs{DocumentMetadata} 中设置版本。\\
+bookmarks  & 这可能会在某个时候改变。 \\
+backref &\\
+pagebackref & \\
+destlabel  &\\
+pdfusetitle &\\
+pdfpagelabels &\\
+hyperfootnotes &\\
+hyperfigures&\\
+hyperindex &\\
+encap &\\
+CJKbookmarks & 仅在新 pdfmanagement 下使用，其他情况可在 \cs{hypersetup} 中使用\\
+psdextra     & 仅在新 pdfmanagement 下使用，其他情况可在 \cs{hypersetup} 中使用\\
+nesting      & 仅在新 pdfmanagement 下使用，其他情况可在 \cs{hypersetup} 中使用（但
+               不太清楚是否有用）\\
+
+\end{tabular}
+
+例如，特定文件的行为可以通过以下方式控制：
+\begin{itemize}
+
+\item	全站级 \texttt{hyperref.cfg} 设置链接外观、添加反向引用、设置 PDF 显示默认值：
+
+\begin{verbatim}
+\hypersetup{backref,
+pdfpagemode=FullScreen,
+colorlinks=true}
+\end{verbatim}
+
+\item	文件中的全局选项，传递给 \xpackage{hyperref}：
+
+\begin{verbatim}
+\documentclass[dvips]{article}
+\end{verbatim}
+
+\item	\cs{usepackage} 命令中的文件特定选项，覆盖 \texttt{hyperref.cfg} 中的设置：
+
+\begin{verbatim}
+\usepackage[colorlinks=false]{hyperref}
+\hypersetup{pdftitle={A Perfect Day}}
+\end{verbatim}
+\end{itemize}
+
+如前例所示，信息条目（pdftitle、pdfauthor 等）应在宏包加载后设置。否则 \LaTeX 会过早展开这些选项的值。此外 \LaTeX 会去除选项中的空格。特别是选项 `pdfborder' 需要一些注意。如果作为宏包选项给出，花括号可以保护值。在 \verb|\hypersetup| 中不需要花括号。
+
+\begin{verbatim}
+\usepackage[pdfborder={0 0 0}]{hyperref}
+\hypersetup{pdfborder=0 0 0}
+\end{verbatim}
+
+有些选项可以随时设置，但许多是受限的：在 \verb|\begin{document}| 之前、仅在 \verb|\usepackage[...]{hyperref}| 中、在首次使用之前等。
+
+在下面的键描述中，许多选项不需要值，使用时默认为 true。这些被归类为"布尔"选项。但总是可以指定 true 和 false 值。
+
+
+\subsection{通用选项}
+
+首先是指定通用行为和页面大小的选项。
+
+\medskip
+\begin{longtable}{>{\ttfamily}ll>{\itshape}ll}
+draft          & 布尔 & false & 关闭所有超文本选项 \\
+final          & 布尔 & true  & 开启所有超文本选项 \\
+debug          & 布尔 & false & 在日志文件中打印额外诊断信息 \\
+               &         &       &  \\
+verbose        & 布尔 & false & 与 debug 相同 \\
+implicit       & 布尔 & true  & 重定义 \LaTeX\ 内部命令 \\
+setpagesize    & 布尔 & true  & 通过特殊驱动命令设置页面尺寸
+\end{longtable}
+
+\subsection{目标名称选项}
+
+
+目标名称（也称为锚点、目标或链接名）是标识文档中页面位置的内部名称。它们用于内部文档链接或书签的链接目标。
+
+通常在调用 \cs{refstepcounter} 时设置锚点。因此存在计数器名称和值。两者都用于构造目标名称。默认情况下，计数器值跟在计数器名称后面，用点号分隔。例如第四章：
+\begin{quote}
+  \verb|chapter.4|
+\end{quote}
+此方案用于：
+\begin{description}
+\item[\cs{autoref}] 根据计数器名称显示引用的描述标签。
+\item[\cs{hyperpage}] 索引使用它来获取页面链接。页面锚点设置（\verb|pageanchor|）不能关闭。
+\end{description}
+
+目标名称的唯一性非常重要，因为两个目标不能共享相同的名称。计数器值 \cs{the<counter>} 对于计数器并不总是唯一的。例如，表格和图可以在章节内编号，而不包含章节号。因此 \xpackage{hyperref} 引入了 \cs{theH<counter>}，它允许唯一的计数器值，而不影响计数器编号的外观。例如，第三章第二个表格的编号可能显示为 \texttt{2}，即 \cs{thetable} 的结果。但目标名称 \texttt{table.2.4} 是唯一的，因为它使用了 \cs{theHtable}，在这种情况下给出 \verb|2.4|。
+
+通常用户不需要设置 \cs{theH<counter>}。标准情况（章节等）的默认值已提供。而且在加载 \xpackage{hyperref} 后，如果使用 \cs{newcounter}、\cs{@addtoreset} 或 \xpackage{amsmath} 宏包的 \cs{numberwithin}，带有父计数器的新计数器也会自动定义 \cs{theH<counter>}。
+
+通常重复目标名称的问题可以通过适当定义 \cs{theH<counter>} 来解决。如果禁用选项 \texttt{hypertexnames}，则使用唯一的人工编号代替计数器值。对于页面锚点，使用绝对页面锚点。使用选项 \texttt{plainpages} 时，页面锚点使用阿拉伯数字形式。在后两种情况下，用于索引链接的 \cs{hyperpage} 会受到影响，可能无法正常工作。
+
+如果无编号实体获得锚点（章节、小节等的带星号形式）或使用 \cs{phantomsection}，则使用虚拟计数器名称 \texttt{section*} 和人工唯一编号。
+
+如果最终 PDF 文件要与另一个文件合并，目标名称可能冲突，因为两个文档可能都包含 \texttt{chapter.1} 或 \texttt{page.1}。此外 \xpackage{hyperref} 在文档开头设置名为 \texttt{Doc-Start} 的锚点。这可以通过重新定义 \cs{HyperDestNameFilter} 来解决。\xpackage{hyperref} 宏包每次使用目标名称时都会调用此宏。该宏必须可展开，并以目标名称作为唯一参数。例如，重新定义该宏以给所有目标名称添加前缀：
+\begin{quote}
+\begin{verbatim}
+\renewcommand*{\HyperDestNameFilter}[1]{\jobname-#1}
+\end{verbatim}
+\end{quote}
+在文档 \texttt{docA} 中，目标名称 \texttt{chapter.2} 变为 \texttt{docA-chapter.2}。
+
+目标名称也可以从外部在 URI 中使用（如果驱动程序没有移除或更改它们），例如：
+\begin{quote}
+\begin{verbatim}
+http://somewhere/path/file.pdf#nameddest=chapter.4
+\end{verbatim}
+\end{quote}
+然而使用数字似乎不太理想。如果在前面添加另一个章节，编号就会改变。但很难将新名称传递给通常深藏在内部的锚点设置过程。锚点设置后的第一个 \cs{label} 名称似乎是一个不错的近似：
+\begin{quote}
+\begin{verbatim}
+  \section{简介}
+  \label{intro}
+\end{verbatim}
+\end{quote}
+选项 \texttt{destlabel} 检查每个 \cs{label}，如果有新的目标名称处于活动状态，则用标签名称替换目标名称。由于目标名称已在锚点设置时使用，新名称记录在 \texttt{.aux} 文件中，并在后续的 \hologo{LaTeX} 运行中使用。重命名通过重新定义 \cs{HyperDestNameFilter} 完成。这保持了旧的目标名称不变（例如，它们是 \cs{autoref} 所需要的）。此重定义也可用作 \cs{HyperDestLabelReplace}，因此可以在自己的重定义中使用。以下示例还为\emph{所有}目标名称添加前缀：
+\begin{quote}
+\begin{verbatim}
+\renewcommand*{\HyperDestNameFilter}[1]{%
+  \jobname-\HyperDestLabelReplace{#1}%
+}
+\end{verbatim}
+\end{quote}
+另一种情况是只给没有对应 \cs{label}的文件添加前缀，这更复杂，因为 \cs{HyperDestLabelReplace} 需要未修改的目标名称作为参数。这通过可展开的字符串测试（\hologo{pdfTeX} 的 \cs{pdfstrcmp} 或 \hologo{XeTeX} 的 \cs{strcmp}，\xpackage{pdftexcmds} 宏包也支持 \hologo{LuaTeX}）解决：
+\begin{quote}
+\begin{verbatim}
+\usepackage{pdftexcmds}
+\makeatletter
+\renewcommand*{\HyperDestNameFilter}[1]{%
+  \ifcase\pdf@strcmp{#1}{\HyperDestLabelReplace{#1}} %
+    \jobname-#1%
+  \else
+    \HyperDestLabelReplace{#1}%
+  \fi
+}
+\makeatother
+\end{verbatim}
+\end{quote}
+
+使用 \texttt{destlabel} 选项也可以手动命名目标，
+如果目标尚未重命名：
+\begin{quote}
+\verb|\HyperDestRename{|\meta{destination}\verb|}{|\meta{newname}\verb|}|
+\end{quote}
+
+提示：锚点也可以通过 \cs{hypertarget} 来命名和设置。
+
+\medskip
+\begin{longtable}{>{\ttfamily}ll>{\itshape}ll}
+destlabel      & 布尔 & false & 目标由锚点创建后的第一个 \cs{label} 命名\\
+               &         &       & \\
+hypertexnames  & 布尔 & true  & 对链接使用可推测的名称 \\
+naturalnames   & 布尔 & false & 对链接使用 \LaTeX 计算出的名称 \\
+plainpages     & 布尔 & false & 强制页面锚点使用阿拉伯数字形式 \\
+               &         &       & 而不是格式化形式。 \\
+\end{longtable}
+
+\subsection{页面锚点}
+
+在 PDF 中，\xpackage{hyperref} 为每一页（左上角）添加一个链接目标。这些目标例如被索引用以引用条目所在的页码。与其他计数器生成的目标不同，无法通过定义 \cs{theHpage} 命令来更改这些目标的名称：目前该名称无法存入标签，因此不可被引用。尽管如此，仍有几个选项可用；它们在文档其他地方已提及，此处给出汇总：
+
+\begin{description}
+\item[\texttt{pageanchor}] 布尔选项，决定是否在每页左上角放置目标。如果关闭，\verb|\printindex| 将不包含有效的超链接。
+\item[\texttt{hypertexnames}] 默认情况下，目标名称由 \cs{thepage} 构成：\verb|page.\thepage|，例如 \texttt{page.4} 或 \texttt{page.iii}。这些名称要求每页有唯一的数字表示。一个常见问题是标题页通常不显示页码，但内部与后续页使用相同的数字。如果遇到 \texttt{destination with the same identifier (name{page.1})} 之类的提示，请更改标题页的数字表示或禁用页面目标。
+
+    如果布尔选项 \texttt{hypertexnames} 设置为 false，则改用内部计数器递增并以阿拉伯数字使用。在大多数情况下这意味着得到绝对页码（例外是在 shipout 时丢弃或复制页面的文档）。此选项避免了重复标识符的问题，但不能与索引配合使用，因为反向链接必须基于传给索引的表示来创建。
+\item[\texttt{plainpages}] 这强制页面锚点使用阿拉伯数字形式命名，但与上一选项不同，它不使用内部计数器，而是使用页面计数器。这意味着如果同时有罗马数字和阿拉伯数字页面，将得到重复的目标名称，因为 page i 和 page 1 都会设置锚点 \texttt{page.1}。
+\end{description}
+
+\begin{cmdsyntax}
+\ci{@currentHpage}
+\end{cmdsyntax}
+从 7.01c 版本开始，\xpackage{hyperref} 将刚设置的页面目标名称存储在（全局）变量 \cs{@currentHpage} 中。后备值为 \texttt{Doc-Start}。由于目标在页面 shipout 时设置，\cs{@currentHpage} 仅在 shipout 时可靠。对于 2023-11-01 及以后的 \hologo{LaTeX} 格式，可以这样为该名称打标签：
+
+\begin{verbatim}
+%labeling in the document
+\RecordProperties{mylabel}{pagetarget}
+%linking to the page:
+\hyperlink{\RefProperty{mylabel}{pagetarget}}{some text}
+\end{verbatim}
+
+       
+
+\subsection{配置选项}
+
+\begin{longtable}{>{\ttfamily}ll>{\itshape}lp{9cm}}
+raiselinks & 布尔 & true  & 在 hypertex 驱动中，链接高度通常由驱动程序按所含文本的基线计算；此选项强制 \verb|\special| 命令反映链接的真实高度（可能包含图形）\\
+breaklinks & 布尔 & both & 此选项在 \xpackage{hyperref} 中仅用于 dviwindo 驱动；在其他情况下它没有实际意义——既不允许也不阻止链接断行。ocgx2 宏包会检查此布尔值的状态。\\
+pageanchor & 布尔 & true  & 决定是否在每页左上角放置隐式锚点。如果关闭，\verb|\printindex| 将不包含有效的超链接。\\
+nesting    & 布尔 & false & 允许链接嵌套；目前没有驱动支持此功能。
+\end{longtable}
+
+关于选项 \verb|breaklinks| 的说明：正确的值会根据驱动特性自动设置。对于不支持断行链接的驱动，可以覆盖此值。但无论如何，链接区域都将是错误的、发生偏移的。
+
+\subsection{后端驱动程序}
+
+如果未指定驱动程序，宏包会尝试按以下顺序查找驱动程序：
+
+\begin{enumerate}
+\item 自动检测：部分 \TeX\ 处理器可在 \TeX\ 宏层面被检测到（pdf\TeX、Xe\TeX、V\TeX）。
+\item 选项 \textsf{driverfallback}。如果设置了此选项，其值将用作驱动程序选项。
+\item 宏 \cs{Hy@defaultdriver}。该宏接受一个驱动文件名（不带扩展名）。
+\item 宏包默认为 \textsf{hypertex}。
+\end{enumerate}
+许多发行版使用驱动程序文件 \texttt{hypertex.cfg}，用 \texttt{hdvips} 定义 \cs{Hy@defaultdriver}。推荐这样做，因为 \textsf{dvips} 驱动程序在生成 PDF 方面比 \textsf{hypertex} 提供更好的支持。
+
+\begin{longtable}{@{}>{\ttfamily}lp{.8\hsize}@{}}
+driverfallback & 当未指定或无法自动检测驱动程序时，其值用作驱动选项\\
+dvipdfm     & 配置 \xpackage{hyperref} 以配合 \textsf{dvipdfm} 驱动使用。\\
+dvipdfmx    & 配置 \xpackage{hyperref} 以配合 \textsf{dvipdfmx} 驱动使用。\\
+dvips       & 配置 \xpackage{hyperref} 以配合 \textsf{dvips} 驱动使用。\\
+dvipsone    & 配置 \xpackage{hyperref} 以配合 \textsf{dvipsone} 驱动使用。\\
+dviwindo    & 配置 \xpackage{hyperref} 以配合 \textsf{dviwindo} Windows 预览器使用。\\
+hypertex    & 配置 \xpackage{hyperref} 以配合符合 Hyper\TeX 规范的驱动使用。\\
+latex2html  & 为重定义若干宏以与 \textsf{latex2html} 兼容。\\
+nativepdf   & \textsf{dvips} 的别名\\
+pdfmark     & \textsf{dvips} 的别名\\
+pdftex      & 配置 \xpackage{hyperref} 以配合 \textsf{pdftex} 程序使用。\\
+ps2pdf      & 为重定义若干宏以与 Ghostscript 的 PDF 写入器兼容，其余与 \textsf{dvips} 相同。\\
+tex4ht      & 配合 \textsf{\TeX4ht} 使用\\
+textures    & 配合 \textsf{Textures} 使用\\
+vtex        & 配合 MicroPress 的 \textsf{VTeX} 使用；PDF 和 HTML 后端会自动检测。\\
+vtexpdfmark & 配合 \textsf{VTeX} 的 PostScript 后端使用。\\
+xetex       & 配合 Xe\TeX\ 使用（使用 dvipdfm 的后端）。
+\end{longtable}
+\smallskip
+
+如果使用 \textsf{dviwindo}，可能需要重新定义宏 \ci{wwwbrowser}（默认为 \verb|C:\netscape\netscape|），以告诉 \textsf{dviwindo} 启动哪个程序。因此，Internet Explorer 用户可能会向 hyperref.cfg 添加类似内容：
+
+\begin{verbatim}
+\renewcommand{\wwwbrowser}{C:\string\Program\space
+  Files\string\Plus!\string\Microsoft\space
+  Internet\string\iexplore.exe}
+\end{verbatim}
+
+\subsection{扩展选项}
+\begin{longtable}{@{}>{\ttfamily}ll>{\itshape}lp{8cm}@{}}
+extension      & 文本    &         & 设置文件扩展名（例如 \textsf{dvi}），当使用 \xpackage{xr} 宏包时，该扩展名会附加到文件链接后。\\
+hyperfigures   & 布尔    &         & \\
+backref        & 文本    & false   & 在参考文献每个条目末尾添加"反向链接"文本，作为节号列表。只有在每个 \verb|\bibitem| 后留空行时才能正常工作。支持的值为 \verb|section|、\verb|slide|、\verb|page|、\verb|none| 或 \verb|false|。未给值时默认取 \verb|section|。\\
+pagebackref    & 布尔    & false   & 在参考文献每个条目末尾添加"反向链接"文本，作为页码列表。\\
+hyperindex     & 布尔    & true    & 将索引条目的页码设为超链接。依赖唯一的页面锚点（\verb|pageanchor|、\verb|plainpages=false|）。\\
+hyperfootnotes & 布尔    & true    & 将脚注标记设为指向脚注文本的超链接。容易出错 \ldots\\
+encap          &         &         & 设置 hyperindex 的分隔符字符\\
+linktoc        & 文本    & section & 使目录、图表目录中的文本（\verb|section|）、页码（\verb|page|）、两者（\verb|all|）或都不链接（\verb|none|）\\
+linktocpage    & 布尔    & false   & 使页码而非文本成为目录、图表目录中的链接\\
+breaklinks     & 布尔    & false   & 允许链接跨多行断行，将多行链接设为指向同一目标的 PDF 链接\\
+colorlinks     & 布尔    & false   & 为链接和锚点文本着色。所选颜色取决于链接类型。目前区分的链接类型有引用、页码引用、URL、本地文件引用和其他链接。与彩色方框不同，彩色文本在打印时仍然保留。\\
+linkcolor      & 颜色    & red     & 普通内部链接的颜色。\\
+anchorcolor    & 颜色    & black   & 锚点文本的颜色。大多数驱动忽略。\\
+citecolor      & 颜色    & green   & 正文中文献引用的颜色。\\
+filecolor      & 颜色    & cyan    & 打开本地文件的 URL 的颜色。\\
+menucolor      & 颜色    & red     & Acrobat 菜单项的颜色。\\
+runcolor       & 颜色    & filecolor & 运行链接（启动注释）的颜色。\\
+urlcolor       & 颜色    & magenta & 链接 URL 的颜色。\\
+allcolors      & 颜色    &         & 设置所有颜色选项（不含边框和表单选项）。\\
+frenchlinks    & 布尔    & false   & 使用小型大写字母代替颜色表示链接。\\
+hidelinks      &         &         & 隐藏链接（去除颜色和边框）。\\
+\end{longtable} \smallskip
+
+注意，所有颜色名称必须在使用前定义，遵循标准
+\LaTeX\ \xpackage{color} 宏包的系统。
+
+\subsection{PDF 特定显示选项}
+\begin{longtable}{@{}>{\ttfamily}ll>{\itshape}lp{7.6cm}@{}}
+bookmarks          & 布尔   & true   & 写入一组 Acrobat 书签，方式类似目录，需要两遍 \LaTeX 编译。可能需要对书签文件（扩展名为 \texttt{.out}）进行后处理以转换 \LaTeX 代码，因为书签必须以 PDFEncoding 写入。为方便此过程，如果编辑 \texttt{.out} 文件使其包含一行 \verb|\let\WriteBookmarks\relax|，则 \LaTeX 不会重写该文件。\\
+bookmarksopen      & 布尔   & false   & 如果请求 Acrobat 书签，则显示所有子树展开的书签。\\
+bookmarksopenlevel & 参数   &         & 书签展开的层级（\ci{maxdimen}）\\
+bookmarksnumbered  & 布尔   & false   & 如果请求 Acrobat 书签，则包含节号。\\
+bookmarkstype      & 文本   & toc     & 指定要模拟的 `toc' 文件\\
+CJKbookmarks       & 布尔   & false   &
+    此选项用于生成 CJK 书签。\xpackage{hyperref} 支持 \xpackage{CJK} 宏包的普通和预处理模式；在创建书签时，它简单地将 CJK 宏替换为特殊版本，展开为对应的字符编码。注意，如果不使用 \xpackage{hyperref} 的 `unicode' 选项，生成的 PDF 文件实际上违反了 PDF 规范，因为使用了非 Unicode 字符编码——一些面向 CJK 语言的 PDF 阅读器（最著名的是 Acroread 本身）支持这种做法。另请注意，`CJKbookmarks' 选项不能与 `unicode' 选项同时使用。
+    本宏包不提供将非 Unicode 书签转换为 Unicode 的机制；对于可移植的 PDF 文档，应仅使用 Unicode 编码。\\
+pdfhighlight       & 名称   & /I      & 链接按钮选中时的行为；/I 表示反色（默认）；其他选项为 /N（无效果）、/O（轮廓）和 /P（内陷高亮）。\\
+citebordercolor    & rgb 颜色 & 0 1 0   & 引用周围方框的颜色\\
+filebordercolor    & rgb 颜色 & 0 .5 .5 & 文件链接周围方框的颜色\\
+linkbordercolor    & rgb 颜色 & 1 0 0   & 普通链接周围方框的颜色\\
+menubordercolor    & rgb 颜色 & 1 0 0   & Acrobat 菜单链接周围方框的颜色\\
+urlbordercolor     & rgb 颜色 & 0 1 1   & URL 链接周围方框的颜色\\
+runbordercolor     & rgb 颜色 & 0 .7 .7 & `run' 链接边框的颜色\\
+allbordercolors    &        &         & 设置所有边框颜色选项\\
+pdfborder          &        & 0 0 1   & 链接周围方框的样式；默认为 1pt 粗的方框，但 colorlinks 选项会重置它使其不产生边框。
+\end{longtable}
+
+链接边框的颜色过去\emph{只能}指定为3个
+0..1范围内的数字，表示rgb颜色。从6.76a版本开始，如果加载了
+\xpackage{(x)color} 宏包的常用颜色规格也可以使用。
+
+更多信息请参阅 \xpackage{hycolor} 宏包的说明。
+
+书签命令存储在名为 \textit{jobname}\texttt{.out} 的文件中。该文件不被 \LaTeX 处理，因此所有标记都会原样传递。您可以根据需要后处理此文件；为帮助此过程，如果编辑 \texttt{.out} 文件使其包含以下一行，则 \LaTeX 在下一次运行时不会重写它：
+\begin{verbatim}
+\let\WriteBookmarks\relax
+\end{verbatim}
+
+\subsection{PDF 显示和信息选项}\label{sec:pdfdata}
+\begin{longtable}{@{}>{\ttfamily}l>{\raggedright}p{\widthof{key value}}>{\itshape}lp{7cm}@{}}
+baseurl            & URL     &       & 设置 PDF 文档的基础 URL \\
+pdfpagemode        & 名称    & empty & 决定文件在 Acrobat 中如何打开；可选值为 \verb|UseNone|、\verb|UseThumbs|（显示缩略图）、\verb|UseOutlines|（显示书签）、\verb|FullScreen|、\verb|UseOC|（PDF 1.5）和 \verb|UseAttachments|（PDF 1.6）。如果未显式选择模式但设置了 bookmarks 选项，则使用 \verb|UseOutlines|。\\
+pdftitle           & 文本    &       & 设置文档信息的 Title 字段\\
+pdfauthor          & 文本    &       & 设置文档信息的 Author 字段\\
+pdfsubject         & 文本    &       & 设置文档信息的 Subject 字段\\
+pdfcreator         & 文本    &       & 设置文档信息的 Creator 字段\\
+pdfcreationdate    & 日期    &       & 设置创建日期，格式见下表下方说明\\
+pdfmoddate         & 日期    &       & 设置修改日期，格式见下表下方说明\\
+addtopdfcreator    & 文本    &       & 向文档信息的 Creator 字段追加文本\\
+pdfkeywords        & 文本    &       & 设置文档信息的 Keywords 字段\\
+pdftrapped         & 名称    & empty & 设置文档信息的 Trapped 条目。可能值为 \verb|True|、\verb|False| 和 \verb|Unknown|。空值表示不设置该条目。\\
+%
+pdfinfo            & 键值列表 & empty & 设置文档信息的替代接口。\\
+pdfview            & 名称    & XYZ   & 为每个链接设置默认 PDF `view'\\
+pdfstartpage       & 整数    & 1     & 决定 PDF 文件在第几页打开。空值表示不设置该条目。\\
+pdfstartview       & 名称    & Fit   & 设置启动页面视图\\
+pdfremotestartview & 名称    & Fit   & 设置远程 PDF 文件的启动页面视图\\
+pdfpagescrop       & n n n n &       & 设置页面的默认 PDF 裁剪框。应为四个数字\\
+pdfcenterwindow    & 布尔    & false & 将文档窗口置于屏幕中央\\
+pdfdirection       & 名称    & empty & 方向设置。可能值：\verb|L2R|（从左到右）和 \verb|R2L|（从右到左）\\
+pdfdisplaydoctitle & 布尔    & false & 在标题栏显示文档标题而非文件名\\
+pdfduplex          & 名称    & empty & 打印对话框的纸张处理选项。可能值为：\verb|Simplex|（单面打印）、\verb|DuplexFlipShortEdge|（双面并在短边翻转）、\verb|DuplexFlipLongEdge|（双面并在长边翻转）\\
+
+pdffitwindow       & 布尔    & false & 调整文档窗口大小以适应文档尺寸\\
+pdflang            & 名称    & relax & PDF 语言标识符（RFC 3066）\\
+pdfmenubar         & 布尔    & true  & 使 PDF 阅读器菜单栏可见\\
+pdfnewwindow       & 布尔    & false & 使打开另一个 PDF 文件的链接在新窗口中启动\\
+pdfnonfullscreenpagemode
+                   & 名称    & empty & 退出全屏模式时的页面模式设置。可能值为 \verb|UseNone|、\verb|UseOutlines|、\verb|UseThumbs| 和 \verb|UseOC|\\
+pdfnumcopies       & 整数    & empty & 打印份数\\
+pdfpagelayout      & 名称    & empty & 设置 PDF 页面布局。可能值：\verb|SinglePage|、\verb|OneColumn|、\verb|TwoColumnLeft|、\verb|TwoColumnRight|、\verb|TwoPageLeft| 和 \verb|TwoPageRight|\\
+pdfpagelabels      & 布尔    & true  & 设置 PDF 页面标签\\
+pdfpagetransition  & 名称    & empty & 设置 PDF 页面切换样式。可能值为 \verb|Split|、\verb|Blinds|、\verb|Box|、\verb|Wipe|、\verb|Dissolve|、\verb|Glitter|、\verb|R|、\verb|Fly|、\verb|Push|、\verb|Cover|、\verb|Uncover|、\verb|Fade|。根据 PDF 参考，默认值为 \verb|R|，即简单地用新页面替换旧页面。\\
+pdfpicktraybypdfsize
+                   & 布尔    & false & 指定在打印对话框中是否使用 PDF 页面尺寸选择进纸盘\\
+pdfprintarea       & 名称    & empty & 设置阅读器偏好的 /PrintArea。可能值为 \verb|MediaBox|、\verb|CropBox|、\verb|BleedBox|、\verb|TrimBox| 和 \verb|ArtBox|。根据 PDF 参考，默认值为 \verb|CropBox|\\
+pdfprintclip       & 名称    & empty & 设置阅读器偏好的 /PrintClip。可能值为 \verb|MediaBox|、\verb|CropBox|、\verb|BleedBox|、\verb|TrimBox| 和 \verb|ArtBox|。根据 PDF 参考，默认值为 \verb|CropBox|\\
+pdfprintpagerange  & n n (n n)*
+                              & empty & 设置阅读器偏好的 /PrintPageRange\\
+pdfprintscaling    & 名称    & empty & 打印对话框的页面缩放选项（阅读器偏好的 /PrintScaling，PDF 1.6）；有效值为 \verb|None| 和 \verb|AppDefault|\\
+pdftoolbar         & 布尔    & true  & 使 PDF 工具栏可见\\
+pdfviewarea        & 名称    & empty & 设置阅读器偏好的 /ViewArea。可能值为 \verb|MediaBox|、\verb|CropBox|、\verb|BleedBox|、\verb|TrimBox| 和 \verb|ArtBox|。根据 PDF 参考，默认值为 \verb|CropBox|\\
+pdfviewclip        & 名称    & empty & 设置阅读器偏好的 /ViewClip。可能值为 \verb|MediaBox|、\verb|CropBox|、\verb|BleedBox|、\verb|TrimBox| 和 \verb|ArtBox|。根据 PDF 参考，默认值为 \verb|CropBox|\\
+pdfwindowui        & 布尔    & true  & 使 PDF 用户界面元素可见\\
+unicode            & 布尔    & true & Unicode 编码的 PDF 字符串
+\end{longtable}
+
+日期 \verb|CreationDate| 和 \verb|ModDate| 通常在编译时自动设置为当前日期/时间。如果需要更改（例如为了回归测试以生成可复现的文档），可以通过 \verb|\hypersetup| 使用以下键设置 \verb|pdfcreationdate|、\verb|pdfmoddate|，或在外部设置 \verb|SOURCE_DATE_EPOCH| 环境变量。
+
+\begin{verbatim}
+\hypersetup{pdfcreationdate=D:20010101205959-00'00'}
+\end{verbatim}
+
+格式应为 PDF 格式的完整日期/时间，例如：
+\begin{verbatim}
+ D:20010101205959-00'00'
+ D:20010101205959+00'00'
+ D:20010101205959Z
+\end{verbatim}
+
+Acrobat 中的每个链接都带有自己的缩放级别，使用 PDF 坐标空间，这与 \TeX 的不同。单位为 bp，原点在左下角。另请参阅 \verb|\hypercalcbp|（在第 \pageref{hypercalcbp} 页说明）。pdf\TeX 为 \texttt{XYZ}（水平 $\times$ 垂直 $\times$ 缩放）和 \texttt{FitBH} 提供默认值。但是使用 \texttt{pdfmark} 的驱动程序不提供默认值，因此 \xpackage{hyperref} 传入值 -32768，这会使 Acrobat 设置（通常）合理的默认值。以下是 \texttt{pdfview}、\texttt{pdfstartview} 和 \texttt{pdfremotestartview} 参数的可能值。
+
+\begin{longtable}{@{}>{\ttfamily}l>{\itshape}lp{7cm}@{}}
+XYZ   & left top zoom         & 设置一个坐标和缩放因子。如果任一为 null，则使用源链接的值。\textit{null null null} 给出与当前页面相同的值。\\
+Fit   &                       & 将页面适应窗口。\\
+FitH  & top                   & 将页面宽度适应窗口。\\
+FitV  & left                  & 将页面高度适应窗口。\\
+FitR  & left bottom right top & 将四个坐标指定的矩形适应窗口。\\
+FitB  &                       & 将页面边界框适应窗口。\\
+FitBH & top                   & 将页面边界框宽度适应窗口。\\
+FitBV & left                  & 将页面边界框高度适应窗口。\\
+\end{longtable}
+
+\texttt{pdfpagelayout} 可取以下值之一。
+
+\begin{longtable}{@{}>{\ttfamily}lp{10cm}@{}}
+SinglePage     & 显示单页；翻页时换页\\
+OneColumn      & 以单栏显示文档；连续滚动。\\
+TwoColumnLeft  & 以双栏显示文档，奇数页在左。\\
+TwoColumnRight & 以双栏显示文档，奇数页在右。\\
+TwoPageLeft    & 显示两页，奇数页在左（PDF 1.5 起）。\\
+TwoPageRight   & 显示两页，奇数页在右（PDF 1.5 起）。
+\end{longtable}
+
+最后，\texttt{pdfpagetransition} 可取以下值之一，其中 \textit{/Di} 表示运动方向角度（通常为 90 度步长），\textit{/Dm} 是水平（\texttt{/H}）或垂直（\texttt{/V}）维度（例如 \texttt{Blinds /Dm /V}），\textit{/M} 表示运动方式，进入（\texttt{/I}）或退出（\texttt{/O}）。
+
+\begin{longtable}{@{}>{\ttfamily}llp{8.5cm}@{}}
+Blinds   & /Dm    & 屏幕上均匀分布的多条线沿同一方向扫过，显示新页面。\\
+Box      & /M     & 一个方框扫入或扫出。\\
+Dissolve &        & 页面图像以碎片方式溶解，显示新页面。\\
+Glitter  & /Di    & 与 Dissolve 类似，但效果横扫屏幕。\\
+Split    & /Dm /M & 两条线横扫屏幕，显示新页面。\\
+Wipe     & /Di    & 单条线横扫屏幕，显示新页面。\\
+R        &        & 简单地用新页面替换旧页面。\\
+Fly      & /Di /M & 变化按 /M 指定方向飞出或飞入，沿 /Di 指定方向，到或来自屏幕外的位置（/Di 为 None 时除外）。\\
+Push     & /Di    & 旧页面滑出屏幕，新页面滑入，沿 /Di 指定方向推出旧页面。\\
+Cover    & /Di    & 新页面沿 /Di 指定方向滑入屏幕，覆盖旧页面。\\
+Uncover  & /Di    & 旧页面沿 /Di 指定方向滑出屏幕，沿 /Di 指定方向露出新页面。\\
+Fade     &        & 新页面逐渐透过旧页面显现。
+
+\end{longtable}
+
+\subsection{选项 \texttt{pdfinfo}}
+
+信息条目可以使用 \texttt{pdftitle}、\texttt{pdfsubject} 等设置。选项 \texttt{pdfinfo} 提供了替代接口。它接受键值列表。键名即直接出现在 PDF 信息字典中的名称。已知的键如 \texttt{Title}、\texttt{Subject}、\texttt{Trapped} 等会映射到选项 \texttt{pdftitle}、\texttt{subject}、\texttt{trapped} 等。未知的键会被添加到信息字典中。它们的值是文本字符串（见 PDF 规范）。示例：
+\begin{quote}
+\begin{verbatim}
+\hypersetup{
+  pdfinfo={
+    Title={My Title},
+    Subject={My Subject},
+    NewKey={Foobar},
+    % ...
+  }
+}
+\end{verbatim}
+\end{quote}
+
+\subsection{按字母顺序排列的选项列表}
+
+以下是 \xpackage{hyperref} 可用选项的完整列表，按字母顺序排列。
+
+\begin{longtable}{@{}>{\ttfamily}llp{7cm}@{}}
+allbordercolors    &                        & 设置所有边框颜色选项\\
+allcolors          &                        & 设置所有颜色选项（不含边框和表单选项）\\
+anchorcolor        & \textit{black}         & 设置锚点颜色，大多数驱动忽略。\\
+backref            & \textit{false}         & 进行文献反向引用\\
+baseurl            & \textit{empty}         & 设置文档的基础 URL\\
+bookmarks          & \textit{true}          & 生成书签\\
+bookmarksnumbered  & \textit{false}         & 在书签中包含节号\\
+bookmarksopen      & \textit{false}         & 展开书签树\\
+bookmarksopenlevel & \ttfamily\ci{maxdimen} & 书签展开的层级\\
+bookmarkstype      & \textit{toc}           & 指定要模拟的 `toc' 文件\\
+breaklinks         & \textit{false}         & 允许链接跨多行断行\\
+CJKbookmarks       & \textit{false}         & 生成 CJK 书签\\
+citebordercolor    & \textit{0 1 0}         & 引用周围边框颜色\\
+citecolor          & \textit{green}         & 引用链接颜色\\
+colorlinks         & \textit{false}         & 为链接着色\\
+                   & \textit{true}          & （\textsf{tex4ht}、\textsf{dviwindo}）\\
+debug              & \textit{false}         & 输出已定义锚点的详细信息；同 verbose\\
+destlabel          & \textit{false}         & 目标由锚点创建后的第一个 \verb|\label| 命名\\
+draft              & \textit{false}         & 不做任何超链接\\
+driverfallback     &                        & 未指定或检测不到驱动时的默认值\\
+dvipdfm            &                        & 使用 \textsf{dvipdfm} 后端\\
+dvipdfmx           &                        & 使用 \textsf{dvipdfmx} 后端\\
+dvips              &                        & 使用 \textsf{dvips} 后端\\
+dvipsone           &                        & 使用 \textsf{dvipsone} 后端\\
+dviwindo           &                        & 使用 \textsf{dviwindo} 后端\\
+encap              &                        & 设置 hyperindex 的分隔符字符\\
+extension          & \textit{dvi}           & 链接文件的后缀\\
+filebordercolor    & \textit{0 .5 .5}       & 文件链接周围边框颜色\\
+filecolor          & \textit{cyan}          & 文件链接颜色\\
+final              & \textit{true}          & 选项 draft 的反义\\
+frenchlinks        & \textit{false}         & 使用小型大写字母代替颜色表示链接\\
+hidelinks          &                        & 隐藏链接（去除颜色和边框）\\
+hyperfigures       & \textit{false}         & 使图形成为超链接\\
+hyperfootnotes     & \textit{true}          & 设置超链接脚注\\
+hyperindex         & \textit{true}          & 设置超链接索引\\
+hypertex           &                        & 使用 \textsf{Hyper\TeX} 后端\\
+hypertexnames      & \textit{true}          & 对链接使用可推测的名称\\
+implicit           & \textit{true}          & 重定义 \LaTeX 内部命令\\
+latex2html         &                        & 使用 \textsf{\LaTeX2HTML} 后端\\
+linkbordercolor    & \textit{1 0 0}         & 链接周围边框颜色\\
+linkcolor          & \textit{red}           & 链接颜色\\
+linktoc            & \textit{section}       & 使文本成为目录、图表目录中的链接\\
+linktocpage        & \textit{false}         & 使页码而非文本成为目录、图表目录中的链接\\
+menubordercolor    & \textit{1 0 0}         & 菜单链接周围边框颜色\\
+menucolor          & \textit{red}           & 菜单链接颜色\\
+nativepdf          & \textit{false}         & \textsf{dvips} 的别名\\
+naturalnames       & \textit{false}         & 对链接使用 \LaTeX 计算出的名称\\
+nesting            & \textit{false}         & 允许链接嵌套\\
+next-anchor        &                        & 允许设置下一个锚点的名称\\
+pageanchor         & \textit{true}          & 在每页放置锚点\\
+pagebackref        & \textit{false}         & 按页码反向引用\\
+pdfauthor          & \textit{empty}         & PDF Author 字段的文本\\
+pdfborder          & \textit{0 0 1}         & PDF 链接边框宽度\\
+                   & \textit{0 0 0}         & （\texttt{colorlinks}）\\
+pdfborderstyle     &                        & 链接边框样式\\
+pdfcenterwindow    & \textit{false}         & 将文档窗口置于屏幕中央\\
+pdfcreator         & \textit{LaTeX with hyperref} & PDF Creator 字段的文本\\
+pdfcreationdate    &                        & 设置创建日期，格式见 \ref{sec:pdfdata} 节表格下方说明\\
+pdfdirection       & \textit{empty}         & 方向设置\\
+pdfdisplaydoctitle & \textit{false}         & 在标题栏显示文档标题而非文件名\\
+pdfduplex          & \textit{empty}         & 打印对话框的纸张处理选项\\
+pdffitwindow       & \textit{false}         & 调整文档窗口大小以适应文档尺寸\\
+pdfhighlight       & \textit{/I}            & 设置 PDF 链接高亮方式\\
+pdfinfo            & \textit{empty}         & 设置文档信息的替代接口\\
+pdfkeywords        & \textit{empty}         & PDF Keywords 字段的文本\\
+pdflang            & \textit{relax}         & PDF 语言标识符（RFC 3066）\\
+pdfmark            & \textit{false}         & \textsf{dvips} 的别名\\
+pdfmenubar         & \textit{true}          & 使 PDF 阅读器菜单栏可见\\
+pdfmoddate         &                        & 设置修改日期，格式见 \ref{sec:pdfdata} 节表格下方说明\\
+pdfnewwindow       & \textit{false}         & 使打开另一个 PDF 文件的链接在新窗口中启动\\
+pdfnonfullscreenpagemode
+                   & \textit{empty}         & 退出全屏模式时的页面模式\\
+pdfnumcopies       & \textit{empty}         & 打印份数\\
+pdfpagelabels      & \textit{true}          & 设置 PDF 页面标签\\
+pdfpagelayout      & \textit{empty}         & 设置 PDF 页面布局\\
+pdfpagemode        & \textit{empty}         & 设置 PDF 显示的默认模式\\
+pdfpagescrop       & \textit{empty}         & 设置 PDF 文档裁剪尺寸\\
+pdfpagetransition  & \textit{empty}         & 设置 PDF 页面切换样式\\
+pdfpicktraybypdfsize
+                   & \textit{empty}         & 打印对话框选项\\
+pdfprintarea       & \textit{empty}         & 设置阅读器偏好的 /PrintArea\\
+pdfprintclip       & \textit{empty}         & 设置阅读器偏好的 /PrintClip\\
+pdfprintpagerange  & \textit{empty}         & 设置阅读器偏好的 /PrintPageRange\\
+pdfprintscaling    & \textit{empty}         & 打印对话框的页面缩放选项\\
+pdfproducer        & \textit{empty}         & PDF Producer 字段的文本\\
+pdfremotestartview & \textit{Fit}           & 远程 PDF 文档的启动视图\\
+pdfstartpage       & \textit{1}             & PDF 文档打开的页码\\
+pdfstartview       & \textit{Fit}           & 启动页面视图\\
+pdfsubject         & \textit{empty}         & PDF Subject 字段的文本\\
+pdftex             &                        & 使用 \textsf{pdf\TeX} 后端\\
+pdftitle           & \textit{empty}         & PDF Title 字段的文本\\
+pdftoolbar         & \textit{true}          & 使 PDF 工具栏可见\\
+pdftrapped         & \textit{empty}         & 设置文档信息的 Trapped 条目。可能值为 \texttt{True}、\texttt{False} 和 \texttt{Unknown}。空值表示不设置该条目。\\
+pdfview            & \textit{XYZ}           & 链接跳转时的 PDF `view'\\
+pdfviewarea        & \textit{empty}         & 设置阅读器偏好的 /ViewArea\\
+pdfviewclip        & \textit{empty}         & 设置阅读器偏好的 /ViewClip\\
+pdfwindowui        & \textit{true}          & 使 PDF 用户界面元素可见\\
+plainpages         & \textit{false}         & 页码锚点使用纯阿拉伯数字\\
+ps2pdf             &                        & 使用 \textsf{ps2pdf} 后端\\
+psdextra           & \textit{false}         & 为 PDF 字符串命令定义更多短名称\\
+raiselinks         & \textit{false}         & 提升链接（用于 \textsf{Hyper\TeX} 后端）\\
+runbordercolor     & \textit{0 .7 .7}       & `run' 链接周围边框颜色\\
+runcolor           & \textit{filecolor}     & `run' 链接颜色\\
+setpagesize        & \textit{true}          & 通过特殊驱动命令设置页面尺寸\\
+tex4ht             &                        & 使用 \textsf{\TeX4ht} 后端\\
+textures           &                        & 使用 \textsf{Textures} 后端\\
+unicode            & \textit{true}          & Unicode 编码的 PDF 字符串；自 v7.00g 起对所有引擎默认为 true。它会加载 puenc.def 中的若干定义。对于 pdflatex 可设为 false，但不推荐。\\
+urlbordercolor     & \textit{0 1 1}         & URL 链接周围边框颜色\\
+urlcolor           & \textit{magenta}       & URL 链接颜色\\
+verbose            & \textit{false}         & 输出详细信息\\
+vtex               &                        & 使用 \textsf{VTeX} 后端\\
+xetex              &                        & 使用 \textsf{Xe\TeX} 后端\\
+\end{longtable}
+
+\section{附加用户宏}
+
+如果您需要引用 URL，或编写显式链接，提供以下低层用户宏：
+
+\begin{cmdsyntax}
+\ci{href}\verb|[|\emph{选项}\verb|]|\verb|{|\emph{URL}\verb|}{|\emph{文本}\verb|}|
+\end{cmdsyntax}
+
+\noindent \emph{文本} 被制作成指向 \emph{URL} 的超链接；这必须是完整的 URL（如果定义了基础 URL，则相对于基础 URL）。特殊字符 \# 和 \%{} 不需要以任何方式转义（除非该命令在另一个命令的参数中使用）。
+
+可选参数 \emph{选项} 识别 \xpackage{hyperref} 选项 \texttt{pdfremotestartview}、\texttt{pdfnewwindow} 以及以下键值选项：
+\begin{description}
+\item[\texttt{page}:] 指定远程 PDF 文档的起始页码。第一页为 \verb|1|。
+\item[\texttt{ismap}:] 布尔键，如果设置为 \verb|true|，URL 应由 PDF 查看器附加坐标作为查询参数。
+\item[\texttt{nextactionraw}:] 动作字典的键 \verb|/Next| 的值，参见 PDF 规范。
+\end{description}
+
+\begin{cmdsyntax}
+\ci{url}\verb|{|\emph{URL}\verb|}|
+\end{cmdsyntax}
+
+\noindent 类似于
+\ci{href}\verb|{|\emph{URL}\verb|}{|\ci{nolinkurl}\verb|{|\emph{URL}\verb|}}|。
+根据驱动程序，\verb|\href| 也会尝试检测链接类型。因此结果可以是 url 链接、文件链接等。实现利用了 \xpackage{url} 宏包，其命令可用于格式化和微调 url，但 \ci{url} 的行为与 \xpackage{url} 宏包中的行为不同：最重要的是 hyperref 的 \cs{url} 会展开命令。如果需要原始 \cs{url} 的行为，应先加载 url 宏包，并将该命令复制到某个别名命令中。
+
+\begin{cmdsyntax}
+\ci{nolinkurl}\verb|{|\emph{URL}\verb|}|
+\end{cmdsyntax}
+
+\noindent 以与上述 \verb|\url| 相同的方式编写 \emph{URL}，但不创建超链接。
+
+\begin{cmdsyntax}
+\ci{hyperbaseurl}\verb|{|\emph{URL}\verb|}|
+\end{cmdsyntax}
+
+\noindent 建立基础 \emph{URL}，它会被添加到其他指定的 URL 前面，使编写可移植文档更容易。创建 PDF 时，此命令只能使用一次，因为 \emph{URL} 会被写入目录。
+
+\begin{cmdsyntax}
+\ci{hyperimage}\verb|{|\emph{图像URL}\verb|}{|\emph{文本}\verb|}|
+\end{cmdsyntax}
+
+\noindent 插入指向 URL 引用的图像的链接，使用 \emph{文本} 作为锚点。
+
+对于生成 HTML 的驱动程序，图像本身由浏览器插入，\emph{文本} 被完全忽略。
+
+\begin{cmdsyntax}
+\ci{hyperdef}\verb|{|\emph{类别}\verb|}{|\emph{名称}\verb|}{|\emph{文本}\verb|}|
+\end{cmdsyntax}
+
+\noindent 标记文档的目标区域（\emph{文本}），并赋予名称 \emph{类别.名称}
+
+\begin{cmdsyntax}
+\ci{hyperref}\verb|{|\emph{URL}\verb|}{|\emph{类别}\verb|}{|\emph{名称}\verb|}{|\emph{文本}\verb|}|
+\end{cmdsyntax}
+
+\noindent \emph{文本} 被制作成指向 \emph{URL\#类别.名称} 的链接
+
+\begin{cmdsyntax}
+\ci{hyperref}\verb|[|\emph{标签}\verb|]{|\emph{文本}\verb|}|
+\end{cmdsyntax}
+
+\noindent
+\emph{文本} 被制作成链接，指向与 \verb|\ref{|\emph{标签}\verb|}| 相同的位置。
+
+\begin{cmdsyntax}
+\ci{hyperlink}\verb|{|\emph{name}\verb|}{|\emph{text}\verb|}|
+\end{cmdsyntax}
+\begin{cmdsyntax}
+\ci{hypertarget}\verb|{|\emph{name}\verb|}{|\emph{text}\verb|}|
+\end{cmdsyntax}
+
+\noindent 使用 \verb|\hypertarget| 创建简单的内部链接，带有两个参数：锚点\emph{名称}和锚点\emph{文本}。\verb|\hyperlink| 有两个参数：在某处由 \verb|\hypertarget| 定义的超文本对象的名称，以及在页面上用作链接的\emph{文本}。
+
+注意，用 HTML 的术语来说，\verb|\hyperlink| 命令在每个链接前插入了一个概念性的 \#，使其相对于当前文档；而 \verb|\href| 则要求完整 URL。
+
+\begin{cmdsyntax}
+\ci{phantomsection}
+\end{cmdsyntax}
+
+\noindent
+在当前位置设置锚点。它的工作方式类似于 \verb|\hypertarget{}{}|，但锚点名称自动选择。通常与 \verb|\addcontentsline| 一起用于类似分节的内容（索引、参考文献、序言）。\verb|\addcontentsline| 指向最近设置锚点的位置。示例：
+\begin{quote}
+\begin{verbatim}
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{\indexname}
+\printindex
+\end{verbatim}
+\end{quote}
+现在目录（和书签）中索引的条目指向索引页的开头，而不是该页之前的位置。
+
+\begin{cmdsyntax}
+\ci{hyperget}\verb|{anchor}{|\emph{标签}\verb|}|
+\ci{hyperget}\verb|{pageanchor}{|\emph{标签}\verb|}|
+\end{cmdsyntax}
+
+以可展开的方式从标签检索锚点或页面锚点。它考虑了 \verb|\HyperDestNameFilter|。例如，可以与 bookmark 宏包的 \verb|\bookmark| 一起使用，将目标设置为标签：
+
+\begin{verbatim}
+\bookmark[dest=\hyperget{anchor}{sec}]{section}
+\end{verbatim}
+
+由于 \emph{pageanchor} 从标签检索页码，它不能与选项 \texttt{plainpages} 一起使用。
+
+\begin{cmdsyntax}
+\ci{hyperget}\verb|{currentanchor}{}|
+\end{cmdsyntax}
+
+检索最近设置的锚点。它也考虑了 \verb|\HyperDestNameFilter|。
+
+
+
+\begin{cmdsyntax}
+\ci{autoref}\verb|{|\emph{label}\verb|}|
+\end{cmdsyntax}
+
+\noindent
+这是常用 \verb|\ref| 命令的替代品，它在引用前放置上下文标签。这为用户提供了更大的超链接点击目标（例如"第2节"而不仅仅是数字"2"）。
+
+标签由 \xpackage{hyperref} 根据原始 \verb|\label| 命令的上下文，使用下面列出的宏（显示其默认值）计算得出。这些宏可以在文档中使用 \verb|\(re)newcommand| （重新）定义；注意其中一些宏已在标准文档类中定义。小写和大写首字母的混合是有意为之，对应于作者的惯例。
+
+对于下面的每个宏，\xpackage{hyperref} 先检查 \ci{*autorefname}，再检查 \ci{*name}。例如，它会先查找 \ci{figureautorefname}，再查找 \ci{figurename}。
+
+\begin{longtable}{@{}lp{10cm}@{}}
+\textit{宏}         & \textit{默认值} \\
+\ci{figurename}        & 图 \\
+\ci{tablename}         & 表 \\
+\ci{partname}          & 部分 \\
+\ci{appendixname}      & 附录 \\
+\ci{equationname}      & 公式 \\
+\ci{Itemname}          & 项 \\
+\ci{chaptername}       & 章 \\
+\ci{sectionname}       & 节 \\
+\ci{subsectionname}    & 小节 \\
+\ci{subsubsectionname} & 小小节 \\
+\ci{paragraphname}     & 段落 \\
+\ci{Hfootnotename}     & 脚注 \\
+\ci{AMSname}           & 公式 \\
+\ci{theoremname}       & 定理\\
+\ci{page}              & 页\\
+\end{longtable}
+
+如果使用 \textsf{babel}，重新定义示例：
+\begin{quote}
+\begin{verbatim}
+\usepackage[ngerman]{babel}
+\addto\extrasngerman{%
+  \def\subsectionautorefname{Unterkapitel}%
+}
+\end{verbatim}
+\end{quote}
+
+提示：\cs{autoref} 通过引用所基于的计数器名称工作。有时，如果计数器用于不同的用途，\cs{autoref} 会选择错误的名称。例如，当引理与定理共享计数器时，使用 \cs{newtheorem} 就会发生这种情况。此时 \xpackage{aliascnt} 宏包提供了一种生成模拟第二计数器的方法，可以区分定理和引理：
+\begin{quote}
+\begin{verbatim}
+\documentclass{article}
+
+\usepackage{aliascnt}
+\usepackage{hyperref}
+
+\newtheorem{theorem}{Theorem}
+
+\newaliascnt{lemma}{theorem}
+\newtheorem{lemma}[lemma]{Lemma}
+\aliascntresetthe{lemma}
+
+\providecommand*{\lemmaautorefname}{Lemma}
+
+\begin{document}
+
+We will use \autoref{a} to prove \autoref{b}.
+
+\begin{lemma}\label{a}
+  Nobody knows.
+\end{lemma}
+
+\begin{theorem}\label{b}
+  Nobody is right.
+\end{theorem}.
+
+\end{document}
+\end{verbatim}
+\end{quote}
+
+\begin{cmdsyntax}
+\ci{autopageref}\verb|{|\emph{label}\verb|}|
+\end{cmdsyntax}
+
+\noindent
+它替代 \verb|\pageref|，并在页面引用前添加页面名称。先检查 \ci{pageautorefname}，再检查 \ci{pagename}。
+
+对于希望引用使用正确计数器但不创建链接的情况，有带星号形式（即使 hyperref 使用 \verb|implicit=false| 加载，这些带星号形式也存在）：
+
+\begin{cmdsyntax}
+\ci{ref*}\verb|{|\emph{label}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{pageref*}\verb|{|\emph{label}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{autoref*}\verb|{|\emph{label}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{autopageref*}\verb|{|\emph{label}\verb|}|
+\end{cmdsyntax}
+
+典型用法是编写
+\begin{verbatim}
+\hyperref[other]{that nice section (\ref*{other}) we read before}
+\end{verbatim}
+
+我们希望 \verb|\ref*{other}| 生成正确的编号，但不形成链接，因为我们自己用 \ci{hyperref} 完成链接。
+
+\begin{cmdsyntax}
+\ci{pdfstringdef}\verb|{|\emph{macroname}\verb|}{|\emph{\TeX string}\verb|}|
+\end{cmdsyntax}
+
+\ci{pdfstringdef} 返回一个包含 PDF 字符串的宏。（目前这是全局完成的，但不要依赖此行为。）以下所有任务、定义和重定义都在一个组中进行，以保持局部性：
+
+\begin{itemize}
+\item 切换到 PD1 或 PU 编码
+\item 定义八进制序列命令（\verb|\345|）：\verb|\edef\3{\string\3}|
+\item \TeX 的特殊字符：\verb|\{|、\verb|\%|、\verb|\&|、\verb|\space|、\verb|\dots| 等
+\item 国家字符（\textsf{german.sty}、\textsf{french.sty} 等）
+\item 标志：\verb|\TeX|、\verb|\eTeX|、\verb|\MF| 等
+\item 禁用在书签中不提供有用功能的命令：\verb|\label|、\verb|\index|、\verb|\glossary|、\verb|\discretionary|、\verb|\def|、\verb|\let| 等
+\item \LaTeX 的字体命令如 \verb|\textbf| 等
+\item \xpackage{xspace} 宏包提供的 \verb|\xspace| 支持
+\end{itemize}
+
+此外，括号会被保护，以避免 PDF 字符串中不安全的不平衡括号的危险。更多细节请参阅 Heiko Oberdiek 随 \xpackage{hyperref} 分发的 Euro\TeX 论文。
+
+\begin{cmdsyntax}
+\ci{begin}\verb|{NoHyper}|\ldots\ci{end}\verb|{NoHyper}|
+\end{cmdsyntax}
+有时我们就是不希望这个讨厌的宏包来干扰我们。定义一个可以手动放置或在样式文件中包含的环境，使超文本功能停止工作。例如，Elsevier 文档类就使用此环境来阻止 \verb|hyperref| 在前言部分造成混乱。
+
+\subsection{书签宏}
+
+\subsubsection{设置书签}
+
+通常 \xpackage{hyperref} 会自动为 \verb|\section| 等宏添加书签。但也可以手动设置。
+
+\begin{cmdsyntax}
+\ci{pdfbookmark}\verb|[|\emph{层级}\verb|]{|文本\verb|}{|\emph{名称}\verb|}|
+\end{cmdsyntax}
+创建一个带有指定文本和给定层级的书签（默认为 0）。内部锚点名称使用给定名称（与层级组合）。因此名称必须唯一（类似 \verb|\label|）。
+
+\begin{cmdsyntax}
+\ci{currentpdfbookmark}\verb|{|\emph{文本}\verb|}{|\emph{名称}\verb|}|
+\end{cmdsyntax}
+在当前层级创建一个书签。
+
+\begin{cmdsyntax}
+\ci{subpdfbookmark}\verb|{|\emph{文本}\verb|}{|\emph{名称}\verb|}|
+\end{cmdsyntax}
+在书签层级中向下一级创建一个书签。内部当前层级会增加一。
+
+\begin{cmdsyntax}
+\ci{belowpdfbookmark}\verb|{|\emph{文本}\verb|}{|\emph{名称}\verb|}|
+\end{cmdsyntax}
+在当前书签层级之下创建一个书签。但在命令之后，当前书签层级没有变化。
+
+\noindent \textbf{提示：}\textsf{bookmark} 宏包用新算法替代了 \xpackage{hyperref} 的书签组织：
+\begin{itemize}
+\item 通常只需一遍 \LaTeX 编译。
+\item 对书签外观有更多控制（颜色、字体）。
+\item 支持不同的书签动作（外部文件链接、URL 等）。
+\end{itemize}
+因此我推荐使用此宏包。
+
+\subsubsection{替换宏}\label{sec:texorpdfstring}
+
+\xpackage{hyperref} 从 \ci{section} 等命令的参数中获取书签文本，这些命令可以包含数学、颜色或字体变化，这些在书签中都无法原样显示。
+
+\begin{cmdsyntax}
+\ci{texorpdfstring}\verb|{|\emph{\TeX string}\verb|}{|\emph{PDFstring}\verb|}|
+\end{cmdsyntax}
+
+例如，
+\begin{verbatim}
+\section{Pythagoras:
+  \texorpdfstring{$ a^2 + b^2 = c^2 $}{%
+    a\texttwosuperior\ + b\texttwosuperior\ =
+    c\texttwosuperior
+  }%
+}
+\section{\texorpdfstring{\textcolor{red}}{}{Red} Mars}
+\end{verbatim}
+
+\ci{pdfstringdef} executes the hook \pdfstringdefPreHook before it
+展开字符串。因此，您可以使用此钩子来执行
+额外的任务或禁用额外的命令。
+
+\begin{verbatim}
+\expandafter\def\expandafter\pdfstringdefPreHook
+\expandafter{%
+  \pdfstringdefPreHook
+  \renewcommand{\mycommand}[1]{}%
+}
+\end{verbatim}
+
+However, for disabling commands, an easier way is via
+\ci{pdfstringdefDisableCommands}, which adds its argument to the
+definition of \ci{pdfstringdefPreHook} (`@' can here be used as letter in
+command names):
+
+\begin{verbatim}
+\pdfstringdefDisableCommands{%
+  \let~\textasciitilde
+  \def\url{\pdfstringdefWarn\url}%
+  \let\textcolor\@gobble
+}
+\end{verbatim}
+
+\subsection{页面标签}
+\begin{cmdsyntax}
+\ci{thispdfpagelabel}\verb|{|\emph{page number format}\verb|}|
+\end{cmdsyntax}
+
+这允许更改 PDF 阅读器工具栏中显示的特定页面的页码格式，例如：
+
+\verb+\thispdfpagelabel{Empty Page-\roman{page}}+
+
+此命令影响执行它的页面，因此应考虑异步分页，应在例如 \verb|\thispagestyle| 等位置使用。
+
+\subsection{实用宏}
+
+\label{hypercalcbp}
+\begin{cmdsyntax}
+\ci{hypercalcbp}\verb|{|\emph{尺寸说明}\verb|}|
+\end{cmdsyntax}
+\noindent
+\verb|\hypercalcbp| 接受 \TeX 尺寸说明，将其转换为 bp 并返回不带单位的数字。
+这对于 \verb|pdfview|、\verb|pdfstartview| 和 \verb|pdfremotestartview| 选项很有用。
+示例：
+\begin{quote}
+\begin{verbatim}
+\hypersetup{
+  pdfstartview={FitBH \hypercalcbp{\paperheight-\topmargin-1in
+    -\headheight-\headsep}}
+}
+\end{verbatim}
+\end{quote}
+PDF 坐标系的原点在左下角。
+
+注意，计算时需要 \xpackage{calc} 宏包或 \hologo{eTeX}。现在后者应已对 \hologo{LaTeX} 格式自动启用。没有 \hologo{eTeX} 的用户，请在源文档 \verb|hyperref.dtx| 中查看更多限制。
+
+此外，\cs{hypercalcbp} 不能在 \cs{documentclass} 和 \cs{usepackage} 的选项说明中使用，因为 \hologo{LaTeX} 会展开这些命令的选项列表。但此时 \xpackage{hyperref} 尚未加载，控制序列未定义，顺序错误。
+
+\section{新功能}
+
+\subsection{选项 `pdflinkmargin'}
+
+选项 `pdflinkmargin' 是一个实验性选项，用于指定链接边距（如果驱动支持）。支持的驱动默认值为 1 pt。
+
+\begin{description}
+\item[pdfTeX]
+\begin{itemize}
+ \item 链接区域还取决于周围的盒子。
+ \item 设置具有局部效果。
+ \item 当页面 shipout 时，pdfTeX 使用当前设置作为该页面上所有链接的链接边距。
+\end{itemize}
+
+\item[pdfmark]
+\begin{itemize}
+ \item 设置具有全局效果。
+\end{itemize}
+
+\item[xetex]
+\begin{itemize}
+ \item 设置必须在导言区或第一页完成，之后具有全局效果。该键插入新的 (x)dvipdfmx 特殊命令 \verb|\special{dvipdfmx:config g #1}|（去除单位）。
+\end{itemize}
+
+\item[其他驱动]
+ 不支持。
+\end{description}
+
+\subsection{字段选项 `calculatesortkey'}
+
+带计算值的字段默认按文档顺序计算。如果计算字段的值依赖于文档中后面出现的其他计算字段，则可以使用 \xoption{calculatesortkey} 选项指定正确的计算顺序。其值是排序键，不需要唯一。具有相同键的字段按文档顺序排序。
+
+目前字段选项 `calculatesortkey' 仅由
+
+\subsection{Option `next-anchor'}
+此选项允许覆盖下一个锚点的锚点名称。这使得例如可以为目录标题指定一个锚点名称，然后用 bookmark 宏包的 \verb|\bookmark| 命令引用它：
+
+\begin{verbatim}
+\hypersetup{next-anchor=toc}
+\tableofcontents
+\bookmark[dest=\HyperDestNameFilter{toc},level=section]{\contentsname}
+\end{verbatim}
+
+\subsection{选项 `localanchorname'}
+
+当\marginpar{2022-04-27 v7.00o 起已弃用}设置锚点时（例如通过 \verb|\refstepcounter|），锚点名称会被全局设置为当前锚点名称。
+
+例如：
+\begin{verbatim}
+    \section{Foobar}
+    \begin{equation}\end{equation}
+    \label{sec:foobar}
+\end{verbatim}
+使用默认全局设置（localanchorname=false）时，引用 `sec:foobar' 会跳到前面的公式。使用选项 `localanchorname' 时，公式的锚点在环境结束后被遗忘，引用 `sec:foobar' 会跳到章节标题。
+
+选项 `localanchorname' 是一个实验性选项，可能存在锚点名称不像预期那样可用的情况。
+
+该选项已弃用：如果不清楚 \verb|\@currentHref| 是局部还是全局设置，宏包作者很难为链接添加目标。
+
+\subsection{选项 `customdriver'}
+
+选项 `customdriver' 的值是外部驱动文件的名称，不带 `.def' 扩展名。该文件必须有 \verb|\ProvidesFile|，其版本日期和编号必须与 `hyperref' 的日期和编号匹配，否则会发出警告。
+
+由于驱动中需要定义的接口定义不明确且相当混乱，此选项主要用于方便开发、测试、调试驱动部分。
+
+\subsection{选项 `psdextra'}
+
+LaTeX 的 NFSS 用于辅助将任意 TeX 字符串转换为 PDF 字符串（书签、PDF 信息条目）。许多数学命令名称（\verb|\geq|、\verb|\notin| 等）不在 NFSS 的控制范围内，因此它们以前缀 `text' 定义（\verb|\textgeq|、\verb|\textnotin| 等）。在处理 PDF 字符串时，它们可以映射为短名称。缺点是有数百个宏需要为每次 PDF 字符串转换重新定义。因此可以通过选项 `psdextra' 启用或禁用。默认情况下此选项关闭（设置为 `false'）。开启此选项意味着短名称可用。这样 \verb|\geq| 可以直接使用，而不必用 \verb|\textgeq|。
+
+\subsection{\textbackslash XeTeXLinkBox}
+
+当 XeTeX 生成链接注释时，它不查看盒子（像其他驱动那样），而只查看字符字形。如果没有字形（图像、规则等），它就不生成链接注释。宏 \verb|\XeTeXLinkBox| 将其参数放入盒子中，并在左下角和右上角添加空格。可以通过将其设置为维度寄存器 \verb|\XeTeXLinkMargin| 来指定额外边距。默认值为 2pt。
+
+示例：
+
+
+\begin{verbatim}
+    % xelatex
+    \documentclass{article}
+    \usepackage{hyperref}
+    \setlength{\XeTeXLinkMargin}{1pt}
+    \begin{document}
+    \section{Hello World}
+    \newpage
+    \label{sec:hello}
+    \hyperref[sec:hello]{%
+      \XeTeXLinkBox{\rule{10mm}{10mm}}%
+    }
+    \end{document}
+\end{verbatim}
+
+\subsection{\textbackslash IfHyperBooleanExists 和 \textbackslash IfHyperBoolean}
+\begin{verbatim}
+ \IfHyperBooleanExists{OPTION}{YES}{NO}
+\end{verbatim}
+  如果 \xpackage{hyperref} 选项是布尔值（即接受 `true' 或 `false'），则 \verb|\IfHyperBooleanExists| 执行 YES，否则执行 NO。
+
+\begin{verbatim}
+ \IfHyperBoolean{OPTION}{YES}{NO}
+\end{verbatim}
+  宏 \verb|\IfHyperBoolean| 在 OPTION 作为布尔值存在且已启用时执行 YES。否则执行 NO。
+
+  两个宏都是可展开的。此外还有选项 `stoppedearly'。如果 \verb|\MaybeStopEarly| 或 \verb|\MaybeStopNow| 提前结束 \xpackage{hyperref}，则该选项启用。
+
+
+\subsection{\textbackslash unichar}
+
+  如果 puenc.def 不支持某个 Unicode 字符，可以使用 \verb|\unichar| 来指定。其名称和语法继承自 `ucs' 宏包。但它是独立定义的，用于 \xpackage{hyperref} 的 \verb|\pdfstringdef|（将任意
+
+  宏 \verb|\unichar| 接受一个 TeX 数字作为参数，U+263A（白色笑脸）的示例：
+\begin{verbatim}
+    \unichar{"263A}% hexadecimal notation
+    \unichar{9786}% decimal notation
+\end{verbatim}
+  `"' 不能是 babel  shorthand 字符或以其他方式处于活动状态。否则用 \verb|\string| 作前缀：
+\begin{verbatim}
+    \unichar{\string"263A}% converts `"' to `"' with catcode 12 (other)
+\end{verbatim}
+  使用 (n)german 宏包或 babel 选项的用户可以改用 \verb|\dq|：
+\begin{verbatim}
+    \unichar{\dq 263A}% \dq is double quote with catcode 12 (other)
+\end{verbatim}
+
+
+\subsection{\textbackslash ifpdfstringunicode}
+
+  PDF 规范的某些功能需要 PDF 字符串，例如书签或信息字典中的条目。PDF 规范允许两种编码：`PDFDocEncoding'（8 位编码）和 `Unicode'（UTF-16）。用户可以使用 \verb|\texorpdfstring| 将复杂的 TeX 构造替换为 PDF 字符串表示。但 \verb|\texorpdfstring| 不区分这两种编码。为此提供了 \verb|\ifpdfstringunicode|。它只允许在 \verb|\texorpdfstring| 的第二个参数中使用，接受两个参数：第一个允许完整的 Unicode 范围，第二个仅限于 PDFDocEncoding 中可用的字符。
+
+  以 \hologo{HanTheThanh} 的越南语名字的宏定义为例。正确书写需要一些带重音的字符，其中一个字符甚至有双重重音。`tugboat.cls' 类为排版后的名字定义了一个宏：
+\begin{verbatim}
+    \def\Thanh{%
+      H\`an~%
+      Th\^e\llap{\raise 0.5ex\hbox{\'{}}}%
+      ~Th\`anh%
+    }
+\end{verbatim}
+  这不完全正确，`e' 上的第二个重音不是尖音符，而是钩符。但标准 LaTeX 不提供这样的重音。
+
+  现在我们可以扩展定义以支持 \xpackage{hyperref}。第一个和最后一个词已自动支持。带有两个或更多重音的字符在 LaTeX 中是个难题，因为 LaTeX 内核的 NFSS2 宏不支持多于一个重音。因此 puenc.def 也缺少对它们的支持。但我们可以使用 \verb|\unichar| 来提供。所讨论的字符是：
+\begin{verbatim}
+    % U+1EC3 LATIN SMALL LETTER E WITH CIRCUMFLEX AND HOOK ABOVE
+\end{verbatim}
+  因此我们可以组合起来：
+\begin{verbatim}
+    \def\Thanh{%
+      H\`an~%
+      \texorpdfstring{Th\^e\llap{\raise 0.5ex\hbox{\'{}}}}%
+      {\ifpdfstringunicode{Th\unichar{"1EC3}}{Th\^e}}%
+      ~Th\`anh%
+    }
+\end{verbatim}
+  对于 PDFDocEncoding（PD1），上面的变体去掉了第二个重音。或者我们可以提供不带重音的表示，而不是错误的重音：
+\begin{verbatim}
+    \def\Thanh{%
+      \texorpdfstring{%
+        H\`an~%
+        Th\^e\llap{\raise 0.5ex\hbox{\'{}}}}%
+        ~Th\`anh%
+      }{%
+        \ifpdfstringunicode{%
+          H\`an Th\unichar{"1EC3} Th\`anh%
+        }{%
+          Han The Thanh%
+        }%
+      }%
+    }
+\end{verbatim}
+
+\subsection{使用 \textbackslash nohyperpage 自定义索引样式文件}
+
+  自 2008/08/14~v6.78f 版本开始。
+
+  为了在索引中支持超链接，\xpackage{hyperref} 会在索引宏中插入 \verb|\hyperpage|。在使用 Makeindex 处理后，\verb|\hyperpage| 会分析其参数以检测页码范围和逗号分隔的页码列表。但仅直接支持标准设置：
+\begin{verbatim}
+    delim_r "--"
+    delim_n ", "
+\end{verbatim}
+  （参见 Makeindex 手册中说明可在 Makeindex 样式文件中使用的键的页面/文档。）自定义版本的 \verb|delim_r, delim_n, suffix_2p, suffix_3p, suffix_mp| 需要 \verb|\hyperpage| 能检测并知道哪些标记不属于页码。宏 \verb|\nohyperpage| 充当此标记。将自定义这些键的代码放在 \verb|\nohyperpage| 内，例如：
+\begin{verbatim}
+    suffix_2p "\\nohyperpage{f.}"
+    suffix_3p "\\nohyperpage{ff.}"
+\end{verbatim}
+  （根据排版传统，应在 \verb|\nohyperpage| 内第一个 f 前加一些空格 `\verb|\\|' 或 `\verb|~|'。）
+
+
+\subsection{实验性选项 `ocgcolorlinks'}
+
+  其理念是：查看时显示彩色链接，但打印时不带颜色。这个新的实验性选项 `ocgcolorlinks' 使用可选内容组（Optional Content Groups），这是 PDF 1.5 引入的功能。
+
+  更好的实现（没有阻止换行的缺点）在 ocgx2 宏包中。请查阅其文档了解详细用法。
+\begin{itemize}
+ \item 该选项必须在加载宏包时给出：\verb|\usepackage[ocgcolorlinks]{hyperref}|
+ \item 主要缺点：链接不能跨多行断行。PDF 参考 1.7：4.10.2 ``Making Graphical Content Optional''：图形状态操作（如设置颜色等）仍然会应用。因此链接文本被放入一个盒子中并设置两次，带颜色和不带颜色。
+ \item 此功能可通过 \verb|\hypersetup{ocgcolorlinks=false}| 在文档内部关闭。
+ \item 支持的驱动：pdftex、dvipdfm
+ \item PDF 版本应至少为 1.5。对于 pdfTeX、LuaTeX 和 dvipdfmx 会自动设置。
+\end{itemize}
+
+\subsection{选项 `pdfa'}
+
+  新选项 `pdfa' 试图避免 \xpackage{hyperref} 生成的代码违反 PDF/A。但结果通常不在 PDF/A 中，因为许多功能不受 \xpackage{hyperref} 控制（XMP 元数据、字体、颜色、驱动相关的底层内容等）。
+
+  目前，选项 `pdfa' 设置和禁用以下项目：
+\begin{itemize}
+ \item 启用的注释标志：Print、NoZoom、NoRotate [PDF/A 6.5.3]。
+ \item 禁用的注释标志：Hidden、Invisible、NoView [PDF/A 6.5.3]。
+ \item 禁用：Launch 动作（\href{run:...} [PDF/A 6.6.1]）。
+ \item 限制：命名动作（\Acrobatmenu: NextPage、PrevPage、FirstPage、LastPage）[PDF/A 6.6.1]。
+ \item PDF 表单中许多项目被禁用：
+  \begin{itemize}
+   \item JavaScript 动作 [PDF/A 6.6.1]
+   \item 触发事件（附加动作）[PDF/A 6.6.2]
+   \item 按钮（因为 JavaScript）
+   \item 交互式表单：标志 NeedAppearances 默认为 `false'（因此 \xpackage{hyperref} 的表单实现看起来不美观）。[PDF/A 6.9]
+  \end{itemize}
+\end{itemize}
+
+  新选项 `pdfa' 的默认值为 `false'。它影响宏包的加载，在 \xpackage{hyperref} 加载（\verb|\usepackage{hyperref}|）后不能更改。
+
+如果 PDF 管理通过 \cs{DocumentMetadata} 加载，则根据是否通过 `pdfstandard' 键设置了 A 标准，自动设置/取消设置该选项。此时手动设置的 `pdfa' 会被忽略。
+
+\subsection{新增选项 `linktoc'}
+
+  新选项 `linktoc' 允许更精细地控制目录条目中哪一部分成为链接：
+\begin{itemize}
+ \item `linktoc=none'（无链接）
+ \item `linktoc=section'（默认行为，同 `linktocpage=false'）
+ \item `linktoc=page'（同 `linktocpage=true'）
+ \item `linktoc=all'（节和页码部分都是链接）
+\end{itemize}
+
+\subsection{选项 `pdfnewwindow' 变更}
+
+  6.77b 之前：
+\begin{itemize}
+ \item pdfnewwindow=true $\rightarrow$ /NewWindow true
+ \item pdfnewwindow=false $\rightarrow$（不出现）
+ \item 未使用 pdfnewwindow $\rightarrow$（不出现）
+\end{itemize}
+  自 6.77b 起：
+\begin{itemize}
+ \item pdfnewwindow=true $\rightarrow$ /NewWindow true
+ \item pdfnewwindow=false $\rightarrow$ /NewWindow false
+ \item pdfnewwindow={} $\rightarrow$（不出现）
+ \item 未使用 pdfnewwindow $\rightarrow$（不出现）
+\end{itemize}
+
+  理由：设置为 `false' 与条目不出现之间有区别。前者情况下新文档替换旧文档，后者情况下 PDF 阅读器应用应尊重用户偏好。
+
+
+\subsection{PDF 表单的标志选项}
+
+  PDF 表单字段宏（\verb|\TextField|、\verb|\CheckBox| 等）支持布尔标志选项。选项名称是 PDF 规范（1.7）中名称的小写版本：
+
+    \url{http://www.adobe.com/devnet/pdf/pdf_reference.html}
+
+    \url{http://www.adobe.com/devnet/acrobat/pdfs/pdf_reference.pdf}
+
+  选项（转为小写），方括号内的标志除外：
+
+\begin{itemize}
+ \item 表 8.16 注释标志（第 608 页）：
+
+{\obeylines
+    1 Invisible
+    2 Hidden (PDF 1.2)
+    3 Print (PDF 1.2)
+    4 NoZoom (PDF 1.3)
+    5 NoRotate (PDF 1.3)
+    6 NoView (PDF 1.3)
+    [7 ReadOnly (PDF 1.3)] 对小部件注释忽略，见表 8.70
+    8 Locked (PDF 1.4)
+    9 ToggleNoView (PDF 1.5)
+    10 LockedContents (PDF 1.7)
+}
+ \item 表 8.70 所有字段类型通用的字段标志（第 676 页）：
+
+{\obeylines
+    1 ReadOnly
+    2 Required
+    3 NoExport
+}
+ \item 表 8.75 按钮字段特定的字段标志（第 686 页）：
+
+{\obeylines
+    15 NoToggleToOff (仅单选按钮)
+    16 Radio（设置：单选按钮，清除：复选框、按钮：清除）
+    17 Pushbutton
+    26 RadiosInUniso (PDF 1.5)
+}
+ \item 表 8.77 文本字段特定的字段标志（第 691 页）：
+
+{\obeylines
+    13 Multiline
+    14 Password
+    21 FileSelect (PDF 1.4)
+    23 DoNotSpellCheck (PDF 1.4)
+    24 DoNotScroll (PDF 1.4)
+    25 Comb (PDF 1.5)
+    26 RichText (PDF 1.5)
+}
+ \item 表 8.79 选择字段特定的字段标志（第 693 页）：
+
+{\obeylines
+    18 Combo（设置：组合框，清除：列表框）
+    19 Edit（仅在 Combo 设置时有用）
+    20 (Sort) 用于创作工具，非 PDF 阅读器
+    22 MultiSelect (PDF 1.4)
+    23 DoNotSpellCheck (PDF 1.4)（仅在 Combo 和 Edit 都设置时有用）
+    27 CommitOnSelChange (PDF 1.5)
+}
+ \item 表 8.86 提交表单动作的标志（第 704 页）：
+
+{\obeylines
+    [1 Include/Exclude] 不支持，请改用 `noexport'（表 8.70）
+    2 IncludeNoValueFields
+    [3 ExportFormat] 由选项 `export' 处理
+    4 GetMethod
+    5 SubmitCoordinates
+    [6 XFDF (PDF 1.4)] 由选项 `export' 处理
+    7 IncludeAppendSaves (PDF 1.4)
+    8 IncludeAnnotations (PDF 1.4)
+    [9 SubmitPDF (PDF 1.4)] 由选项 `export' 处理
+    10 CanonicalFormat (PDF 1.4)
+    11 ExclNonUserAnnots (PDF 1.4)
+    12 ExclFKey (PDF 1.4)
+    14 EmbedForm (PDF 1.5)
+}
+\end{itemize}
+
+  新选项 `export' 设置提交动作的导出格式。有效值为（大写或小写）：
+\begin{itemize}
+ \item FDF
+ \item HTML
+ \item XFDF
+ \item PDF（Acrobat Reader 不支持）
+\end{itemize}
+
+\subsection{选项 `pdfversion'}
+
+  这是一个实验性选项。它告知 `hyperref' 目前用于 PDF 表单的代码（PDF 规范 1.7 的实现说明 116 和 122）。
+
+  有效值：1.2、1.3、1.4、1.5、1.6、1.7。低于 1.2 的值不支持，因为大多数驱动期望更高的 PDF 版本。
+
+  该选项必须尽早使用，不能在 \verb|\usepackage{hyperref}| 之后。
+
+  理论上此选项也应设置 PDF 版本，但这通常不受支持。
+\begin{itemize}
+ \item pdfTeX 低于 1.10a：不支持。
+     pdfTeX $\ge$ 1.10a 且 < 1.30：\verb|\pdfoptionpdfminorversion|
+     pdfTeX $\ge$ 1.30：\verb|\pdfminorversion|
+ \item dvipdfm：配置文件，例如 TeX Live 2007，texmf/dvipdfm/config/config，条目 `V 2'。
+ \item dvipdfmx：配置文件，例如 TeX Live 2007，texmf/dvipdfm/dvipdfmx.cfg，条目 `V 4'。
+ \item Ghostscript：选项 -dCompatibilityLevel（在 `ps2pdf12'、`ps2pdf13'、`ps2pdf14' 中设置）。
+\end{itemize}
+
+  如果能检测到当前 PDF 版本，则将其用作默认值（仅 pdfTeX $\ge$ 1.10a）。否则假定最低版本 1.2。因此 `hyperref' 会避免破坏此版本的 PDF 代码，但可以自由使用可忽略的更高 PDF 功能。
+
+
+\subsection{字段选项 `name'}
+
+  许多表单对象将标签参数用于多种目的：
+\begin{itemize}
+ \item 排版标签。
+ \item 在 HTML 结构中作为名称。
+\end{itemize}
+  适合用 TeX 排版的代码可能在输出格式的结构中出错。如果给出选项 `name'，则其值在不同输出结构中用作名称。因此该值应仅由字母组成。
+
+
+\subsection{选项 `pdfencoding'}
+
+  PDF 格式为书签和信息字典中的条目允许两种编码：PDFDocEncoding 和 UTF-16BE Unicode。选项 \xoption{pdfencoding} 在这些编码之间选择：
+\begin{itemize}
+ \item \xoption{pdfdoc} 使用 PDFDocEncoding。每个字符仅用一个字节，但支持的字符有限（PDF-1.7 中为 244 个）。
+ \item \xoption{unicode} 设置 Unicode。编码为 UTF-16BE。大多数字符用两个字节，代理对需要四个字节。
+ \item \xoption{auto} 如果字符串不包含编码外的字符（使用 unicode 引擎时为 ASCII 外），则使用 PDFDocEncoding，否则使用 Unicode。此选项不适用于 unicode 引擎。
+\end{itemize}
+
+  所有驱动现在默认使用 \xoption{unicode}。如果需要强制使用其他编码，应在 \verb|hypersetup| 中完成。
+
+\subsection{颜色选项/hycolor 宏包}
+
+  参见 `hycolor' 宏包的文档。
+
+
+\subsection{选项 pdfusetitle}
+
+  如果设置了选项 pdfusetitle，则 \xpackage{hyperref} 尝试从 \verb|\title| 和 \verb|\author| 推导 pdftitle 和 pdfauthor 的值。支持 \verb|\title| 和 \verb|\author| 的可选参数（amsart 类）。
+
+
+\subsection{\textbackslash autoref 的带星号形式}
+
+  \verb|\autoref*| 生成不带链接的引用，如同 \verb|\ref*| 或 \verb|\pageref*|。
+
+
+\subsection{链接边框样式}
+
+  链接可以用下划线代替默认的矩形或选项 \xoption{colorlinks}、\xoption{frenchlinks}。这通过选项 \verb|pdfborderstyle={/S/U/W 1}| 完成。
+
+  一些说明：
+
+\begin{itemize}
+ \item AR7/Linux 似乎有个 bug，宽度不使用默认值 \verb"1" 而是零，因此不加 \verb"/W 1" 时下划线不可见。虚线框同理，例如：
+      pdfborderstyle={/S/D/D[3 2]/W 1}
+
+ \item 语法在 PDF 规范中有说明，查找 ``border style''，例如表 8.13 ``Entries in a border style dictionary''（1.6 版规范）。
+
+ \item 边框样式通过 pdfborderstyle={} 移除。如果启用了 colorlinks 选项，会自动完成此操作。
+
+ \item 请注意并非所有 PDF 阅读器都支持此功能，甚至 Acrobat Reader 本身也不支持：
+
+    部分支持：
+   \begin{itemize}
+   \item AR7/Linux：\xoption{underline} 和 \xoption{dashed}，但必须给出边框宽度。
+   \item xpdf 3.00：\xoption{underline} 和 \xoption{dashed}
+   \end{itemize}
+
+    不支持：
+   \begin{itemize}
+   \item AR5/Linux
+   \item ghostscript 8.50
+   \end{itemize}
+\end{itemize}
+
+\subsection{选项 \xoption{bookmarksdepth}}
+
+  书签的深度可以通过新选项 \xoption{bookmarksdepth} 控制。该选项全局生效，区分三种情况：
+\begin{itemize}
+ \item \xoption{bookmarksdepth} 不带值
+     则 \xpackage{hyperref} 使用计数器 \xoption{tocdepth} 的当前值。这是兼容行为，也是默认值。
+ \item \verb"bookmarksdepth=<number>"，值为数字（也可为负）：书签深度设为此数字。
+ \item \verb"bookmarksdepth=<name>"
+     <name> 是文档分节名称（part、chapter 等）。它不能以数字或减号开头，以避免与数字情况混淆。内部 \xpackage{hyperref} 使用宏 \verb|\toclevel@<name>| 的值。
+   示例：
+\begin{verbatim}
+    \hypersetup{bookmarksdepth=paragraph}
+    \hypersetup{bookmarksdepth=4} % same as before
+    \hypersetup{bookmarksdepth} % counter "tocdepth" is used
+\end{verbatim}
+\end{itemize}
+
+\subsection{选项 \xoption{pdfescapeform}}
+
+  有很多地方任意字符串最终成为 PS 或 PDF 字符串。括号形式的 PS/PDF 字符串需要保护某些字符，例如不匹配的左括号或右括号需要转义，或转义字符本身（反斜杠）。自 2006/02/12~v6.75a 起，PS/PDF 驱动应自动完成此操作。但我假设存在兼容性问题，特别是在表单部分，可能存在大量 JavaScript 代码。移除所有转义会很麻烦，因为额外的转义层可能使代码失真。
+
+  因此引入了新选项 pdfescapeform：
+\begin{itemize}
+ \item pdfescapeform=false
+     表单的转义被禁用，这是兼容行为，因此是默认值。
+ \item pdfescapeform=true
+     则 PS/PDF 驱动完成所有必要的转义。这是合理的选择，也是推荐的设置。例如，用户按 JavaScript 原样编写 JavaScript，不关心 PS/PDF 输出的转义字符。
+\end{itemize}
+
+\subsection{默认驱动设置}
+
+  (hyperref $\ge$ 6.72s)
+  如果未指定驱动，\xpackage{hyperref} 会尽力猜测最合适的驱动。因此如果检测到 pdfTeX 在 PDF 模式下运行，它加载 \xoption{hpdftex}。或者根据 VTeX 的工作模式加载相应的 VTeX 驱动。遗憾的是许多驱动程序在 TeX 编译器之后运行，因此 \xpackage{hyperref} 没有机会（dvips、dvipdfm 等）。这种情况下加载驱动 \xoption{hypertex}，它支持 xdvi 识别的 HyperTeX 功能。但此行为可以在配置文件 \verb"hyperref.cfg" 中轻松更改：
+\begin{verbatim}
+    \providecommand*{\Hy@defaultdriver}{hdvips}
+\end{verbatim}
+  用于 dvips，或
+\begin{verbatim}
+    \providecommand*{\Hy@defaultdriver}{hypertex}
+\end{verbatim}
+  用于 \xpackage{hyperref} 的默认行为。
+
+  另见新选项 `driverfallback'。
+
+\subsection{反向链接条目}
+
+  格式化反向链接条目的替代接口，示例：
+
+\begin{verbatim}
+\documentclass[12pt,UKenglish]{article}
+
+\usepackage{babel}
+\usepackage[pagebackref]{hyperref}
+
+% Some language options are detected by package backref.
+% This affects the following macros:
+%   \backrefpagesname
+%   \backrefsectionsname
+%   \backrefsep
+%   \backreftwosep
+%   \backreflastsep
+
+\renewcommand*{\backref}[1]{
+  % default interface
+  % #1: backref list
+  %
+  % We want to use the alternative interface,
+  % therefore the definition is empty here.
+}
+\renewcommand*{\backrefalt}[4]{%
+  % alternative interface
+  % #1: number of distinct back references
+  % #2: backref list with distinct entries
+  % #3: number of back references including duplicates
+  % #4: backref list including duplicates
+  \par
+  #3 citation(s) on #1 page(s): #2,\par
+  \ifnum#1=1 %
+    \ifnum#3=1 %
+      1 citation on page %
+    \else
+      #3 citations on page %
+    \fi
+  \else
+    #3 citations on #1 pages %
+  \fi
+  #2,\par
+  \ifnum#3=1 %
+    1 citation located at page %
+  \else
+    #3 citations located at pages %
+  \fi
+  #4.\par
+}
+
+% The list of distinct entries can be further refined:
+\renewcommand*{\backrefentrycount}[2]{%
+  % #1: the original backref entry
+  % #2: the count of citations of this entry,
+  %     in case of duplicates greater than one
+  #1%
+  \ifnum#2>1 %
+    ~(#2)%
+  \fi
+}
+
+\begin{document}
+
+  \section{Hello}
+    \cite{ref1, ref2, ref3, ref4}
+  \section{World}
+    \cite{ref1, ref3}
+  \newpage
+
+  \section{Next section}
+    \cite{ref1}
+  \newpage
+
+  \section{Last section}
+    \cite{ref1, ref2}
+  \newpage
+
+  \pdfbookmark[1]{Bibliography}{bib}
+  \begin{thebibliography}{99}
+    \bibitem{ref1} Dummy entry one.
+
+    \bibitem{ref2} Dummy entry two.
+
+    \bibitem{ref3} Dummy entry three.
+
+    \bibitem{ref4} Dummy entry four.
+
+  \end{thebibliography}
+
+\end{document}
+\end{verbatim}
+
+\subsection{\textbackslash phantomsection}
+
+  在当前位置设置锚点。它通常与 \verb|\addcontentsline| 一起用于类似分节的内容（索引、参考文献、前言）。\verb|\addcontentsline| 指向之前最近设置锚点的位置。
+
+\begin{verbatim}
+  \cleardoublepage
+  \phantomsection
+  \addcontentsline{toc}{chapter}{\indexname}
+  \printindex
+\end{verbatim}
+
+  现在目录（和书签）中索引的条目指向索引页的开头，而不是该页之前的位置。
+
+\subsection{puenc 编码、puenc-greekbasic.def 和 puenc-extra.def}
+
+\texttt{unicode} 选项为书签加载 \texttt{puenc.def}，其中包含大量书签命令的定义。由于现在 \texttt{unicode} 对所有引擎默认为 true，此文件现在也会随 pdflatex 加载。\texttt{puenc.def} 中的某些定义与其他用途冲突。为减少影响，\xpackage{hyperref} 使用两种策略。
+
+\begin{itemize}
+\item 若干命令仅在条件满足时定义：西里尔字母块的命令在 \cs{CYRDZE} 已定义时定义，希腊字母在 \cs{textBeta} 已定义时定义，希伯来字母在 \cs{hebdalet} 已定义时定义。
+
+希腊字母块在单独的文件 \texttt{puenc-greekbasic.def} 中，需要时可手动加载。
+
+\item 其他命令移至单独的文件 \texttt{puenc-extra.def}，不会自动加载，但需要时可在导言区加载。目前此文件包含重音 \cs{G} 的所有定义。
+\end{itemize}
+
+
+
+\section{Acrobat 特定行为}
+如果要访问 Acrobat Reader 或 Exchange 的菜单选项，相应驱动中提供了以下宏：
+
+\begin{cmdsyntax}
+\ci{Acrobatmenu}\verb|{|\emph{菜单选项}\verb|}{|\emph{文本}\verb|}|
+\end{cmdsyntax}
+
+\noindent \emph{文本} 用于创建一个按钮，激活相应的 \emph{菜单选项}。下表列出了可用的选项名称——将其与 Acrobat Reader 或 Exchange 中的菜单对比即可了解其功能。显然有些仅适用于 Exchange。
+
+\medskip
+\begin{longtable}{@{}l>{\raggedright\arraybackslash}p{9cm}@{}}
+文件 (File)                    & Open, Close, Scan, Save, SaveAs, Optimizer:SaveAsOpt, Print, PageSetup, Quit \\
+File$\rightarrow$Import       & ImportImage, ImportNotes, AcroForm:ImportFDF \\
+File$\rightarrow$Export       & ExportNotes, AcroForm:ExportFDF \\
+File$\rightarrow$DocumentInfo & GeneralInfo, OpenInfo, FontsInfo, SecurityInfo, Weblink:Base, AutoIndex:DocInfo \\
+File$\rightarrow$Preferences  & GeneralPrefs, NotePrefs, FullScreenPrefs, Weblink:Prefs, AcroSearch:Preferences(Windows)
+                                or, AcroSearch:Prefs(Mac), Cpt:Capture \\
+编辑 (Edit)                    & Undo, Cut, Copy, Paste, Clear, SelectAll, Ole:CopyFile, TouchUp:TextAttributes,
+                                TouchUp:FitTextToSelection, TouchUp:ShowLineMarkers, TouchUp:ShowCaptureSuspects,
+                                TouchUp:FindSuspect, \\
+                              & Properties \\
+Edit$\rightarrow$Fields       & AcroForm:Duplicate, AcroForm:TabOrder \\
+文档 (Document)                & Cpt:CapturePages, AcroForm:Actions, CropPages, RotatePages, InsertPages, ExtractPages,
+                                ReplacePages, DeletePages, NewBookmark, SetBookmarkDest, CreateAllThumbs,
+                                DeleteAllThumbs \\
+视图 (View)                    & ActualSize, FitVisible, FitWidth, FitPage, ZoomTo, FullScreen, FirstPage, PrevPage,
+                                NextPage, LastPage, GoToPage, GoBack, GoForward, SinglePage, OneColumn, TwoColumns,
+                                ArticleThreads, PageOnly, ShowBookmarks, ShowThumbs \\
+工具 (Tools)                   & Hand, ZoomIn, ZoomOut, SelectText, SelectGraphics, Note, Link, Thread, AcroForm:Tool,
+                                Acro\_Movie:MoviePlayer, TouchUp:TextTool, Find, FindAgain, FindNextNote,
+                                CreateNotesFile \\
+Tools$\rightarrow$Search      & AcroSrch:Query, AcroSrch:Indexes, AcroSrch:Results, AcroSrch:Assist, AcroSrch:PrevDoc,
+                                AcroSrch:PrevHit, AcroSrch:NextHit, AcroSrch:NextDoc \\
+窗口 (Window)                  & ShowHideToolBar, ShowHideMenuBar, ShowHideClipboard, Cascade, TileHorizontal,
+                                TileVertical, CloseAll \\
+帮助 (Help)                    & HelpUserGuide, HelpTutorial, HelpExchange, HelpScan, HelpCapture, HelpPDFWriter,
+                                HelpDistiller, HelpSearch, HelpCatalog, HelpReader, Weblink:Home \\
+帮助 (Windows)                 & About
+\end{longtable}
+
+\section{PDF 和 HTML 表单}
+您必须将字段放在 \texttt{Form} 环境内。该环境做一些通用设置，因此在文档中只应使用一次。也可以简单地在文档开头使用 \cs{Form}。
+
+有六个宏用于准备字段：
+
+\begin{cmdsyntax}
+\ci{TextField}\verb|[|\emph{参数}\verb|]{|\emph{标签}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{CheckBox}\verb|[|\emph{参数}\verb|]{|\emph{标签}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{ChoiceMenu}\verb|[|\emph{参数}\verb|]{|\emph{标签}\verb|}{|\emph{选项}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{PushButton}\verb|[|\emph{参数}\verb|]{|\emph{标签}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{Submit}\verb|[|\emph{参数}\verb|]{|\emph{标签}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{Reset}\verb|[|\emph{参数}\verb|]{|\emph{标签}\verb|}|
+\end{cmdsyntax}
+
+表单及其标签的排版方式由以下宏决定：
+\begin{cmdsyntax}
+\ci{LayoutTextField}\verb|{|\emph{标签}\verb|}{|\emph{字段}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{LayoutChoiceField}\verb|{|\emph{标签}\verb|}{|\emph{字段}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{LayoutCheckField}\verb|{|\emph{标签}\verb|}{|\emph{字段}\verb|}|
+\end{cmdsyntax}
+
+这些宏默认为 \#1 \#2
+
+字段中实际显示的内容由以下宏决定：
+\begin{cmdsyntax}
+\ci{MakeRadioField}\verb|{|\emph{宽度}\verb|}{|\emph{高度}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{MakeCheckField}\verb|{|\emph{宽度}\verb|}{|\emph{高度}\verb|}|
+\end{cmdsyntax}
+\begin{cmdsyntax}
+\ci{MakeTextField}\verb|{|\emph{宽度}\verb|}{|\emph{高度}\verb|}|
+\end{cmdsyntax}
+\begin{cmdsyntax}
+\ci{MakeChoiceField}\verb|{|\emph{宽度}\verb|}{|\emph{高度}\verb|}|
+\end{cmdsyntax}
+
+\begin{cmdsyntax}
+\ci{MakeButtonField}\verb|{|\emph{文本}\verb|}|
+\end{cmdsyntax}
+
+这些宏默认为 \verb|\vbox to #2{\hbox to #1{\hfill}\vfill}|，最后一个除外，它默认为 \#1；用于按钮以及特殊的 \ci{Submit} 和 \ci{Reset} 宏。
+
+您可能还需要重定义以下宏：
+\begin{verbatim}
+\def\DefaultHeightofSubmit{12pt}
+\def\DefaultWidthofSubmit{2cm}
+\def\DefaultHeightofReset{12pt}
+\def\DefaultWidthofReset{2cm}
+\def\DefaultHeightofCheckBox{0.8\baselineskip}
+\def\DefaultWidthofCheckBox{0.8\baselineskip}
+\def\DefaultHeightofChoiceMenu{0.8\baselineskip}
+\def\DefaultWidthofChoiceMenu{0.8\baselineskip}
+\def\DefaultHeightofText{\baselineskip}
+\def\DefaultHeightofTextMultiline{4\baselineskip}
+\def\DefaultWidthofText{3cm}
+\end{verbatim}
+
+\subsection{表单环境参数}
+
+\smallskip
+\begin{longtable}{@{}>{\ttfamily}l>{\itshape}lp{9cm}@{}}
+action   & URL  & 如果表单中包含 \textsf{Submit} 按钮，接收表单数据的 URL \\
+encoding & 名称 & 设置到 URL 的字符串的编码；通常使用 FDF 编码，\texttt{html} 是唯一有效值 \\
+method   & 名称 & 仅在生成 HTML 时使用；值可为 \texttt{post} 或 \texttt{get} \\
+\end{longtable}
+
+\subsection{表单可选参数}
+注意，所有颜色必须表示为 rgb 三元组，范围在 0..1（即 \texttt{color=0 0 0.5}）
+
+\smallskip
+\begin{longtable}{@{}>{\ttfamily}ll>{\itshape}ll@{}}
+accesskey       & 键     &       & （按 HTML）\\
+align           & 数字  & 0     & 文本字段内的对齐；0 左对齐，\\*
+                &         &       & 1 居中，2 右对齐。\\
+altname         & 名称    &       & 替代名称，\\*
+                &         &       & 用户界面中显示的名称\\
+backgroundcolor &         &       & 盒子颜色\\
+bordercolor     &         &       & 边框颜色\\
+bordersep       &         &       & 盒子边框间距\\
+borderstyle     & 字符    & S     & 盒子边框样式；S（实线）为默认，B 为斜面，\\
+                &         &       & D 为虚线，I 为内陷，U 为下划线\\
+borderwidth     &         & 1     & 盒子边框宽度，值为尺寸\\
+                &         &       & 或带默认单位 bp 的数字\\
+calculate       &         &       & 计算字段值的 JavaScript 代码\\
+charsize        & 尺寸   &       & 字段文本的字号\\
+checkboxsymbol  & 字符    & 4 (\ding{\number`4}) & 复选框使用的符号（ZapfDingbats），\\
+&&& 值为字符或 \cs{ding}\verb|{|\texttt{\itshape 数字}\verb|}|，\\
+&&& 参见 \xpackage{psnfss} 包中的 \xpackage{pifont} 宏包\\
+checked         & 布尔 & false & 选项是否默认选中\\
+color           &         &       & 盒子内文本颜色\\
+combo           & 布尔 & false & 选择列表为 `combo' 样式\\
+default         &         &       & 默认值\\
+disabled        & 布尔 & false & 字段禁用\\
+format          &         &       & 格式化字段的 JavaScript 代码\\
+height          & 尺寸   &       & 字段盒子高度\\
+hidden          & 布尔 & false & 字段隐藏\\
+keystroke       &         &       & 控制输入时击键的 JavaScript 代码\\
+mappingname     & 名称    &       & 导出字段数据时使用的映射名称\\*
+                &         &       & \\
+maxlen          & 数字  & 0     & 文本字段允许的字符数\\
+menulength      & 数字  & 4     & 列表中显示的元素数\\
+multiline       & 布尔 & false & 文本框是否多行\\
+name            & 名称    &       & 字段名称（默认为标签）\\
+onblur          &         &       & JavaScript 代码\\
+onchange        &         &       & JavaScript 代码\\
+onclick         &         &       & JavaScript 代码\\
+ondblclick      &         &       & JavaScript 代码\\
+onfocus         &         &       & JavaScript 代码\\
+onkeydown       &         &       & JavaScript 代码\\
+onkeypress      &         &       & JavaScript 代码\\
+onkeyup         &         &       & JavaScript 代码\\
+onmousedown     &         &       & JavaScript 代码\\
+onmousemove     &         &       & JavaScript 代码\\
+onmouseout      &         &       & JavaScript 代码\\
+onmouseover     &         &       & JavaScript 代码\\
+onmouseup       &         &       & JavaScript 代码\\
+onselect        &         &       & JavaScript 代码\\
+password        & 布尔 & false & 文本字段为 `password' 样式\\
+popdown         & 布尔 & false & 选择列表为 `popdown' 样式\\
+radio           & 布尔 & false & 选择列表为 `radio' 样式\\
+radiosymbol     & 字符    & H (\ding{\number`H}) & 单选字段使用的符号（ZapfDingbats），\\
+&&& 值为字符或 \cs{ding}\verb|{|\texttt{\itshape 数字}\verb|}|，\\
+&&& 参见 \xpackage{psnfss} 包中的 \xpackage{pifont} 宏包\\
+readonly        & 布尔 & false & 字段只读\\
+rotation        & 数字  & 0     & 小部件注释的旋转\\*
+                &         &       & （度，逆时针，90 的倍数）\\
+tabkey          &         &       & （按 HTML）\\
+validate        &         &       & 验证输入的 JavaScript 代码\\
+value           &         &       & 初始值\\
+width           & 尺寸   &       & 字段盒子宽度
+\end{longtable}
+
+\section{定义新驱动程序}
+
+\xpackage{hyperref} 驱动程序必须为八个宏提供定义：
+
+\smallskip
+\noindent 1. \verb|\hyper@anchor|
+
+\noindent 2. \verb|\hyper@link|
+
+\noindent 3. \verb|\hyper@linkfile|
+
+\noindent 4. \verb|\hyper@linkurl|
+
+\noindent 5. \verb|\hyper@anchorstart|
+
+\noindent 6. \verb|\hyper@anchorend|
+
+\noindent 7. \verb|\hyper@linkstart|
+
+\noindent 8. \verb|\hyper@linkend|
+\smallskip
+
+draft 选项按以下方式定义这些宏：
+\begin{verbatim}
+\let\hyper@@anchor\@gobble
+\gdef\hyper@link##1##2##3{##3}%
+\def\hyper@linkurl##1##2{##1}%
+\def\hyper@linkfile##1##2##3{##1}%
+\let\hyper@anchorstart\@gobble
+\let\hyper@anchorend\@empty
+\let\hyper@linkstart\@gobbletwo
+\let\hyper@linkend\@empty
+\end{verbatim}
+
+\section{对其他宏包的特殊支持}
+
+\xpackage{hyperref} 宏包旨在与其他宏包协作，但长期目标是移除补丁并将链接支持移入内核、文档类和宏包中。目前仍有若干可能的冲突来源，例如：
+
+\begin{itemize}
+
+\item 操纵文献机制的宏包。支持 Peter William 的 \xpackage{harvard} 宏包。但推荐使用 Patrick Daly 的 \xpackage{natbib} 宏包（它有专门的 \xpackage{hyperref} 钩子以实现可靠交互）或 \xpackage{biblatex} 宏包。这两个宏包覆盖非常广泛的布局和引用样式，都能与 \xpackage{hyperref} 配合工作。
+
+\item 修改 \ci{label} 和 \ci{ref} 宏的宏包。自 \LaTeX{} 2023-06-01 起，内核和 \xpackage{hyperref}/\xpackage{nameref} 使用相同的 \ci{label} 定义。\ci{label} 为外部宏包提供了钩子。外部宏包和文档类不应再需要重定义它们。
+
+\item 对索引做重要操作的宏包。
+
+\item 对分节命令和目录做重要操作的宏包。
+\end{itemize}
+
+\xpackage{hyperref} 宏包附带了一个变体 \xpackage{xr}、\xpackage{xr-hyper}\footnote{它很快将与 \xpackage{xr} 宏包合并}，支持使用 \hologo{LaTeX} 常规 \cs{label}/\cs{ref} 机制进行跨文档链接。
+
+
+\subsection{宏包兼容性}
+
+目前只能通过宏包加载顺序来解决：
+
+\subsubsection{algorithm}
+\begin{verbatim}
+ \usepackage{float}
+  \usepackage{hyperref}
+  \usepackage[chapter]{algorithm}% 例如
+\end{verbatim}
+
+\subsubsection{amsmath}
+
+环境 equation 和 eqnarray 支持得不太好。例如，可能存在间距问题（eqnarray 本来就不推荐使用，参见 CTAN:info/l2tabu/，equation 的情况不清楚，因为没人有兴趣研究）。考虑使用 amsmath 宏包提供的环境，例如用 gather 代替 equation。甚至可以重新定义 equation 环境使用 gather：
+
+\begin{verbatim}
+  \usepackage{amsmath}
+  \let\equation\gather
+  \let\endequation\endgather
+\end{verbatim}
+
+\subsubsection{amsrefs}
+
+\xpackage{amsrefs} 的文档声称该宏包必须在 \xpackage{hyperref} 之后加载（不清楚是否真的如此），因此推荐的宏包加载顺序是：
+
+\begin{verbatim}
+  \usepackage{hyperref}
+  \usepackage{amsrefs}
+\end{verbatim}
+
+\subsubsection{arydshln, longtable}
+
+\xpackage{longtable} 必须放在 \xpackage{hyperref} 和 \xpackage{arydshln} 之前，\xpackage{hyperref} 在 \xpackage{arydshln} 之后加载会产生错误，因此最终的宏包顺序是：
+
+\begin{verbatim}
+  \usepackage{longtable}
+  \usepackage{hyperref}
+  \usepackage{arydshln}
+\end{verbatim}
+
+\subsubsection{babel/magyar.ldf}
+
+旧版本 2005/03/30 v1.4j 无法工作。您需要至少 1.5 版本，由 P\'eter Szab\'o 维护，参见 CTAN:language/hungarian/babel/。
+
+\subsubsection{babel/spanish.ldf}
+
+Babel 的 spanish.ldf 重新定义了 `\verb|\.|' 以支持 `\verb|\...|'。在书签（\verb|\pdfstringdef|）中只支持 `\verb|\.|'。如果需要 `\verb|\...|'，可以改用 \verb|\texorpdfstring{\...}{\dots}|。
+
+\subsubsection{bibentry}
+
+解决方法：
+
+\begin{verbatim}
+  \makeatletter
+  \let\saved@bibitem\@bibitem
+  \makeatother
+
+  \usepackage{bibentry}
+  \usepackage{hyperref}
+
+  \begin{document}
+
+  \begingroup
+    \makeatletter
+    \let\@bibitem\saved@bibitem
+    \nobibliography{database}
+  \endgroup
+\end{verbatim}
+
+\subsubsection{bigfoot}
+
+ \xpackage{hyperref} 不支持 \xpackage{bigfoot} 宏包。而且 \xpackage{bigfoot} 宏包也不支持 \xpackage{hyperref} 的脚注，并禁用它们（hyperfootnotes=false）。
+
+
+
+
+\subsubsection{chappg}
+
+ \xpackage{chappg} 宏包使用被 \xpackage{hyperref} 重定义的 \verb|\@addtoreset|。
+  因此宏包顺序为：
+
+\begin{verbatim}
+  \usepackage{hyperref}
+  \usepackage{chappg}
+\end{verbatim}
+
+\subsubsection{count1to}
+
+ 宏包 count1to' 添加了若干 \verb|\@addtoreset| 命令，会混淆 hyperref'。因此必须修正 \verb|\theH<...>|：
+
+
+\begin{verbatim}
+  \usepackage{count1to}
+  \AtBeginDocument{% *after* \usepackage{count1to}
+    \renewcommand*{\theHsection}{\theHchapter.\arabic{section}}%
+    \renewcommand*{\theHsubsection}{\theHsection.\arabic{subsection}}%
+    \renewcommand*{\theHsubsubsection}{\theHsubsection.\arabic{subsubsection}}%
+    \renewcommand*{\theHparagraph}{\theHsubsubsection.\arabic{paragraph}}%
+    \renewcommand*{\theHsubparagraph}{\theHparagraph.\arabic{subparagraph}}%
+  }
+\end{verbatim}
+
+\subsubsection{dblaccnt}
+
+ 应在之前加载 pd1enc.def 或 puenc.def：
+\begin{verbatim}
+  \usepackage{hyperref}
+  \usepackage{dblaccnt}
+\end{verbatim}
+  或参见 \xoption{vietnam} 条目。
+
+
+\subsubsection{easyeqn}
+ 不兼容，会中断。
+
+
+\subsubsection{ellipsis}
+
+ 此宏包在 \xpackage{hyperref} 之后重定义 \verb|\textellipsis|（应在之前加载 pd1enc.def/puenc.def）：
+
+\begin{verbatim}
+  \usepackage{hyperref}
+  \usepackage{ellipsis}
+\end{verbatim}
+
+（这会导致书签中的省略号错误，因此需要 \verb|\texorpdfstring|）。
+
+\subsubsection{float}
+\begin{verbatim}
+ \usepackage{float}
+  \usepackage{hyperref}
+\end{verbatim}
+\begin{itemize}
+  \item 一个浮动对象内不支持多个 \verb|\caption| 命令。
+  \item 如果浮动对象的样式由 float.sty 控制，锚点设置在浮动对象顶部。
+
+\end{itemize}
+
+\subsubsection{endnotes}
+ 不支持。
+
+\subsubsection{foiltex}
+ 更新到 2008/01/28 v2.1.4b 版本：
+   自 6.77a 版本起，\xpackage{hyperref} 不再侵入 \verb|\@begindvi|，而是使用 tbegshi' 宏包，该宏包挂钩 \verb|\shipout|。
+   因此 oils.cls' 中关于 \xpackage{hyperref} 的补丁现已过时，并会导致关于 \verb|\@hyperfixhead| 的未定义错误。
+   此问题已在 FoilTeX 2.1.4b 中修复。
+
+
+
+
+\subsubsection{footnote}
+
+  此宏包不受支持，必须使用选项 \verb"hyperfootnotes=false" 禁用 \xpackage{hyperref} 的脚注支持。
+
+
+
+\subsubsection{linguex}
+\begin{verbatim}
+ \usepackage{hyperref}
+  \usepackage{linguex}
+\end{verbatim}
+
+\subsubsection{ltabptch}
+\begin{verbatim}
+ \usepackage{longtable}
+  \usepackage{ltabptch}
+  \usepackage{hyperref}
+\end{verbatim}
+
+\subsubsection{mathenv}
+
+ 不支持。
+
+
+
+ \xpackage{mathenv} 和 \xpackage{hyperref} 都会干扰 \texttt{eqnarray} 环境。可以在 \xpackage{hyperref} 之后加载 \xpackage{mathenv} 以避免错误信息。但 \verb|\label| 在 \texttt{eqnarray} 环境内不能正常工作，
+
+
+
+  
+
+
+\subsubsection{minitoc-hyper}
+
+ 此宏包已过时，请使用最新的原版宏包 \xpackage{minitoc}。
+
+
+
+
+\subsubsection{multind}
+\begin{verbatim}
+ \usepackage{multind}
+  \usepackage{hyperref}
+\end{verbatim}
+
+\subsubsection{natbib}
+\begin{verbatim}
+ \usepackage{natbib}
+  \usepackage{hyperref}
+\end{verbatim}
+
+\subsubsection{nomencl}
+ 为页码引入链接的示例：
+\begin{verbatim}
+      \renewcommand*{\pagedeclaration}[1]{\unskip, \hyperpage{#1}}
+\end{verbatim}
+
+\subsubsection{ntheorem}
+
+此宏包未完全受支持。\texttt{thref} 选项根本不应使用，因为它会破坏 \verb+\label+ 命令。也不能保证指向定理的链接总是正常工作，因为该宏包重定义了许多内部命令，但没有为超链接提供合适的接口。
+
+
+
+
+\subsubsection{ntheorem-hyper}
+ 此宏包已过时，请使用最新的原版宏包 \xpackage{ntheorem}。
+
+
+
+对于公式，以下方法可能有效：
+\begin{verbatim}
+      \renewcommand*{\eqdeclaration}[1]{%
+        \hyperlink{equation.#1}{(Equation~#1)}%
+      }
+    但从公式编号到锚点名称的映射一般不可用。
+
+\end{verbatim}
+
+
+\subsubsection{prettyref}
+\begin{verbatim}
+%%% example for prettyref %%%
+\documentclass{article}
+\usepackage{prettyref}
+\usepackage{hyperref}
+
+%\newrefformat{FIG}{Figure~\ref{#1}}% without hyperref
+\newrefformat{FIG}{\hyperref[{#1}]{Figure~\ref*{#1}}}
+
+\begin{document}
+  This is a reference to \prettyref{FIG:ONE}.
+  \newpage
+  \begin{figure}
+    \caption{This is my figure}
+    \label{FIG:ONE}
+  \end{figure}
+\end{document}
+%%% example for prettyref %%%
+      \end{verbatim}
+
+
+\subsubsection{setspace}
+\begin{verbatim}
+ \usepackage{setspace}
+  \usepackage{hyperref}
+\end{verbatim}
+
+\subsubsection{sidecap}
+不再需要特殊处理。
+
+\subsubsection{subfigure}
+此宏包已过时。请使用 \xpackage{subfig} 或 \xpackage{subcaption}。
+
+
+\subsubsection{titleref}
+\begin{verbatim}
+ \usepackage{nameref}
+  \usepackage{titleref}% without usetoc
+  \usepackage{hyperref}
+\end{verbatim}
+
+\subsubsection{tabularx}
+
+ \texttt{tabularx} 环境内不支持链接脚注，因为它们使用 \verb|\footnotetext| 的可选参数，参见 Limitations' 节。在 2011/09/28 6.82i 版本之前，\xpackage{hyperref} 通过 \texttt{hyperfootnotes=false} 完全禁用脚注。
+
+
+
+
+
+\subsubsection{titlesec}
+
+ \xpackage{nameref} 支持 \xpackage{titlesec}，但 \xpackage{hyperref} 不支持（未解决的问题是锚点设置：无编号分节时缺失，有编号分节时可能有分页问题）。
+
+
+
+
+\subsubsection{ucs/utf8x.def}
+ 注意：utf8 现在是 \LaTeX{} 的默认编码，\xpackage{ucs} 不再推荐使用。
+
+ 第一次调用多字节 UTF8 序列时，它会做一些计算并将结果存入宏中，以加速后续该 UTF8 序列的调用。但这使得第一次调用不可展开，在信息条目或书签中使用时会出错。\xpackage{ucs} 宏包提供 \verb|\PrerenderUnicode| 或 \verb|\PreloadUnicodePage| 来解决此问题：
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  带两个脱字符的记法避免了 8 位字节的问题；对于 README 文件，您可以直接使用字符。
+
+
+
+\subsubsection{varioref}
+之前与 \xpackage{varioref} 的大多数问题应该已解决。只有一个关于 \ci{vrefformat} 的未决问题（\url{https://github.com/latex3/hyperref/issues/225}）。
+
+
+建议始终使用选项 \texttt{nospace} 加载 \xpackage{varioref}，参见其文档。
+
+
+\begin{verbatim}
+    \usepackage[nospace]{varioref}
+\end{verbatim}
+
+\subsubsection{verse}
+
+ 2005/08/22 v2.22 版本已包含对 \xpackage{hyperref} 的支持。
+
+\subsubsection{vietnam}
+\begin{verbatim}
+ % 应在 dblaccnt 宏包之前加载 pd1enc.def：
+  \usepackage[PD1,OT1]{fontenc}
+  \usepackage{vietnam}
+  \usepackage{hyperref}
+\end{verbatim}
+
+\subsubsection{XeTeX}
+
+ 书签编码默认为 \verb|pdfencoding=unicode|。这意味着字符串始终被视为 unicode 字符串。如果强制使用 \verb|auto| 或 \verb|pdfdoc|，则仅在字符串限于可打印 ASCII 字符集时才适用。原因是 \verb|\special| 不支持 PDFDocEncoding。
+
+
+
+
+ 在旧版本中，\xpackage{hyperref} 在若干地方包含从 UTF-16BE 转回 UTF-8 的特殊转换代码，供 xetex 使用，以避免 xdvipdfmx 警告：
+
+
+
+    \verb"Failed to convert input string to UTF16..."
+
+ 对于当前的 xdvipdfmx，不再需要此代码，因此已移除。不应再使用 \verb|\csname HyPsd@XeTeXBigCharstrue\endcsname|。
+
+
+
+
+
+\section{限制}
+
+\footnote{本节从 README 文件移来，需要更多地融入手册。}
+
+\subsection{换行/断行链接支持}
+
+ 只有少数驱动程序支持自动换行/断开的链接，例如 pdftex、dvipdfmx、hypertex。其他驱动缺少此功能，例如 dvips、dvipsone。
+
+ 变通方法：
+\begin{itemize}
+\item 对于目录中过长的节或标题标题，或图表目录时，可以使用 \xoption{linktocpage} 选项。这样页码将是链接，过长的章节标题不会被强制放入一行链接中导致溢出 \verb|\hbox| 警告。
+\item ``\verb|\url|'' 由 \xpackage{breakurl} 宏包处理。
+\item 选项 \xoption{breaklinks} 供内部使用。但它可用于强制链接换行，例如打印文档。但当这样的文档转换为 PDF 并在 PDF 阅读器中查看时，活动链接区域将错位。
+
+  另一个限制：TeX 会"优化"某些惩罚值，因此缺少断点，特别是在 \verb|\url| 内。（参见 comp.text.tex 2005-09 中的线程 ``hyperref.sty, breaklinks and url.sty 3.2''。）
+\end{itemize}
+
+\subsection{跨页链接}
+
+ 一般来说它们有问题：
+\begin{itemize}
+  \item 某些驱动根本不支持它们（见上文）。
+  \item 驱动允许，但链接结果可能包含页脚和/或页眉。目前（2023）可以通过使用 PDF 管理并至少加载 latex-lab 的 new-or-1 模块来避免：
+
+      \begin{verbatim}
+      \DocumentMetadata{testphase=new-or-1}
+      \end{verbatim}
+
+\end{itemize}
+
+\subsection{脚注}
+
+ LaTeX 允许将脚注标记和脚注文本（\verb|\footnotemark|、\verb|\footnotetext|）分离。此接口对于视觉排版可能足够。但 \verb|\footnotemark| 到 \verb|\footnotetext| 的关联不如 \verb|\ref| 到 \verb|\label| 那样强。因此通常不清楚哪个 \verb|\footnotemark| 引用哪个 \verb|\footnotetext|。但实现超链接需要这种关联。因此 \xpackage{hyperref} 的实现不支持 \verb|\footnotemark| 和 \verb|\footnotetext| 的可选参数。
+
+
+\section{提示}
+
+\footnote{本节从 README 文件移来，需要更多地融入手册。}
+
+\subsection{选项值中的空格}
+
+ 遗憾的是，如果在 \verb|\documentclass| 或 \verb|\usepackage|（或 \verb|\RequirePackage|）中给出选项，LaTeX 会去除选项中的空格，例如：
+\begin{verbatim}
+    \usepackage[pdfborder=0 0 1]{hyperref}
+\end{verbatim}
+ 宏包 \xpackage{hyperref} 现在得到
+\begin{verbatim}
+    pdfborder=001
+\end{verbatim}
+ 结果是无效的 PDF 文件。作为变通方法，可以使用花括号：
+\begin{verbatim}
+    \usepackage[pdfborder={0 0 1}]{hyperref}
+\end{verbatim}
+ 某些选项也可以在 \verb|\hypersetup| 中给出：
+\begin{verbatim}
+    \hypersetup{pdfborder=0 0 1}
+\end{verbatim}
+ 在 \verb|\hypersetup| 中，选项直接作为键值选项处理（参见 keyval 宏包），值部分不去除空格。
+
+ 或者，可以通过 \xpackage{kvoptions-patch}（来自 \xpackage{kvoptions} 项目）或 \xpackage{xkvltxp}（来自 \xpackage{xsetkeys} 项目）等宏包之一来适配 LaTeX 的选项处理系统以支持键值选项。
+
+
+\subsection{使用 makeindex 生成索引}
+\begin{itemize}
+ \item 宏包 \xpackage{hyperref} 通过 encap 机制（参见 Makeindex 文档）在设置了 hyperindex 选项（默认）时添加 \verb|\hyperpage| 命令。\verb|\hyperpage| 使用 \xpackage{hyperref} 在每页设置的页面锚点（默认）。但默认情况下，页码用于锚点名称的阿拉伯数字形式。如果使用其他格式的页码（book 类的 \verb|\frontmatter|、\verb|\romannumbering| 等），则页面锚点不唯一。因此推荐使用选项 \verb"plainpages=false"。
+ \item Makeindex 的 encap 机制只允许使用一个命令（参见 Makeindex 文档）。如果用户设置了这样的命令，\xpackage{hyperref} 会抑制其 \verb|\hyperpage| 命令。使用逻辑标记可以轻松解决这种情况：
+\begin{verbatim}
+      \usepackage{makeidx}
+      \makeindex
+      \usepackage[hyperindex]{hyperref}
+      \newcommand*{\main}[1]{\textbf{\hyperpage{#1}}}
+      ...
+      \index{Some example|main}
+\end{verbatim}
+  \item Scientific Word/Scientific WorkPlace 用户可以使用 robustindex 宏包并设置 hyperindex=false。
+  \item 其他 encap 字符可通过选项 \xoption{encap} 设置。使用 ``?'' 的示例：
+\begin{verbatim}
+      \usepackage[encap=?]{hyperref}
+\end{verbatim}
+  \item 另一种方式是通过 makeindex 的样式文件插入 \verb|\hyperpage|。在这种情况下，\xpackage{hyperref} 的插入会被 \verb"hyperindex=false" 禁用。无论 hyperindex 如何设置，\verb|\hyperpage| 都会被定义。
+\begin{verbatim}
+%%% cut %%% hyperindex.ist %%% cut %%%
+delim_0 ", \\hyperpage{"
+delim_1 ", \\hyperpage{"
+delim_2 ", \\hyperpage{"
+delim_n "}, \\hyperpage{"
+delim_t "}"
+encap_prefix "}\\"
+encap_infix "{\\hyperpage{"
+encap_suffix "}"
+%%% cut %%% hyperindex.ist %%% cut %%%
+\end{verbatim}
+\end{itemize}
+
+\subsection{警告 \texttt{"bookmark level for unknown <foobar> defaults to 0"}}
+
+ 消除方法：
+\begin{verbatim}
+\makeatletter
+\providecommand*{\toclevel@<foobar>}{0}
+\makeatother
+\end{verbatim}
+
+\subsection{图形中的链接锚点}
+
+ 标题命令会递增计数器，这是 \xpackage{hyperref} 设置相应锚点的位置。不幸的是标题设置在图下方，因此当链接跳转到图时图不可见。这种情况下，请尝试 \xpackage{hypcap} 宏包，它实现了一种绕过此问题的方法。
+
+
+\subsection{书签和 PDF 信息条目中的额外 Unicode 字符：}
+\begin{verbatim}
+\documentclass[pdftex]{article}
+\usepackage[unicode]{hyperref}
+\end{verbatim}
+
+ 对额外 Unicode 字符的支持：
+
+  示例：\verb|\.{a}| 和 \verb|\d{a}|
+
+  1. 获取 unicode 数据列表，例如：
+
+    http://www.unicode.org/Public/UNIDATA/UnicodeData.txt
+
+  2. 识别字符（\verb|\.{a}|、\verb|\d{a}|）：
+\begin{verbatim}
+    0227;LATIN SMALL LETTER A WITH DOT ABOVE;...
+    1EA1;LATIN SMALL LETTER A WITH DOT BELOW;...
+\end{verbatim}
+
+  3. 计算八进制代码：
+
+    文件中行的前几个字符是十六进制值，转换每个字节并在前面加反斜杠。（这将进入 PDF 文件。）
+
+\begin{verbatim}
+    0227 -> \002\047
+    1EA1 -> \036\241
+\end{verbatim}
+
+  4. 转换为 \xpackage{hyperref} 能理解的形式：
+
+    Hyperref 必须知道第一个字节从哪里开始，这用 \verb"9" 标记（8 和 9 不能出现在八进制数中）：
+
+\begin{verbatim}
+    \002\047 -> \9002\047
+    \036\241 -> \9036\241
+\end{verbatim}
+
+    可选：\verb"8" 用于缩写：
+
+\begin{verbatim}
+    \900 = \80, \901 = \81, \902 = \82, ...
+
+    \9002\047 -> \82\047
+\end{verbatim}
+
+  5. 用 LaTeX 声明字符：
+
+\begin{verbatim}
+\DeclareTextCompositeCommand{\.}{PU}{a}{\82\047}
+\DeclareTextCompositeCommand{\d}{PU}{a}{\9036\241}
+
+\begin{document}
+\section{\={a}, \d{a}, \'{a}, \.{a}}
+\end{document}
+      \end{verbatim}
+
+\subsection{脚注}
+
+ 脚注支持相当有限。不按顺序使用 \verb|\footnotemark| 和 \verb|\footnotetext| 或重复使用 \verb|\footnotemark| 超出了范围。此时可以通过 \verb"hyperfootnotes=false" 禁用 \xpackage{hyperref} 的脚注支持，或者摆弄内部宏，糟糕的示例：
+
+\begin{verbatim}
+\documentclass{article}
+\usepackage{hyperref}
+\begin{document}
+Hello%
+\footnote{The first footnote}
+World%
+\addtocounter{footnote}{-1}%
+\addtocounter{Hfootnote}{-1}%
+\footnotemark.
+\end{document}
+
+  or
+
+\documentclass{article}
+
+\usepackage{hyperref}
+
+\begin{document}
+
+\makeatletter
+
+A%
+  \footnotemark
+  \let\saved@Href@A\Hy@footnote@currentHref
+  % remember link name
+B%
+  \footnotemark
+  \let\saved@Href@B\Hy@footnote@currentHref
+b%
+  \addtocounter{footnote}{-1}%
+  \addtocounter{Hfootnote}{-1}% generate the same anchor
+  \footnotemark
+C%
+  \footnotemark
+  \let\saved@Href@C\Hy@footnote@currentHref
+
+  \addtocounter{footnote}{-2}%
+  \let\Hy@footnote@currentHref\saved@Href@A
+\footnotetext{AAAA}%
+  \addtocounter{footnote}{1}%
+  \let\Hy@footnote@currentHref\saved@Href@B
+\footnotetext{BBBBB}%
+  \addtocounter{footnote}{1}%
+  \let\Hy@footnote@currentHref\saved@Href@C
+\footnotetext{CCCC}%
+
+\end{document}
+\end{verbatim}
+
+\subsection{从属计数器}
+
+ 某些计数器没有唯一值，需要其他计数器的值才能唯一。例如，节或图可能在章内编号，或 \verb|\newtheorem| 带可选计数器参数使用。内部 LaTeX 使用 \verb|\@addtoreset| 在依赖另一个计数器时重置计数器。\xpackage{hyperref} 挂钩 \verb|\@addtoreset| 来捕获此情况。amsmath 宏包的 \verb|\numberwithin| 也被 \xpackage{hyperref} 捕获。
+
+ 但是，如果从属计数器的定义发生在 \xpackage{hyperref} 加载之前，则调用的是不带 \xpackage{hyperref} 添加的旧版 \verb|\@addtoreset|。此时可以相应地重定义配套计数器宏 \verb|\theH<counter>|。或者将从属计数器的定义移到 \xpackage{hyperref} 加载之后。
+
+ \verb|\newtheorem| 的问题示例：
+\begin{verbatim}
+    \newtheorem{corA}{CorollaryA}[section]
+    \usepackage{hyperref}
+\end{verbatim}
+ 解决方法 a)
+\begin{verbatim}
+    \usepackage{hyperref}
+    \newtheorem{corA}{CorollaryA}[section}
+\end{verbatim}
+ 解决方法 b)
+\begin{verbatim}
+    \newtheorem{corA}{CorollaryA}[section]
+    \usepackage{hyperref}
+    \newcommand*{\theHcorA}{\theHsection.\number\value{corA}}
+\end{verbatim}
+
+\section{历史与致谢}
+
+\textsf{hyperbasics.tex} 和 \textsf{hypertex.sty} 的原始作者（本宏包源自它们）是 Tanmoy Bhattacharya 和 Thorsten Ohl。\xpackage{hyperref} 宏包最初只是将他们的工作简单移植到 \hologo{LaTeXe} 标准，但最终我几乎重写了所有内容，因为我不太理解原始代码的很多部分，而且只对让它与 \hologo{LaTeX} 配合工作感兴趣。我要感谢 Arthur Smith、Tanmoy Bhattacharya、Mark Doyle、Paul Ginsparg、David Carlisle、T.\ V.\ Raman 和 Leslie Lamport 的评论、需求、想法和代码，使宏包达到了第一个可用状态。其他许多人在源代码中的相应位置被提及——在后续版本中，由于他们发现的问题，我不得不修改代码。
+
+Tanmoy 发现了大量错误，而且（更好的是）经常提供修复，这使宏包更加健壮。花在 Rev\TeX 上的时间完全归功于他！Bill Moss 对后续版本（包括原生 PDF 支持）的研究发现了很多错误，他的测试值得赞赏。Hans Hagen 提供了很多关于 PDF 的见解。
+
+Berthold Horn 为 \textsf{dvipsone} 和 \textsf{dviwindo} 驱动程序提供了帮助、鼓励和赞助。Sergey Lesenko 提供了 \textsf{dvipdf} 所需的更改，\Hologo{HanTheThanh} 提供了 \textsf{pdftex} 所需的所有信息。Patrick Daly 友好地更新了他的 \xpackage{natbib} 宏包，以便与 \xpackage{hyperref} 轻松集成。Michael Mehlich 的 \xpackage{hyper} 宏包（与 \xpackage{hyperref} 并行开发）向我展示了一些问题的解决方案。希望有一天这两个宏包能够合并。
+
+表单创建部分很大程度上归功于：T.\ V.\ Raman 的鼓励、支持和想法；Thomas Merz 的书《\emph{Web Publishing with Acrobat/PDF}》提供了关键见解；D.\ P.\ Story 关于 pdfmarks 和表单的详细文章解决了许多实际问题；以及 Hans Hagen 解释了如何在 \textsf{pdftex} 中实现。
+
+Steve Peter 在 2003 年 7 月手册源文件丢失后重新创建了它。
+
+特别感谢 David Carlisle 提供 \xpackage{backref} 模块、ps2pdf 和 dviwindo 支持，频繁地重写我的糟糕代码，以及修改 \xpackage{xr} 宏包以适配 \xpackage{hyperref}。
+
+\begingroup
+  \makeatletter
+  \let\chapter=\section
+  % subsections goes into bookmarks but not toc
+  \hypersetup{bookmarksopenlevel=1}
+  \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
+  % The \section command acts as \subsection.
+  % Additionally the title is converted to lowercase except
+  % for the first letter.
+  \def\section{%
+    \let\section\lc@subsection
+    \lc@subsection
+  }
+  \def\lc@subsection{%
+    \@ifstar{\def\mystar{*}\lc@sec}%
+            {\let\mystar\@empty\lc@sec}%
+  }
+  \def\lc@sec#1{%
+    \lc@@sec#1\@nil
+  }
+  \def\lc@@sec#1#2\@nil{%
+    \begingroup
+      \def\a{#1}%
+      \lowercase{%
+        \edef\x{\endgroup
+          \noexpand\subsection\mystar{\a#2}%
+        }%
+      }%
+    \x
+  }
+\clearpage
+
+
+\chapter{GNU Free Documentation License}
+
+Version 1.2, November 2002
+
+
+ Copyright \copyright\ 2000,2001,2002  Free Software Foundation, Inc.\\
+     59 Temple Place, Suite 330, Boston, MA  02111-1307  USA\\
+ 允许任何人复制和分发本许可证文档的逐字副本，
+ 但不允许修改。
+
+
+\section*{前言}
+
+ 本许可证的目的是使手册、教科书或其他实用文档在自由意义上"自由"：确保每个人都有有效复制和重新分发它的自由，无论是否修改，无论是商业还是非商业用途。其次，本许可证为作者和出版者保留一种方式，使其作品获得认可，同时不对他人所做的修改负责。
+
+本许可证是一种"copyleft"，意味着文档的衍生作品本身也必须在同样意义上自由。它补充了 GNU 通用公共许可证，后者是为自由软件设计的 Copyleft 许可证。
+
+我们设计本许可证是为了用于自由软件的手册，因为自由软件需要自由文档：自由程序应附带提供与软件相同自由的手册。但本许可证不限于软件手册；它可以用于任何文本作品，无论主题如何，无论是否作为印刷书籍出版。我们推荐本许可证用于教学或参考目的的作品。
+
+
+\section{适用范围与定义}
+\label{applicability}
+
+本许可证适用于任何介质中的任何手册或其他作品，只要其中包含版权所有者放置的声明，说明该作品可根据本许可证的条款分发。此类声明授予一项全球范围、免版税、期限不限的许可，允许在本文规定的条件下使用该作品。下文所称"文档"指任何此类手册或作品。公众中的任何成员都是被许可人，下称"您"。如果您以需要许可的方式复制、修改或分发该作品，即表示接受本许可证。
+
+文档的"修改版本"指包含文档或其一部分的任何作品，无论是逐字复制还是经过修改和/或翻译成另一种语言。
+
+"次要章节"是文档中命名的附录或前言部分，专门讨论文档出版者或作者与文档整体主题（或相关事项）的关系，且不包含任何可直接归入该整体主题的内容。（因此，如果文档部分是数学教科书，次要章节不得解释任何数学。）这种关系可以是与主题或相关事项的历史联系，或关于它们的法律、商业、哲学、伦理或政治立场。
+
+"不变章节"是某些次要章节，其标题在声明文档根据本许可证发布的通知中被指定为不变章节。如果文档未指明任何不变章节，则没有。文档可以不包含不变章节。
+
+"封面文本"是在声明文档根据本许可证发布的通知中列出的某些短段落文本，作为封面文本或封底文本。封面文本最多 5 个词，封底文本最多 25 个词。
+
+文档的"透明"副本指机器可读的副本，其表示格式的规范对公众可用，适合用通用文本编辑器直接修改文档，或（对于像素组成的图像）通用绘图程序，或（对于图形）某些广泛使用的绘图编辑器，并且适合输入到文本格式化程序或自动翻译成各种适合输入文本格式化程序的格式。如果在其他方面透明的文件格式中制作的副本，其标记（或缺少标记）被安排为阻碍或阻止读者后续修改，则不是透明的。如果图像格式用于大量文本，则不是透明的。非"透明"的副本称为"不透明"。
+
+适合透明副本的格式示例包括：无标记的纯 ASCII、Texinfo 输入格式、\LaTeX 输入格式、使用公开可用 DTD 的 SGML 或 XML，以及符合标准的简单 HTML、PostScript 或 PDF（为人工修改设计）。透明图像格式示例包括 PNG、XCF 和 JPG。不透明格式包括：只能由专有文字处理器读取和编辑的专有格式、DTD 和/或处理工具不普遍可用的 SGML 或 XML，以及某些文字处理器仅为输出生成的机器生成的 HTML、PostScript 或 PDF。
+
+对于印刷书籍，"标题页指标题页本身，加上后续需要以清晰易读的方式容纳本许可证要求出现在标题页上的材料的页面。对于没有此类标题页的格式的作品，"标题页"指作品标题最显著出现处附近的文本，位于正文开始之前。
+
+一个"名为 XYZ"的章节指文档的一个命名子单元，其标题要么正好是 XYZ，要么在括号中包含 XYZ，后跟将 XYZ 翻译成另一种语言的文本。（此处 XYZ 指下面提到的特定章节名称，如"致谢"、"献词"、"背书"或"历史"。）修改文档时"保留此类章节的标题"指它根据本定义仍是一个"名为 XYZ"的章节。
+
+文档可在声明本许可证适用于文档的通知旁边包含免责声明。这些免责声明视为通过引用包含在本许可证中，但仅就免责而言；这些免责声明可能产生的任何其他含义均无效，对本许可证的含义无影响。
+
+
+\section{逐字复制}
+\label{verbatim}
+
+您可以在任何介质中复制和分发文档，无论商业或非商业，前提是在所有副本中 reproduces 本许可证、版权声明和声明本许可证适用于文档的许可通知，并且您不对本许可证的条款添加任何其他条件。您不得使用技术措施来阻碍或控制您制作或分发的副本的阅读或进一步复制。但您可以接受副本的报酬。如果您分发足够数量的副本，还必须遵循 \ref{copying} 节中的条件。
+
+您也可以在上述相同条件下借出副本，并可以公开展示副本。
+
+
+\section{批量复制}
+\label{copying}
+
+如果您出版文档的印刷副本（或通常有印刷封面的介质中的副本），数量超过 100，且文档的许可通知要求封面文本，您必须在副本上清晰可辨地包含所有这些封面文本：封面上的封面文本和封底上的封底文本。两个封面还必须清晰可辨地标明您为这些副本的出版者。封面必须以同等显著和可见的方式呈现完整标题。您可以在封面上添加其他材料。仅对封面进行修改的复制，只要保留文档标题并满足这些条件，在其他方面可视为逐字复制。
+
+如果任一封面所需文本太多而无法清晰放下，应将列出的前几个（合理数量）放在实际封面上，其余继续到相邻页面。
+
+如果您出版或分发超过 100 份不透明副本，您必须在每份不透明副本中包含机器可读的透明副本，或在每份不透明副本中或附带其声明一个计算机网络位置，使一般网络用户能够使用公共标准网络协议下载文档的完整透明副本，不含附加材料。如果选择后一选项，在开始批量分发不透明副本时，必须采取合理谨慎的步骤，确保该透明副本在所述位置保持可访问，至少持续到您最后一次向公众分发该版本的不透明副本（直接或通过代理或零售商）后一年。
+
+建议（但不要求）您在重新分发大量副本之前很久联系文档作者，让他们有机会向您提供文档的更新版本。
+
+
+\section{修改}
+\label{modifications}
+
+您可以根据上述 \ref{verbatim} 和 \ref{copying} 节的条件复制和分发文档的修改版本，前提是您完全根据本许可证发布修改版本，使修改版本充当文档的角色，从而许可对修改版本的分发和修改给任何拥有其副本的人。此外，您必须在修改版本中做以下事项：
+
+\renewcommand{\labelenumi}{\Alph{enumi}.}
+\begin{enumerate}
+\item 在标题页（和封面上，如果有）使用与文档不同的标题，以及与先前版本不同的标题（如果先前版本有，应列在文档的历史节中）。如果该版本的原始出版者允许，您可以使用与先前版本相同的标题。
+\item 在标题页上列出作为作者的一个或多个对修改版本的修改负责的个人或实体，以及文档的至少五位主要作者（如果文档主要作者少于五位，则列出所有主要作者），除非他们解除您的此要求。
+\item 在标题页上声明修改版本出版者的名称作为出版者。
+\item 保留文档的所有版权声明。
+\item 在其他版权声明旁边添加您修改的适当版权声明。
+\item 在版权声明之后立即包含一个许可通知，授予公众根据本许可证条款使用修改版本的权利，格式见下文附录。
+\item 在该许可通知中保留文档许可通知中给出的完整不变章节列表和所需封面文本。
+\item 包含本许可证的未修改副本。
+\item 保留名为"历史"的章节，保留其标题，并在其中添加一项，说明修改版本的标题、年份、新作者和出版者（如标题页所示）。如果文档中没有名为"历史"的章节，则创建一个，说明文档的标题、年份、作者和出版者（如标题页所示），然后添加一项描述修改版本，如上一句所述。
+\item 保留文档中给出的供公众访问文档透明副本的网络位置，以及文档所基于的先前版本的网络位置。这些可放在"历史"节中。对于在文档本身之前至少四年出版的作品，或者如果该版本的原始出版者允许，您可以省略网络位置。
+\item 对于任何名为"致谢"或"献词"的章节，保留章节标题，并保留章节中各贡献者致谢和/或献词的全部实质内容和语气。
+\item 保留文档的所有不变章节，其文本和标题均不修改。章节编号或等效内容不视为章节标题的一部分。
+\item 删除任何名为"背书"的章节。此类章节不得包含在修改版本中。
+\item 不得将任何现有章节重新命名为"背书"或与任何不变章节标题冲突。
+\item 保留任何免责声明。
+
+\end{enumerate}
+
+如果修改版本包含新的前言部分或附录，且这些部分属于次要章节且不包含从文档复制的材料，您可以自行决定将部分或全部这些章节指定为不变章节。为此，将它们的标题添加到修改版本许可通知中的不变章节列表。这些标题必须与任何其他章节标题不同。
+
+您可以添加一个名为"背书"的章节，前提是其中仅包含各方对您修改版本的背书——例如同行评审声明或文本已被某组织批准为标准权威定义的声明。
+
+您可以在修改版本的封面文本列表末尾添加一段最多 5 个词的封面文本和一段最多 25 个词的封底文本。每个实体（或通过其安排）只能添加一段封面文本和一段封底文本。如果文档已包含同一封面的封面文本（先前由您或您代表的同一实体安排添加），您不得再添加另一个；但您可以在获得先前添加该文本的出版者明确许可后替换旧文本。
+
+文档的作者和出版者不通过本许可证授予使用其姓名进行宣传或主张或暗示任何修改版本的背书的权利。
+
+
+\section{合并文档}
+\label{combining}
+
+您可以将文档与其他根据本许可证发布的文档合并，按照上述 \ref{modifications} 节中修改版本的条款，前提是您在合并中包含所有原始文档的所有不变章节（未修改），并在合并作品的许可通知中将它们全部列为不变章节，并且保留所有免责声明。
+
+合并作品只需包含一份本许可证副本，多个相同的不变章节可以用一份副本替换。如果有多个同名但内容不同的不变章节，通过在每个章节标题末尾括号中添加该章节的原始作者或出版者名称（如果已知），或唯一编号，使每个此类章节的标题唯一。对合并作品许可通知中不变章节列表中的章节标题做同样调整。
+
+在合并中，您必须合并各原始文档中任何名为"历史"的章节，形成一个名为"历史"的章节；同样合并任何名为"致谢"的章节和任何名为"献词"的章节。您必须删除所有名为"背书"的章节。
+
+
+\section{文档汇编}
+\label{collections}
+
+您可以制作一个由文档和其他根据本许可证发布的文档组成的汇编，并在汇编中用一份本许可证副本替换各文档中的单独许可证副本，前提是在其他方面遵循本许可证对每个文档逐字复制的规则。
+
+您可以从此类汇编中提取单个文档，并在本许可证下单独分发，前提是在提取的文档中插入本许可证副本，并在其他方面遵循本许可证关于该文档逐字复制的规则。
+
+
+\section{与独立作品聚合}
+\label{aggregation}
+
+文档或其衍生作品与其他独立文档或作品在一卷存储或分发介质中或上的汇编，如果汇编产生的版权未用于限制汇编用户的法律权利超出各单独作品允许的范围，则称为"聚合"。当文档包含在聚合中时，本许可证不适用于聚合中本身不是文档衍生作品的其他作品。
+
+如果 \ref{copying} 节的封面文本要求适用于这些文档副本，且文档不到整个聚合的一半，则文档的封面文本可以放在聚合中包围文档的封面上，或电子形式的等效封面上。否则必须出现在包围整个聚合的印刷封面上。
+
+
+\section{翻译}
+\label{translation}
+
+翻译视为一种修改，因此您可以根据 \ref{modifications} 节的条款分发文档的翻译。用翻译替换不变章节需要其版权所有者的特别许可，但您可以在这些不变章节的原始版本之外，包含部分或全部不变章节的翻译。您可以包含本许可证的翻译，以及文档中的所有许可通知和任何免责声明，前提是您同时包含本许可证的原始英文版本和这些通知和免责声明的原始版本。如果翻译与本许可证或通知或免责声明的原始版本之间存在分歧，以原始版本为准。
+
+如果文档中的章节名为"致谢"、"献词"或"历史"，\ref{modifications} 节中保留其标题（\ref{applicability} 节）的要求通常需要更改实际标题。
+
+
+\section{终止}
+\label{termination}
+
+您不得复制、修改、再许可或分发文档，除非本许可证明确规定。任何其他复制、修改、再许可或分发文档的尝试均无效，并将自动终止您在本许可证下的权利。但是，从您处获得副本或权利的各方，只要完全遵守，其许可证不会被终止。
+
+
+\section{本许可证的未来修订}
+\label{future}
+
+自由软件基金会可能不时发布 GNU 自由文档许可证的新修订版本。此类新版本在精神上与当前版本相似，但可能在细节上不同，以解决新问题或关注点。参见 http://www.gnu.org/copyleft/。
+
+每个版本的许可证都有一个区分版本号。如果文档指定本许可证的特定编号版本"或任何后续版本"适用于它，您可以选择遵循该指定版本或自由软件基金会发布（非草稿）的任何后续版本的条款和条件。如果文档未指定本许可证的版本号，您可以选择自由软件基金会发布（非草稿）的任何版本。
+
+
+\section*{附录：如何将本许可证用于您的文档}
+
+要在您编写的文档中使用本许可证，在文档中包含本许可证的副本，并在标题页之后放置以下版权和许可通知：
+
+\begin{quote}
+    Copyright \copyright\ 年份  您的姓名。
+    准许复制、分发和/或修改本文档，条件是遵循自由软件基金会发布的 GNU 自由文档许可证 1.2 版或任何后续版本的条款；没有不变章节，没有封面文本，没有封底文本。许可证副本包含在名为"GNU 自由文档许可证"的章节中。
+\end{quote}
+
+如果您有不变章节、封面文本和封底文本，将"with...Texts."行替换为：
+
+    不变章节为列出其标题，封面文本为列表，封底文本为列表。
+
+如果您有不变章节但没有封面文本，或三者的某种其他组合，将两种选择合并以适应情况。
+
+如果您的文档包含重要的程序代码示例，我们建议根据您选择的自由软件许可证（如 GNU 通用公共许可证）并行发布这些示例，以允许在自由软件中使用它们。
+
+\endgroup
+
+\end{document}

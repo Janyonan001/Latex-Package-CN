@@ -1,0 +1,2507 @@
+% \iffalse meta-comment
+%
+% Copyright 2017-2026 by Tibor Tómács
+%
+% This work may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3
+% of this license or (at your option) any later version.
+% The latest version of this license is in
+%   http://www.latex-project.org/lppl.txt
+% and version 1.3 or later is part of all distributions of LaTeX
+% version 2005/12/01 or later.
+%
+% This work has the LPPL maintenance status `maintained'.
+% 
+% The Current Maintainer of this work is Tibor Tómács.
+%
+% \fi
+%
+% \iffalse
+%<*driver>
+\ProvidesFile{fgruler.dtx}
+%</driver>
+%<package>\NeedsTeXFormat{LaTeX2e}[2020/10/01]
+%<package>\ProvidesPackage{fgruler}[2026/01/11 v1.7 Package for drawing rulers on the foreground or in the text]
+%
+%<*driver>
+\documentclass{ltxdoc}
+\OnlyDescription
+\AddToHook{begindocument/before}[doc/hyperref]{\hypersetup{pdfstartview=FitH,allcolors=black}}% see in doc.sty and hypdoc.sty
+\usepackage[a4paper,margin=25mm,marginparwidth=15mm,marginparsep=5mm,headsep=5mm,headheight=4mm,footskip=10mm]{geometry}
+\usepackage{ctex}
+\usepackage{listings,fontawesome,stackengine}
+\usepackage[type=none]{fgruler}
+
+\setlength{\labelsep}{0pt}
+
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible,
+  keepspaces=true,
+}
+
+\lstnewenvironment{examplelst}{\lstset{
+gobble=2,
+belowskip=\bigskipamount,
+basicstyle=\ttfamily,
+backgroundcolor=\color{blue!10},
+framerule=0pt,
+frame=trbl,
+framesep=5pt,
+columns=fullflexible,
+xleftmargin=5pt,
+xrightmargin=5pt,
+keepspaces}}{}
+
+\newcommand{\commandinline}{\lstinline[
+literate={<}{{$\langle$}}1{>}{{$\rangle$}}1,
+delim={[is][\color{green!50!black}\normalfont\itshape]{!}{!}},
+basicstyle=\color{blue!80!black}\ttfamily,
+columns=fullflexible,
+keepspaces]}
+
+\begin{document}
+    \DocInput{./fgruler-zh.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{fgruler.sty}
+% 
+% \title{\texorpdfstring{{\bfseries\sffamily fgruler} 宏包\\{\large v1.7 (2026/01/11)}}{fgruler 宏包}}
+% \author{Tibor Tómács\\{\normalsize\href{mailto:tomacs.tibor@gmail.com}{\texttt{tomacs.tibor@gmail.com}}}}
+% \date{}
+% \maketitle
+%
+% \fgruler*[color=red!80!black]{upperleft}
+% \noindent{\rulerparams{}{\scriptsize\sffamily\color{teal}}{blue}{}{}\ruler{taperight}{\textwidth}}
+%
+% \section{简介}
+% |fgruler| 宏包可在每一页（或当前页）的前景层以绝对位置绘制水平和垂直标尺。
+% 借此您可以检查页面版式尺寸。
+% 您也可以在正文中绘制各种标尺。
+%
+% \medskip\noindent
+% |fgruler| 宏包依赖以下宏包：|kvoptions|、|etoolbox|、|xcolor|、|graphicx|、|eso-pic|。
+%
+% \section{加载宏包}
+% 使用以下命令加载宏包：
+% \begin{flushleft}
+% \commandinline|\usepackage[!<宏包选项>!]{fgruler}|
+% \end{flushleft}
+% 或
+% \begin{flushleft}
+% \commandinline|\usepackage{fgruler}|\\
+% \commandinline|\setfgruler{!<宏包选项>!}|
+% \end{flushleft}
+% |\setfgruler| 命令也可在正文中使用。
+% 
+% \section{宏包选项}\label{sec:options}
+% 默认情况下，|fgruler| 宏包在每一页的前景层绘制一个方形标尺。
+% 以下宏包选项用于设置这些标尺的参数。
+% \begin{description}
+% \item\commandinline|unit=!<单位>!|\\
+% 标尺单位。\commandinline|!<单位>!| 可取的值：
+% \begin{description}
+% \item\commandinline|cm| 公制标尺（厘米）。默认值。
+% \item\commandinline|in| 英制标尺（英寸）。
+% \end{description}
+%
+% \item\commandinline|type=!<类型名称>!|\\
+% 决定标尺的原点、方向和长度。\commandinline|!<类型名称>!| 可取的值：
+% \begin{description}
+% \item\commandinline|upperleft| 默认值。方形标尺（原点：纸张左上角；方向：向下和向右；长度：纸张尺寸）。参见示例 \ref{example:upperleft}。
+% \item\commandinline|upperright| 方形标尺（原点：纸张右上角；方向：向下和向左；长度：纸张尺寸）。参见示例 \ref{example:upperright}。
+% \item\commandinline|lowerleft| 方形标尺（原点：纸张左下角；方向：向上和向右；长度：纸张尺寸）。参见示例 \ref{example:lowerleft}。
+% \item\commandinline|lowerright| 方形标尺（原点：纸张右下角；方向：向上和向左；长度：纸张尺寸）。参见示例 \ref{example:lowerright}。
+% \item\commandinline|upperleftT| 方形标尺（原点：文本区域左上角；方向：向下和向右；长度：文本区域尺寸）。参见示例 \ref{example:upperleftT}。
+% \item\commandinline|upperrightT| 方形标尺（原点：文本区域右上角；方向：向下和向左；长度：文本区域尺寸）。参见示例 \ref{example:upperrightT}。
+% \item\commandinline|lowerleftT| 方形标尺（原点：文本区域左下角；方向：向上和向右；长度：文本区域尺寸）。参见示例 \ref{example:lowerleftT}。
+% \item\commandinline|lowerrightT| 方形标尺（原点：文本区域右下角；方向：向上和向左；长度：文本区域尺寸）。参见示例 \ref{example:lowerrightT}。
+% \item\commandinline|alledges| 在纸张所有边缘都绘制标尺。
+% 顶部标尺原点：纸张左上角（方向：向右）。
+% 底部标尺原点：纸张左下角（方向：向右）。
+% 左侧标尺原点：纸张左上角（方向：向下）。
+% 右侧标尺原点：纸张右上角（方向：向下）。长度：纸张尺寸。参见示例 \ref{example:alledges}。
+% \item\commandinline|alledges*| 与 |alledges| 选项类似，但底部标尺原点为纸张右下角（方向：向左），
+% 左侧标尺原点为纸张左下角（方向：向上）。
+% 参见示例 \ref{example:alledges*}。
+% \item\commandinline|alledgesT| 与 |alledges| 选项类似，但绘制在文本区域的边缘。参见示例 \ref{example:alledgesT}。
+% \item\commandinline|alledgesT*| 与 |alledges*| 选项类似，但绘制在文本区域的边缘。参见示例 \ref{example:alledgesT*}。
+% \item\commandinline|user| 每一对 \commandinline|!<单位>!|--\commandinline|!<类型名称>!| 都会激活一个 \commandinline|\fgrulertype{!<单位>!}{!<类型名称>!}| 命令。
+% 因此 \commandinline|\fgrulertype{!<单位>!}{user}| 的展开结果决定了此选项的效果。
+% 在使用 \commandinline|\fgrulerdefuser{!<代码>!}| 命令后，它将变为 \commandinline|!<代码>!|，
+% 其中在 \commandinline|!<代码>!| 中您必须以 \commandinline|\fgrulerunit| 引用单位。
+% 例如，在执行\\ |\fgrulerdefuser{\fgrulertype{\fgrulerunit}{alledges}}|\\ 之后，|type=user| 选项将等价于 |type=alledges|。
+% 另请参见示例 \ref{example:user-first}--\ref{example:user-last}。
+% \item\commandinline|none| 不绘制标尺。
+% \end{description}
+%
+% \item\commandinline|type={!<类型名称列表>!}|\\
+% \commandinline|!<类型名称列表>!| 是以逗号分隔的有效类型名称列表。
+% 这些类型将被组合使用。
+% 例如 |type={alledges,alledgesT}|。
+% 结果参见示例 \ref{example:combining}。
+%
+% \item\commandinline|hshift=!<长度>!|\\
+% 当 \commandinline|!<类型名称>!| 为 |upperleft|、|lowerleft|、|upperright| 或 |lowerright| 时，标尺的水平偏移。
+% 当 \commandinline|!<类型名称>!| 为 |upperleft| 或 |lowerleft| 时，偏移方向向右。
+% 当 \commandinline|!<类型名称>!| 为 |upperright| 或 |lowerright| 时，偏移方向向左。
+% 默认值：|hshift=0cm|。
+% 参见示例 \ref{example:shift-first}--\ref{example:shift-last}。
+%
+% \item\commandinline|vshift=!<长度>!|\\
+% 当 \commandinline|!<类型名称>!| 为 |upperleft|、|lowerleft|、|upperright| 或 |lowerright| 时，标尺的垂直偏移。
+% 当 \commandinline|!<类型名称>!| 为 |upperleft| 或 |upperright| 时，偏移方向向下。
+% 当 \commandinline|!<类型名称>!| 为 |lowerleft| 或 |lowerright| 时，偏移方向向上。
+% 默认值：|vshift=0cm|。
+% 参见示例 \ref{example:shift-first}--\ref{example:shift-last}。
+%
+% \item\commandinline|color=!<颜色名称>!|\\
+% 标尺颜色（参见 |xcolor| 宏包）。默认值：|color=black|。
+% 参见示例 \ref{example:showframe-color}。
+%
+% \item\commandinline|numsep=!<长度>!|\\
+% 数字与标尺之间的间距。默认值：|numsep=3pt|。
+%
+% \item\commandinline|markthick=!<长度>!|\\
+% 刻度线粗细。默认值：|markthick=0.4pt|。
+%
+% \item\commandinline|marklength=!<长度>!|\\
+% 整数单位处的刻度线长度（参见红色刻度）：
+% {\fgrulernoborderline\fgrulercaptioncm{}\fgrulerthickcm{}{}{1pt}\fgrulercolorcm{}{}{red}\ruler{rightup}{3cm}}
+% 默认值：|marklength=2mm|。其他刻度的长度参见第 \ref{sec:additional} 节。
+%
+% \item\commandinline|numfont=!<字体类型>!|\\
+% 数字字体类型。默认值：|numfont=\scriptsize\sffamily|。此选项仅可用于 |\setfgruler| 和 |\fgruler*| 命令（参见第 \ref{sec:currentpage} 节）。
+%
+% \item\commandinline|showframe| 或 \commandinline|showframe=true|\\
+% 绘制可见的文本区域和边注区域框线，以及页眉和页脚线。
+% 其颜色和粗细由 |color| 和 |markthick| 选项决定。
+% 参见示例 \ref{example:showframe-color}。
+%
+% \item\commandinline|showframe=false|\\
+% 停用 |showframe| 选项。
+%
+% \item\commandinline|nonefgrulers|\\
+% 终止前景层上所有标尺的绘制，包括由 |\fgruler| 或 |\fgruler*| 生成的标尺（参见第 \ref{sec:currentpage} 节）。
+% 但由 |\ruler| 和 |\squareruler| 绘制的标尺（参见第 \ref{sec:intext} 节）不会消失。
+% 此外它还会停用 |showframe| 选项。
+% 在此情况下，|fgruler| 宏包不会加载 |eso-pic| 宏包。
+% 此选项仅在导言区有效。
+%
+% 建议在以下两种情况下使用：
+% \begin{itemize}
+% \item 仅在正文中绘制标尺，不需要检查功能时。
+% \item 临时暂停检查功能时。
+% \end{itemize}
+%
+% |type=none| 与 |nonefgrulers| 选项并不相同。区别在于：
+% \begin{itemize}
+% \item |type=none| 不会终止 |\fgruler| 和 |\fgruler*| 命令以及 |showframe| 选项。
+% \item |type=none| 可在文档任意位置修改。
+% \item 如果使用 |type=none| 选项而不使用 |nonefgrulers|，|fgruler| 宏包仍会加载 |eso-pic| 宏包。
+% \end{itemize}
+% \end{description}
+% 
+% \section{在当前页前景层绘制标尺}\label{sec:currentpage}
+% \begin{description}
+% \item\commandinline|\fgruler[!<单位!>]{!<类型名称>!}{!<水平偏移>!}{!<垂直偏移>!}|\\
+% 在本命令展开所在页的前景层绘制一个方形标尺。
+% 您可以在同一页使用多个 |\fgruler| 命令。
+%
+% 宏包选项（参见第 \ref{sec:options} 节）对此命令同样有效，但 |type|、|hshift| 和 |vshift| 除外。
+%
+% 如果在导言区使用了 |nonefgrulers| 宏包选项，此命令无效。
+% \begin{description}
+% \item\commandinline|!<单位!>| 选项：
+% \commandinline|cm|、\commandinline|in|（参见第 \ref{sec:options} 节）。
+% 其默认值与 |unit=|\commandinline|!<单位!>| 宏包选项指定的值相同。
+%
+% \item\commandinline|!<类型名称!>| 参数：
+% \commandinline|upperleft|、\commandinline|upperright|、\commandinline|lowerleft|、\commandinline|lowerright|（参见第 \ref{sec:options} 节）。
+%
+% \item\commandinline|!<水平偏移>!|
+% 水平偏移量。
+% 当 \commandinline|!<类型名称>!| 为 |upperleft| 或 |lowerleft| 时偏移方向向右，否则向左。
+%
+% \item\commandinline|!<垂直偏移>!|
+% 垂直偏移量。
+% 当 \commandinline|!<类型名称>!| 为 |upperleft| 或 |upperright| 时偏移方向向下，否则向上。
+% \end{description}
+%
+% 示例：|\fgruler[in]{upperright}{1in}{2.5in}|
+% \end{description}
+% \begin{description}
+% \item\commandinline|\fgruler*[!<宏包选项!>]{!<类型名称>!}|\\
+% 在本命令展开所在页的前景层绘制一个标尺。
+% 您可以在同一页使用多个 |\fgruler*| 命令。
+%
+% 宏包选项（参见第 \ref{sec:options} 节）对此命令同样有效，但 |type| 除外。
+%
+% 如果在导言区使用了 |nonefgrulers| 宏包选项，此命令无效。
+% \begin{description}
+% \item\commandinline|!<宏包选项!>|
+% 第 \ref{sec:options} 节中的所有选项，但 |type|、|showframe| 和 |nonefgrulers| 除外。
+%
+% \item\commandinline|!<类型名称!>|
+% 第 \ref{sec:options} 节中 |type| 选项的所有可能值，但 |none| 值除外。
+% \end{description}
+%
+% 示例：|\fgruler*[color=red,type=in]{alledges}|
+%
+% 请注意以下两条命令等价：\\
+% |\fgruler*[unit=in,hshift=1in,vshift=2.5in]{upperright}|\\
+% |\fgruler[in]{upperright}{1in}{2.5in}|
+% \end{description}
+% 
+% \section{在正文中绘制标尺}\label{sec:intext}
+% \begin{description}
+% \item\commandinline|\ruler[!<单位!>]{!<类型名称>!}{!<长度>!}|\\
+% 绘制一个水平或垂直标尺。
+% 标尺底部与周围文本的基线对齐。
+% 宏包选项（参见第 \ref{sec:options} 节）对此命令无效。
+% \begin{description}
+% \item\commandinline|!<单位!>| 选项：\\
+% \commandinline|cm| 公制标尺（厘米）。默认选项。\\
+% \commandinline|in| 英制标尺（英寸）。
+%
+% \item\commandinline|!<类型名称!>| 参数：\\
+% \commandinline|downright | 方向：向下。数字在右侧。\\
+% \commandinline|downleft  | 方向：向下。数字在左侧。\\
+% \commandinline|upright   | 方向：向上。数字在右侧。\\
+% \commandinline|upleft    | 方向：向上。数字在左侧。\\
+% \commandinline|rightdown | 方向：向右。数字在下侧。\\
+% \commandinline|rightup   | 方向：向右。数字在上侧。\\
+% \commandinline|leftdown  | 方向：向左。数字在下侧。\\
+% \commandinline|leftup    | 方向：向左。数字在上侧。\\
+% \commandinline|taperight | 卷尺（方向：向右）。参见示例 \ref{example:tape}。\\
+% \commandinline|tapeleft  | 卷尺（方向：向左）。参见示例 \ref{example:tape}。
+%
+% \item\commandinline|!<长度>!|
+% 标尺长度。
+% \end{description}
+%
+% 示例：|\ruler{rightdown}{5cm}| \ruler{rightdown}{5cm}
+%
+% \item\commandinline|\ruler*[!<单位!>]{!<类型名称>!}{!<长度>!}|\\
+% 与 |\ruler| 类似，但标尺顶部与周围文本的基线对齐。
+%
+% 示例：
+% |\ruler*{taperight}{5cm}|
+% \ruler*{taperight}{5cm}
+%
+% \item\commandinline|\squareruler[!<单位!>]{!<类型名称>!}{!<宽度>!}{!<高度>!}|\\
+% 绘制一个方形标尺。
+% 方形标尺底部与周围文本的基线对齐。
+% 宏包选项（参见第 \ref{sec:options} 节）对此命令无效。
+% \begin{description}
+% \item\commandinline|!<单位!>| 选项：\\
+% \commandinline|cm| 公制标尺（厘米）。默认选项。\\
+% \commandinline|in| 英制标尺（英寸）。
+%
+% \item\commandinline|!<类型名称!>| 参数：\\
+% \commandinline|upperleft | 方向：向下和向右。\\
+% \commandinline|upperright| 方向：向下和向左。\\
+% \commandinline|lowerleft | 方向：向上和向右。\\
+% \commandinline|lowerright| 方向：向上和向左。
+%
+% \item\commandinline|!<宽度>!|
+% 方形标尺宽度。
+%
+% \item\commandinline|!<高度>!|
+% 方形标尺高度。
+% \end{description}
+%
+% 示例：
+% |\squareruler{upperleft}{5cm}{1cm}|
+% \squareruler{upperleft}{5cm}{1cm}
+%
+% \item\commandinline|\squareruler*[!<单位!>]{!<类型名称>!}{!<宽度>!}{!<高度>!}|\\
+% 与 |\squareruler| 类似，但方形标尺顶部与周围文本的基线对齐。
+%
+% 示例：
+% |\squareruler*{upperleft}{5cm}{1cm}|
+% \squareruler*{upperleft}{5cm}{1cm}
+%
+% \item\commandinline|\rulerparams{!<刻度粗细>!}{!<数字字体>!}{!<颜色>!}{!<刻度长度>!}{!<数字间距>!}|\\
+% 设置由 |\ruler| 或 |\squareruler| 绘制的标尺参数。
+% 如果某个参数为空，则该参数不被修改。
+% \begin{description}
+% \item\commandinline|!<刻度粗细>!| 刻度线粗细。默认值：|0.4pt|
+% \item\commandinline|!<数字字体>!| 数字字体类型。默认值：|\scriptsize\sffamily|
+% \item\commandinline|!<颜色>!| 标尺线颜色。默认值：|black|
+% \item\commandinline|!<刻度长度>!| 整数单位处的刻度线长度。默认值：|2mm|
+% \item\commandinline|!<数字间距>!| 数字与标尺之间的间距。默认值：|3pt|
+% \end{description}
+%
+% 例如，|\rulerparams{}{}{red}{}{}| 将标尺颜色改为红色。
+%
+% \item\commandinline|\rulerparamsfromfg|\\
+% 从当前前景层标尺参数设置标尺参数。
+%
+% \item\commandinline|\rulernorotatenum|\\
+% 默认情况下，垂直标尺的数字（由 |\ruler| 或 |\squareruler| 生成）旋转 90$^\circ$。
+% 此命令取消该旋转效果。
+% 此命令仅可在正文中展开。
+%
+% 示例：|{\rulernorotatenum\ruler{upright}{1cm}}| {\rulernorotatenum\ruler{upright}{1cm}}
+%
+% \item\commandinline|\rulerrotatenum|\\
+% 在 |\rulernorotatenum| 之后，重新启用数字旋转。
+% 此命令仅可在正文中展开。
+% \end{description}
+% 
+% \section{附加设置命令}\label{sec:additional}
+% 以下命令对 |fgruler| 宏包绘制的所有标尺均有效。
+% \begin{description}
+% \item\commandinline|\fgrulerstartnum{!<数字>!}|\\
+% \commandinline|!<数字>!| 为非负整数，作为水平和垂直标尺上的起始数字。
+% 默认值：|\fgrulerstartnum{0}|
+%
+% 示例：|{\fgrulerstartnum{5}\squareruler{lowerleft}{3cm}{1cm}}| {\fgrulerstartnum{5}\squareruler{lowerleft}{3cm}{1cm}}
+%
+% \item\commandinline|\fgrulerstartnumh{!<数字>!}|\\
+% \commandinline|!<数字>!| 为非负整数，作为水平标尺上的起始数字。
+% 默认值：|\fgrulerstartnumh{0}|
+%
+% 示例：|{\fgrulerstartnumh{5}\squareruler{lowerleft}{3cm}{1cm}}| {\fgrulerstartnumh{5}\squareruler{lowerleft}{3cm}{1cm}}
+%
+% \item\commandinline|\fgrulerstartnumv{!<数字>!}|\\
+% \commandinline|!<数字>!| 为非负整数，作为垂直标尺上的起始数字。
+% 默认值：|\fgrulerstartnumv{0}|
+%
+% 示例：|{\fgrulerstartnumv{5}\squareruler{lowerleft}{3cm}{1cm}}| {\fgrulerstartnumv{5}\squareruler{lowerleft}{3cm}{1cm}}
+%
+% \item\commandinline|\fgrulernoborderline|\\
+% 默认情况下，标尺的一侧有边框线。
+% 此命令可使其消失。
+%
+% 示例：|{\fgrulernoborderline\ruler{rightup}{3cm}}| {\fgrulernoborderline\ruler{rightup}{3cm}}
+%
+% \item\commandinline|\fgrulerborderline|\\
+% 在 |\fgrulernoborderline| 之后，重新启用先前的默认边框效果。
+%
+% \item\commandinline|\fgrulercaptioncm{!<标注>!}|\\
+% 公制标尺中的单位标注。
+% 默认值：|\fgrulercaptioncm{cm}|
+%
+% 示例：|{\fgrulercaptioncm{}\ruler{rightup}{3cm}}| {\fgrulercaptioncm{}\ruler{rightup}{3cm}}
+%
+% \item\commandinline|\fgrulercaptionin{!<标注>!}|\\
+% 英制标尺中的单位标注。
+% 默认值：|\fgrulercaptionin{inch}|
+%
+% \item\commandinline|\fgrulerdefnum{!<定义>!}|\\
+% 标尺数字由 \commandinline|fgrulernum| 计数器决定。
+% 其当前值由 \commandinline|\thefgrulernum| 输出。
+% 其默认定义为 |\def\thefgrulernum{\arabic{fgrulernum}}|，等价于 |\fgrulerdefnum{\arabic{fgrulernum}}|。
+%
+% 示例：|{\fgrulerdefnum{}\fgrulercaptioncm{}\ruler{rightdown}{2cm}}| {\fgrulerdefnum{}\fgrulercaptioncm{}\ruler{rightdown}{2cm}}
+%
+% \item\commandinline|\fgrulerratiocm{!<比值1>!}{!<比值2>!}|\\
+% 公制标尺中的刻度长度比值。
+% 如果某个参数为空，则该参数不被修改。
+% \begin{description}
+% \item\commandinline|!<比值1>!|
+% $k/10$\,cm 处的刻度长度比值，其中 $k$ 为正整数且不被 5 整除。\\
+% {\fgrulerthickcm{1pt}{}{}\fgrulercolorcm{red}{}{}\ruler{rightup}{3cm}}\\
+% 例如，若此比值为 0.5，整数单位处刻度长度为 2\,mm，则该刻度长度为 $0.5\cdot 2\,\mathrm{mm}=1\,\mathrm{mm}$。
+%
+% \item\commandinline|!<比值2>!|
+% $k/2$\,cm 处的刻度长度比值，其中 $k$ 为正奇数。\\
+% {\fgrulerthickcm{}{1pt}{}\fgrulercolorcm{}{red}{}\ruler{rightup}{3cm}}
+% \end{description}
+%
+% 默认值：|\fgrulerratiocm{0.5}{0.75}|
+%
+% \item\commandinline|\fgrulerratioin{!<比值1>!}{!<比值2>!}{!<比值3>!}{!<比值4>!}|\\
+% 英制标尺中的刻度长度比值。
+% 如果某个参数为空，则该参数不被修改。
+% \begin{description}
+% \item\commandinline|!<比值1>!|
+% $k/16$\,inch 处的刻度长度比值，其中 $k$ 为正奇数。\\
+% {\fgrulerthickin{1pt}{}{}{}{}\fgrulercolorin{red}{}{}{}{}\ruler[in]{rightup}{2in}}
+%
+% \item\commandinline|!<比值2>!|
+% $k/8$\,inch 处的刻度长度比值，其中 $k$ 为正奇数。\\
+% {\fgrulerthickin{}{1pt}{}{}{}\fgrulercolorin{}{red}{}{}{}\ruler[in]{rightup}{2in}}
+%
+% \item\commandinline|!<比值3>!|
+% $k/4$\,inch 处的刻度长度比值，其中 $k$ 为正奇数。\\
+% {\fgrulerthickin{}{}{1pt}{}{}\fgrulercolorin{}{}{red}{}{}\ruler[in]{rightup}{2in}}
+%
+% \item\commandinline|!<比值4>!|
+% $k/2$\,inch 处的刻度长度比值，其中 $k$ 为正奇数。\\
+% {\fgrulerthickin{}{}{}{1pt}{}\fgrulercolorin{}{}{}{red}{}\ruler[in]{rightup}{2in}}
+% \end{description}
+%
+% 默认值：|\fgrulerratioin{0.25}{0.375}{0.625}{0.75}|
+%
+% \item\commandinline|\fgrulerthickcm{!<粗细1>!}{!<粗细2>!}{!<粗细3>!}|\\
+% 公制标尺中的刻度线粗细。
+% 如果某个参数为空，则该参数不被修改。
+% \begin{description}
+% \item\commandinline|!<粗细1>!|
+% $k/10$\,cm 处的刻度线粗细，其中 $k$ 为正整数且不被 5 整除。
+%
+% \item\commandinline|!<粗细2>!|
+% $k/2$\,cm 处的刻度线粗细，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<粗细3>!|
+% 整数单位处的刻度线粗细。
+% \end{description}
+%
+% 默认值分别由 |\rulerparams| 的 \commandinline|!<刻度粗细>!| 参数和 |markthick| 选项给出。
+%
+% 示例：\\
+% |{\fgrulerthickcm{}{}{2pt}|\\
+% |\rulerparams{}{}{}{5mm}{}|\\
+% |\fgrulernoborderline|\\
+% |\ruler{rightdown}{3cm}}|\\[2mm]
+% {\fgrulerthickcm{}{}{2pt}
+% \rulerparams{}{}{}{5mm}{}
+% \fgrulernoborderline
+% \ruler{rightdown}{3cm}}
+%
+% \item\commandinline|\fgrulerthickin{!<粗细1>!}{!<粗细2>!}{!<粗细3>!}{!<粗细4>!}{!<粗细5>!}|\\
+% 英制标尺中的刻度线粗细。
+% 如果某个参数为空，则该参数不被修改。
+% \begin{description}
+% \item\commandinline|!<粗细1>!|
+% $k/16$\,inch 处的刻度线粗细，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<粗细2>!|
+% $k/8$\,inch 处的刻度线粗细，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<粗细3>!|
+% $k/4$\,inch 处的刻度线粗细，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<粗细4>!|
+% $k/2$\,inch 处的刻度线粗细，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<粗细5>!|
+% 整数单位处的刻度线粗细。
+% \end{description}
+%
+% 默认值分别由 |\rulerparams| 的 \commandinline|!<刻度粗细>!| 参数和 |markthick| 选项给出。
+%
+% 示例：\\
+% |{\fgrulerthickin{}{}{}{}{2pt}|\\
+% |\rulerparams{}{}{}{5mm}{}|\\
+% |\fgrulernoborderline|\\
+% |\ruler[in]{rightdown}{3in}}|\\[2mm]
+% {\fgrulerthickin{}{}{}{}{2pt}
+% \rulerparams{}{}{}{5mm}{}
+% \fgrulernoborderline
+% \ruler[in]{rightdown}{3in}}
+%
+% \item\commandinline|\fgrulercolorcm{!<颜色1>!}{!<颜色2>!}{!<颜色3>!}|\\
+% 公制标尺中的刻度颜色。
+% 如果某个参数为空，则该参数不被修改。
+% \begin{description}
+% \item\commandinline|!<颜色1>!|
+% $k/10$\,cm 处的刻度颜色，其中 $k$ 为正整数且不被 5 整除。
+%
+% \item\commandinline|!<颜色2>!|
+% $k/2$\,cm 处的刻度颜色，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<颜色3>!|
+% 整数单位处的刻度颜色。
+% \end{description}
+%
+% 默认值分别由 |\rulerparams| 的 \commandinline|!<颜色>!| 参数和 |color| 选项给出。
+%
+% 示例：\\
+% |{\fgrulercolorcm{green}{blue}{red}|\\
+% |\rulerparams{1pt}{}{}{5mm}{}|\\
+% |\fgrulernoborderline|\\
+% |\ruler{rightdown}{3cm}}|\\[2mm]
+% {\fgrulernoborderline
+% \fgrulercolorcm{green}{blue}{red}
+% \rulerparams{1pt}{}{}{5mm}{}
+% \ruler{rightdown}{3cm}}
+%
+% \item\commandinline|\fgrulercolorin{!<颜色1>!}{!<颜色2>!}{!<颜色3>!}{!<颜色4>!}{!<颜色5>!}|\\
+% 英制标尺中的刻度颜色。
+% 如果某个参数为空，则该参数不被修改。
+% \begin{description}
+% \item\commandinline|!<颜色1>!|
+% $k/16$\,inch 处的刻度颜色，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<颜色2>!|
+% $k/8$\,inch 处的刻度颜色，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<颜色3>!|
+% $k/4$\,inch 处的刻度颜色，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<颜色4>!|
+% $k/2$\,inch 处的刻度颜色，其中 $k$ 为正奇数。
+%
+% \item\commandinline|!<颜色5>!|
+% 整数单位处的刻度颜色。
+% \end{description}
+%
+% 默认值分别由 |\rulerparams| 的 \commandinline|!<颜色>!| 参数和 |color| 选项给出。
+%
+% 示例：\\
+% |{\fgrulercolorin{yellow}{orange}{green}{blue}{red}|\\
+% |\rulerparams{1pt}{}{}{5mm}{}|\\
+% |\fgrulernoborderline|\\
+% |\ruler[in]{rightdown}{3in}}|\\[2mm]
+% {\fgrulernoborderline
+% \fgrulercolorin{yellow}{orange}{green}{blue}{red}
+% \rulerparams{1pt}{}{}{5mm}{}
+% \ruler[in]{rightdown}{3in}}
+%
+% \item\commandinline|\fgrulerreset|\\
+% 将所有选项和参数恢复为默认值。
+% 此命令仅可在正文中展开。
+% \end{description}
+%
+% \medskip\noindent
+% \colorbox{red!10}{\parbox{\dimexpr\textwidth-2\fboxsep\relax}{\textcolor{red}{\faWarning}
+% \itshape 所有设置命令均遵循正常的作用域规则，即如果在分组内使用，参数的更改在分组外无效。}}
+% 
+% \newpage\fgrulerreset
+% \section{示例}
+% \subsection{默认情况}\label{example:upperleft}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{showframe} 与 \texttt{color} 选项}\label{example:showframe-color}
+% \setfgruler{color=red,showframe}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[color=red,showframe]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=upperright} 选项}\label{example:upperright}
+% \setfgruler{type=upperright}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=upperright]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=lowerleft} 选项}\label{example:lowerleft}
+% \setfgruler{type=lowerleft}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=lowerleft]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=lowerright} 选项}\label{example:lowerright}
+% \setfgruler{type=lowerright}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=lowerright]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{默认情况的偏移}\label{example:shift-first}
+% \setfgruler{hshift=1cm,vshift=2cm}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[hshift=1cm,vshift=2cm]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=upperright} 选项时的偏移}
+% \setfgruler{type=upperright,hshift=1cm,vshift=2cm}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=upperright,hshift=1cm,vshift=2cm]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=lowerleft} 选项时的偏移}
+% \setfgruler{type=lowerleft,hshift=1cm,vshift=2cm}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=lowerleft,hshift=1cm,vshift=2cm]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=lowerright} 选项时的偏移}\label{example:shift-last}
+% \setfgruler{type=lowerright,hshift=1cm,vshift=2cm}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=lowerright,hshift=1cm,vshift=2cm]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=alledges} 选项}\label{example:alledges}
+% \setfgruler{type=alledges}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=alledges]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=alledges*} 选项}\label{example:alledges*}
+% \setfgruler{type=alledges*}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=alledges*]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=upperleftT} 选项}\label{example:upperleftT}
+% \setfgruler{type=upperleftT}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=upperleftT]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=upperrightT} 选项}\label{example:upperrightT}
+% \setfgruler{type=upperrightT}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=upperrightT]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=lowerleftT} 选项}\label{example:lowerleftT}
+% \setfgruler{type=lowerleftT}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=lowerleftT]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=lowerrightT} 选项}\label{example:lowerrightT}
+% \setfgruler{type=lowerrightT}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=lowerrightT]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=alledgesT} 选项}\label{example:alledgesT}
+% \setfgruler{type=alledgesT}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=alledgesT]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{\texttt{type=alledgesT*} 选项}\label{example:alledgesT*}
+% \setfgruler{type=alledgesT*}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=alledgesT*]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+%
+% \newpage\fgrulerreset
+% \subsection{组合类型名称}\label{example:combining}
+% \setfgruler{type={alledges,alledgesT}}
+% \fgrulerdefusercm{\fgrulertype{cm}{alledges}\fgrulertype{cm}{alledgesT}}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type={alledges,alledgesT}]{fgruler}
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{设置 \texttt{type=user} 选项}\label{example:user-first}
+% 在下一示例中，|type=user| 选项根据页码奇偶性激活 |type=upperright| 或 |type=upperleft|。
+% \setfgruler{type=none}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=user]{fgruler}
+% \fgrulerdefuser{
+%     \ifodd\value{page}\fgrulertype{\fgrulerunit}{upperright}
+%         \else\fgrulertype{\fgrulerunit}{upperleft}\fi
+% }
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{设置 \texttt{type=user} 选项}
+% 在下一示例中，|type=user| 选项在文本区域左边界放置一个垂直标尺。
+% \setfgruler{type=user}
+%\fgrulerdefuser{\AtTextLowerLeft{\ignorespaces\rulerparamsfromfg\llap{\ruler[\fgrulerunit]{downleft}{\textheight}}}}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=user]{fgruler}
+% \fgrulerdefuser{
+%     \AtTextLowerLeft{% 参见 eso-pic 宏包！
+%         \rulerparamsfromfg
+%         \llap{\ruler[\fgrulerunit]{downleft}{\textheight}}
+%     }
+% }
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{设置 \texttt{type=user} 选项}
+% 在下一示例中，|type=user| 选项在文本区域右边界和下边界放置标尺。
+% \setfgruler{type=user}
+%\fgrulerdefuser{\AtTextLowerLeft{\ignorespaces\rulerparamsfromfg\rulernorotatenum\llap{\ruler[\fgrulerunit]{downleft}{\textheight}}\ruler*[\fgrulerunit]{rightdown}{\textwidth}}}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=user]{fgruler}
+% \fgrulerdefuser{
+%     \AtTextLowerLeft{% 参见 eso-pic 宏包！
+%         \rulerparamsfromfg
+%         \rulernorotatenum
+%         \llap{\ruler[\fgrulerunit]{downleft}{\textheight}}%
+%         \ruler*[\fgrulerunit]{rightdown}{\textwidth}
+%     }
+% }
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{设置 \texttt{type=user} 选项}\label{example:user-last}
+% 在下一示例中，|type=user| 选项在文本区域右边界和上边界放置标尺。
+% \setfgruler{type=user}
+%\fgrulerdefuser{\AtTextUpperLeft{\ignorespaces%
+%\rulerparamsfromfg\ruler[\fgrulerunit]{rightup}{\textwidth}\ignorespaces%
+%\rulernorotatenum\fgrulercaptioncm{}\ignorespaces\ruler*[\fgrulerunit]{downright}{\textheight}}}
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=user]{fgruler}
+% \fgrulerdefuser{
+%     \AtTextUpperLeft{% 参见 eso-pic 宏包！
+%         \rulerparamsfromfg
+%         \ruler[\fgrulerunit]{rightup}{\textwidth}%
+%         \rulernorotatenum
+%         \csname fgrulercaption\fgrulerunit\endcsname{}%
+%         \ruler*[\fgrulerunit]{downright}{\textheight}
+%     }
+% }
+% \begin{document}
+% ...
+% \end{document}
+% \end{examplelst}
+%
+% \newpage\fgrulerreset
+% \subsection{当前页前景层与正文中的标尺}
+% \setfgruler{color=blue}
+% \fgruler{upperleft}{1cm}{1.5cm}\fgruler*[color=red,unit=in]{lowerrightT}
+% \noindent
+% text
+% \rulerparams{}{\color{red}\tiny\ttfamily}{green}{}{}
+% {\fgrulernoborderline\ruler{rightdown}{3cm}}
+% text
+% \ruler*{rightdown}{3cm}
+% text
+% \rotatebox[origin=tl]{30}{\ruler*{rightdown}{3cm}}
+% 
+% \bigskip
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[color=blue]{fgruler}
+% \begin{document}
+%     \fgruler{upperleft}{1cm}{1.5cm}
+%     \fgruler*[color=red,unit=in]{lowerrightT}
+%     \noindent
+%     text
+%     \rulerparams{}{\color{red}\tiny\ttfamily}{green}{}{}
+%     {\fgrulernoborderline\ruler{rightdown}{3cm}}
+%     text
+%     \ruler*{rightdown}{3cm}
+%     text
+%     \rotatebox[origin=tl]{30}{\ruler*{rightdown}{3cm}} 
+%     % \rotatebox 定义于 graphicx 宏包
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{正文中的标尺类型}
+% \setfgruler{type=none}
+% \noindent
+% \rulerparams{}{}{red}{}{3pt}
+% \ruler{rightdown}{3cm}
+% \hfill
+% \ruler{rightup}{3cm}
+% \hfill
+% \ruler{leftup}{3cm}
+% \hfill
+% \ruler{leftdown}{3cm}
+% 
+% \bigskip\noindent
+% \rulerparams{}{}{green}{}{}
+% {\rulernorotatenum\ruler{upright}{3cm}}
+% \hfill
+% \ruler{downright}{3cm}
+% \hfill
+% \ruler{upleft}{3cm}
+% \hfill
+% \ruler{downleft}{3cm}
+% 
+% \bigskip\noindent
+% \rulerparams{}{}{blue!50!black}{}{}
+% {\rulernorotatenum\fgrulercaptioncm{}\squareruler{upperleft}{2cm}{3cm}}
+% \hfill
+% \squareruler{lowerright}{2cm}{3cm}
+% \hfill
+% \squareruler{lowerleft}{2cm}{3cm}
+% \hfill
+% \squareruler{upperright}{2cm}{3cm}
+% \hfill
+% {\rulerparams{}{\footnotesize\bfseries\color{red}}{}{5mm}{}\squareruler[in]{lowerleft}{2in}{3cm}}
+% 
+% \bigskip
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[a4paper,margin=25mm]{geometry}
+% \usepackage[nonefgrulers]{fgruler}
+% \begin{document}
+%     \noindent
+%     \rulerparams{}{}{red}{}{3pt}
+%     \ruler{rightdown}{3cm}
+%     \hfill
+%     \ruler{rightup}{3cm}
+%     \hfill
+%     \ruler{leftup}{3cm}
+%     \hfill
+%     \ruler{leftdown}{3cm}
+%     
+%     \bigskip\noindent
+%     \rulerparams{}{}{green}{}{}
+%     {\rulernorotatenum\ruler{upright}{3cm}}
+%     \hfill
+%     \ruler{downright}{3cm}
+%     \hfill
+%     \ruler{upleft}{3cm}
+%     \hfill
+%     \ruler{downleft}{3cm}
+%     
+%     \bigskip\noindent
+%     \rulerparams{}{}{blue!50!black}{}{}
+%     {\rulernorotatenum\fgrulercaptioncm{}\squareruler{upperleft}{2cm}{3cm}}
+%     \hfill
+%     \squareruler{lowerright}{2cm}{3cm}
+%     \hfill
+%     \squareruler{lowerleft}{2cm}{3cm}
+%     \hfill
+%     \squareruler{upperright}{2cm}{3cm}
+%     \hfill
+%     {\rulerparams{}{\footnotesize\bfseries\color{red}}{}{5mm}{}
+%     \squareruler[in]{lowerleft}{2in}{3cm}}
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{卷尺}\label{example:tape}
+% \setfgruler{type=none}
+% 
+%\noindent\ignorespaces\ruler{taperight}{\textwidth}\\[2pt]\rotatebox[origin=br]{-90}{\ruler{tapeleft}{3cm}}~\ruler{taperight}{10cm}
+%\par\medskip\noindent{\fgrulerdefnum{}\ruler{taperight}{\textwidth}}
+%\par\medskip\noindent{\fgrulerdefnum{}\fgrulercaptioncm{}\rulerparams{}{}{red}{}{0pt}\ruler{taperight}{\textwidth}}
+%
+% \bigskip
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[a4paper,margin=25mm]{geometry}
+% \usepackage[nonefgrulers]{fgruler}
+% \begin{document}
+%     \noindent
+%     \ruler{taperight}{\textwidth}\\[2pt]
+%     \rotatebox[origin=br]{-90}{\ruler{tapeleft}{3cm}}
+%     \ruler{taperight}{10cm}
+%
+%     \medskip\noindent
+%     {\fgrulerdefnum{}
+%     \ruler{taperight}{\textwidth}}
+%     
+%     \medskip\noindent
+%     {\fgrulerdefnum{}
+%     \fgrulercaptioncm{}
+%     \rulerparams{}{}{red}{}{0pt}
+%     \ruler{taperight}{\textwidth}}
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{刻度长度与旋转}
+% \setfgruler{type=none}
+% \noindent
+% {\fgrulerdefnum{\rotatebox{45}{\arabic{fgrulernum}\,cm}}
+% \fgrulercaptioncm{}
+% \rulerparams{}{\tiny\color{red}}{blue}{8mm}{}
+% \fgrulercolorcm{}{}{black}
+% \rotatebox{-45}{\ruler{rightup}{10cm}}\\
+% \ruler{rightup}{5cm}}
+% 
+% \bigskip
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[nonefgrulers]{fgruler}
+% \begin{document}
+%     \noindent
+%     {\fgrulerdefnum{\rotatebox{45}{\arabic{fgrulernum}\,cm}}
+%     \fgrulercaptioncm{}
+%     \rulerparams{}{\tiny\color{red}}{blue}{8mm}{}
+%     \fgrulercolorcm{}{}{black}
+%     \rotatebox{-45}{\ruler{rightup}{10cm}}\\
+%     \ruler{rightup}{5cm}}
+% \end{document}
+% \end{examplelst}
+% 
+% \newpage\fgrulerreset
+% \subsection{坐标系}
+% \setfgruler{type=none}
+% \noindent
+% \rulernorotatenum
+% \fgrulercaptioncm{}
+% \fgrulercolorcm{}{}{red}
+% \rulerparams{}{\scriptsize\color{red}}{}{}{}
+% {\fgrulerdefnum{$-\arabic{fgrulernum}$}\squareruler*{upperright}{3cm}{3cm}}\ignorespaces
+% \squareruler{lowerleft}{13cm}{6cm}
+% 
+% \bigskip
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[a4paper,margin=25mm]{geometry}
+% \usepackage[nonefgrulers]{fgruler}
+% \begin{document}
+%     \noindent
+%     \rulernorotatenum
+%     \fgrulercaptioncm{}
+%     \fgrulercolorcm{}{}{red}
+%     \rulerparams{}{\scriptsize\color{red}}{}{}{}
+%     {\fgrulerdefnum{$-\arabic{fgrulernum}$}\squareruler*{upperright}{3cm}{3cm}}%
+%     \squareruler{lowerleft}{13cm}{6cm}
+% \end{document}
+% \end{examplelst}
+%
+% \newpage\fgrulerreset
+% \subsection{一种新的方形标尺类型}
+% \setfgruler{type=none}
+% {\rulernorotatenum\fgrulercaptioncm{}\ruler*{downleft}{5cm}}\ruler{rightup}{3cm}
+% 
+% \bigskip
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[type=none]{fgruler}
+% \newcommand{\usersquareruler}[2]{%
+%     {\rulernorotatenum\fgrulercaptioncm{}\ruler*{downleft}{#2}}%
+%     \ruler{rightup}{#1}%
+% }
+% \begin{document}
+% \usersquareruler{3cm}{5cm}
+% \end{document}
+% \end{examplelst}
+%
+% \newpage\fgrulerreset
+% \subsection{地图上的比例尺}
+% \setfgruler{type=none}
+% \def\Sstackgap{5pt}
+% \fgrulerratiocm{0}{0}
+% \fgrulercaptioncm{m}
+% \fgrulerdefnum{\fpeval{\value{fgrulernum}*100}}
+% \Shortstack{\ruler{rightup}{5cm} $1:10000$}
+% \par\bigskip\noindent
+% \fgrulerdefnum{\fpeval{\value{fgrulernum}*200}}
+% \Shortstack{\ruler{rightup}{5cm} $1:20000$}
+% \par\bigskip\noindent
+% \fgrulercaptioncm{km}
+% \fgrulerdefnum{\fpeval{\value{fgrulernum}*.5}}
+% \Shortstack{\ruler{rightup}{5cm} $1:50000$}
+% 
+% \bigskip
+% \begin{examplelst}
+% \documentclass{article}
+% \usepackage[nonefgrulers]{fgruler}
+% \usepackage{stackengine}
+% \def\Sstackgap{5pt}
+% \fgrulerratiocm{0}{0}
+% \fgrulercaptioncm{m}
+
+% \begin{document}
+
+% \fgrulerdefnum{\fpeval{\value{fgrulernum}*100}}
+% \Shortstack{\ruler{rightup}{5cm} $1:10000$}
+
+% \bigskip
+
+% \fgrulerdefnum{\fpeval{\value{fgrulernum}*200}}
+% \Shortstack{\ruler{rightup}{5cm} $1:20000$}
+
+% \bigskip
+
+% \fgrulercaptioncm{km}
+% \fgrulerdefnum{\fpeval{\value{fgrulernum}*.5}}
+% \Shortstack{\ruler{rightup}{5cm} $1:50000$}
+
+% \end{document}
+% \end{examplelst}
+%
+% \StopEventually
+%
+%    \begin{macrocode}
+%%
+\@ifpackageloaded{kvoptions}{}{\RequirePackage{kvoptions}}
+\@ifpackageloaded{etoolbox}{}{\RequirePackage{etoolbox}}
+
+\SetupKeyvalOptions{family=fgruler,prefix=fgruler@}
+\DeclareStringOption[.4pt]{markthick}
+\DeclareStringOption[\scriptsize\sffamily]{numfont}
+\DeclareStringOption[black]{color}
+\DeclareStringOption[2mm]{marklength}
+\DeclareStringOption[3pt]{numsep}
+\DeclareStringOption[0pt]{hshift}
+\DeclareStringOption[0pt]{vshift}
+\DeclareStringOption[upperleft]{type}
+\DeclareStringOption[cm]{unit}
+\DeclareBoolOption{nonefgrulers}
+\DeclareBoolOption{showframe}
+\ProcessKeyvalOptions{fgruler}
+
+\newlength{\fgruler@marklth}
+\newlength{\fgruler@sep}
+\newlength{\fgruler@width}
+\newlength{\fgruler@fg@width}
+\newlength{\fgruler@fg@height}
+
+\def\fgruler@set#1#2#3#4#5{%
+\def\fgruler@markthickness{\linethickness{#1}}%
+\def\fgruler@font{#2}%
+\def\fgruler@rulercolor{\color{#3}}%
+\setlength{\fgruler@marklth}{#4}%
+\setlength{\fgruler@sep}{#5}%
+\def\fgruler@font@{\normalfont\normalsize\fgruler@font}%
+\addtolength{\fgruler@sep}{\fgruler@marklth}%
+\ifx\thefgrulernum\@empty%
+  \expandafter\ifx\csname fgruler@caption@\fgruler@unit\endcsname\@empty%
+    \setlength{\fgruler@width}{\fgruler@marklth}%
+  \else
+    \settoheight{\fgruler@width}{\fgruler@font@\csname fgruler@caption@\fgruler@unit\endcsname}%
+    \addtolength{\fgruler@width}{\fgruler@sep}%
+  \fi
+\else
+  \settoheight{\fgruler@width}{\fgruler@font@\thefgrulernum}%
+  \addtolength{\fgruler@width}{\fgruler@sep}%
+\fi}
+
+\def\rulerparams#1#2#3#4#5{%
+\ifx#1\@empty\else\def\fgruler@markthick@{#1}\fi%
+\ifx#2\@empty\else\def\fgruler@numfont@{#2}\fi%
+\ifx#3\@empty\else\def\fgruler@color@{#3}\fi%
+\ifx#4\@empty\else\def\fgruler@marklength@{#4}\fi%
+\ifx#5\@empty\else\def\fgruler@numsep@{#5}\fi%
+\ignorespaces}
+
+\rulerparams{.4pt}{\scriptsize\sffamily}{black}{2mm}{3pt}
+
+\def\rulerparamsfromfg{\rulerparams{\fgruler@markthick}{\fgruler@numfont}{\fgruler@color}{\fgruler@marklength}{\fgruler@numsep}}
+
+\def\fgruler@fgsetting{%
+\fgruler@set{\fgruler@markthick}{\fgruler@numfont}{\fgruler@color}{\fgruler@marklength}{\fgruler@numsep}%
+\rulernorotatenum}
+
+\def\fgruler@intextsetting{%
+\fgruler@set{\fgruler@markthick@}{\fgruler@numfont@}{\fgruler@color@}{\fgruler@marklength@}{\fgruler@numsep@}}
+
+\def\fgruler@activate@type{%
+\def\fgruler@output{}%
+\def\fgruler@check{cm}\ifx\fgruler@unit\fgruler@check\else%
+\def\fgruler@check{in}\ifx\fgruler@unit\fgruler@check\else%
+\PackageError{fgruler}{\fgruler@unit\space is invalid unit}{Valid units: cm, in}%
+\fi\fi%
+\def\do##1{%
+\expandafter\def\expandafter\fgruler@type@item\expandafter{##1}%
+\def\fgruler@check{upperleft}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{upperright}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{lowerleft}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{lowerright}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{upperleftT}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{upperrightT}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{lowerleftT}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{lowerrightT}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{alledges}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{alledges*}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{alledgesT}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{alledgesT*}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{none}\ifx\fgruler@type@item\fgruler@check\else%
+\def\fgruler@check{user}\ifx\fgruler@type@item\fgruler@check\else%
+\PackageError{fgruler}{\fgruler@type@item\space is invalid type}%
+{Valid types:\MessageBreak
+upperleft, upperright, lowerleft, lowerright,\MessageBreak
+upperleftT, upperrightT, lowerleftT, lowerrightT,\MessageBreak
+alledges, alledges*, alledgesT, alledgesT*, user, none}%
+\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi%
+\g@addto@macro\fgruler@output{\csname fgruler@\fgruler@unit @##1@fg\endcsname}}%
+\expandafter\docsvlist\expandafter{\fgruler@type}}
+
+\def\fgrulerratiocm#1#2{%
+\ifx#1\@empty\else\def\fgruler@cm@ratio@i{#1}\fi%
+\ifx#2\@empty\else\def\fgruler@cm@ratio@ii{#2}\fi%
+\ignorespaces}
+
+\fgrulerratiocm{.5}{.75}
+
+\def\fgrulerratioin#1#2#3#4{%
+\ifx#1\@empty\else\def\fgruler@in@ratio@i{#1}\fi%
+\ifx#2\@empty\else\def\fgruler@in@ratio@ii{#2}\fi%
+\ifx#3\@empty\else\def\fgruler@in@ratio@iii{#3}\fi%
+\ifx#4\@empty\else\def\fgruler@in@ratio@iv{#4}\fi%
+\ignorespaces}
+
+\fgrulerratioin{.25}{.375}{.625}{.75}
+
+\def\fgrulerthickcm#1#2#3{%
+\ifx#1\@empty\else\def\fgruler@cm@thick@i{\linethickness{#1}}\fi%
+\ifx#2\@empty\else\def\fgruler@cm@thick@ii{\linethickness{#2}}\fi%
+\ifx#3\@empty\else\def\fgruler@cm@thick@iii{\linethickness{#3}}\fi%
+\ignorespaces}
+
+\def\fgruler@cm@thick@i{}
+\def\fgruler@cm@thick@ii{}
+\def\fgruler@cm@thick@iii{}
+
+\def\fgrulerthickin#1#2#3#4#5{%
+\ifx#1\@empty\else\def\fgruler@in@thick@i{\linethickness{#1}}\fi%
+\ifx#2\@empty\else\def\fgruler@in@thick@ii{\linethickness{#2}}\fi%
+\ifx#3\@empty\else\def\fgruler@in@thick@iii{\linethickness{#3}}\fi%
+\ifx#4\@empty\else\def\fgruler@in@thick@iv{\linethickness{#4}}\fi%
+\ifx#5\@empty\else\def\fgruler@in@thick@v{\linethickness{#5}}\fi%
+\ignorespaces}
+
+\def\fgruler@in@thick@i{}
+\def\fgruler@in@thick@ii{}
+\def\fgruler@in@thick@iii{}
+\def\fgruler@in@thick@iv{}
+\def\fgruler@in@thick@v{}
+
+\def\fgrulercolorcm#1#2#3{%
+\ifx#1\@empty\else\def\fgruler@cm@color@i{\color{#1}}\fi%
+\ifx#2\@empty\else\def\fgruler@cm@color@ii{\color{#2}}\fi%
+\ifx#3\@empty\else\def\fgruler@cm@color@iii{\color{#3}}\fi%
+\ignorespaces}
+
+\def\fgruler@cm@color@i{}
+\def\fgruler@cm@color@ii{}
+\def\fgruler@cm@color@iii{}
+
+\def\fgrulercolorin#1#2#3#4#5{%
+\ifx#1\@empty\else\def\fgruler@in@color@i{\color{#1}}\fi%
+\ifx#2\@empty\else\def\fgruler@in@color@ii{\color{#2}}\fi%
+\ifx#3\@empty\else\def\fgruler@in@color@iii{\color{#3}}\fi%
+\ifx#4\@empty\else\def\fgruler@in@color@iv{\color{#4}}\fi%
+\ifx#5\@empty\else\def\fgruler@in@color@v{\color{#5}}\fi%
+\ignorespaces}
+
+\def\fgruler@in@color@i{}
+\def\fgruler@in@color@ii{}
+\def\fgruler@in@color@iii{}
+\def\fgruler@in@color@iv{}
+\def\fgruler@in@color@v{}
+
+\def\setfgruler#1{\setkeys{fgruler}{#1}\fgruler@activate@type\ignorespaces}
+
+\newdimen\fgruler@tempdima
+\newdimen\fgruler@tempdimb
+
+\newcommand\fgruler@div[2]{%
+\fgruler@tempdima=#1\relax\fgruler@tempdimb=\unitlength\relax
+\fgruler@tempdimb=#2\fgruler@tempdimb\divide\fgruler@tempdima by \fgruler@tempdimb
+\@tempcnta\fgruler@tempdima\advance\@tempcnta\@ne}
+
+\def\fgruler@check@param#1#2{%
+\expandafter\def\expandafter\fgruler@param\expandafter{#1}%
+\def\fgruler@check{cm}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{in}\ifx\fgruler@param\fgruler@check\else%
+\PackageError{fgruler}{\fgruler@param\space is invalid parameter}{Valid parameters: cm, in}%
+\fi\fi%
+\expandafter\def\expandafter\fgruler@param\expandafter{#2}%
+\def\fgruler@check{rightdown}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{rightup}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{leftdown}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{leftup}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{downright}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{downleft}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{upright}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{upleft}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{taperight}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{tapeleft}\ifx\fgruler@param\fgruler@check\else%
+\PackageError{fgruler}{\fgruler@param\space is invalid parameter}%
+{Valid parameters:\MessageBreak
+rightdown, rightup, leftdown, leftup,\MessageBreak
+downright, downleft, upright, upleft, taperight, tapeleft}%
+\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi}
+
+\def\fgruler@check@param@#1#2{%
+\expandafter\def\expandafter\fgruler@param\expandafter{#1}%
+\def\fgruler@check{cm}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{in}\ifx\fgruler@param\fgruler@check\else%
+\PackageError{fgruler}{\fgruler@param\space is invalid parameter}{Valid parameters: cm, in}%
+\fi\fi%
+\expandafter\def\expandafter\fgruler@param\expandafter{#2}%
+\def\fgruler@check{upperleft}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{upperright}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{lowerleft}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{lowerright}\ifx\fgruler@param\fgruler@check\else%
+\PackageError{fgruler}{\fgruler@param\space is invalid parameter}%
+{Valid parameters:\MessageBreak
+upperleft, upperright, lowerleft, lowerright}%
+\fi\fi\fi\fi}
+
+\def\fgruler@check@param@@#1#2{%
+\expandafter\def\expandafter\fgruler@param\expandafter{#1}%
+\def\fgruler@check{cm}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{in}\ifx\fgruler@param\fgruler@check\else%
+\PackageError{fgruler}{\fgruler@param\space is invalid parameter}{Valid parameters: cm, in}%
+\fi\fi%
+\expandafter\def\expandafter\fgruler@param\expandafter{#2}%
+\def\fgruler@check{upperleft}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{upperright}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{lowerleft}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{lowerright}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{upperleftT}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{upperrightT}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{lowerleftT}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{lowerrightT}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{alledges}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{alledges*}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{alledgesT}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{alledgesT*}\ifx\fgruler@param\fgruler@check\else%
+\def\fgruler@check{user}\ifx\fgruler@param\fgruler@check\else%
+\PackageError{fgruler}{\fgruler@param\space is invalid type}%
+{Valid types:\MessageBreak
+upperleft, upperright, lowerleft, lowerright,\MessageBreak
+upperleftT, upperrightT, lowerleftT, lowerrightT,\MessageBreak
+alledges, alledges*, alledgesT, alledgesT*, user}%
+\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi}
+
+\newcommand{\fgruler@ruler}[3][cm]{\fgruler@check@param{#1}{#2}\fgruler@intextsetting\csname fgruler@#1@#2@\endcsname{#3}}
+\newcommand{\fgruler@ruler@}[3][cm]{\fgruler@check@param{#1}{#2}\fgruler@intextsetting\csname fgruler@#1@#2@@\endcsname{#3}}
+\def\ruler{\@ifstar{\fgruler@ruler@}{\fgruler@ruler}}
+
+\newcommand{\fgruler@squareruler}[4][cm]{\fgruler@check@param@{#1}{#2}\fgruler@intextsetting\csname fgruler@#1@#2@\endcsname{#3}{#4}}
+\newcommand{\fgruler@squareruler@}[4][cm]{\fgruler@check@param@{#1}{#2}\fgruler@intextsetting\csname fgruler@#1@#2@@\endcsname{#3}{#4}}
+\def\squareruler{\@ifstar{\fgruler@squareruler@}{\fgruler@squareruler}}
+
+\newcommand{\fgruler@fgruler}[4][\fgruler@unit]{\fgruler@check@param@{#1}{#2}\g@addto@macro\fgruler@output@{\csname fgruler@#1@#2@fg@\endcsname{#3}{#4}}}
+\newcommand{\fgruler@fgruler@}[2][]{\g@addto@macro\fgruler@output@{{\setkeys{fgruler}{#1}\fgruler@check@param@@{\fgruler@unit}{#2}\csname fgruler@\fgruler@unit @#2@fg\endcsname}}}
+\def\fgruler{\@ifstar{\fgruler@fgruler@}{\fgruler@fgruler}}
+
+\def\fgrulercaptioncm#1{\def\fgruler@caption@cm{#1}\ignorespaces}
+\def\fgruler@caption@cm{cm}
+\def\fgrulercaptionin#1{\def\fgruler@caption@in{#1}\ignorespaces}
+\def\fgruler@caption@in{inch}
+
+\newif\iffgruler@borderline
+\def\fgrulernoborderline{\fgruler@borderlinefalse\ignorespaces}
+\def\fgrulerborderline{\fgruler@borderlinetrue\ignorespaces}
+\fgruler@borderlinetrue
+
+\newcounter{fgrulernum}
+\newcounter{fgruler@check}
+
+\def\fgruler@ifnot@divisible@five#1{%
+\setcounter{fgruler@check}{\value{fgrulernum}}%
+\divide\value{fgruler@check}by5\relax%
+\multiply\value{fgruler@check}by5\relax%
+\ifnum\value{fgruler@check}=\value{fgrulernum}\else#1\fi\stepcounter{fgrulernum}}
+
+\def\fgruler@ifodd#1{\ifodd\value{fgrulernum}#1\fi\stepcounter{fgrulernum}}
+
+\def\fgrulerstartnum#1{\def\fgruler@startnumh{#1}\def\fgruler@startnumv{#1}\ignorespaces}
+\def\fgrulerstartnumh#1{\def\fgruler@startnumh{#1}\ignorespaces}
+\def\fgrulerstartnumv#1{\def\fgruler@startnumv{#1}\ignorespaces}
+\def\fgruler@startnumh{0}
+\def\fgruler@startnumv{0}
+
+\def\fgrulerdefnum#1{\def\thefgrulernum{#1}\ignorespaces}
+
+\def\fgruler@rotatebox#1#2{#2}%
+
+\def\rulernorotatenum{%
+\ifx\@onlypreamble\@notprerr%
+\def\fgruler@rotatebox##1##2{##2}%
+\else\PackageError{fgruler}{Don't use \protect\rulernorotatenum\space in preamble!}{}\fi%
+\ignorespaces}
+
+\def\rulerrotatenum{%
+\ifx\@onlypreamble\@notprerr%
+\def\fgruler@rotatebox##1##2{\rotatebox{##1}{##2}}%
+\else\PackageError{fgruler}{Don't use \protect\rulerrotatenum\space in preamble!}{}\fi%
+\ignorespaces}
+
+\def\fgrulerreset{%
+\ifx\@onlypreamble\@notprerr%
+\def\fgruler@cm@ratio@i{.5}%
+\def\fgruler@cm@ratio@ii{.75}%
+\def\fgruler@in@ratio@i{.25}%
+\def\fgruler@in@ratio@ii{.375}%
+\def\fgruler@in@ratio@iii{.625}%
+\def\fgruler@in@ratio@iv{.75}%
+\def\fgruler@cm@thick@i{}%
+\def\fgruler@cm@thick@ii{}%
+\def\fgruler@cm@thick@iii{}%
+\def\fgruler@in@thick@i{}%
+\def\fgruler@in@thick@ii{}%
+\def\fgruler@in@thick@iii{}%
+\def\fgruler@in@thick@iv{}%
+\def\fgruler@in@thick@v{}%
+\def\fgruler@cm@color@i{}%
+\def\fgruler@cm@color@ii{}%
+\def\fgruler@cm@color@iii{}%
+\def\fgruler@in@color@i{}%
+\def\fgruler@in@color@ii{}%
+\def\fgruler@in@color@iii{}%
+\def\fgruler@in@color@iv{}%
+\def\fgruler@in@color@v{}%
+\def\fgruler@rotatebox##1##2{\rotatebox{##1}{##2}}%
+\def\fgruler@markthick@{.4pt}%
+\def\fgruler@numfont@{\scriptsize\sffamily}%
+\def\fgruler@color@{black}%
+\def\fgruler@marklength@{2mm}%
+\def\fgruler@numsep@{3pt}%
+\def\fgruler@type{upperleft}%
+\def\fgruler@unit{cm}%
+\def\fgruler@markthick{.4pt}%
+\def\fgruler@numfont{\scriptsize\sffamily}%
+\def\fgruler@color{black}%
+\def\fgruler@marklength{2mm}%
+\def\fgruler@hshift{0pt}%
+\def\fgruler@vshift{0pt}%
+\def\fgruler@numsep{3pt}%
+\def\thefgrulernum{\arabic{fgrulernum}}%
+\def\fgruler@caption@cm{cm}%
+\def\fgruler@caption@in{inch}%
+\def\fgruler@startnumh{0}%
+\def\fgruler@startnumv{0}%
+\fgruler@borderlinetrue%
+\fgruler@showframefalse%
+\def\fgruler@output{\csname fgruler@\fgruler@unit @\fgruler@type @fg\endcsname}%
+\else\PackageError{fgruler}{Don't use \protect\fgrulerreset\space in preamble!}{}\fi%
+\ignorespaces}
+
+\AtEndPreamble{
+
+\@ifpackageloaded{xcolor}{}{\RequirePackage{xcolor}}
+\@ifpackageloaded{graphicx}{}{\RequirePackage{graphicx}}
+
+\def\fgruler@rotatebox#1#2{\rotatebox{#1}{#2}}
+
+\iffgruler@nonefgrulers
+
+\renewcommand{\fgruler@fgruler}[4][]{}
+\renewcommand{\fgruler@fgruler@}[2][]{}
+
+\else
+
+\@ifpackageloaded{eso-pic}{}{\RequirePackage{eso-pic}[2020/10/14]}
+
+\def\fgruler@frame{%
+  \begingroup
+    \fgruler@fgsetting
+    \fgruler@rulercolor%
+    \fgruler@markthickness%
+    \AtPageLowerLeft{%
+      \framebox(\paperwidth,\paperheight){}}%
+    \AtTextLowerLeft{%
+      \framebox(\textwidth,\textheight){}}%
+    \AtTextUpperLeft{%
+      \put(0,\headsep){%
+        \framebox(\textwidth,\headheight){}}}%
+    \AtTextLowerLeft{%
+      \put(0,-\footskip){%
+        \line(1,0){\textwidth}}}%
+    \AtTextLowerLeft{%
+      \fgruler@tempdima=\textwidth\advance\fgruler@tempdima\marginparsep%
+      \if@twoside
+        \ifodd\c@page\else
+          \if@mparswitch
+            \fgruler@tempdima=-\marginparsep\advance\fgruler@tempdima-\marginparwidth
+          \fi
+        \fi
+      \fi
+      \put(\fgruler@tempdima,0)%
+        {\framebox(\marginparwidth,\textheight){}}%
+    }%
+  \endgroup
+}
+
+\def\fgruler@output@{}
+
+\ESO@isMEMOIR{%
+  \AddToHook{shipout/foreground}{%
+    \ESO@MEMOIR@corr
+    \put(\ESO@tempdima,\ESO@tempdimb){%
+      \iffgruler@showframe\fgruler@frame\fi%
+      \fgruler@output\fgruler@output@%
+      \global\let\fgruler@output@\@empty%
+    }%
+  }%
+}{%
+  \AddToHook{shipout/foreground}{%
+    \put(0,\ESO@yoffsetI){%
+      \iffgruler@showframe\fgruler@frame\fi%
+      \fgruler@output\fgruler@output@%
+      \global\let\fgruler@output@\@empty%
+    }%
+  }%
+}
+
+\fgruler@activate@type
+
+\fi
+}
+
+%% RIGHTDOWN CM
+\def\fgruler@cm@rightdown#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(1,0){\@tempcnta}{\fgruler@ifnot@divisible@five{\fgruler@cm@thick@i\fgruler@cm@color@i\line(0,-1){\fgruler@cm@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{5}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(5,0){\@tempcnta}{\fgruler@ifodd{\fgruler@cm@thick@ii\fgruler@cm@color@ii\line(0,-1){\fgruler@cm@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{10}%
+\multiput(0,0)(10,0){\@tempcnta}{\fgruler@cm@thick@iii\fgruler@cm@color@iii\line(0,-1){\fgruler@marklth}}%
+\iffgruler@borderline\put(-\@halfwidth,0){\line(1,0){#1+\@wholewidth}}\fi% \@wholewidth is current line thickness and \@halfwidth = 0.5\@wholewidth (see in latex.ltx)
+\setcounter{fgrulernum}{\fgruler@startnumh}\stepcounter{fgrulernum}%
+\multiput(10,-\fgruler@sep)(10,0){\fgruler@tempdima}{\makebox(0,0)[t]{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}
+
+\def\fgruler@cm@rightdown@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,\fgruler@width)(0,-\fgruler@width)%
+\fgruler@cm@rightdown{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5cm\put(5,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@rightdown@@#1{\leavevmode\hbox{}\lower\fgruler@width\hbox{\fgruler@cm@rightdown@{#1}}}
+
+%% RIGHTDOWN IN
+\def\fgruler@in@rightdown#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(1,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@i\fgruler@in@color@i\line(0,-1){\fgruler@in@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{2}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(2,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@ii\fgruler@in@color@ii\line(0,-1){\fgruler@in@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{4}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(4,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iii\fgruler@in@color@iii\line(0,-1){\fgruler@in@ratio@iii\fgruler@marklth}}}%
+\fgruler@div{#1}{8}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(8,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iv\fgruler@in@color@iv\line(0,-1){\fgruler@in@ratio@iv\fgruler@marklth}}}%
+\fgruler@div{#1}{16}%
+\multiput(0,0)(16,0){\@tempcnta}{\fgruler@in@thick@v\fgruler@in@color@v\line(0,-1){\fgruler@marklth}}%
+\iffgruler@borderline\put(-\@halfwidth,0){\line(1,0){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumh}\stepcounter{fgrulernum}%
+\multiput(16,-\fgruler@sep)(16,0){\fgruler@tempdima}{\makebox(0,0)[t]{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}
+
+\def\fgruler@in@rightdown@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,\fgruler@width)(0,-\fgruler@width)%
+\fgruler@in@rightdown{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5in\put(8,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@in}}\fi%
+\end{picture}}
+
+\def\fgruler@in@rightdown@@#1{\leavevmode\hbox{}\lower\fgruler@width\hbox{\fgruler@in@rightdown@{#1}}}
+
+%% RIGHTUP CM
+\def\fgruler@cm@rightup#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(1,0){\@tempcnta}{\fgruler@ifnot@divisible@five{\fgruler@cm@thick@i\fgruler@cm@color@i\line(0,1){\fgruler@cm@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{5}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(5,0){\@tempcnta}{\fgruler@ifodd{\fgruler@cm@thick@ii\fgruler@cm@color@ii\line(0,1){\fgruler@cm@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{10}%
+\multiput(0,0)(10,0){\@tempcnta}{\fgruler@cm@thick@iii\fgruler@cm@color@iii\line(0,1){\fgruler@marklth}}%
+\iffgruler@borderline\put(-\@halfwidth,0){\line(1,0){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumh}\stepcounter{fgrulernum}%
+\multiput(10,\fgruler@sep)(10,0){\fgruler@tempdima}{\makebox(0,0)[b]{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}
+
+\def\fgruler@cm@rightup@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,\fgruler@width)%
+\fgruler@cm@rightup{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5cm\put(5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@rightup@@#1{\leavevmode\hbox{}\lower\fgruler@width\hbox{\fgruler@cm@rightup@{#1}}}
+
+%% RIGHTUP IN
+\def\fgruler@in@rightup#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(1,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@i\fgruler@in@color@i\line(0,1){\fgruler@in@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{2}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(2,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@ii\fgruler@in@color@ii\line(0,1){\fgruler@in@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{4}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(4,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iii\fgruler@in@color@iii\line(0,1){\fgruler@in@ratio@iii\fgruler@marklth}}}%
+\fgruler@div{#1}{8}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(8,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iv\fgruler@in@color@iv\line(0,1){\fgruler@in@ratio@iv\fgruler@marklth}}}%
+\fgruler@div{#1}{16}%
+\multiput(0,0)(16,0){\@tempcnta}{\fgruler@in@thick@v\fgruler@in@color@v\line(0,1){\fgruler@marklth}}%
+\iffgruler@borderline\put(-\@halfwidth,0){\line(1,0){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumh}\stepcounter{fgrulernum}%
+\multiput(16,\fgruler@sep)(16,0){\fgruler@tempdima}{\makebox(0,0)[b]{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}
+
+\def\fgruler@in@rightup@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,\fgruler@width)%
+\fgruler@in@rightup{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5in\put(8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}\fi%
+\end{picture}}
+
+\def\fgruler@in@rightup@@#1{\leavevmode\hbox{}\lower\fgruler@width\hbox{\fgruler@in@rightup@{#1}}}
+
+%% LEFTDOWN CM
+\def\fgruler@cm@leftdown#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-1,0){\@tempcnta}{\fgruler@ifnot@divisible@five{\fgruler@cm@thick@i\fgruler@cm@color@i\line(0,-1){\fgruler@cm@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{5}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-5,0){\@tempcnta}{\fgruler@ifodd{\fgruler@cm@thick@ii\fgruler@cm@color@ii\line(0,-1){\fgruler@cm@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{10}%
+\multiput(0,0)(-10,0){\@tempcnta}{\fgruler@cm@thick@iii\fgruler@cm@color@iii\line(0,-1){\fgruler@marklth}}%
+\iffgruler@borderline\put(\@halfwidth,0){\line(-1,0){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumh}\stepcounter{fgrulernum}%
+\multiput(-10,-\fgruler@sep)(-10,0){\fgruler@tempdima}{\makebox(0,0)[t]{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}
+
+\def\fgruler@cm@leftdown@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,\fgruler@width)(-#1,-\fgruler@width)%
+\fgruler@cm@leftdown{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5cm\put(-5,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@leftdown@@#1{\leavevmode\hbox{}\lower\fgruler@width\hbox{\fgruler@cm@leftdown@{#1}}}
+
+%% LEFTDOWN IN
+\def\fgruler@in@leftdown#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-1,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@i\fgruler@in@color@i\line(0,-1){\fgruler@in@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{2}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-2,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@ii\fgruler@in@color@ii\line(0,-1){\fgruler@in@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{4}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-4,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iii\fgruler@in@color@iii\line(0,-1){\fgruler@in@ratio@iii\fgruler@marklth}}}%
+\fgruler@div{#1}{8}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-8,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iv\fgruler@in@color@iv\line(0,-1){\fgruler@in@ratio@iv\fgruler@marklth}}}%
+\fgruler@div{#1}{16}%
+\multiput(0,0)(-16,0){\@tempcnta}{\fgruler@in@thick@v\fgruler@in@color@v\line(0,-1){\fgruler@marklth}}%
+\iffgruler@borderline\put(\@halfwidth,0){\line(-1,0){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumh}\stepcounter{fgrulernum}%
+\multiput(-16,-\fgruler@sep)(-16,0){\fgruler@tempdima}{\makebox(0,0)[t]{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}
+
+\def\fgruler@in@leftdown@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,\fgruler@width)(-#1,-\fgruler@width)%
+\fgruler@in@leftdown{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5in\put(-8,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@in}}\fi%
+\end{picture}}
+
+\def\fgruler@in@leftdown@@#1{\leavevmode\hbox{}\lower\fgruler@width\hbox{\fgruler@in@leftdown@{#1}}}
+
+%% LEFTUP CM
+\def\fgruler@cm@leftup#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-1,0){\@tempcnta}{\fgruler@ifnot@divisible@five{\fgruler@cm@thick@i\fgruler@cm@color@i\line(0,1){\fgruler@cm@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{5}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-5,0){\@tempcnta}{\fgruler@ifodd{\fgruler@cm@thick@ii\fgruler@cm@color@ii\line(0,1){\fgruler@cm@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{10}%
+\multiput(0,0)(-10,0){\@tempcnta}{\fgruler@cm@thick@iii\fgruler@cm@color@iii\line(0,1){\fgruler@marklth}}%
+\iffgruler@borderline\put(\@halfwidth,0){\line(-1,0){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumh}\stepcounter{fgrulernum}%
+\multiput(-10,\fgruler@sep)(-10,0){\fgruler@tempdima}{\makebox(0,0)[b]{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}
+
+\def\fgruler@cm@leftup@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,\fgruler@width)(-#1,0)%
+\fgruler@cm@leftup{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5cm\put(-5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@leftup@@#1{\leavevmode\hbox{}\lower\fgruler@width\hbox{\fgruler@cm@leftup@{#1}}}
+
+%% LEFTUP IN
+\def\fgruler@in@leftup#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-1,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@i\fgruler@in@color@i\line(0,1){\fgruler@in@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{2}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-2,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@ii\fgruler@in@color@ii\line(0,1){\fgruler@in@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{4}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-4,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iii\fgruler@in@color@iii\line(0,1){\fgruler@in@ratio@iii\fgruler@marklth}}}%
+\fgruler@div{#1}{8}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(-8,0){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iv\fgruler@in@color@iv\line(0,1){\fgruler@in@ratio@iv\fgruler@marklth}}}%
+\fgruler@div{#1}{16}%
+\multiput(0,0)(-16,0){\@tempcnta}{\fgruler@in@thick@v\fgruler@in@color@v\line(0,1){\fgruler@marklth}}%
+\iffgruler@borderline\put(\@halfwidth,0){\line(-1,0){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumh}\stepcounter{fgrulernum}%
+\multiput(-16,\fgruler@sep)(-16,0){\fgruler@tempdima}{\makebox(0,0)[b]{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}
+
+\def\fgruler@in@leftup@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,\fgruler@width)(-#1,0)%
+\fgruler@in@leftup{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5in\put(-8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}\fi%
+\end{picture}}
+
+\def\fgruler@in@leftup@@#1{\leavevmode\hbox{}\lower\fgruler@width\hbox{\fgruler@in@leftup@{#1}}}
+
+%% DOWNRIGHT CM
+\def\fgruler@cm@downright#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-1){\@tempcnta}{\fgruler@ifnot@divisible@five{\fgruler@cm@thick@i\fgruler@cm@color@i\line(1,0){\fgruler@cm@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{5}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-5){\@tempcnta}{\fgruler@ifodd{\fgruler@cm@thick@ii\fgruler@cm@color@ii\line(1,0){\fgruler@cm@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{10}%
+\multiput(0,0)(0,-10){\@tempcnta}{\fgruler@cm@thick@iii\fgruler@cm@color@iii\line(1,0){\fgruler@marklth}}%
+\iffgruler@borderline\put(0,\@halfwidth){\line(0,-1){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumv}\stepcounter{fgrulernum}%
+\multiput(\fgruler@sep,-10)(0,-10){\fgruler@tempdima}{\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}}
+
+\def\fgruler@cm@downright@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(\fgruler@width,#1)(0,-#1)%
+\fgruler@cm@downright{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\thefgrulernum}}}%
+\ifdim#1>.5cm\put(\fgruler@sep,-5){\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\fgruler@caption@cm}}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@downright@@#1{\leavevmode\hbox{}\lower#1\hbox{\fgruler@cm@downright@{#1}}}
+
+%% DOWNRIGHT IN
+\def\fgruler@in@downright#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-1){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@i\fgruler@in@color@i\line(1,0){\fgruler@in@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{2}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-2){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@ii\fgruler@in@color@ii\line(1,0){\fgruler@in@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{4}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-4){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iii\fgruler@in@color@iii\line(1,0){\fgruler@in@ratio@iii\fgruler@marklth}}}%
+\fgruler@div{#1}{8}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-8){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iv\fgruler@in@color@iv\line(1,0){\fgruler@in@ratio@iv\fgruler@marklth}}}%
+\fgruler@div{#1}{16}%
+\multiput(0,0)(0,-16){\@tempcnta}{\fgruler@in@thick@v\fgruler@in@color@v\line(1,0){\fgruler@marklth}}%
+\iffgruler@borderline\put(0,\@halfwidth){\line(0,-1){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumv}\stepcounter{fgrulernum}%
+\multiput(\fgruler@sep,-16)(0,-16){\fgruler@tempdima}{\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}}
+
+\def\fgruler@in@downright@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(\fgruler@width,#1)(0,-#1)%
+\fgruler@in@downright{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\thefgrulernum}}}%
+\ifdim#1>.5in\put(\fgruler@sep,-8){\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\fgruler@caption@in}}}\fi%
+\end{picture}}
+
+\def\fgruler@in@downright@@#1{\leavevmode\hbox{}\lower#1\hbox{\fgruler@in@downright@{#1}}}
+
+%% DOWNLEFT CM
+\def\fgruler@cm@downleft#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-1){\@tempcnta}{\fgruler@ifnot@divisible@five{\fgruler@cm@thick@i\fgruler@cm@color@i\line(-1,0){\fgruler@cm@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{5}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-5){\@tempcnta}{\fgruler@ifodd{\fgruler@cm@thick@ii\fgruler@cm@color@ii\line(-1,0){\fgruler@cm@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{10}%
+\multiput(0,0)(0,-10){\@tempcnta}{\fgruler@cm@thick@iii\fgruler@cm@color@iii\line(-1,0){\fgruler@marklth}}%
+\iffgruler@borderline\put(0,\@halfwidth){\line(0,-1){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumv}\stepcounter{fgrulernum}%
+\multiput(-\fgruler@sep,-10)(0,-10){\fgruler@tempdima}{\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}}
+
+\def\fgruler@cm@downleft@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(\fgruler@width,#1)(-\fgruler@width,-#1)%
+\fgruler@cm@downleft{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\thefgrulernum}}}%
+\ifdim#1>.5cm\put(-\fgruler@sep,-5){\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\fgruler@caption@cm}}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@downleft@@#1{\leavevmode\hbox{}\lower#1\hbox{\fgruler@cm@downleft@{#1}}}
+
+%% DOWNLEFT IN
+\def\fgruler@in@downleft#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-1){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@i\fgruler@in@color@i\line(-1,0){\fgruler@in@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{2}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-2){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@ii\fgruler@in@color@ii\line(-1,0){\fgruler@in@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{4}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-4){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iii\fgruler@in@color@iii\line(-1,0){\fgruler@in@ratio@iii\fgruler@marklth}}}%
+\fgruler@div{#1}{8}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,-8){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iv\fgruler@in@color@iv\line(-1,0){\fgruler@in@ratio@iv\fgruler@marklth}}}%
+\fgruler@div{#1}{16}%
+\multiput(0,0)(0,-16){\@tempcnta}{\fgruler@in@thick@v\fgruler@in@color@v\line(-1,0){\fgruler@marklth}}%
+\iffgruler@borderline\put(0,\@halfwidth){\line(0,-1){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumv}\stepcounter{fgrulernum}%
+\multiput(-\fgruler@sep,-16)(0,-16){\fgruler@tempdima}{\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}}
+
+\def\fgruler@in@downleft@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(\fgruler@width,#1)(-\fgruler@width,-#1)%
+\fgruler@in@downleft{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\thefgrulernum}}}%
+\ifdim#1>.5in\put(-\fgruler@sep,-8){\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\fgruler@caption@in}}}\fi%
+\end{picture}}
+
+\def\fgruler@in@downleft@@#1{\leavevmode\hbox{}\lower#1\hbox{\fgruler@in@downleft@{#1}}}
+
+%% UPRIGHT CM
+\def\fgruler@cm@upright#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,1){\@tempcnta}{\fgruler@ifnot@divisible@five{\fgruler@cm@thick@i\fgruler@cm@color@i\line(1,0){\fgruler@cm@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{5}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,5){\@tempcnta}{\fgruler@ifodd{\fgruler@cm@thick@ii\fgruler@cm@color@ii\line(1,0){\fgruler@cm@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{10}%
+\multiput(0,0)(0,10){\@tempcnta}{\fgruler@cm@thick@iii\fgruler@cm@color@iii\line(1,0){\fgruler@marklth}}%
+\iffgruler@borderline\put(0,-\@halfwidth){\line(0,1){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumv}\stepcounter{fgrulernum}%
+\multiput(\fgruler@sep,10)(0,10){\fgruler@tempdima}{\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}}
+
+\def\fgruler@cm@upright@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(\fgruler@width,#1)%
+\fgruler@cm@upright{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\thefgrulernum}}}%
+\ifdim#1>.5cm\put(\fgruler@sep,5){\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\fgruler@caption@cm}}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@upright@@#1{\leavevmode\hbox{}\lower#1\hbox{\fgruler@cm@upright@{#1}}}
+
+%% UPRIGHT IN
+\def\fgruler@in@upright#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,1){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@i\fgruler@in@color@i\line(1,0){\fgruler@in@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{2}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,2){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@ii\fgruler@in@color@ii\line(1,0){\fgruler@in@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{4}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,4){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iii\fgruler@in@color@iii\line(1,0){\fgruler@in@ratio@iii\fgruler@marklth}}}%
+\fgruler@div{#1}{8}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,8){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iv\fgruler@in@color@iv\line(1,0){\fgruler@in@ratio@iv\fgruler@marklth}}}%
+\fgruler@div{#1}{16}%
+\multiput(0,0)(0,16){\@tempcnta}{\fgruler@in@thick@v\fgruler@in@color@v\line(1,0){\fgruler@marklth}}%
+\iffgruler@borderline\put(0,-\@halfwidth){\line(0,1){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumv}\stepcounter{fgrulernum}%
+\multiput(\fgruler@sep,16)(0,16){\fgruler@tempdima}{\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}}
+
+\def\fgruler@in@upright@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(\fgruler@width,#1)%
+\fgruler@in@upright{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\thefgrulernum}}}%
+\ifdim#1>.5in\put(\fgruler@sep,8){\makebox(0,0)[l]{\fgruler@rotatebox{90}{\fgruler@font@\fgruler@caption@in}}}\fi%
+\end{picture}}
+
+\def\fgruler@in@upright@@#1{\leavevmode\hbox{}\lower#1\hbox{\fgruler@in@upright@{#1}}}
+
+%% UPLEFT CM
+\def\fgruler@cm@upleft#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,1){\@tempcnta}{\fgruler@ifnot@divisible@five{\fgruler@cm@thick@i\fgruler@cm@color@i\line(-1,0){\fgruler@cm@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{5}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,5){\@tempcnta}{\fgruler@ifodd{\fgruler@cm@thick@ii\fgruler@cm@color@ii\line(-1,0){\fgruler@cm@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{10}%
+\multiput(0,0)(0,10){\@tempcnta}{\fgruler@cm@thick@iii\fgruler@cm@color@iii\line(-1,0){\fgruler@marklth}}%
+\iffgruler@borderline\put(0,-\@halfwidth){\line(0,1){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumv}\stepcounter{fgrulernum}%
+\multiput(-\fgruler@sep,10)(0,10){\fgruler@tempdima}{\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}}
+
+\def\fgruler@cm@upleft@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(\fgruler@width,#1)(-\fgruler@width,0)%
+\fgruler@cm@upleft{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\thefgrulernum}}}%
+\ifdim#1>.5cm\put(-\fgruler@sep,5){\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\fgruler@caption@cm}}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@upleft@@#1{\leavevmode\hbox{}\lower#1\hbox{\fgruler@cm@upleft@{#1}}}
+
+%% UPLEFT IN
+\def\fgruler@in@upleft#1{%
+\fgruler@rulercolor%
+\fgruler@markthickness%
+\fgruler@div{#1}{1}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,1){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@i\fgruler@in@color@i\line(-1,0){\fgruler@in@ratio@i\fgruler@marklth}}}%
+\fgruler@div{#1}{2}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,2){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@ii\fgruler@in@color@ii\line(-1,0){\fgruler@in@ratio@ii\fgruler@marklth}}}%
+\fgruler@div{#1}{4}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,4){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iii\fgruler@in@color@iii\line(-1,0){\fgruler@in@ratio@iii\fgruler@marklth}}}%
+\fgruler@div{#1}{8}%
+\setcounter{fgrulernum}{0}%
+\multiput(0,0)(0,8){\@tempcnta}{\fgruler@ifodd{\fgruler@in@thick@iv\fgruler@in@color@iv\line(-1,0){\fgruler@in@ratio@iv\fgruler@marklth}}}%
+\fgruler@div{#1}{16}%
+\multiput(0,0)(0,16){\@tempcnta}{\fgruler@in@thick@v\fgruler@in@color@v\line(-1,0){\fgruler@marklth}}%
+\iffgruler@borderline\put(0,-\@halfwidth){\line(0,1){#1+\@wholewidth}}\fi%
+\setcounter{fgrulernum}{\fgruler@startnumv}\stepcounter{fgrulernum}%
+\multiput(-\fgruler@sep,16)(0,16){\fgruler@tempdima}{\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\thefgrulernum\stepcounter{fgrulernum}}}}}
+
+\def\fgruler@in@upleft@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(\fgruler@width,#1)(-\fgruler@width,0)%
+\fgruler@in@upleft{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\thefgrulernum}}}%
+\ifdim#1>.5in\put(-\fgruler@sep,8){\makebox(0,0)[r]{\fgruler@rotatebox{-90}{\fgruler@font@\fgruler@caption@in}}}\fi%
+\end{picture}}
+
+\def\fgruler@in@upleft@@#1{\leavevmode\hbox{}\lower#1\hbox{\fgruler@in@upleft@{#1}}}
+
+%% TAPERIGHT CM
+\def\fgruler@cm@taperight@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,\fgruler@width+\fgruler@sep)%
+\fgruler@cm@rightup{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5cm\put(5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\def\thefgrulernum{}%
+\put(0,\fgruler@width+\fgruler@sep){\fgruler@cm@rightdown{#1}}%
+\end{picture}}
+
+\def\fgruler@cm@taperight@@#1{\leavevmode\hbox{}\lower\dimexpr
+\fgruler@width+\fgruler@sep\relax\hbox{\fgruler@cm@taperight@{#1}}}
+
+%% TAPERIGHT IN
+\def\fgruler@in@taperight@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,\fgruler@width+\fgruler@sep)%
+\fgruler@in@rightup{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5in\put(8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}\fi%
+\def\thefgrulernum{}%
+\put(0,\fgruler@width+\fgruler@sep){\fgruler@in@rightdown{#1}}%
+\end{picture}}
+
+\def\fgruler@in@taperight@@#1{\leavevmode\hbox{}\lower\dimexpr
+\fgruler@width+\fgruler@sep\relax\hbox{\fgruler@in@taperight@{#1}}}
+
+%% TAPELEFT CM
+\def\fgruler@cm@tapeleft@#1{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,\fgruler@width+\fgruler@sep)(-#1,0)%
+\fgruler@cm@leftup{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5cm\put(-5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\def\thefgrulernum{}%
+\put(0,\fgruler@width+\fgruler@sep){\fgruler@cm@leftdown{#1}}%
+\end{picture}}
+
+\def\fgruler@cm@tapeleft@@#1{\leavevmode\hbox{}\lower\dimexpr
+\fgruler@width+\fgruler@sep\relax\hbox{\fgruler@cm@tapeleft@{#1}}}
+
+%% TAPELEFT IN
+\def\fgruler@in@tapeleft@#1{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,\fgruler@width+\fgruler@sep)(-#1,0)%
+\fgruler@in@leftup{#1}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\ifdim#1>.5in\put(-8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}\fi%
+\def\thefgrulernum{}%
+\put(0,\fgruler@width+\fgruler@sep){\fgruler@in@leftdown{#1}}%
+\end{picture}}
+
+\def\fgruler@in@tapeleft@@#1{\leavevmode\hbox{}\lower\dimexpr
+\fgruler@width+\fgruler@sep\relax\hbox{\fgruler@in@tapeleft@{#1}}}
+
+%% UPPERLEFT CM
+\def\fgruler@cm@upperleft@#1#2{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,#2)(0,-#2)%
+\fgruler@cm@rightdown{#1}%
+\fgruler@cm@downright{#2}%
+\ifdim#1>.5cm\put(5,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@upperleft@@#1#2{\leavevmode\hbox{}\lower#2\hbox{\fgruler@cm@upperleft@{#1}{#2}}}
+
+\def\fgruler@cm@upperleft@fg@#1#2{%
+\begingroup%
+\setlength{\fgruler@fg@width}{\paperwidth}%
+\addtolength{\fgruler@fg@width}{-#1}%
+\setlength{\fgruler@fg@height}{\paperheight}%
+\addtolength{\fgruler@fg@height}{-#2}%
+\fgruler@fgsetting%
+\AtPageLowerLeft{\put(#1,0){%
+\fgruler@cm@upperleft@{\fgruler@fg@width}{\fgruler@fg@height}}}%
+\endgroup}
+
+\def\fgruler@cm@upperleft@fg{\fgruler@cm@upperleft@fg@{\fgruler@hshift}{\fgruler@vshift}}
+
+%% UPPERLEFT IN
+\def\fgruler@in@upperleft@#1#2{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,#2)(0,-#2)%
+\fgruler@in@rightdown{#1}%
+\fgruler@in@downright{#2}%
+\ifdim#1>.5in\put(8,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@in}}\fi%
+\end{picture}}
+
+\def\fgruler@in@upperleft@@#1#2{\leavevmode\hbox{}\lower#2\hbox{\fgruler@in@upperleft@{#1}{#2}}}
+
+\def\fgruler@in@upperleft@fg@#1#2{%
+\begingroup%
+\setlength{\fgruler@fg@width}{\paperwidth}%
+\addtolength{\fgruler@fg@width}{-#1}%
+\setlength{\fgruler@fg@height}{\paperheight}%
+\addtolength{\fgruler@fg@height}{-#2}%
+\fgruler@fgsetting%
+\AtPageLowerLeft{\put(#1,0){%
+\fgruler@in@upperleft@{\fgruler@fg@width}{\fgruler@fg@height}}}%
+\endgroup}
+
+\def\fgruler@in@upperleft@fg{\fgruler@in@upperleft@fg@{\fgruler@hshift}{\fgruler@vshift}}
+
+%% UPPERRIGHT CM
+\def\fgruler@cm@upperright@#1#2{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,#2)(-#1,-#2)%
+\fgruler@cm@leftdown{#1}%
+\fgruler@cm@downleft{#2}%
+\ifdim#1>.5cm\put(-5,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@upperright@@#1#2{\leavevmode\hbox{}\lower#2\hbox{\fgruler@cm@upperright@{#1}{#2}}}
+
+\def\fgruler@cm@upperright@fg@#1#2{%
+\begingroup%
+\setlength{\fgruler@fg@width}{\paperwidth}%
+\addtolength{\fgruler@fg@width}{-#1}%
+\setlength{\fgruler@fg@height}{\paperheight}%
+\addtolength{\fgruler@fg@height}{-#2}%
+\fgruler@fgsetting%
+\AtPageLowerLeft{\fgruler@cm@upperright@{\fgruler@fg@width}{\fgruler@fg@height}}%
+\endgroup}
+
+\def\fgruler@cm@upperright@fg{\fgruler@cm@upperright@fg@{\fgruler@hshift}{\fgruler@vshift}}
+
+%% UPPERRIGHT IN
+\def\fgruler@in@upperright@#1#2{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,#2)(-#1,-#2)%
+\fgruler@in@leftdown{#1}%
+\fgruler@in@downleft{#2}%
+\ifdim#1>.5in\put(-8,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@in}}\fi%
+\end{picture}}
+
+\def\fgruler@in@upperright@@#1#2{\leavevmode\hbox{}\lower#2\hbox{\fgruler@in@upperright@{#1}{#2}}}
+
+\def\fgruler@in@upperright@fg@#1#2{%
+\begingroup%
+\setlength{\fgruler@fg@width}{\paperwidth}%
+\addtolength{\fgruler@fg@width}{-#1}%
+\setlength{\fgruler@fg@height}{\paperheight}%
+\addtolength{\fgruler@fg@height}{-#2}%
+\fgruler@fgsetting%
+\AtPageLowerLeft{\fgruler@in@upperright@{\fgruler@fg@width}{\fgruler@fg@height}}%
+\endgroup}
+
+\def\fgruler@in@upperright@fg{\fgruler@in@upperright@fg@{\fgruler@hshift}{\fgruler@vshift}}
+
+%% LOWERLEFT CM
+\def\fgruler@cm@lowerleft@#1#2{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,#2)%
+\fgruler@cm@rightup{#1}%
+\fgruler@cm@upright{#2}%
+\ifdim#1>.5cm\put(5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@lowerleft@@#1#2{\leavevmode\hbox{}\lower#2\hbox{\fgruler@cm@lowerleft@{#1}{#2}}}
+
+\def\fgruler@cm@lowerleft@fg@#1#2{%
+\begingroup%
+\setlength{\fgruler@fg@width}{\paperwidth}%
+\addtolength{\fgruler@fg@width}{-#1}%
+\setlength{\fgruler@fg@height}{\paperheight}%
+\addtolength{\fgruler@fg@height}{-#2}%
+\fgruler@fgsetting%
+\AtPageLowerLeft{\put(#1,#2){%
+\fgruler@cm@lowerleft@{\fgruler@fg@width}{\fgruler@fg@height}}}%
+\endgroup}
+
+\def\fgruler@cm@lowerleft@fg{\fgruler@cm@lowerleft@fg@{\fgruler@hshift}{\fgruler@vshift}}
+
+%% LOWERLEFT IN
+\def\fgruler@in@lowerleft@#1#2{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,#2)%
+\fgruler@in@rightup{#1}%
+\fgruler@in@upright{#2}%
+\ifdim#1>.5in\put(8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}\fi%
+\end{picture}}
+
+\def\fgruler@in@lowerleft@@#1#2{\leavevmode\hbox{}\lower#2\hbox{\fgruler@in@lowerleft@{#1}{#2}}}
+
+\def\fgruler@in@lowerleft@fg@#1#2{%
+\begingroup%
+\setlength{\fgruler@fg@width}{\paperwidth}%
+\addtolength{\fgruler@fg@width}{-#1}%
+\setlength{\fgruler@fg@height}{\paperheight}%
+\addtolength{\fgruler@fg@height}{-#2}%
+\fgruler@fgsetting%
+\AtPageLowerLeft{\put(#1,#2){%
+\fgruler@in@lowerleft@{\fgruler@fg@width}{\fgruler@fg@height}}}%
+\endgroup}
+
+\def\fgruler@in@lowerleft@fg{\fgruler@in@lowerleft@fg@{\fgruler@hshift}{\fgruler@vshift}}
+
+%% LOWERRIGHT CM
+\def\fgruler@cm@lowerright@#1#2{%
+\setlength{\unitlength}{1mm}%
+\begin{picture}(#1,#2)(-#1,0)%
+\fgruler@cm@leftup{#1}%
+\fgruler@cm@upleft{#2}%
+\ifdim#1>.5cm\put(-5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}\fi%
+\end{picture}}
+
+\def\fgruler@cm@lowerright@@#1#2{\leavevmode\hbox{}\lower#2\hbox{\fgruler@cm@lowerright@{#1}{#2}}}
+
+\def\fgruler@cm@lowerright@fg@#1#2{%
+\begingroup%
+\setlength{\fgruler@fg@width}{\paperwidth}%
+\addtolength{\fgruler@fg@width}{-#1}%
+\setlength{\fgruler@fg@height}{\paperheight}%
+\addtolength{\fgruler@fg@height}{-#2}%
+\fgruler@fgsetting%
+\AtPageLowerLeft{\put(0,#2){%
+\fgruler@cm@lowerright@{\fgruler@fg@width}{\fgruler@fg@height}}}%
+\endgroup}
+
+\def\fgruler@cm@lowerright@fg{\fgruler@cm@lowerright@fg@{\fgruler@hshift}{\fgruler@vshift}}
+
+%% LOWERRIGHT IN
+\def\fgruler@in@lowerright@#1#2{%
+\setlength{\unitlength}{.0625in}%
+\begin{picture}(#1,#2)(-#1,0)%
+\fgruler@in@leftup{#1}%
+\fgruler@in@upleft{#2}%
+\ifdim#1>.5in\put(-8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}\fi%
+\end{picture}}
+
+\def\fgruler@in@lowerright@@#1#2{\leavevmode\hbox{}\lower#2\hbox{\fgruler@in@lowerright@{#1}{#2}}}
+
+\def\fgruler@in@lowerright@fg@#1#2{%
+\begingroup%
+\setlength{\fgruler@fg@width}{\paperwidth}%
+\addtolength{\fgruler@fg@width}{-#1}%
+\setlength{\fgruler@fg@height}{\paperheight}%
+\addtolength{\fgruler@fg@height}{-#2}%
+\fgruler@fgsetting%
+\AtPageLowerLeft{\put(0,#2){%
+\fgruler@in@lowerright@{\fgruler@fg@width}{\fgruler@fg@height}}}%
+\endgroup}
+
+\def\fgruler@in@lowerright@fg{\fgruler@in@lowerright@fg@{\fgruler@hshift}{\fgruler@vshift}}
+
+%% UPPERLEFTT CM
+\def\fgruler@cm@upperleftT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{1mm}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(0,-\textheight)%
+\fgruler@cm@rightup{\textwidth}%
+\fgruler@cm@downleft{\textheight}%
+\put(5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% UPPERLEFTT IN
+\def\fgruler@in@upperleftT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{.0625in}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(0,-\textheight)%
+\fgruler@in@rightup{\textwidth}%
+\fgruler@in@downleft{\textheight}%
+\put(8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% UPPERRIGHTT CM
+\def\fgruler@cm@upperrightT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{1mm}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(-\textwidth,-\textheight)%
+\fgruler@cm@leftup{\textwidth}%
+\fgruler@cm@downright{\textheight}%
+\put(-5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% UPPERRIGHTT IN
+\def\fgruler@in@upperrightT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{.0625in}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(-\textwidth,-\textheight)%
+\fgruler@in@leftup{\textwidth}%
+\fgruler@in@downright{\textheight}%
+\put(-8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% LOWERLEFTT CM
+\def\fgruler@cm@lowerleftT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{1mm}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(0,0)%
+\fgruler@cm@rightdown{\textwidth}%
+\fgruler@cm@upleft{\textheight}%
+\put(5,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@cm}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% LOWERLEFTT IN
+\def\fgruler@in@lowerleftT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{.0625in}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(0,0)%
+\fgruler@in@rightdown{\textwidth}%
+\fgruler@in@upleft{\textheight}%
+\put(8,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@in}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% LOWERRIGHTT CM
+\def\fgruler@cm@lowerrightT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{1mm}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(-\textwidth,0)%
+\fgruler@cm@leftdown{\textwidth}%
+\fgruler@cm@upright{\textheight}%
+\put(-5,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@cm}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% LOWERRIGHTT IN
+\def\fgruler@in@lowerrightT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{.0625in}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(-\textwidth,0)%
+\fgruler@in@leftdown{\textwidth}%
+\fgruler@in@upright{\textheight}%
+\put(-8,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@in}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% ALLEDGES CM
+\def\fgruler@cm@alledges@fg{%
+\AtPageLowerLeft{%
+\setlength{\unitlength}{1mm}%
+\fgruler@fgsetting%
+\begin{picture}(\paperwidth,\paperheight)(0,-\paperheight)%
+\fgruler@cm@rightdown{\paperwidth}%
+\fgruler@cm@downright{\paperheight}%
+\put(0,-\paperheight){\fgruler@cm@rightup{\paperwidth}}
+\put(\paperwidth,0){\fgruler@cm@downleft{\paperheight}}
+\put(5,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@cm}}
+\end{picture}}}
+
+%% ALLEDGES IN
+\def\fgruler@in@alledges@fg{%
+\AtPageLowerLeft{%
+\setlength{\unitlength}{.0625in}%
+\fgruler@fgsetting%
+\begin{picture}(\paperwidth,\paperheight)(0,-\paperheight)%
+\fgruler@in@rightdown{\paperwidth}%
+\fgruler@in@downright{\paperheight}%
+\put(0,-\paperheight){\fgruler@in@rightup{\paperwidth}}
+\put(\paperwidth,0){\fgruler@in@downleft{\paperheight}}
+\put(8,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@in}}
+\end{picture}}}
+
+%% ALLEDGES* CM
+\@namedef{fgruler@cm@alledges*@fg}{%
+\AtPageLowerLeft{%
+\setlength{\unitlength}{1mm}%
+\fgruler@fgsetting%
+\begin{picture}(\paperwidth,\paperheight)(0,-\paperheight)%
+\fgruler@cm@rightdown{\paperwidth}%
+\fgruler@cm@downright{\paperheight}%
+\put(\paperwidth,-\paperheight){%
+\fgruler@cm@leftup{\paperwidth}%
+\fgruler@cm@upleft{\paperheight}}
+\put(5,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@cm}}
+\end{picture}}}
+
+%% ALLEDGES* IN
+\@namedef{fgruler@in@alledges*@fg}{%
+\AtPageLowerLeft{%
+\setlength{\unitlength}{.0625in}%
+\fgruler@fgsetting%
+\begin{picture}(\paperwidth,\paperheight)(0,-\paperheight)%
+\fgruler@in@rightdown{\paperwidth}%
+\fgruler@in@downright{\paperheight}%
+\put(\paperwidth,-\paperheight){%
+\fgruler@in@leftup{\paperwidth}%
+\fgruler@in@upleft{\paperheight}}
+\put(8,-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\fgruler@caption@in}}
+\end{picture}}}
+
+%% ALLEDGEST CM
+\def\fgruler@cm@alledgesT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{1mm}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(0,-\textheight)%
+\fgruler@cm@rightup{\textwidth}%
+\fgruler@cm@downleft{\textheight}%
+\put(0,-\textheight){\fgruler@cm@rightdown{\textwidth}}
+\put(\textwidth,0){\fgruler@cm@downright{\textheight}}
+\put(5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\put(0,-\textheight-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@font@\thefgrulernum}}%
+\put(\textwidth+\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% ALLEDGEST IN
+\def\fgruler@in@alledgesT@fg{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{.0625in}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(0,-\textheight)%
+\fgruler@in@rightup{\textwidth}%
+\fgruler@in@downleft{\textheight}%
+\put(0,-\textheight){\fgruler@in@rightdown{\textwidth}}
+\put(\textwidth,0){\fgruler@in@downright{\textheight}}
+\put(8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\put(0,-\textheight-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@font@\thefgrulernum}}%
+\put(\textwidth+\fgruler@sep,0){\makebox(0,0)[l]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% ALLEDGEST* CM
+\@namedef{fgruler@cm@alledgesT*@fg}{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{1mm}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(0,-\textheight)%
+\fgruler@cm@rightup{\textwidth}%
+\fgruler@cm@downleft{\textheight}%
+\put(\textwidth,-\textheight){\fgruler@cm@leftdown{\textwidth}}
+\put(\textwidth,-\textheight){\fgruler@cm@upright{\textheight}}
+\put(5,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@cm}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\put(\textwidth,-\textheight-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@font@\thefgrulernum}}%
+\put(\textwidth+\fgruler@sep,-\textheight){\makebox(0,0)[l]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% ALLEDGEST* IN
+\@namedef{fgruler@in@alledgesT*@fg}{%
+\AtTextLowerLeft{%
+\setlength{\unitlength}{.0625in}%
+\fgruler@fgsetting%
+\begin{picture}(\textwidth,\textheight)(0,-\textheight)%
+\fgruler@in@rightup{\textwidth}%
+\fgruler@in@downleft{\textheight}%
+\put(\textwidth,-\textheight){\fgruler@in@leftdown{\textwidth}}
+\put(\textwidth,-\textheight){\fgruler@in@upright{\textheight}}
+\put(8,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\fgruler@caption@in}}%
+\setcounter{fgrulernum}{\fgruler@startnumh}%
+\put(0,\fgruler@sep){\makebox(0,0)[b]{\fgruler@font@\thefgrulernum}}%
+\put(\textwidth,-\textheight-\fgruler@sep){\makebox(0,0)[t]{\fgruler@font@\thefgrulernum}}%
+\setcounter{fgrulernum}{\fgruler@startnumv}%
+\put(-\fgruler@sep,0){\makebox(0,0)[r]{\fgruler@font@\thefgrulernum}}%
+\put(\textwidth+\fgruler@sep,-\textheight){\makebox(0,0)[l]{\fgruler@font@\thefgrulernum}}%
+\end{picture}}}
+
+%% USER
+\def\fgruler@cm@user@fg{}
+\def\fgruler@in@user@fg{}
+\def\fgrulertype#1#2{\csname fgruler@#1@#2@fg\endcsname}
+
+\def\fgrulerdefusercm#1{\def\fgruler@cm@user@fg{#1}} % for old versions
+\def\fgrulerdefuserin#1{\def\fgruler@in@user@fg{#1}} % for old versions
+
+\def\fgrulerdefuser#1{%
+\expandafter\def\expandafter\fgrulerunit\expandafter{\fgruler@unit}%
+\@namedef{fgruler@\fgruler@unit @user@fg}{#1}}
+
+%    \end{macrocode}
+% \Finale
+\endinput
