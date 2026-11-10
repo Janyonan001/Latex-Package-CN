@@ -1,0 +1,1493 @@
+% This file is part of TeX by Topic
+% Copyright 2007 Victor
+% see file TeXbyTopic.tex for copying conditions
+
+本章给出 \TeX\ 所有原语的列表。每个控制序列之后
+给出该命令或参数的语法类别，并附简短描述。部分命令
+还给出其使用语法。
+
+对于参数，给出其所属的类别。在 \TeXbook\ 中没有语法类别的命令，
+在本列表中标记为
+`\gr{expandable command}' 或
+`\gr{primitive command}'。
+
+语法术语如 \gr{equals} 和 \gr{optional space}
+在第~\ref{gramm} 章中解释。
+
+\begin{glossinventory}
+
+\item []\par
+
+\item [\cs{-}]
+      \gr{horizontal command}
+      自定连字符；等价于 \cs{discretionary}""\verb|{-}{}{}|。
+      可用于指示单词中可断字的位置。
+
+\item [\cs{char32}]
+      \gr{horizontal command}
+      控制空格。插入与空格记号在 \cs{spacefactor}${}=1000$ 时
+      \alt
+      相同的间距。
+
+\item [\cs{char47}]
+      \gr{primitive command}
+      斜体修正：插入由前一个字符指定的紧排。
+      每个字符在 \n{tfm} 文件中都规定了一个斜体修正量（可能为零）。
+      对于倾斜字体，此修正用于补偿伸出量。
+
+\item [\cs{above\gr{dimen}}]
+      \gr{generalized fraction command}
+      横线宽度指定的分式。
+
+\item [\cs{abovedisplayshortskip}]
+      \gr{glue parameter}
+      当展示公式前一行较短时，展示式上方的粘连。
+
+\item [\cs{abovedisplayskip}]
+      \gr{glue parameter}
+      展示式上方的粘连。
+
+\item [\cs{abovewithdelims\gr{delim$_1$}\gr{delim$_2$}\gr{dimen}}]
+      \gr{generalized fraction command}
+      带定界符的广义分式。
+
+\item [\cs{accent\gr{8-bit number}\gr{optional assignments}\gr{character}}]
+      \gr{horizontal command}
+      在字符上放置重音符号的命令。\alt
+
+\item [\cs{adjdemerits}]
+      \gr{integer parameter}
+      相邻行视觉上不协调时的罚值。
+      plain \TeX\ 中默认值为~\n{10$\,$000}。
+
+\item [\cs{advance\gr{numeric variable}\gr{optional \n{by}}\gr{number}}]
+      \gr{arithmetic assignment}
+      用于增减一个 \gr{numeric variable} 的算术命令，即
+ \alt
+      一个 \gr{count variable}、\gr{dimen variable}、\gr{glue variable}，
+      或 \gr{muglue variable}。
+
+\item [\cs{afterassignment\gr{token}}]
+      \gr{primitive command}
+      保存下一个记号，使其在下一次赋值之后执行。
+      用此方式只能保存一个记号。
+
+\item [\cs{aftergroup\gr{token}}]
+      \gr{primitive command}
+      保存下一个记号，使其在当前分组结束后插入。
+      用此方式可保存多个记号。
+
+\item [\cs{atop\gr{dimen}}]
+      \gr{generalized fraction command}
+      将对象上下叠放。
+
+\item [\cs{atopwithdelims\gr{delim$_1$}\gr{delim$_2$}}]
+      \gr{generalized fraction command}
+      带定界符地将对象上下叠放。
+
+\item [\cs{badness}]
+      \gr{internal integer}
+      （仅 \TeX3）最近构造的盒子的不良度。
+
+\item [\cs{baselineskip}]
+      \gr{glue parameter}
+      竖直列表中相邻盒子之间的“理想”基线距离；
+      plain \TeX\ 中为 \n{12pt}。
+
+\item [\cs{batchmode}]
+      \gr{interaction mode assignment}
+      \TeX\ 自行修补错误
+ \alt
+      并在遇到严重错误（如缺少输入文件）时紧急停止，
+      但不产生终端输出。
+
+\item [\cs{begingroup}]
+      \gr{primitive command}
+      打开一个分组，必须用 \verb-\endgroup- 关闭。
+
+\item [\cs{belowdisplayshortskip}]
+      \gr{glue parameter}
+      当展示公式前一行较短时，展示式下方的粘连。
+
+\item [\cs{belowdisplayskip}]
+      \gr{glue parameter}
+      展示式下方的粘连。
+
+\item [\cs{binoppenalty}]
+      \gr{integer parameter}
+      在未被子公式括起的二元运算符之后断行的罚值。
+      plain \TeX\ 默认值：~\n{700}。
+
+\item [\cs{botmark}]
+      \gr{expandable command}
+      当前页上最后一个标记。
+
+\item [\cs{box\gr{8-bit number}}]
+      \gr{box}
+      使用一个盒子寄存器，并清空它。
+
+\item [\cs{boxmaxdepth}]
+      \gr{dimen parameter}
+      盒子允许的最大深度。
+      plain \TeX\ 中默认值为~\cs{maxdimen}。
+
+\item [\cs{brokenpenalty}]
+      \gr{integer parameter}
+      在断字行之后分页的附加罚值。
+      plain \TeX\ 中默认值为~\n{100}。
+
+\item [\cs{catcode\gr{8-bit number}}]
+      \gr{internal integer}；该控制序列本身
+      是一个~\gr{codename}。
+      访问类别码。
+
+\item [\cs{char\gr{number}}]
+      \gr{character}
+      显式指定一个待排版的字符。
+
+\item [\cs{chardef\gr{control sequence}\gr{equals}\gr{number}}]
+      \gr{shorthand definition}
+      定义一个控制序列作为某个字符码的同义名。
+
+\item [\cs{cleaders}]
+      \gr{leaders}
+      与 \verb=\leaders= 相同，但对于盒子引导符，多余空间会被均分
+ \alt
+      在引导符之前和之后的粘连项中。
+
+\item [\cs{closein\gr{4-bit number}}]
+      \gr{primitive command}
+      关闭一个输入流。
+
+\item [\cs{closeout\gr{4-bit number}}]
+      \gr{primitive command}
+      关闭一个输出流。
+
+\item [\cs{clubpenalty}]
+      \gr{integer parameter}
+      在段落第一行之后分页的附加罚值。
+      plain \TeX\ 中默认值为~\n{150}。
+
+\item [\cs{copy\gr{8-bit number}}]
+      \gr{box}
+      使用一个盒子寄存器，但保留其内容。
+
+\item [\cs{count\gr{8-bit number}}]
+      \gr{internal integer}；该控制序列本身
+      是一个~\gr{register prefix}。
+      访问计数寄存器。
+
+\item [\cs{countdef\gr{control sequence}\gr{equals}\gr{8-bit number}}]
+      \gr{shorthand definition}；该控制序列
+      本身是一个~\gr{registerdef}。
+      定义一个控制序列作为某个~\cs{count} 寄存器的同义名。
+
+\item [\cs{cr}]
+      \gr{primitive command}
+      结束一条对齐行。
+
+\item [\cs{crcr}]
+      \gr{primitive command}
+      若一条对齐行尚未被~\cs{cr} 结束，则结束它。
+
+\item [\cs{csname}]
+      \gr{expandable command}
+      开始构造一个控制序列的名字。
+      必须与 \cs{endcsname} 配对使用。
+
+\item [\cs{day}]
+      \gr{integer parameter}
+      当前作业的日期（日）。
+
+\item [\cs{deadcycles}]
+      \gr{special integer}
+      计数器，记录输出例程被调用但未发生 \cs{shipout} 的次数。
+      若此数达到 \cs{maxdeadcycles}，\TeX\
+      给出错误信息。plain \TeX\ 默认值：~\n{25}。
+
+\item [\cs{def}]
+      \gr{def} 开始一个宏定义。
+
+\item [\cs{defaulthyphenchar}]
+      \gr{integer parameter}
+      装入字体时 \cs{hyphenchar} 的值。
+      plain \TeX\ 中的默认值为~\verb>`\->。
+
+\item [\cs{defaultskewchar}]
+      \gr{integer parameter}
+      装入字体时 \cs{skewchar} 的值。
+      plain \TeX\ 中的默认值为~\n{-1}。
+
+\item [\cs{delcode\gr{8-bit number}}]
+      \gr{internal integer}；该控制序列本身
+      是一个~\gr{codename}。
+      访问用于指定某字符在 \cs{left} 或 \cs{right}
+      之后如何用作定界符的码。
+
+\item [\cs{delimiter\gr{27-bit number}}]
+      \gr{math character}
+      显式指定一个定界符。
+
+\item [\cs{delimiterfactor}]
+      \gr{integer parameter}
+      带定界符公式中应由定界符覆盖部分的 1000 倍。
+      plain \TeX\ 默认值：~\n{901}。
+
+\item [\cs{delimitershortfall}]
+      \gr{integer parameter}
+      带定界符公式中允许未被定界符覆盖部分的尺寸。
+      plain \TeX\ 默认值：~\n{5pt}。
+
+\item [\cs{dimen\gr{8-bit number}}]
+      \gr{internal dimen}；该控制序列本身
+      是一个~\gr{register prefix}。
+      访问尺寸寄存器。
+
+\item [\cs{dimendef\gr{control sequence}\gr{equals}\gr{8-bit number}}]
+      \gr{shorthand definition}；该控制序列
+      本身是一个~\gr{registerdef}。
+      定义一个控制序列作为某个~\cs{dimen} 寄存器的同义名。
+
+\item [\cs{discretionary\SerifFont\italic\lb pre-break\rb\lb post-break\rb\lb no-break\rb{}}]
+      \gr{horizontal command}
+      指定字符序列在断行处如何拆分。
+
+\item [\cs{displayindent}]
+      \gr{dimen parameter}
+      展示式居中盒子因悬挂缩进而缩进的距离。
+      此值对每个展示式自动设置。
+
+\item [\cs{displaylimits}]
+      \gr{primitive command}
+      恢复上下限的默认位置。
+
+\item [\cs{displaystyle}]
+      \gr{primitive command}
+      选择数学排版的展示样式。
+
+\item [\cs{displaywidowpenalty}]
+      \gr{integer parameter}
+      在展示公式上方最后一行之前分页的附加罚值。
+      plain \TeX\ 中默认值为~\n{50}。
+
+\item [\cs{displaywidth}]
+      \gr{dimen parameter}
+      展示式居中盒子的宽度。
+      此值对每个展示式自动设置。
+
+\item [\cs{divide\gr{numeric variable}\gr{optional \n{by}}\gr{number}}]
+      \gr{arithmetic assignment}
+      用于除以一个 \gr{numeric variable} 的算术命令
+      （见 \cs{advance}）。
+
+\item [\cs{doublehyphendemerits}]
+      \gr{integer parameter}
+      相邻两行都以连字符结尾时的罚值。
+      plain \TeX\ 中默认值为~\n{10$\,$000}。
+
+\item [\cs{dp\gr{8-bit number}}]
+      \gr{internal dimen}；该控制序列本身
+      是一个~\gr{box dimension}。
+      盒子寄存器中盒子的深度。
+
+\item [\cs{dump}]
+      \gr{vertical command}
+      转储一个格式文件；仅在 \IniTeX\ 中可行，
+      不允许在分组内部使用。
+
+
+\item [\cs{edef}]
+      \gr{def}
+      开始一个宏定义；
+      替换文本在定义时即被展开。
+
+\item [\cs{else}]
+      \gr{expandable command}
+      选择条件语句的
+      \gr{false text}，或 \cs{ifcase} 的默认分支。
+
+\item [\cs{emergencystretch}]
+      \gr{dimen parameter}
+      （仅 \TeX3）断行算法第三趟处理时，
+      段落各行所假定的额外伸长量。
+
+\item [\cs{end}]
+      \gr{vertical command}
+      结束本次运行。
+
+\item [\cs{endcsname}]
+      \gr{expandable command}
+      结束由 \cs{csname} 开始的控制序列名。
+
+\item [\cs{endgroup}]
+      \gr{primitive command}
+      结束由 \verb-\begingroup- 打开的分组。
+
+\item [\cs{endinput}]
+      \gr{expandable command}
+      在当前行之后结束当前文件的输入。
+
+\item [\cs{endlinechar}]
+      \gr{integer parameter}
+      附加到输入行末的行尾字符的字符码。
+      \IniTeX\ 默认值：~\n{13}。
+
+\item [\cs{eqno\gr{math mode material}\n{\char36\char36}}]
+      \gr{eqno}
+      在展示公式右侧放置公式编号。
+
+\item [\cs{errhelp}]
+      \gr{token parameter}
+      当用户在 \cs{err\-message} 之后请求帮助时
+      将显示的记号。
+
+\item [\cs{errmessage\gr{general text}}]
+      \gr{primitive command}
+      报告错误并给予用户采取行动的机会。
+
+\item [\cs{errorcontextlines}]
+      \gr{integer parameter}
+      （仅 \TeX3）错误信息中额外显示的上下文行数。
+
+\item [\cs{errorstopmode}]
+      \gr{interaction mode assignment}
+      遇到错误时请求用户输入。
+
+\item [\cs{escapechar}]
+      \gr{integer parameter}
+      控制序列转换为字符记号时
+      所用转义字符的编号。
+      \IniTeX\ 默认值：~\n{92}。
+
+\item [\cs{everycr}]
+      \gr{token parameter}
+      在每个 \cs{cr} 或非多余的 \cs{crcr} 之后插入的记号列表。
+
+\item [\cs{everydisplay}]
+      \gr{token parameter}
+      在展示式开头插入的记号列表。
+
+\item [\cs{everyhbox}]
+      \gr{token parameter}
+      在水平盒子开头插入的记号列表。
+
+\item [\cs{everyjob}]
+      \gr{token parameter}
+      在每次作业开头插入的记号列表。
+
+\item [\cs{everymath}]
+      \gr{token parameter}
+      在非展示式数学开头插入的记号列表。
+
+\item [\cs{everypar}]
+      \gr{token parameter}
+      在段落文本之前插入的记号列表。
+
+\item [\cs{everyvbox}]
+      \gr{token parameter}
+      在竖直盒子开头插入的记号列表。
+
+\item [\cs{exhyphenpenalty}]
+      \gr{integer parameter}
+      当断前文本为空时，在自定断行处断行的罚值。
+      plain \TeX\ 中默认值为~\n{50}。
+
+\item [\cs{expandafter}]
+      \gr{expandable command}
+      取下两个记号，将第二个记号的展开结果
+      置于第一个记号之后。
+
+\item [\cs{fam}]
+      \gr{integer parameter}
+      当前字体族的编号。
+
+\item [\cs{fi}]
+      \gr{expandable command}
+      所有条件语句的结束定界符。
+
+\item [\cs{finalhyphendemerits}]
+      \gr{integer parameter}
+      当段落倒数第二行以连字符结尾时附加的罚值。
+      plain \TeX\ 默认值~\n{5000}。
+
+\item [\cs{firstmark}]
+      \gr{expandable command}
+      当前页上第一个标记。
+
+\item [\cs{floatingpenalty}]
+      \gr{integer parameter}
+      当插入物被拆分时，加到 \cs{insertpenalties} 上
+ \alt
+      的罚值。
+
+\item [\cs{font\gr{control sequence}\gr{equals}\gr{file name}\gr{at clause}}]
+      \gr{simple assignment}
+      将一个控制序列与一个 \n{tfm} 文件关联。
+      单独使用时，该控制序列是一个 \gr{font}，
+      表示当前字体。
+
+\item [\cs{fontdimen\gr{number}\gr{font}}]
+      \gr{internal dimen}
+      访问字体的各种参数。
+
+\item [\cs{fontname\gr{font}}]
+      \gr{primitive command}
+      字体的外部名称。
+
+\item [\cs{futurelet\gr{control sequence}\gr{token$_1$}\gr{token$_2$}}]
+      \gr{let assignment}
+      将 \gr{token$_2$} 的含义
+      赋予 \gr{control sequence}。
+
+\item [\cs{gdef}]
+      \gr{def}
+      \verb-\global\def- 的同义命令。
+
+\item [\cs{global}]
+      \gr{prefix}
+      使下一个定义、算术语句或赋值成为全局的。
+
+\item [\cs{globaldefs}]
+      \gr{integer parameter}
+      覆盖 \cs{global} 设定：此参数为正值时使所有赋值成为全局的，
+      为负值时使所有赋值成为局部的。
+
+\item [\cs{halign\gr{box specification}\lb\gr{alignment material}\rb{}}]
+      \gr{vertical command}
+      水平对齐。
+      展示式对齐：
+      \begin{disp}\n{\$\$}\cs{halign}\gr{box specification}\lb\n{...}\rb
+      \gr{optional assignments}\n{\$\$}\end{disp}
+
+\item [\cs{hangafter}]
+      \gr{integer parameter}
+      若为正，表示缩进开始之前的行数；
+      若为负，其绝对值表示从段落首行开始的缩进行数。
+      每段之后恢复默认值~1。
+
+\item [\cs{hangindent}]
+      \gr{dimen parameter}
+      若为正，表示从左页边缩进的距离；
+      若为负，表示从右页边缩进距离的负值。
+      每段之后恢复默认值~\n{0pt}。
+
+\item [\cs{hbadness}]
+      \gr{integer parameter}
+      \TeX\ 不报告水平盒子过松或过满的阈值。
+      plain \TeX\ 默认值：~\n{1000}。
+
+\item [\cs{hbox\gr{box specification}\lb\gr{horizontal material}\rb}]
+      \gr{box}
+      构造一个水平盒子。
+
+\item [\cs{hfil}]
+      \gr{horizontal command}
+      等价于 \verb-\hskip 0cm plus 1fil- 的水平跳跃。
+
+\item [\cs{hfill}]
+      \gr{horizontal command}
+      等价于 \verb-\hskip 0cm plus 1fill- 的水平跳跃。
+
+\item [\cs{hfilneg}]
+      \gr{horizontal command}
+      等价于 \verb-\hskip 0cm minus 1fil- 的水平跳跃。
+
+\item [\cs{hfuzz}]
+      \gr{dimen parameter}
+      \TeX\ 判定水平盒子过满之前所容忍的超出量。
+      plain \TeX\ 默认值：~\n{0.1pt}。
+
+\item [\cs{hoffset}]
+      \gr{dimen parameter}
+      页面相对于参考点向右偏移的距离，
+      参考点位于距左页边一英寸处。
+
+\item [\cs{holdinginserts}]
+      \gr{integer parameter}
+      （仅 \TeX3）若此值为正，则在插入 \cs{output}
+      记号时，插入物不放入其盒子中。
+
+\item [\cs{hrule}]
+      \gr{vertical command}
+      沿水平方向伸展的线。
+
+\item [\cs{hsize}]
+      \gr{dimen parameter}
+      竖直盒子内文本排版所用的行宽。
+
+\item [\cs{hskip\gr{glue}}]
+      \gr{horizontal command}
+      在水平模式下插入一个粘连项。
+
+\item [\cs{hss}]
+      \gr{horizontal command}
+      等价于 \verb-\hskip 0cm plus 1fil minus 1fil- 的水平跳跃。
+
+\item [\cs{ht\gr{8-bit number}}]
+      \gr{internal dimen}；该控制序列本身
+      是一个~\gr{box dimension}。
+      盒子寄存器中盒子的高度。
+
+\item [\cs{hyphenation\gr{general text}}]
+      \gr{hyphenation assignment}
+      为当前 \cs{language} 值定义断字例外词。
+
+\item [\cs{hyphenchar\gr{font}}]
+      \gr{internal integer}
+      在其后插入 \verb-\discretionary{}{}{}- 的字符编号。
+
+\item [\cs{hyphenpenalty}]
+      \gr{integer parameter}
+      一般情况下在自定断行处断行的罚值。
+      plain \TeX\ 中默认值为~\n{50}。
+
+\item [\cs{if\gr{token$_1$}\gr{token$_2$}}]
+      \gr{expandable command}
+      测试字符码是否相等。
+
+\item [\cs{ifcase\gr{number}\gr{case$_0$}\cs{or}\n{...}\cs{or}\gr{case$_n$}\cs{else}\gr{other cases}\cs{fi}}]
+      \gr{expandable command}
+      枚举式分支语句。
+
+\item [\cs{ifcat\gr{token$_1$}\gr{token$_2$}}]
+      \gr{expandable command}
+      测试两个字符是否具有相同的类别码。
+
+\item [\cs{ifdim\gr{dimen$_1$}\gr{relation}\gr{dimen$_2$}}]
+      \gr{expandable command}
+      比较两个尺寸。
+
+\item [\cs{ifeof\gr{4-bit number}}]
+      \gr{expandable command}
+      测试一个文件是否已读完，或不存在。
+
+\item [\cs{iffalse}]
+      \gr{expandable command}
+      此测试恒为假。
+
+\item [\cs{ifhbox\gr{8-bit number}}]
+      \gr{expandable command}
+      测试盒子寄存器中是否含有水平盒子。
+
+\item [\cs{ifhmode}]
+      \gr{expandable command}
+      测试当前模式是否为（可能是受限的）水平模式。
+
+\item [\cs{ifinner}]
+      \gr{expandable command}
+      测试当前模式是否为内部模式。
+
+\item [\cs{ifmmode}]
+      \gr{expandable command}
+      测试当前模式是否为（可能是展示式）数学模式。
+
+\item [\cs{ifnum\gr{number$_1$}\gr{relation}\gr{number$_2$}}]
+      \gr{expandable command}
+      测试数值之间的关系。
+
+\item [\cs{ifodd\gr{number}}]
+      \gr{expandable command}
+      测试一个数是否为奇数。
+
+\item [\cs{iftrue}]
+      \gr{expandable command}
+      此测试恒为真。
+
+\item [\cs{ifvbox\gr{8-bit number}}]
+      \gr{expandable command}
+      测试盒子寄存器中是否含有竖直盒子。
+
+\item [\cs{ifvmode}]
+      \gr{expandable command}
+      测试当前模式是否为（可能是内部的）竖直模式。
+
+\item [\cs{ifvoid\gr{8-bit number}}]
+      \gr{expandable command}
+      测试盒子寄存器是否为空。
+
+\item [\cs{ifx\gr{token$_1$}\gr{token$_2$}}]
+      \gr{expandable command}
+      测试宏展开是否相等，或字符码与类别码是否相等。
+
+\item [\cs{ignorespaces}]
+      \gr{primitive command}
+      展开其后的记号，直到遇到非~\gr{space token}
+      的内容为止。
+
+\item [\cs{immediate}]
+      \gr{primitive command}
+      前缀，用于使输出操作立即执行。
+
+\item [\cs{indent}]
+      \gr{primitive command}
+      切换到水平模式并插入宽度为 \cs{parindent} 的盒子。
+      在竖直模式下，此命令会在
+      \gr{horizontal
+      command} 之前自动插入。
+
+\item [\cs{input\gr{file name}}]
+      \gr{expandable command}
+      读取指定文件作为 \TeX\ 输入。
+
+\item [\cs{inputlineno}]
+      \gr{internal integer}
+      （仅 \TeX3）当前输入行的行号。
+
+\item [\cs{insert\gr{8-bit number}\lb\gr{vertical mode material}\rb}]
+      \gr{primitive command}
+      开始一个插入项。
+
+\item [\cs{insertpenalties}]
+      \gr{special integer}
+      拆分插入物的罚值总和。
+      在输出例程内部，表示暂留插入物的数量。
+
+\item [\cs{interlinepenalty}]
+      \gr{integer parameter}
+      在段落各行之间分页的罚值。
+      plain \TeX\ 中默认值为~\n{0}。
+
+\item [\cs{jobname}]
+      \gr{expandable command}
+      正在处理的主 \TeX\ 文件的名称。
+
+\item [\cs{kern\gr{dimen}}]
+      \gr{kern}
+      向列表中添加一个尺寸为指定
+      \gr{dimen} 的紧排项；
+      在水平模式和竖直模式下均可使用。
+
+\item [\cs{language}]
+      \gr{integer parameter}
+      （仅 \TeX3）选择一组断字模式和例外词。
+
+\item [\cs{lastbox}]
+      \gr{box}
+      若当前列表中最后添加的元素是盒子，则该寄存器保存它。
+
+\item [\cs{lastkern}]
+      \gr{internal dimen}
+      若列表最后一项是紧排项，则为其尺寸。
+
+\item [\cs{lastpenalty}]
+      \gr{internal integer}
+      若列表最后一项是罚值，则为其值。
+
+\item [\cs{lastskip}]
+      \gr{internal glue} 或 \gr{internal muglue}。
+      若列表最后一项是跳跃项，则为其尺寸。
+
+\item [\cs{lccode\gr{8-bit number}}]
+      \gr{internal integer}；该控制序列本身
+      是一个~\gr{codename}。
+      访问某给定字符码对应的小写字符码。
+
+\item [\cs{leaders\gr{box or rule}\gr{vertical/horizontal/mathematical skip}}]
+      \gr{leaders}
+      用一条线或盒子的副本填满指定空间。
+
+\item [\cs{left}]
+      \gr{primitive command}
+      将其后的字符用作开始定界符。
+
+\item [\cs{lefthyphenmin}]
+      \gr{integer parameter}
+      （仅 \TeX3）断字之前最少保留的字符数。
+
+\item [\cs{leftskip}]
+      \gr{glue parameter}
+      放置在所有行左侧的粘连。
+
+\item [\cs{leqno\gr{math mode material}\n{\char36\char36}}]
+      \gr{eqno}
+      在展示公式左侧放置公式编号。
+
+\item [\cs{let\gr{control sequence}\gr{equals}\gr{token}}]
+      \gr{let assignment}
+      将一个控制序列定义为某个记号；
+      若该记号是命令或宏，则赋予其含义。
+
+\item [\cs{limits}]
+      \gr{primitive command}
+      将上下限置于大运算符的上方和下方。
+      这是展示样式下的默认位置。
+
+\item [\cs{linepenalty}]
+      \gr{integer parameter}
+      与每次断行关联的罚值。
+      plain \TeX\ 中默认值为~\n{10}。
+
+\item [\cs{lineskip}]
+      \gr{glue parameter}
+      当相邻盒子底部与顶部之间的距离小于 \cs{lineskiplimit} 时
+      添加的粘连。plain \TeX\ 中默认值为~\n{1pt}。
+
+\item [\cs{lineskiplimit}]
+      \gr{dimen parameter}
+      竖直列表中相邻盒子底部与顶部之间应保持的距离。
+      plain \TeX\ 中默认值为~\n{0pt}。
+
+\item [\cs{long}]
+      \gr{prefix}
+      指示待定义宏的参数中允许包含 \cs{par} 记号。
+
+\item [\cs{looseness}]
+      \gr{integer parameter}
+      本段应比理想长度多出（若为负则少）的行数。
+
+\item [\cs{lower\gr{dimen}\gr{box}}]
+      \gr{primitive command}
+      在水平模式下调整盒子的竖直位置。
+
+\item [\cs{lowercase\gr{general text}}]
+      \gr{primitive command}
+      将参数转换为小写形式。
+
+\item [\cs{mag}]
+      \gr{integer parameter}
+      文档放大倍数的 1000 倍。
+      \IniTeX\ 中默认值为 \n{1000}。
+
+\item [\cs{mark\gr{general text}}]
+      \gr{primitive command}
+      指定一个标记文本。
+
+\item [\cs{mathaccent\gr{15-bit number}\gr{math field}}]
+      \gr{primitive command}
+      在数学模式下放置重音符号。
+
+\item [\cs{mathbin\gr{math field}}]
+      \gr{math atom}
+      使其后的 \gr{math field}
+      作为二元运算起作用。
+
+\item [\cs{mathchar\gr{15-bit number}}]
+      \gr{primitive command}
+      显式指定一个数学字符。
+
+\item [\cs{mathchardef\gr{control sequence}\gr{equals}\gr{15-bit number}}]
+      \gr{shorthand definition}
+      定义一个控制序列作为某个数学字符码的同义名。
+
+\item [\cs{mathchoice\lb\SerifFont {\it D\/\rb\lb T\/\rb\lb S\/\rb\lb SS\/}\rb}]
+      \gr{primitive command}
+      为四种数学排版样式给出公式的四个变体。
+
+\item [\cs{mathclose\gr{math field}}]
+      \gr{math atom}
+      使其后的 \gr{math field}
+      作为闭符号起作用。
+
+\item [\cs{mathcode\gr{8-bit number}}]
+      \gr{internal integer}；该控制序列本身
+      是一个~\gr{codename}。
+      决定某字符在数学模式下处理方式的字符码。
+
+\item [\cs{mathinner\gr{math field}}]
+      \gr{math atom}
+      使其后的 \gr{math field}
+      作为内部公式起作用。
+
+\item [\cs{mathop\gr{math field}}]
+      \gr{math atom}
+      使其后的 \gr{math field}
+      作为大运算符起作用。
+
+\item [\cs{mathopen\gr{math field}}]
+      \gr{math atom}
+      使其后的 \gr{math field}
+      作为开符号起作用。
+
+\item [\cs{mathord\gr{math field}}]
+      \gr{math atom}
+      使其后的 \gr{math field}
+      作为普通对象起作用。
+
+\item [\cs{mathpunct\gr{math field}}]
+      \gr{math atom}
+      使其后的 \gr{math field}
+      作为标点符号起作用。
+
+\item [\cs{mathrel\gr{math field}}]
+      \gr{math atom}
+      使其后的 \gr{math field} 作为关系符起作用。
+
+\item [\cs{mathsurround}]
+      \gr{dimen parameter}
+      行间公式前后放置的紧排量。
+
+\item [\cs{maxdeadcycles}]
+      \gr{integer parameter}
+      允许输出例程在未发生 \cs{shipout} 的情况下
+      被调用的最多次数。
+      \IniTeX\ 默认值：~\n{25}。
+
+\item [\cs{maxdepth}]
+      \gr{dimen parameter}
+      页面盒子的最大深度。
+      plain \TeX\ 中默认值为~\n{4pt}。
+
+\item [\cs{meaning}]
+      \gr{expandable command}
+      以字符串形式给出一个控制序列的含义。
+
+\item [\cs{medmuskip}]
+      \gr{muglue parameter}
+      中等数量的 mu 粘连。
+      plain \TeX\ 中的默认值：\n{4mu plus 2mu minus 4mu}
+
+\item [\cs{message\gr{general text}}]
+      \gr{primitive command}
+      向终端写入一条信息。
+
+\item [\cs{mkern}]
+      \gr{primitive command}
+      插入以 mu 单位计量的紧排。
+
+\item [\cs{month}]
+      \gr{integer parameter}
+      当前作业的月份。
+
+\item [\cs{moveleft\gr{dimen}\gr{box}}]
+      \gr{primitive command}
+      在竖直模式下调整盒子的水平位置。
+
+\item [\cs{moveright\gr{dimen}\gr{box}}]
+      \gr{primitive command}
+      在竖直模式下调整盒子的水平位置。
+
+\item [\cs{mskip}]
+      \gr{mathematical skip}
+      插入以 mu 单位计量的粘连。
+
+\item [\cs{multiply\gr{numeric variable}\gr{optional \n{by}}\gr{number}}]
+      \gr{arithmetic assignment}
+      用于乘以一个 \gr{numeric variable} 的算术命令
+      （见 \cs{advance}）。
+
+\item [\cs{muskip\gr{8-bit number}}]
+      \gr{internal muglue}；该控制序列本身
+      是一个~\gr{register prefix}。
+      访问以 mu 单位计量的跳跃寄存器。
+
+\item [\cs{muskipdef\gr{control sequence}\gr{equals}\gr{8-bit number}}]
+      \gr{shorthand definition}；该控制序列
+      本身是一个~\gr{registerdef}。
+      定义一个控制序列作为某个~\cs{muskip} 寄存器的同义名。
+
+\item [\cs{newlinechar}]
+      \gr{integer parameter}
+      在 \cs{write} 语句中触发换行的字符编号。
+      plain \TeX\ 默认值~$-1$。
+
+\item [\cs{noalign\gr{filler}\lb\gr{vertical (horizontal) mode material}\rb}]
+    \gr{primitive command}
+      指定竖直（水平）
+      材料，置于 \cs{halign}（\cs{valign}）的
+      行（列）之间。
+
+\item [\cs{noboundary}]
+      \gr{horizontal command}
+      （仅 \TeX3）省略隐式边界字符。
+
+\item [\cs{noexpand\gr{token}}]
+      \gr{expandable command}
+      不展开下一个记号。
+
+\item [\cs{noindent}]
+      \gr{primitive command}
+      以空水平列表切换到水平模式。
+
+\item [\cs{nolimits}]
+      \gr{primitive command}
+      将大运算符的上下限作为下标和上标表达式放置。
+      这是文本样式下的默认位置。
+
+\item [\cs{nonscript}]
+      \gr{primitive command}
+      若下一个粘连项出现在下标样式或二级下标样式中，
+      则取消它。
+
+\item [\cs{nonstopmode}]
+      \gr{interaction mode assignment}
+      \TeX\ 尽其所能力修复错误，
+      在需要用户干预时紧急停止。
+
+\item [\cs{nulldelimiterspace}]
+      \gr{dimen parameter}
+      空定界符所占的宽度。
+      plain \TeX\ 中默认值为~\n{1.2pt}。
+
+\item [\cs{nullfont}]
+      \gr{fontdef token}
+      \TeX\ 在紧急情况下使用的空字体的名称。
+
+\item [\cs{number\gr{number}}]
+      \gr{expandable command}
+      将一个 \gr{number}
+      转换为十进制表示。
+
+\item [\cs{omit}]
+      \gr{primitive command}
+      省略一个对齐条目的模板。
+
+\item [\cs{openin\gr{4-bit number}\gr{equals}\gr{filename}}]
+      \gr{primitive command}
+      打开一个输入流。
+
+\item [\cs{openout\gr{4-bit number}\gr{equals}\gr{filename}}]
+      \gr{primitive command}
+      打开一个输出流。
+
+\item [\cs{or}]
+      \gr{primitive command}
+      \cs{ifcase} 各分支之间的分隔符。
+
+\item [\cs{outer}]
+      \gr{prefix}
+      指示待定义的宏只能出现在外层。
+
+\item [\cs{output}]
+      \gr{token parameter}
+      包含输出页面指令的记号列表。
+
+\item [\cs{outputpenalty}]
+      \gr{integer parameter}
+      当前分页处的罚值；若分页处不在罚值处，
+      则为 $10\,000$。
+
+\item [\cs{over}]
+      \gr{generalized fraction command}
+      分式。
+
+\item [\cs{overfullrule}]
+      \gr{dimen parameter}
+      用于标示过满水平盒子所打印竖线的宽度。
+      plain \TeX\ 默认值：~\n{5pt}。
+
+\item [\cs{overline\gr{math field}}]
+      \gr{math atom}
+      在其后的 \gr{math field} 上方加上横线。
+
+\item [\cs{overwithdelims\gr{delim$_1$}\gr{delim$_2$}}]
+      \gr{generalized fraction command}
+      带定界符的分式。
+
+\item [\cs{pagedepth}]
+      \gr{special dimen}
+      当前页的深度。
+
+\item [\cs{pagefilllstretch}]
+      \gr{special dimen}
+      当前页累积的三阶伸长量。
+
+\item [\cs{pagefillstretch}]
+      \gr{special dimen}
+      当前页累积的二阶伸长量。
+
+\item [\cs{pagefilstretch}]
+      \gr{special dimen}
+      当前页累积的一阶伸长量。
+
+\item [\cs{pagegoal}]
+      \gr{special dimen}
+      页面盒子的目标高度。初始为 \cs{vsize}，
+      并因插入项的高度而减小。
+
+\item [\cs{pageshrink}]
+      \gr{special dimen}
+      当前页累积的收缩量。
+
+\item [\cs{pagestretch}]
+      \gr{special dimen}
+      当前页累积的零阶伸长量。
+
+\item [\cs{pagetotal}]
+      \gr{special dimen}
+      当前页累积的自然高度。
+
+\item [\cs{par}]
+      \gr{primitive command}
+      结束一个段落并进入竖直模式。
+
+\item [\cs{parfillskip}]
+      \gr{glue parameter}
+      放置在段落最后一个元素与行末之间的粘连。
+      plain \TeX\ 默认值：~\n{0pt plus 1fil}。
+
+\item [\cs{parindent}]
+      \gr{dimen parameter}
+      段落前方所加缩进盒子的尺寸。
+
+\item [\cs{parshape}]
+      \gr{internal integer}
+      用于一般段落形状的命令：
+      \begin{disp}\cs{parshape}\gr{equals}$n$ $i_1$ $\ell_1$ $\ldots$
+                $i_n$ $\ell_n$\end{disp}
+      指定行数~$n$，以及 $n$~对缩进量与
+      行长度。
+
+\item [\cs{parskip}]
+      \gr{glue parameter}
+      段落开始时添加到竖直列表中的粘连量；
+      plain \TeX\ 中的默认值为 \verb.0pt plus 1pt.。
+
+\item [\cs{patterns\gr{general text}}]
+      \gr{hyphenation assignment}
+      为当前 \cs{language} 值定义一组断字模式；
+      仅在 \IniTeX\ 中允许。
+
+\item [\cs{pausing}]
+      \gr{integer parameter}
+      指定 \TeX\ 在从文件读入每一行之后暂停。
+
+\item [\cs{penalty}]
+      \gr{primitive command}
+      指定不在此处断行的期望程度。
+
+\item [\cs{postdisplaypenalty}]
+      \gr{integer parameter}
+      放置在展示式下方竖直列表中的罚值。
+
+\item [\cs{predisplaypenalty}]
+      \gr{integer parameter}
+      放置在展示式上方竖直列表中的罚值。
+      plain \TeX\ 默认值：~\n{10$\,$000}。
+
+\item [\cs{predisplaysize}]
+      \gr{dimen parameter}
+      展示式前一行的有效宽度。
+
+\item [\cs{pretolerance}]
+      \gr{integer parameter}
+      不使用断字时段落的容差值。
+      plain \TeX\ 中默认值为~\n{100}。
+
+\item [\cs{prevdepth}]
+      \gr{special dimen}
+      \TeX\ 所感知的、添加到竖直列表中
+      最后一个盒子的深度。
+
+\item [\cs{prevgraf}]
+      \gr{special integer}
+      最近添加到竖直列表中的段落的行数。
+
+\item [\cs{radical\gr{24-bit number}}]
+      \gr{primitive command}
+      用于排版根号等内容的命令。
+
+\item [\cs{raise\gr{dimen}\gr{box}}]
+      \gr{primitive command}
+      在水平模式下调整盒子的竖直位置。
+
+\item [\cs{read\gr{number}\n{to}\gr{control sequence}}]
+      \gr{simple assignment}
+      从一个流中读取一行到一个控制序列。
+
+\item [\cs{relax}]
+      \gr{primitive command}
+      什么也不做。
+
+\item [\cs{relpenalty}]
+      \gr{integer parameter}
+      在未被子公式括起的二元关系符之后断行的罚值。
+      plain \TeX\ 默认值：~\n{500}。
+
+\item [\cs{right}]
+      \gr{primitive command}
+      将其后的字符用作闭定界符。
+
+\item [\cs{righthyphenmin}]
+      \gr{integer parameter}
+      （仅 \TeX3）断字之后最少保留的字符数。
+
+\item [\cs{rightskip}]
+      \gr{glue parameter}
+      放置在所有行右侧的粘连。
+
+\item [\cs{romannumeral\gr{number}}]
+      \gr{expandable command}
+      将一个正的 \gr{number}
+      转换为小写罗马数字表示。
+
+\item [\cs{scriptfont\gr{4-bit number}}]
+      \gr{family member}；该控制序列本身
+      是一个~\gr{font range}。
+      访问字体族的下标字体。
+
+\item [\cs{scriptscriptfont\gr{4-bit number}}]
+      \gr{family member}；该控制序列本身
+      是一个~\gr{font range}。
+      访问字体族的二级下标字体。
+
+\item [\cs{scriptscriptstyle}]
+      \gr{primitive command}
+      选择数学排版的二级下标样式。
+
+\item [\cs{scriptspace}]
+      \gr{dimen parameter}
+      下标和上标之后的额外间距。
+      plain \TeX\ 中默认值为~\n{.5pt}。
+
+\item [\cs{scriptstyle}]
+      \gr{primitive command}
+      选择数学排版的下标样式。
+
+\item [\cs{scrollmode}]
+      \gr{interaction mode assignment}
+      \TeX\ 自行修补错误，但在缺少文件时会询问用户。
+
+\item [\cs{setbox\gr{8-bit number}\gr{equals}\gr{box}}]
+      \gr{simple assignment}
+      将一个盒子赋给一个盒子寄存器。
+
+\item [\cs{setlanguage\gr{number}}]
+      \gr{primitive command}
+      （仅 \TeX3）插入一个 whatsit，
+      将当前语言重置为指定的 \gr{number}。
+
+\item [\cs{sfcode\gr{8-bit number}}]
+      \gr{internal integer}；该控制序列本身
+      是一个~\gr{codename}。
+      访问与某字符关联的 \cs{spacefactor} 值。
+
+\item [\cs{shipout\gr{box}}]
+      \gr{primitive command}
+      将一个盒子输出到 \n{dvi} 文件。
+
+\item [\cs{show\gr{token}}]
+      \gr{primitive command}
+      在屏幕上显示一个记号的含义。
+
+\item [\cs{showbox\gr{8-bit number}}]
+      \gr{primitive command}
+      将一个盒子的内容写入日志文件。
+
+\item [\cs{showboxbreadth}]
+      \gr{integer parameter}
+      当 \verb-\tracingoutput- 为正时，
+      每访问一层所显示的连续元素数量。
+      plain \TeX\ 默认值：~\n{5}。
+
+\item [\cs{showboxdepth}]
+      \gr{integer parameter}
+      当 \verb-\tracingoutput- 为正
+      时所显示的层数。
+      plain \TeX\ 默认值：~\n{3}。
+
+\item [\cs{showlists}]
+      \gr{primitive command}
+      将所有模式下当前构建中的部分列表内容
+      写入日志文件。
+
+\item [\cs{showthe\gr{internal quantity}}]
+      \gr{primitive command}
+      在终端上显示将一个记号前加 \cs{the} 的结果。
+
+\item [\cs{skewchar\gr{font}}]
+      \gr{internal integer}
+      后置重音符号的字体位置。
+
+\item [\cs{skip\gr{8-bit number}}]
+      \gr{internal glue}；该控制序列本身
+      是一个~\gr{register prefix}。
+      访问跳跃寄存器。
+
+\item [\cs{skipdef\gr{control sequence}\gr{equals}\gr{8-bit number}}]
+      \gr{shorthand definition}；该控制序列
+      本身是一个~\gr{registerdef}。
+      定义一个控制序列作为某个~\cs{skip} 寄存器的同义名。
+
+\item [\cs{spacefactor}]
+      \gr{special integer}
+      词间粘连的伸长分量应乘以的比率的 1000 倍。
+
+\item [\cs{spaceskip}]
+      \gr{glue parameter}
+      若非零，则为词间粘连。
+
+\item [\cs{span}]
+      \gr{primitive command}
+      连接两个相邻的对齐条目，或（在前导码中）展开下一个记号。
+
+\item [\cs{special\gr{general text}}]
+      \gr{primitive command}
+      将一个记号列表写入 \n{dvi} 文件。
+
+\item [\cs{splitbotmark}]
+      \gr{expandable command}
+      被拆分出页面上的最后一个标记。
+
+\item [\cs{splitfirstmark}]
+      \gr{expandable command}
+      被拆分出页面上的第一个标记。
+
+\item [\cs{splitmaxdepth}]
+      \gr{dimen parameter}
+      经 \cs{vsplit} 操作拆分出盒子的最大深度。
+      plain \TeX\ 中默认值为~\n{4pt}。
+
+\item [\cs{splittopskip}]
+      \gr{glue parameter}
+      经 \cs{vsplit} 操作后剩余部分顶部
+      与该盒子中第一个元素之间的最小距离。
+      plain \TeX\ 中默认值为~\n{10pt}。
+
+\item [\cs{string\gr{token}}]
+      \gr{expandable command}
+      将一个记号转换为一个或多个字符组成的字符串。
+
+\item [\cs{tabskip}]
+      \gr{glue parameter}
+      \cs{halign}（\cs{valign}）各列（行）之间的粘连量。
+ \alt
+
+\item [\cs{textfont\gr{4-bit number}}]
+      \gr{family member}；该控制序列本身
+      是一个~\gr{font range}。
+      访问字体族的文本字体。
+
+\item [\cs{textstyle}]
+      \gr{primitive command}
+      选择数学排版的文本样式。
+
+\item [\cs{the\gr{internal quantity}}]
+      \gr{primitive command}
+      将 \TeX\ 中各种量的值展开为（字符）记号串。
+
+\item [\cs{thickmuskip}]
+      \gr{muglue parameter}
+      大量的 mu 粘连。
+      plain \TeX\ 中的默认值：\n{5mu plus 5mu}。
+
+\item [\cs{thinmuskip}]
+      \gr{muglue parameter}
+      少量的 mu 粘连。
+      plain \TeX\ 中的默认值：\n{3mu}。
+
+\item [\cs{time}]
+      \gr{integer parameter}
+      当前作业自午夜起经过的分钟数。
+
+\item [\cs{toks\gr{8-bit number}}]
+      \gr{register prefix}
+      访问一个记号列表寄存器。
+
+\item [\cs{toksdef\gr{control sequence}\gr{equals}\gr{8-bit number}}]
+      \gr{shorthand definition}；该控制序列
+      本身是一个~\gr{registerdef}。
+      将一个控制序列指派给某个~\cs{toks} 寄存器。
+
+\item [\cs{tolerance}]
+      \gr{integer parameter}
+      使用断字时段落各行的容差值。
+      plain \TeX\ 中默认值为~\n{200}，\IniTeX\ 中为 \n{10$\,$000}。
+
+\item [\cs{topmark}]
+      \gr{expandable command}
+      上一页的最后一个标记。
+
+\item [\cs{topskip}]
+      \gr{glue parameter}
+      页面盒子顶部与页面上第一个盒子基线之间的
+      最小距离。plain \TeX\ 中默认值为~\n{10pt}。
+
+\item [\cs{tracingcommands}]
+      \gr{integer parameter}
+      当此值为~1 时，\TeX\ 显示已执行的原语命令；
+      当此值为 2~或更大时，还会记录条件语句的结果。
+
+\item [\cs{tracinglostchars}]
+      \gr{integer parameter}
+      若此参数为正，则每当访问某字体中
+      不存在的字符时，\TeX\ 都会给出诊断信息。
+      plain \TeX\ 默认值：~1。
+
+\item [\cs{tracingmacros}]
+      \gr{integer parameter}
+      当此值为~1 时，日志文件显示所执行宏的展开
+      以及参数的实际值；当此值为 2~或更大时，
+      \cs{output} 和 \cs{everypar} 等 \gr{token parameter}
+      也会被跟踪。
+
+\item [\cs{tracingonline}]
+      \gr{integer parameter}
+      若此参数为正，\TeX\ 还会将跟踪信息写入终端。
+
+\item [\cs{tracingoutput}]
+      \gr{integer parameter}
+      若此参数为正，日志文件显示输出到
+      \n{dvi} 文件的盒子转储。
+
+\item [\cs{tracingpages}]
+      \gr{integer parameter}
+      若此参数为正，\TeX\ 生成
+      分页算法的跟踪信息。
+
+\item [\cs{tracingparagraphs}]
+      \gr{integer parameter}
+      若此参数为正，\TeX\ 生成
+      断行算法的跟踪信息。
+
+\item [\cs{tracingrestores}]
+      \gr{integer parameter}
+      若此参数为正，\TeX\ 报告
+      在某一层分组结束时恢复的所有值。
+
+\item [\cs{tracingstats}]
+      \gr{integer parameter}
+      若此参数为正，\TeX\ 在作业结束时
+      报告各种内部数组的使用情况。
+
+\item [\cs{uccode\gr{8-bit number}}]
+      \gr{internal integer}；该控制序列本身
+      是一个~\gr{codename}。
+      访问某给定字符码对应的大写字符码。
+
+\item [\cs{uchyph}]
+      \gr{integer parameter}
+      若允许对以大写字母开头的单词断字，
+      则此值为正。plain \TeX\ 默认值~1。
+
+\item [\cs{underline\gr{math field}}]
+      \gr{math atom}
+      在其后的 \gr{math field} 下方加下划线。
+
+\item [\cs{unhbox\gr{8-bit number}}]
+      \gr{horizontal command}
+ \alt
+      拆开一个含有水平盒子的盒子寄存器，
+      将其内容追加到列表中，并清空该寄存器。
+
+\item [\cs{unhcopy\gr{8-bit number}}]
+      \gr{horizontal command}
+ \alt
+      与 \cs{unhbox} 相同，但不清空该寄存器。
+
+\item [\cs{unkern}]
+      \gr{primitive command}
+      若列表最后一项是紧排项，则移除它。
+
+\item [\cs{unpenalty}]
+      \gr{primitive command}
+      若列表最后一项是罚值，则移除它。
+
+\item [\cs{unskip}]
+      \gr{primitive command}
+      若列表最后一项是跳跃项，则移除它。
+
+\item [\cs{unvbox\gr{8-bit number}}]
+      \gr{vertical command}
+ \alt
+      拆开一个含有竖直盒子的盒子寄存器，
+      将其内容追加到列表中，并清空该寄存器。
+
+\item [\cs{unvcopy\gr{8-bit number}}]
+      \gr{vertical command}
+ \alt
+      与 \cs{unvbox} 相同，但不清空该寄存器。
+
+\item [\cs{uppercase\gr{general text}}]
+      \gr{primitive command}
+      将参数转换为大写形式。
+
+\item [\cs{vadjust\gr{filler}\lb\gr{vertical mode material}\rb}]
+      \gr{primitive command}
+      在水平模式下为外层竖直列表指定材料。
+
+\item [\cs{valign\gr{box specification}\lb\gr{alignment material}\rb}]
+      \gr{horizontal command}
+      竖直对齐。
+
+\item [\cs{vbadness}]
+      \gr{integer parameter}
+      不报告过满或过松竖直盒子的阈值。
+      plain \TeX\ 默认值：~\n{1000}。
+
+\item [\cs{vbox\gr{box specification}\lb\gr{vertical material}\rb}]
+      \gr{primitive command}
+      构造一个参考点位于最后一项的竖直盒子。
+
+\item [\cs{vcenter\gr{box specification}\lb\gr{vertical material}\rb}]
+      \gr{primitive command}
+      构造一个以数学轴为竖直中心的竖直盒子。
+
+\item [\cs{vfil}]
+      \gr{vertical command}
+      等价于 \verb-\vskip 0cm plus 1fil- 的竖直跳跃。
+
+\item [\cs{vfill}]
+      \gr{vertical command}
+      等价于 \verb-\vskip 0cm plus 1fill- 的竖直跳跃。
+
+\item [\cs{vfilneg}]
+      \gr{vertical command}
+      等价于 \verb-\vskip 0cm minus 1fil- 的竖直跳跃。
+
+\item [\cs{vfuzz}]
+      \gr{dimen parameter}
+      \TeX\ 判定竖直盒子过满之前所容忍的超出量。
+      plain \TeX\ 默认值：~\n{0.1pt}。
+
+\item [\cs{voffset}]
+      \gr{dimen parameter}
+      页面相对于参考点向下偏移的距离，
+      参考点位于距页面顶部一英寸处。
+
+\item [\cs{vrule}]
+      \gr{horizontal command}
+      沿竖直方向伸展的线。
+
+\item [\cs{vsize}]
+      \gr{dimen parameter}
+      页面盒子的高度。
+
+\item [\cs{vskip\gr{glue}}]
+      \gr{vertical command}
+      在竖直模式下插入一个粘连项。
+
+\item [\cs{vsplit\gr{8-bit number}\n{to}\gr{dimen}}]
+      \gr{primitive command}
+      从一个竖直盒子上拆分出顶部。
+
+\item [\cs{vss}]
+      \gr{vertical command}
+      等价于 \verb-\vskip 0cm plus 1fil minus 1fil- 的竖直跳跃。
+
+\item [\cs{vtop\gr{box specification}\lb\gr{vertical material}\rb}]
+      \gr{primitive command}
+      构造一个参考点位于第一项的竖直盒子。
+
+\item [\cs{wd\gr{8-bit number}}]
+      \gr{internal dimen}；该控制序列本身
+      是一个~\gr{box dimension}。
+      盒子寄存器中盒子的宽度。
+
+\item [\cs{widowpenalty}]
+      \gr{integer parameter}
+      在段落最后一行之前分页的附加罚值。
+      plain \TeX\ 中默认值为~\n{150}。
+
+\item [\cs{write\gr{number}\gr{general text}}]
+      \gr{primitive command}
+      生成一个 whatsit 项，其中包含
+      要写入终端或文件的记号列表。
+
+\item [\cs{xdef}]
+      \gr{def}
+      \verb-\global\edef- 的同义命令。
+
+\item [\cs{xleaders}]
+      \gr{leaders}
+      与 \cs{leaders} 相同，但对于盒子引导符，
+      多余空间会均匀分布在各盒子之间。
+
+\item [\cs{xspaceskip}]
+      \gr{glue parameter}
+      若非零且 \cs{spacefactor}${}\geq2000$，
+      则为词间粘连。
+
+\item [\cs{year}]
+      \gr{integer parameter}
+      当前作业的年份。
+\end{glossinventory}

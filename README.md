@@ -8,3 +8,5 @@
 - fgruler-zh v1.7 (2026/01/11)
 - eso-pic v3.0e 2026/05/31
 - hyperref 2026-10-09 v7.01s
+- tex by topic v1.1
+- standalone 版本v1.5a ——2025/02/22
