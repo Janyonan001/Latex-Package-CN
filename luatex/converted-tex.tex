@@ -1,0 +1,2233 @@
+% engine=luatex language=uk
+
+% lua.newtable
+
+\chapter{与 \TEX 相关的库}\label{tex}
+
+\section{\type {lua}}
+
+\subsection{版本信息}
+
+\topicindex{libraries+\type{lua}}
+\topicindex{version}
+
+\libindex{version}
+
+此库包含一个只读项目：
+
+\begin{typing}
+<string> s = lua.version
+\end{typing}
+
+这会返回 \LUA 版本标识字符串。当前值为
+\directlua {tex.print(lua.version)}。
+
+\section{\type {status}}
+
+\topicindex{libraries+\type{status}}
+
+\libindex{list}
+\libindex{resetmessages}
+\libindex{setexitcode}
+
+此库包含一些运行时配置项，你可能会发现它们在消息报告中很有用；以及一个
+迭代器函数，它以 table 形式获取所有名称和值。
+
+\begin{typing}
+<table> info = status.list()
+\end{typing}
+
+table 中的键是已知项目，值为当前值。\type {status} 中几乎所有值都是在运行时
+通过元表在访问时获取的，因此你不能对 \type {status} 使用 \type {pairs}，但
+你{\it 可以}对 \type {info} 使用 \type {pairs}。如果你不需要完整列表，也可以
+通过将名称作为 \type {status} 的索引来请求单个项目。当前列表如下：
+
+\begin{longtable}{l p{5cm}}
+\toprule 键                       & 说明 \\
+\midrule
+\type{banner}             & 终端显示横幅 \\
+\type{best_page_break}    & 当前最佳断点（一个节点） \\
+\type{buf_size}           & 当前分配的行缓冲区大小 \\
+\type{callbacks}          & 迄今为止执行的回调总数 \\
+\type{cs_count}           & 控制序列数量 \\
+\type{dest_names_size}    & \PDF 目标表大小 \\
+\type{dvi_gone}           & 已写入的 \DVI 字节数 \\
+\type{dvi_ptr}            & 尚未写入的 \DVI 字节数 \\
+\type{dyn_used}           & 正在使用的令牌（多字）内存  \\
+\type{filename}           & 当前输入文件名 \\
+\type{fix_mem_end}        & 已使用令牌的最大数量 \\
+\type{fix_mem_min}        & 为令牌分配的最小字数 \\
+\type{fix_mem_max}        & 为令牌分配的最大字数 \\
+\type{font_ptr}           & 活动字体数量 \\
+\type{hash_extra}         & 额外允许的哈希量 \\
+\type{hash_size}          & 哈希表大小 \\
+\type{indirect_callbacks} & 其中本身是其他回调（例如文件读取器）结果的数量 \\
+\type{ini_version}        & 如果这是一次 initex 运行则为 \type {true} \\
+\type{init_pool_ptr}      & initex 字符串池索引 \\
+\type{init_str_ptr}       & initex 字符串数量 \\
+\type{input_ptr}          & 我们当前所在的输入层级 \\
+\type{inputid}            & 当前输入的数字 id \\
+\type{largest_used_mark}  & 最大引用的 marks 类 \\
+\type{lasterrorcontext}   & 最后一个错误上下文字符串（含换行） \\
+\type{lasterrorstring}    & 最后一个 \TEX 错误字符串 \\
+\type{lastluaerrorstring} & 最后一个 \LUA 错误字符串 \\
+\type{lastwarningstring}  & 最后一个警告标签，通常指示位于哪个部分\\
+\type{lastwarningtag}     & 最后一个警告字符串\\
+\type{linenumber}         & 当前输入文件中的位置 \\
+\type{log_name}           & 日志文件名 \\
+\type{luabytecode_bytes}   & \LUA 字节码寄存器中的字节数 \\
+\type{luabytecodes}        & 活动 \LUA 字节码寄存器数量 \\
+\type{luastate_bytes}      & \LUA 解释器正在使用的字节数 \\
+\type{luatex_engine}       & \LUATEX 引擎标识符 \\
+\type{luatex_hashchars}    & \LUA 对字符串做哈希的长度（$2^n$） \\
+\type{luatex_hashtype}    & 使用的哈希方法（在 \LUAJITTEX 中） \\
+\type{luatex_version}      & \LUATEX 版本号 \\
+\type{luatex_revision}     & \LUATEX 修订字符串 \\
+\type{max_buf_stack}       & 最大已用缓冲区位置 \\
+\type{max_in_stack}        & 最大已用输入栈条目 \\
+\type{max_nest_stack}      & 最大已用嵌套栈条目 \\
+\type{max_param_stack}     & 最大已用参数栈条目 \\
+\type{max_save_stack}      & 最大已用保存栈条目 \\
+\type{max_strings}         & 最大允许字符串数 \\
+\type{nest_size}           & 嵌套栈大小 \\
+\type{node_mem_usage}      & 一个字符串，提供当前使用节点的洞察 \\
+\type{obj_ptr}             & 最大 \PDF 对象指针 \\
+\type{obj_tab_size}        & \PDF 对象表大小 \\
+\type{output_active}       & 如果 \prm {output} 例程处于活动状态则为 \type {true} \\
+\type{output_file_name}    & \PDF 或 \DVI 文件名 \\
+\type{param_size}          & 参数栈大小 \\
+\type{pdf_dest_names_ptr}  & 最大 \PDF 目标指针 \\
+\type{pdf_gone}            & 已写入的 \PDF 字节数 \\
+\type{pdf_mem_ptr}         & 最大已用 \PDF 内存 \\
+\type{pdf_mem_size}        & \PDF 内存大小 \\
+\type{pdf_os_cntr}         & 最大 \PDF 对象流指针 \\
+\type{pdf_os_objidx}       & \PDF 对象流索引 \\
+\type{pdf_ptr}             & 尚未写入的 \PDF 字节数 \\
+\type{pool_ptr}           & 字符串池索引 \\
+\type{pool_size}           & 当前为字符串字符分配的大小 \\
+\type{save_size}           & 保存栈大小 \\
+\type{shell_escape}        & \type {0} 表示禁用，\type {1} 表示允许任何操作，\type {2} 为受限 \\
+\type{safer_option}        & \type {1} 表示强制执行更安全模式 \\
+\type{luadebug_option}     & 如果在命令行启用了 \type{debug} 库则为 true \\
+\type{output_directory}    & 输出目录的值 \\
+\type{kpse_used}           & \type {1} 表示使用 kpse \\
+\type{stack_size}          & 输入栈大小 \\
+\type{str_ptr}             & 字符串数量 \\
+\type{total_pages}         & 已写入的页数 \\
+\type{var_mem_max}         & 为节点分配的字数 \\
+\type{var_used}            & 正在使用的变量（单字）内存 \\
+\type{lc_collate}          & 启动时 \type {LC_COLLATE} 的值（启动时变为 \type {C}） \\
+\type{lc_ctype}            & 启动时 \type {LC_CTYPE} 的值（启动时变为 \type {C}） \\
+%NC \type{lc_monetary}         & 启动时 \type {LC_MONETARY} 的值 \\
+\type{lc_numeric}           & 启动时 \type {LC_NUMERIC} 的值 \\
+%NC \type{lc_time}             & 启动时 \type {LC_TIME} 的值（启动时变为 \type {C}） \\
+\bottomrule
+\end{longtable}
+
+错误和警告消息可以通过 \type {resetmessages} 函数清除。可以使用
+\type {setexitcode} 设置返回值。
+
+\section{\type {tex}}
+
+\subsection{简介}
+
+\topicindex{libraries+\type{tex}}
+
+\type {tex} table 包含大量虚拟内部 \TEX 参数，其中部分可写。
+
+``虚拟这一称谓意味着这些项目并非在 \LUA 中正式定义，而只是由元表
+处理实际 \TEX 值的前端。因此，大多数 \LUA table 操作符（如 \type {pairs} 和
+\type {#}）对此类项目不起作用。
+
+目前，几乎可以访问所有你能在 \prm {the} 之后使用的参数，即单个令牌或在
+\TEX 中具有特殊性质的参数。这不包括需要额外参数的参数，如 \type {\the\scriptfont}。
+由简单整数和尺寸寄存器组成的子集既可读又可写（如 \prm {tracingcommands}
+和 \prm {parindent}）。
+
+\subsection{内部参数值：\type {set}}
+
+\topicindex{parameters+internal}
+
+\libindex{set}
+\libindex{get}
+
+对于本节中的所有参数，可以直接使用其名称作为 \type {tex} table 中的索引来
+访问，或者使用 \type {tex.get} 和 \type {tex.set} 函数之一。
+
+确切的参数和返回值因实际参数而异，\type {tex.set} 是否有作用也是如此。对于
+{\em 可以}设置的参数，可以使用 \type {global} 作为 \type {tex.set} 的第一个
+参数；这使赋值变为全局而非局部。
+
+\begin{typing}
+tex.set (["global",] <string> n, ...)
+... = tex.get (<string> n)
+\end{typing}
+
+黏胶有点特殊，因为涉及五个值。返回值是一个 \nod {glue_spec} 节点，但当你向
+\type {tex.get} 传递 \type {false} 作为最后一个参数时，你得到黏胶的宽度；
+传递 \type {true} 则得到全部五个值。否则你得到一个节点，它是内部值的副本，
+因此你有责任在 \LUA 端释放它。设置黏胶量时，你可以传递一个 \nod {glue_spec}
+或最多五个数字。向 \type {get} 传递 \type {true} 时，黏胶返回 5 个值；
+传递 \type {false} 时仅返回宽度。
+
+\subsubsection{整数参数}
+
+整数参数接受并返回 \LUA 数字。以下为可读写的：
+
+\starttwocolumns
+\begin{typing}
+tex.adjdemerits
+tex.binoppenalty
+tex.brokenpenalty
+tex.catcodetable
+tex.clubpenalty
+tex.day
+tex.defaulthyphenchar
+tex.defaultskewchar
+tex.delimiterfactor
+tex.displaywidowpenalty
+tex.doublehyphendemerits
+tex.endlinechar
+tex.errorcontextlines
+tex.escapechar
+tex.exhyphenpenalty
+tex.fam
+tex.finalhyphendemerits
+tex.floatingpenalty
+tex.globaldefs
+tex.hangafter
+tex.hbadness
+tex.holdinginserts
+tex.hyphenpenalty
+tex.interlinepenalty
+tex.language
+tex.lastlinefit
+tex.lefthyphenmin
+tex.linepenalty
+tex.localbrokenpenalty
+tex.localinterlinepenalty
+tex.looseness
+tex.mag
+tex.maxdeadcycles
+tex.month
+tex.newlinechar
+tex.outputpenalty
+tex.pausing
+tex.postdisplaypenalty
+tex.predisplaydirection
+tex.predisplaypenalty
+tex.pretolerance
+tex.relpenalty
+tex.righthyphenmin
+tex.savinghyphcodes
+tex.savingvdiscards
+tex.showboxbreadth
+tex.showboxdepth
+tex.time
+tex.tolerance
+tex.tracingassigns
+tex.tracingcommands
+tex.tracinggroups
+tex.tracingifs
+tex.tracinglostchars
+tex.tracingmacros
+tex.tracingnesting
+tex.tracingonline
+tex.tracingoutput
+tex.tracingpages
+tex.tracingparagraphs
+tex.tracingrestores
+tex.tracingscantokens
+tex.tracingstats
+tex.uchyph
+tex.vbadness
+tex.widowpenalty
+tex.year
+\end{typing}
+\stoptwocolumns
+
+以下为只读的：
+
+\startthreecolumns
+\begin{typing}
+tex.deadcycles
+tex.insertpenalties
+tex.parshape
+tex.interlinepenalties
+tex.clubpenalties
+tex.widowpenalties
+tex.displaywidowpenalties
+tex.prevgraf
+tex.spacefactor
+\end{typing}
+\stopthreecolumns
+
+\subsubsection{尺寸参数}
+
+尺寸参数接受 \LUA 数字（表示缩放点）或字符串（含尺寸单位）。结果始终为以
+缩放点为单位的数字。以下为可读写的：
+
+\startthreecolumns
+\begin{typing}
+tex.boxmaxdepth
+tex.delimitershortfall
+tex.displayindent
+tex.displaywidth
+tex.emergencystretch
+tex.hangindent
+tex.hfuzz
+tex.hoffset
+tex.hsize
+tex.lineskiplimit
+tex.mathsurround
+tex.maxdepth
+tex.nulldelimiterspace
+tex.overfullrule
+tex.pagebottomoffset
+tex.pageheight
+tex.pageleftoffset
+tex.pagerightoffset
+tex.pagetopoffset
+tex.pagewidth
+tex.parindent
+tex.predisplaysize
+tex.scriptspace
+tex.splitmaxdepth
+tex.vfuzz
+tex.voffset
+tex.vsize
+tex.prevdepth
+tex.prevgraf
+tex.spacefactor
+\end{typing}
+\stopthreecolumns
+
+以下为只读的：
+
+\startthreecolumns
+\begin{typing}
+tex.pagedepth
+tex.pagefilllstretch
+tex.pagefillstretch
+tex.pagefilstretch
+tex.pagegoal
+tex.pageshrink
+tex.pagestretch
+tex.pagetotal
+\end{typing}
+\stopthreecolumns
+
+注意：与所有 \LUA table 一样，你可以向其中添加值。因此，以下是有效的：
+
+\begin{typing}
+tex.foo = 123
+\end{typing}
+
+当你访问一个 \TEX 参数时，会进行查找。对于只读变量，这意味着你会得到返回值，
+但当你设置它们时，会在 table 中创建一个新条目，从而使原始条目不可见。
+
+有几个特殊情况我们做了例外处理：\type {prevdepth}、\type {prevgraf} 和
+\type {spacefactor}。通常它们通过 \type {tex.nest} table 访问：
+
+\begin{typing}
+tex.nest[tex.nest.ptr].prevdepth   = p
+tex.nest[tex.nest.ptr].spacefactor = s
+\end{typing}
+
+不过，以下方式也有效：
+
+\begin{typing}
+tex.prevdepth   = p
+tex.spacefactor = s
+\end{typing}
+
+请记住，当你在 \LUA 端直接操作节点列表时，可能需要显式更新嵌套栈顶的
+\type {prevdepth}，因为 \LUATEX 无法猜测你的意图。通过使用 \type {tex}
+table 中的访问器，你可以获取和设置嵌套栈顶的值。
+
+\subsubsection{方向参数}
+
+方向参数为只读，返回一个 \LUA 字符串。
+
+\startthreecolumns
+\begin{typing}
+tex.bodydir
+tex.mathdir
+tex.pagedir
+tex.pardir
+tex.textdir
+\end{typing}
+\stopthreecolumns
+
+\subsubsection{黏胶参数}
+
+黏胶参数接受并返回一个表示 \nod {glue_spec} 节点的 userdata 对象。
+
+\startthreecolumns
+\begin{typing}
+tex.abovedisplayshortskip
+tex.abovedisplayskip
+tex.baselineskip
+tex.belowdisplayshortskip
+tex.belowdisplayskip
+tex.leftskip
+tex.lineskip
+tex.parfillskip
+tex.parskip
+tex.rightskip
+tex.spaceskip
+tex.splittopskip
+tex.tabskip
+tex.topskip
+tex.xspaceskip
+\end{typing}
+\stopthreecolumns
+
+\subsubsection{muglue 参数}
+
+所有 muglue 参数均为只读，返回一个 \LUA 字符串。
+
+\startthreecolumns
+\begin{typing}
+tex.medmuskip
+tex.thickmuskip
+tex.thinmuskip
+\end{typing}
+\stopthreecolumns
+
+\subsubsection{令牌列表参数}
+
+令牌列表参数接受并返回 \LUA 字符串。\LUA 字符串使用 \prm {the} \prm {toks}
+式展开与令牌列表相互转换：所有类别码要么是空格（10），要么是其他（12）。
+因此，对其中一些参数（如 ``tex.output）赋值实际上没有用处，但考虑到
+未来将支持完整令牌字符串的扩展，做例外处理并不合适。
+
+\startthreecolumns
+\begin{typing}
+tex.errhelp
+tex.everycr
+tex.everydisplay
+tex.everyeof
+tex.everyhbox
+tex.everyjob
+tex.everymath
+tex.everypar
+tex.everyvbox
+tex.output
+\end{typing}
+\stopthreecolumns
+
+\subsection{转换命令}
+
+\topicindex{convert commands}
+
+所有 ``convert 命令均为只读，返回一个 \LUA 字符串。当前支持的命令有：
+
+\starttwocolumns
+\begin{typing}
+tex.eTeXVersion
+tex.eTeXrevision
+tex.formatname
+tex.jobname
+tex.luatexbanner
+tex.luatexrevision
+tex.fontname(number)
+tex.uniformdeviate(number)
+tex.number(number)
+tex.romannumeral(number)
+tex.fontidentifier(number)
+\end{typing}
+\stoptwocolumns
+
+如果你想知道为什么这个列表看起来杂乱无章；这些都是不需要参数的 ``convert 内部命令的所有情况，以及只需要简单数值的命令。特殊的（仅限 \LUA）
+\type {tex.fontidentifier} 情况返回与字体 id 编号匹配的 \type {csname} 字符串
+（如果存在的话）。
+
+\subsection{最后一项命令}
+
+\topicindex{last items}
+
+所有 ``last item 命令均为只读，返回一个数字。当前支持的命令有：
+
+\startthreecolumns
+\begin{typing}
+tex.lastpenalty
+tex.lastkern
+tex.lastskip
+tex.lastnodetype
+tex.inputlineno
+tex.lastxpos
+tex.lastypos
+tex.randomseed
+tex.luatexversion
+tex.eTeXminorversion
+tex.eTeXversion
+tex.currentgrouplevel
+tex.currentgrouptype
+tex.currentiflevel
+tex.currentiftype
+tex.currentifbranch
+\end{typing}
+\stopthreecolumns
+
+\subsection{访问寄存器：\type {set*}}
+
+\topicindex{attributes}
+\topicindex{registers}
+
+\libindex{attribute}  \libindex{setattribute}  \libindex{getattribute}  \libindex{isattribute}
+\libindex{count}      \libindex{setcount}      \libindex{getcount}      \libindex{iscount}
+\libindex{dimen}      \libindex{setdimen}      \libindex{getdimen}      \libindex{isdimen}
+\libindex{skip}       \libindex{setskip}       \libindex{getskip}       \libindex{isskip}
+\libindex{muskip}     \libindex{setmuskip}     \libindex{getmuskip}     \libindex{ismuskip}
+\libindex{glue}       \libindex{setglue}       \libindex{getglue}       \libindex{isglue}
+\libindex{muglue}     \libindex{setmuglue}     \libindex{getmuglue}     \libindex{ismuglue}
+\libindex{toks}       \libindex{settoks}       \libindex{gettoks}       \libindex{istoks}
+\libindex{box}        \libindex{setbox}        \libindex{getbox}        \libindex{isbox}
+
+\libindex{scantoks}
+
+\libindex{getmark}
+
+\TEX 的属性（\lpr {attribute}）、计数器（\prm {count}）、尺寸（\prm {dimen}）、
+skip（\prm {skip}、\prm {muskip}）和令牌（\prm {toks}）寄存器可以通过
+\type {tex} table 的两组各五个虚拟子表来访问和写入：
+
+\startthreecolumns
+\begin{typing}
+tex.attribute
+tex.count
+tex.dimen
+tex.skip
+tex.glue
+tex.muskip
+tex.muglue
+tex.toks
+\end{typing}
+\stopthreecolumns
+
+可以将相关的 \lpr {attributedef}、\prm {countdef}、\prm {dimendef}、
+\prm {skipdef} 或 \prm {toksdef} 控制序列的名称用作这些 table 的索引：
+
+\begin{typing}
+tex.count.scratchcounter = 0
+enormous = tex.dimen['maxdimen']
+\end{typing}
+
+在这种情况下，\LUATEX 会即时为你查找值。你必须使用有效的 \prm {countdef}
+（或 \lpr {attributedef}、\prm {dimendef}、\prm {skipdef}、\prm {toksdef}），
+其他任何内容都会产生错误（其意图是最终也允许 \type {<chardef tokens>}
+甚至展开为数字的宏）。
+
+\begin{itemize}\item count 寄存器接受并返回 \LUA 数字。
+    
+
+    \item 尺寸寄存器接受 \LUA 数字（以缩放点为单位）或字符串（含绝对尺寸；
+        \type {em}、\type {ex} 和 \type {px} 不允许）。结果始终为以缩放点
+        为单位的数字。
+    
+
+    \item 令牌寄存器接受并返回 \LUA 字符串。\LUA 字符串使用 \prm {the}
+        \prm {toks} 式展开与令牌列表相互转换：所有类别码要么是空格（10），
+        要么是其他（12）。
+    
+
+    \item skip 寄存器接受并返回 \nod {glue_spec} userdata 节点对象（参见本手册
+        其他部分对节点接口的描述）。
+    
+
+    \item glue 寄存器就是 skip 寄存器，但不是 userdata 形式而是详细表示形式。
+    
+
+    \item 与 count 一样，属性寄存器接受并返回 \LUA 数字。
+    
+
+\end{itemize}
+
+除了数组寻址之外，还为所有情况定义了访问器函数，例如，以下是 \prm {skip}
+寄存器的一组可能函数：
+
+\begin{typing}
+tex.setskip (["global",] <number> n, <node> s)
+tex.setskip (["global",] <string> s, <node> s)
+<node> s = tex.getskip (<number> n)
+<node> s = tex.getskip (<string> s)
+\end{typing}
+
+我们对 \type {count}、\type {dimen}、\type {muskip} 和 \type {toks} 有类似
+的设置函数。计数器和尺寸以数字表示，skip 和 muskip 以节点表示，toks 以字符串
+表示。
+
+同样，glue 变体不使用 \nod {glue_spec} userdata 节点。\type {setglue}
+函数最多接受 5 个参数：宽度、伸展、收缩、伸展阶和收缩阶。如果你不传递值或
+某个值不是数字，相应属性将变为零。\type {getglue} 函数报告所有属性，除非
+第二个参数为 \type {false}，此时仅返回宽度。
+
+以下是一个使用三元组的示例：
+
+\begin{typing}
+local d = tex.getdimen("foo")
+if tex.isdimen("bar") then
+    tex.setdimen("bar",d)
+end
+\end{typing}
+
+有六个额外的 skip（glue）相关辅助函数：
+
+\begin{typing}
+tex.setglue (["global"], <number> n,
+    width, stretch, shrink, stretch_order, shrink_order)
+tex.setglue (["global"], <string> s,
+    width, stretch, shrink, stretch_order, shrink_order)
+width, stretch, shrink, stretch_order, shrink_order =
+    tex.getglue (<number> n)
+width, stretch, shrink, stretch_order, shrink_order =
+    tex.getglue (<string> s)
+\end{typing}
+
+另外两个是 \type {tex.setmuglue} 和 \type {tex.getmuglue}。
+
+\type {dimen}、\type {count}、\type {skip}、\type {muskip}、\type {box}
+和 \type {attribute} 寄存器都有这样的辅助函数，但 glue 的比较特殊，因为
+它们需要处理更多属性。
+
+与之前讨论的通用 \type {get} 和 \type {set} 函数一样，对于 skip 寄存器，
+\type {getskip} 返回节点，\type {getglue} 返回数字；而 \type {setskip}
+接受节点，\type {setglue} 期望最多五个数字。同样，当你向 \type {getglue}
+传递 \type {false} 作为第二个参数时，仅返回宽度。\type {getmuskip}、
+\type {setmuskip} 的 mu 变体也是如此。
+
+对于令牌寄存器，我们有一个备选方案，可以指定类别码表：
+
+\begin{typing}
+tex.scantoks(0,3,"$e=mc^2$")
+tex.scantoks("global",0,"$\int\limits^1_2$")
+\end{typing}
+
+在基于函数的接口中，可以通过使用字符串 \type {global} 作为第一个函数参数
+来全局定义值。
+
+marks 有一个专用的获取函数：\type {getmark}，它接受两个参数。第一个参数是
+\type {top}、\type {bottom}、\type {first}、\type {splitbottom} 或
+\type {splitfirst} 之一，第二个参数是 marks 类编号。当不提供参数时，返回
+当前最大类数。
+
+\subsection{{字符码寄存器：\type {[get|set}*code[s]}}]
+
+\topicindex{characters+codes}
+
+\libindex{lccode}    \libindex{setlccode}    \libindex{getlccode}
+\libindex{uccode}    \libindex{setuccode}    \libindex{getuccode}
+\libindex{sfcode}    \libindex{setsfcode}    \libindex{getsfcode}
+\libindex{catcode}   \libindex{setcatcode}   \libindex{getcatcode}
+\libindex{mathcode}  \libindex{setmathcode}  \libindex{getmathcode}
+\libindex{delcode}   \libindex{setdelcode}   \libindex{getdelcode}
+
+\libindex{setdelcodes}   \libindex{getdelcodes}
+\libindex{setmathcodes}  \libindex{getmathcodes}
+
+\TEX 的字符码表（\prm {lccode}、\prm {uccode}、\prm {sfcode}、\prm
+{catcode}、\prm {mathcode}、\prm {delcode}）可以通过 \type {tex} table 的
+六个虚拟子表来访问和写入
+
+\startthreecolumns
+\begin{typing}
+tex.lccode
+tex.uccode
+tex.sfcode
+tex.catcode
+tex.mathcode
+tex.delcode
+\end{typing}
+\stopthreecolumns
+
+函数调用接口大致如上，但有一些曲折。\type {sfcode} 是最简单的：
+
+\begin{typing}
+tex.setsfcode (["global",] <number> n, <number> s)
+<number> s = tex.getsfcode (<number> n)
+\end{typing}
+
+\type {lccode} 和 \type {uccode} 的函数调用接口还允许你同时设置关联的兄弟码：
+
+\begin{typing}
+tex.setlccode (["global"], <number> n, <number> lc)
+tex.setlccode (["global"], <number> n, <number> lc, <number> uc)
+<number> lc = tex.getlccode (<number> n)
+tex.setuccode (["global"], <number> n, <number> uc)
+tex.setuccode (["global"], <number> n, <number> uc, <number> lc)
+<number> uc = tex.getuccode (<number> n)
+\end{typing}
+
+\type {catcode} 的函数调用接口还允许你在赋值或查询时指定要使用的类别表
+（两种情况的默认值都是当前表）：
+
+\begin{typing}
+tex.setcatcode (["global"], <number> n, <number> c)
+tex.setcatcode (["global"], <number> cattable, <number> n, <number> c)
+<number> lc = tex.getcatcode (<number> n)
+<number> lc = tex.getcatcode (<number> cattable, <number> n)
+\end{typing}
+
+\type {delcode} 和 \type {mathcode} 的接口使用小数组 table 来设置和检索值：
+
+\begin{typing}
+tex.setmathcode (["global"], <number> n, <table> mval )
+<table> mval = tex.getmathcode (<number> n)
+tex.setdelcode (["global"], <number> n, <table> dval )
+<table> dval = tex.getdelcode (<number> n)
+\end{typing}
+
+其中 \type {mathcode} 的 table 是一个包含 3 个数字的数组，如下所示：
+
+\begin{typing}
+{
+    <number> class,
+    <number> family,
+    <number> character
+}
+\end{typing}
+
+而 \type {delcode} 的 table 是一个包含 4 个数字的数组，如下所示：
+
+\begin{typing}
+{
+    <number> small_fam,
+    <number> small_char,
+    <number> large_fam,
+    <number> large_char
+}
+\end{typing}
+
+你也可以避免使用 table：
+
+\begin{typing}
+tex.setmathcode (["global"], <number> n, <number> class,
+    <number> family, <number> character)
+class, family, char =
+    tex.getmathcodes (<number> n)
+tex.setdelcode (["global"], <number> n, <number> smallfam,
+    <number> smallchar, <number> largefam, <number> largechar)
+smallfam, smallchar, largefam, largechar =
+    tex.getdelcodes (<number> n)
+\end{typing}
+
+通常，根据 \lpr {Udelcode} 的用法，分隔符码赋值中的第三个和第四个值为零，
+但返回的 table 中这些位置可能有值（例如，如果分隔符码是使用 \prm {delcode}
+设置的）。未设置的 \type {delcode} 可以通过 \type {dval[1]} 为 $-1$ 来识别。
+
+\subsection{{Box 寄存器：\type {[get|set}box}}]
+
+\topicindex{registers}
+\topicindex{boxes}
+
+\libindex{box}
+\libindex{setbox}  \libindex{getbox}
+
+可以使用 \type {node} 库中定义的节点接口来设置和查询实际的 box，例如来自
+\prm {hbox}、\prm {vbox} 或 \prm {vtop} 的 box：
+
+\begin{typing}
+tex.box
+\end{typing}
+
+用于数组访问，或
+
+\begin{typing}
+tex.setbox(["global",] <number> n, <node> s)
+tex.setbox(["global",] <string> cs, <node> s)
+<node> n = tex.getbox(<number> n)
+<node> n = tex.getbox(<string> cs)
+\end{typing}
+
+用于基于函数的访问。在基于函数的接口中，可以通过使用字符串 \type {global}
+作为第一个函数参数来全局定义值。
+
+请注意，如下赋值
+
+\begin{typing}
+tex.box[0] = tex.box[2]
+\end{typing}
+
+不会复制节点列表，它只是复制了一个节点指针。如果 \type {\box2} 之后被
+\TEX 命令清除，\type {\box0} 的内容也会变为无效。为防止这种情况发生，
+始终使用 \type {node.copy_list}，除非你赋值给临时变量：
+
+\begin{typing}
+tex.box[0] = node.copy_list(tex.box[2])
+\end{typing}
+
+\subsection{{重用 box：\type {[use|save}boxresource} 与 \type {getboxresourcedimensions}}]
+
+\topicindex{boxes+reuse}
+
+\libindex{useboxresource}
+\libindex{saveboxresource}
+\libindex{getboxresourcedimensions}
+
+以下函数将注册一个 box 以供重用（这是仿照 \PDF 中所谓的 xforms 建模的）。
+你可以通过 \lpr {useboxresource} 或创建子类型为~2 的规则节点来（重）使用
+该 box。
+
+\begin{typing}
+local index = tex.saveboxresource(n,attributes,resources,immediate,type,margin)
+\end{typing}
+
+可选的第二个和第三个参数是字符串，第四个是布尔值。第五个参数是类型。设置为
+非零时省略 \type {/Type} 条目。值为 1 或 3 仍会写入 \type {/BBox}，而 2 或 3
+会写入 \type {/Matrix}。第六个参数是（虚拟）边距，它超出 \TEX 所见的有效
+包围盒。除了 box 编号之外，还可以传递一个 \type {[h|v]list} 节点。
+
+你可以通过以下方式生成引用（规则类型）：
+
+\begin{typing}
+local reused = tex.useboxresource(n,wd,ht,dp)
+\end{typing}
+
+尺寸是可选的，最终尺寸作为额外值返回。以下只是一个附加功能（不返回尺寸意味着
+该资源未知）：
+
+\begin{typing}
+local w, h, d, m = tex.getboxresourcedimensions(n)
+\end{typing}
+
+这会返回资源的宽度、高度、深度和边距。
+
+\subsection{\type {triggerbuildpage}}
+
+\topicindex{pages}
+
+\libindex{triggerbuildpage}
+
+你不应指望 \type {triggerbuildpage} 辅助函数有太多作为，因为通常当 \TEX
+认为没有什么需要做时就不会做太多，但它可能对某些应用程序有用。它只是按照
+其名称所做的那样——调用构建页面的内部函数，前提是有东西需要构建。
+
+\subsection{\type {splitbox}}
+
+\topicindex{boxes+split}
+
+\libindex{splitbox}
+
+你可以拆分一个 box：
+
+\begin{typing}
+local vlist = tex.splitbox(n,height,mode)
+\end{typing}
+
+余数保留在原始 box 中，并返回一个打包好的 vlist。此操作类似于 \prm {vsplit}
+操作。mode 可以是 \type {additional} 或 \type {exactly}，涉及被拆分出去
+的 box。
+
+\subsection{{访问数学参数：\type {[get|set}math}}]
+
+\topicindex{math+parameters}
+\topicindex{parameters+math}
+
+\libindex{setmath}
+\libindex{getmath}
+
+可以使用以下方式设置和查询内部数学参数：
+
+\begin{typing}
+tex.setmath(["global",] <string> n, <string> t, <number> n)
+<number> n = tex.getmath(<string> n, <string> t)
+\end{typing}
+
+与之前一样，可选的第一个参数 \type {global} 表示全局赋值。
+
+第一个字符串是去掉前导 ``Umath 的参数名，第二个字符串是去掉尾部
+``style 的样式名。为完整起见，数学参数名的值如下：
+
+\begin{typing}
+quad                axis                operatorsize
+overbarkern         overbarrule         overbarvgap
+underbarkern        underbarrule        underbarvgap
+radicalkern         radicalrule         radicalvgap
+radicaldegreebefore radicaldegreeafter  radicaldegreeraise
+stackvgap           stacknumup          stackdenomdown
+fractionrule        fractionnumvgap     fractionnumup
+fractiondenomvgap   fractiondenomdown   fractiondelsize
+limitabovevgap      limitabovebgap      limitabovekern
+limitbelowvgap      limitbelowbgap      limitbelowkern
+underdelimitervgap  underdelimiterbgap
+overdelimitervgap   overdelimiterbgap
+subshiftdrop        supshiftdrop        subshiftdown
+subsupshiftdown     subtopmax           supshiftup
+supbottommin        supsubbottommax     subsupvgap
+spaceafterscript    connectoroverlapmin
+ordordspacing       ordopspacing        ordbinspacing     ordrelspacing
+ordopenspacing      ordclosespacing     ordpunctspacing   ordinnerspacing
+opordspacing        opopspacing         opbinspacing      oprelspacing
+opopenspacing       opclosespacing      oppunctspacing    opinnerspacing
+binordspacing       binopspacing        binbinspacing     binrelspacing
+binopenspacing      binclosespacing     binpunctspacing   bininnerspacing
+relordspacing       relopspacing        relbinspacing     relrelspacing
+relopenspacing      relclosespacing     relpunctspacing   relinnerspacing
+openordspacing      openopspacing       openbinspacing    openrelspacing
+openopenspacing     openclosespacing    openpunctspacing  openinnerspacing
+closeordspacing     closeopspacing      closebinspacing   closerelspacing
+closeopenspacing    closeclosespacing   closepunctspacing closeinnerspacing
+punctordspacing     punctopspacing      punctbinspacing   punctrelspacing
+punctopenspacing    punctclosespacing   punctpunctspacing punctinnerspacing
+innerordspacing     inneropspacing      innerbinspacing   innerrelspacing
+inneropenspacing    innerclosespacing   innerpunctspacing innerinnerspacing
+\end{typing}
+
+样式参数的值为：
+
+\begin{typing}
+display       crampeddisplay
+text          crampedtext
+script        crampedscript
+scriptscript  crampedscriptscript
+\end{typing}
+
+值要么是一个数字（表示尺寸或数值），要么是表示 \type {ordordspacing} 及
+类似间距参数的 muskip 的黏胶规格节点。
+
+\subsection{{特殊列表头：\type {[get|set}list}}]
+
+\topicindex{lists}
+
+\libindex{lists}
+\libindex{setlist}
+\libindex{getlist}
+
+虚拟 table \type {tex.lists} 包含跟踪构建页面列表的内部寄存器集合。
+
+\begin{longtable}{l p{5cm}}
+\toprule 字段                      & 说明 \\
+\midrule
+\type{page_ins_head}       & 待处理插入项的循环链表 \\
+\type{contrib_head}        & 最近的贡献内容 \\
+\type{page_head}           & 当前页面内容 \\
+%NC \type{temp_head}           & \\
+\type{hold_head}           & 用于为下一页保留的项目 \\
+\type{adjust_head}         & 当前 \prm {vadjust} 列表的头 \\
+\type{pre_adjust_head}     & 当前 \type {\vadjust pre} 列表的头 \\
+%NC \type{align_head}          & \\
+\type{page_discards_head}  & 分页断开时被丢弃项目的头 \\
+\type{split_discards_head} & vsplit 中被丢弃项目的头 \\
+\bottomrule
+\end{longtable}
+
+获取和设置函数是 \type {getlist} 和 \type {setlist}。你必须小心设置的内容，
+因为 \TEX 可能对列表的构建方式或其所处的状态有期望。
+
+\subsection{语义嵌套层级：\type {getnest}}
+
+\topicindex{nesting}
+
+\libindex{nest}
+\libindex{ptr}
+%libindex{setnest} % only a message
+\libindex{getnest}
+
+虚拟 table \type {nest} 包含当前活动的语义嵌套状态。它有两个主要部分：
+一个以零为基的 userdata 数组，表示语义嵌套本身；以及数值 \type {ptr}，
+给出最高可用索引。\type {nest[]} 中的数组项和 \type {ptr} 都不能赋值
+（因为这会使排版引擎陷入无法修复的混乱），但你可以对数组项内部的各个值
+赋值，例如 \type {tex.nest[tex.nest.ptr].prevdepth}。
+
+\type {tex.nest[tex.nest.ptr]} 是当前嵌套状态，\type {nest[0]} 是最外层
+（主垂直列表）层级。获取函数是 \type {getnest}。你可以传递一个数字（返回
+一个列表）、不传递参数、或 \type {top}（返回最顶层列表），或字符串
+\type {ptr}（返回最顶层列表的索引）。
+
+已知字段有：
+
+\begin{longtable}{l l l p{5cm}}
+\toprule 键                & 类型    & 模式 & 说明 \\
+\midrule
+\type{mode}        & number  & 所有   & 这些数字的含义取决于引擎
+                                                 有时甚至取决于版本；你可以使用 \typ
+                                                 {tex.getmodevalues()} 获取映射：正值
+                                                 表示垂直、水平和数学模式，
+                                                 负值表示内部和行内变体 \\
+\type{modeline}    & number  & 所有   & 进入此模式时的源输入行，
+                                                 输出例程内部为负值 \\
+\type{head}        & node    & 所有   & 当前列表的头 \\
+\type{tail}        & node    & 所有   & 当前列表的尾 \\
+\type{prevgraf}    & number  & vmode & 上一段落的行数 \\
+\type{prevdepth}   & number  & vmode & 上一段落的深度 \\
+\type{spacefactor} & number  & hmode & 当前间距因子 \\
+\type{dirs}        & node    & hmode & 供换行算法临时存储使用\\
+\type{noad}        & node    & mmode & 用于临时存储待处理的分数分子，
+                                                 用于 \prm {over} 等 \\
+\type{delimptr}    & node    & mmode & 用于临时存储前一个数学分隔符，
+                                                 用于 \prm {middle} \\
+\type{mathdir}     & boolean & mmode & 在数学处理期间 \lpr {mathdir} 与
+                                                 周围的 \lpr {textdir} 不同时为 true \\
+\type{mathstyle}   & number  & mmode & 当前 \lpr {mathstyle} \\
+\bottomrule
+\end{longtable}
+
+\subsection{打印函数}\label{sec:luaprint}
+
+\topicindex{printing}
+
+\type {tex} table 还包含三个打印函数，它们是从 \LUA 脚本到 \TEX 的主要
+接口。这三个函数的参数都存储在一个内存虚拟文件中，该文件作为 \prm {directlua}
+展开的结果馈送给 \TEX 扫描器。
+
+一个 \prm {directlua} 命令可返回的文本总量仅受可用系统 \RAM 的限制。不过，
+每个单独的打印字符串必须完全适合 \TEX 的输入缓冲区。目前在回调内部使用
+这些函数的结果是未定义的。
+
+\subsubsection{\type {print}}
+
+\libindex{print}
+
+\begin{typing}
+tex.print(<string> s, ...)
+tex.print(<number> n, <string> s, ...)
+tex.print(<table> t)
+tex.print(<number> n, <table> t)
+\end{typing}
+
+每个字符串参数都被 \TEX 视为独立的输入行。如果是 table 参数而不是字符串列表，
+则必须是要打印的连续字符串数组（第一个非字符串值将停止打印过程）。
+
+可选参数可用于使用由 \lpr {catcodetable}~\type {n} 定义的类别码规则打印字符串。
+如果 \type {n} 为 $-1$，则使用当前活动的类别码规则。如果 \type {n} 为 $-2$，
+则生成的类别码是 \prm {the} \prm {toks} 的结果：所有类别码为 12（其他），
+除了空格字符的类别码为 10（空格）。否则，如果 \type {n} 不是有效的类别码表，
+则被忽略，改为使用当前活动的类别码规则。
+
+在一个 \prm {directlua} 中，最后一个 \type {tex.print} 命令的最后一个字符串
+不会附加 \prm {endlinechar}，其他所有字符串都会附加。
+
+\subsubsection{\type {sprint}}
+
+\libindex{sprint}
+
+\begin{typing}
+tex.sprint(<string> s, ...)
+tex.sprint(<number> n, <string> s, ...)
+tex.sprint(<table> t)
+tex.sprint(<number> n, <table> t)
+\end{typing}
+
+每个字符串参数都被 \TEX 视为一种特殊的输入行，使其适合用作部分行输入机制：
+
+\begin{itemize}
+\item \TEX 不会切换到 ``新行 状态，因此前导空格不会被忽略。
+
+\item 不插入 \prm {endlinechar}。
+
+\item 尾部空格不会被移除。注意，这并不妨碍 \TEX 本身在解释行时吞掉空格。
+    例如，在
+
+    \begin{typing}
+    before\directlua{tex.sprint("\\relax")tex.sprint(" inbetween")}after
+    \end{typing}
+
+    中，\type {in between} 之前的空格会因 \prm {relax} 的 ``正常
+    扫描而被吞掉。
+
+\end{itemize}
+
+如果是 table 参数而不是字符串列表，则必须是要打印的连续字符串数组（第一个非
+字符串值将停止打印过程）。
+
+可选参数设置类别码规则，与 \type {tex.print} 一样。这会影响字符串参数（或
+转换为字符串的数字）。
+
+虽然这需要谨慎使用，但你也可以传递令牌或节点 userdata 对象。这些会被注入
+流中。令牌最好是有效的令牌，而节点在被注入时必须存在。因此重要的是要认识到
+以下几点：
+
+\begin{itemize}\item 当你注入一个令牌时，你需要传递一个有效的令牌 userdata 对象。这个对象在
+    不再被引用时会被 \LUA 回收。当它被打印到 \TEX 时，令牌本身会被复制，
+    因此不会与 \LUA 垃圾回收产生干扰。你自己管理该对象。由于令牌实际上只是
+    数字，在 \TEX 端没有真正的额外开销。
+
+\item 当你注入一个节点时，你需要传递一个有效的节点 userdata 对象。与该对象
+    关联的节点在不再被引用时不会被 \LUA 回收。它在 \TEX 端自己的内存空间中
+    继续存在。当它被打印到 \TEX 时，节点引用被使用，假设该节点仍然存在。
+    不涉及 \LUA 垃圾回收。同样，你自己管理该对象。节点本身在 \TEX 用完后
+    被释放。
+
+\end{itemize}
+
+如果你考虑最后一点，可能会意识到当打印的字符串、令牌和节点的混合体被重用时
+我们会遇到问题。在 \TEX 内部，序列变为输入缓冲区的链表。因此，\type {"123"}
+或 \type {"\foo{123}"} 会被即时读取和解析，而 \typ {<token userdata>} 已经
+是令牌化的，实际上现在是一个令牌列表。\typ {<node userdata>} 也被令牌化为
+令牌列表，但它有一个对真实节点的引用。通常这没问题。但现在假设你将整个内容
+存储在一个宏中：在这种情况下，令牌化节点可以被多次刷新。但是，在第一次这样
+的刷新后，节点被使用且其内存被释放。你可以通过使用副本来防止这种情况，这通过
+将 \lpr {luacopyinputnodes} 设置为非零值来控制。如果你真的要处理这些底层
+问题，这是你必须接受的模糊区域之一。
+
+\subsubsection{\type {tprint}}
+
+\libindex{tprint}
+
+\begin{typing}
+tex.tprint({<number> n, <string> s, ...}, {...})
+\end{typing}
+
+此函数基本上是重复调用 \type {tex.sprint(<number> n, <string> s, ...)} 的快捷
+方式，对每个提供的参数 table 调用一次。
+
+\subsubsection{\type {cprint}}
+
+\libindex{cprint}
+
+此函数接受一个表示要使用的类别码的数字，以及一个字符串 table 或将被推入输入
+流的字符串参数列表。
+
+\begin{typing}
+tex.cprint( 1," 1: $&{\\foo}") tex.print("\\par") -- a lot of \{ s
+tex.cprint( 2," 2: $&{\\foo}") tex.print("\\par") -- matching \} s
+tex.cprint( 9," 9: $&{\\foo}") tex.print("\\par") -- all get ignored
+tex.cprint(10,"10: $&{\\foo}") tex.print("\\par") -- all become spaces
+tex.cprint(11,"11: $&{\\foo}") tex.print("\\par") -- letters
+tex.cprint(12,"12: $&{\\foo}") tex.print("\\par") -- other characters
+tex.cprint(14,"12: $&{\\foo}") tex.print("\\par") -- comment triggers
+\end{typing}
+
+% \subsubsection{\type {write}, \type {twrite}, \type {nwrite}}
+\subsubsection{\type {write}}
+
+\libindex{write}
+% \libindex{twrite}
+% \libindex{nwrite}
+
+\begin{typing}
+tex.write(<string> s, ...)
+tex.write(<table> t)
+\end{typing}
+
+每个字符串参数都被 \TEX 视为一种特殊的输入行，使其适合用作快速转储信息的
+方式：
+
+\begin{itemize}\item 该行上的所有类别码要么是 ``空格（用于 '~'）要么是 ``字符（用于其他所有字符）。
+\item 不附加 \prm {endlinechar}。
+\end{itemize}
+
+如果是 table 参数而不是字符串列表，则必须是要打印的连续字符串数组（第一个非
+字符串值将停止打印过程）。
+
+% 函数 \type {twrite} 和 \type {nwrite} 可用于将令牌或节点写回 \TEX，
+% 可能与将被令牌化的常规字符串混合。你必须确保传递正确的数据，因为有时
+% \TEX 有需要满足的期望。
+
+\subsection{辅助函数}
+
+\subsubsection{\type {round}}
+
+\topicindex {helpers}
+
+\libindex{round}
+
+\begin{typing}
+<number> n = tex.round(<number> o)
+\end{typing}
+
+对 \LUA 数字 \type {o} 取整，返回一个在有效 \TEX 寄存器值范围内的数字。如果
+数字初始超出范围，还会产生 ``number too big 错误。
+
+\subsubsection{\type {scale}}
+
+\libindex{scale}
+
+\begin{typing}
+<number> n = tex.scale(<number> o, <number> delta)
+<table> n = tex.scale(table o, <number> delta)
+\end{typing}
+
+将 \LUA 数字 \type {o} 和 \nod {delta} 相乘，返回一个在有效 \TEX 寄存器值
+范围内的取整数字。在 table 版本中，它创建一个 table 的副本，其中所有顶层
+数值都按此方式缩放。如果相乘后的数字超出范围，还会产生 ``number too big
+错误。
+
+注意：此函数输出的精度取决于你计算机的体系结构和操作系统，因此请谨慎使用！
+稍后将添加一个与 \LUATEX 内部 100\% 可移植缩放函数的接口。
+
+\subsubsection{\type {number} 与 \type {romannumeral}}
+
+\libindex{number}
+\libindex{romannumeral}
+
+这是原语 \prm {number} 和 \prm {romannumeral} 的配套函数。它们可以这样使用：
+
+\begin{typing}
+tex.print(tex.romannumeral(123))
+\end{typing}
+
+\subsubsection{\type {fontidentifier} 与 \type {fontname}}
+
+\libindex{fontidentifier}
+\libindex{fontname}
+
+第一个仅返回名称，第二个还报告字号。
+
+\begin{typing}
+tex.print(tex.fontidentifier(1))
+tex.print(tex.fontname(1))
+\end{typing}
+
+\subsubsection{\type {sp}}
+
+\libindex{sp}
+
+\begin{typing}
+<number> n = tex.sp(<number> o)
+<number> n = tex.sp(<string> s)
+\end{typing}
+
+将数字 \type {o} 或表示显式尺寸的字符串 \type {s} 转换为缩放点的整数。
+
+对于解析字符串，使用与 \LUATEX 在其类 \TEX 输入语言中扫描尺寸说明符时相同的
+扫描和转换规则（包括为错误值生成错误），但以下情况除外：
+
+\begin{itemize}
+\item 仅允许显式值，不处理控制序列
+
+\item 无限尺寸单位（\type {fil...}）不允许
+
+\item \type {mu} 单位不产生错误（但可能也没有用处）
+
+\end{itemize}
+
+%\subsubsection{\type {tex.getlinenumber} and \type {tex.setlinenumber}}
+%
+%\libindex{getlinenumber}
+%\libindex{setlinenumber}
+%
+%你可以操作当前行号：
+%
+%\begin{typing}
+%local n = tex.getlinenumber()
+%tex.setlinenumber(n+10)
+%\end{typing}
+%
+%这可以快捷为：
+%
+%\begin{typing}
+%tex.setlinenumber(10,true)
+%\end{typing}
+%
+%当你有一个从文件读取数字并将它们合并在一行中的回调时，这可能很方便（在这种
+%情况下，错误消息可能需要引用原始行）。当然，与 \TEX 内部数字处理的干扰是
+%可能的。
+
+\subsubsection{\type {error} 与 \type {show_context}}
+
+\topicindex{errors}
+
+\libindex{error}
+\libindex{show_context}
+
+\begin{typing}
+tex.error(<string> s)
+tex.error(<string> s, <table> help)
+\end{typing}
+
+这会创建一个错误，类似于 \prm {errhelp} 和 \prm {errmessage} 的组合。在此
+错误期间，删除操作被禁用。
+
+\type {help} table 的数组部分必须包含字符串，每行错误帮助一个字符串。
+
+在发生错误时，\type {show_context} 函数将显示我们当前所处的上下文（在展开中）。
+
+\subsubsection{\type {run}、\type {finish}}
+
+\libindex{run}
+\libindex{finish}
+
+这两个函数启动解释并强制结束。一次运行通常归结为 \TEX 进入所谓的主循环。
+获取一个令牌，根据其当前含义执行某些操作。有时操作立即发生，有时需要更多
+扫描。很多时候令牌被推回输入中。这一切意味着 \TEX 扫描器不断推送和弹出输入
+状态，但最终在所有操作完成后返回主循环。
+
+\subsubsection{\type {runtoks}}
+
+由于 \TEX 处于展开、处理字体、排版段落、处理 box、构建页面等复杂舞蹈中，
+你无法轻易运行嵌套的 \TEX 运行（即嵌套主循环）。不过，有一个选项可以通过
+\type {runtoks} 强制进行局部运行。给定令牌列表寄存器的内容在本地展开，
+然后我们返回到在 \LUA 端触发此展开的位置。也可以传递一个执行某些工作的
+函数。你必须确保最后 \TEX 处于健全状态，而这并不总是容易的。更复杂的机制
+会使 \TEX 本身复杂化（可能也会损害性能），因此这个简单的局部展开循环
+只能将就。
+
+\begin{typing}
+tex.runtoks(<token register>)
+tex.runtoks(<lua function>)
+\end{typing}
+
+当 \prm {tracingnesting} 参数设置为大于~2 的值时，会报告一些关于局部循环
+状态的信息。
+
+当传递令牌寄存器时，此函数有两个可选参数：
+
+\begin{typing}
+tex.runtoks(<token register>,force,grouped)
+\end{typing}
+
+在例如 \type {\edef} 内部，\type {runtoks} 函数的行为（至少尝试）就像它是
+一个 \type {\the}。这防止了不良副作用：通常在这样的定义中令牌保持为令牌，
+（例如）字符不会变成节点。使用第二个参数，你可以强制局部主循环，无论如何。
+第三个参数添加一层分组。
+
+你可以使用 \type {\endlocalcontrol} 或从 \LUA 端使用 \type {tex.quittoks}
+退出局部循环。在这种情况下，你结束一层！当然，最终这可能意味着你到达主层级，
+在这种情况下额外的结束将触发冗余警告（而不是中止！）。
+
+\subsubsection{\type {forcehmode}}
+
+\libindex{forcehmode}
+
+一个（可能触发错误的）复杂情况的例子是，\TEX 期望处于某种状态，比如水平
+模式，你必须确保在从 \LUA 向 \TEX 反馈内容时它确实处于该状态。通常用户
+不会遇到问题，但当你开始写入令牌或节点或进行嵌套运行时，可能会出现需要
+运行 \type {forcehmode} 的情况。对此没有现成方案，拦截可能的情况会削弱
+\LUATEX 的灵活性。
+
+\subsubsection{\type {hashtokens}}
+
+\libindex{hashtokens}
+
+\topicindex{hash}
+
+\begin{typing}
+for i,v in pairs (tex.hashtokens()) do ... end
+\end{typing}
+
+返回名称列表。这对调试很有用，但注意这也会报告可能因局部重定义而在此刻无法
+访问的控制序列：它严格是哈希表的转储。你可以使用 \type {token.create}
+检查属性，例如当创建的 table 中的 \type {command} 键等于 \type {123} 时，
+你的 \type {cmdname} 值为 \type {undefined_cs}。
+
+\subsubsection{\type {definefont}}
+
+\topicindex{fonts+defining}
+
+\libindex{definefont}
+
+\begin{typing}
+tex.definefont(<string> csname, <number> fontid)
+tex.definefont(<boolean> global, <string> csname, <number> fontid)
+\end{typing}
+
+将 \type {csname} 与内部字体编号 \type {fontid} 关联。当且仅当指定了
+\type {global} 且为 true 时，定义是全局的（不考虑 \type {globaldefs} 的
+设置）。
+
+\subsection{处理原语的函数}\label{luaprimitives}
+
+\subsubsection{\type {enableprimitives}}
+
+\libindex{enableprimitives}
+
+\topicindex{initialization}
+\topicindex{primitives}
+
+\begin{typing}
+tex.enableprimitives(<string> prefix, <table> primitive names)
+\end{typing}
+
+此函数接受一个前缀字符串和一个原语名称数组。对于 ``prefix 和
+``name 的每个组合，\type {tex.enableprimitives} 首先验证
+``name 是否是实际的原语（它必须由下面解释的 \type {tex.extraprimitives}
+调用之一返回，或是 \TEX82 的一部分，或是 \prm {directlua}）。如果不是，
+\type {tex.enableprimitives} 不做任何操作，跳到下一对。
+
+但如果是，它会通过连接 ``prefix 和 ``name 构造一个 csname
+变量，除非 ``prefix 已经是 ``name 的实际前缀。在后一种
+情况下，它会丢弃 ``prefix，直接使用 ``name。
+
+然后它会检查构造的 csname 是否存在。如果该 csname 当前未定义（注意：这与
+\prm {relax} 不同），它将全局定义该 csname 使其具有以下含义：运行属于原语
+``name 的代码。如果由于某种原因 csname 已定义，它不做任何操作，
+尝试下一对。
+
+示例：
+
+\begin{typing}
+tex.enableprimitives('LuaTeX', {'formatname'})
+\end{typing}
+
+将定义 \type {\LuaTeXformatname}，其内在含义与文档中说明的原语
+\lpr {formatname} 相同，前提是控制序列 \type {\LuaTeXformatname} 当前未定义。
+
+当 \LUATEX 以 \type {--ini} 运行时，只有 \TEX82 原语和 \prm {directlua}
+可用，因此没有任何额外原语{\bf 可用}。
+
+如果你想让所有新功能以其默认名称可用（就像现在这样），你必须在格式生成文件
+的开头附近添加
+
+\begin{typing}
+\ifx\directlua\undefined \else
+    \directlua {tex.enableprimitives('',tex.extraprimitives ())}
+\fi
+\end{typing}
+
+或者你可以根据需要为不同子集选择不同的前缀。
+
+不过，调用某种形式的 \type {tex.enableprimitives} 非常重要，因为如果不这样做，
+你最终会得到一个可以运行 \LUA 代码但做不了多少其他事情的 \TEX82 仿制品。
+定义的 csname（当然）保存在格式中，并在运行时可用。
+
+\subsubsection{\type {extraprimitives}}
+
+\libindex{extraprimitives}
+
+\begin{typing}
+<table> t = tex.extraprimitives(<string> s, ...)
+\end{typing}
+
+此函数返回源自所请求字符串值所给定引擎的原语列表。可能的值及其（当前）
+返回值在下表中给出。此外，还定义了一些特殊的原语 ``\tex{ }、
+``\tex {/} 和 ``\type {-}。
+
+% [Lua code block removed]
+
+\begin{longtable}{l p{8cm}}
+\toprule 名称    & 值 \\
+\midrule
+tex     & [Lua输出] \\
+core    & [Lua输出] \\
+etex    & [Lua输出] \\
+luatex  & [Lua输出] \\
+\bottomrule
+\end{longtable}
+
+注意，\type {luatex} 不包含 \type {directlua}，因为它被认为是核心原语，
+与所有 \TEX82 原语一起，因此它是从 \type {'core'} 返回的列表的一部分。
+
+运行 \type {tex.extraprimitives} 会给你 \type {-ini} 启动时的完整原语列表。
+它完全等同于 \type {tex.extraprimitives("etex","luatex")}。
+
+\subsubsection{\type {primitives}}
+
+\libindex{primitives}
+
+\begin{typing}
+<table> t = tex.primitives()
+\end{typing}
+
+此函数返回 \LUATEX 已知的所有原语列表。
+
+\subsection{核心功能接口}
+
+\subsubsection{\type {badness}}
+
+\libindex{badness}
+
+\begin{typing}
+<number> b = tex.badness(<number> t, <number> s)
+\end{typing}
+
+此辅助函数在换行计算中很有用。\type {t} 和 \type {s} 是缩放值；函数返回当
+总 \type {t} 应由总和为 \type {s} 的量构成时的不良度。返回的数字是
+\mathematics {100(t/s)^3} 的合理近似。
+
+\subsubsection{\type {tex.resetparagraph}}
+
+\topicindex {paragraphs+reset}
+
+\libindex{resetparagraph}
+
+此函数重置 \TEX 在遇到新段落时通常会重置的参数。
+
+\subsubsection{\type {linebreak}}
+
+\topicindex {linebreaks}
+
+\libindex{linebreak}
+
+\begin{typing}
+local <node> nodelist, <table> info =
+    tex.linebreak(<node> listhead, <table> parameters)
+\end{typing}
+
+可识别的参数如下：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 名称                        & 类型            & 说明 \\
+\midrule
+\type{pardir}               & string          & \\
+\type{pretolerance}         & number          & \\
+\type{tracingparagraphs}    & number          & \\
+\type{tolerance}            & number          & \\
+\type{looseness}            & number          & \\
+\type{hyphenpenalty}        & number          & \\
+\type{exhyphenpenalty}      & number          & \\
+\type{pdfadjustspacing}     & number          & \\
+\type{adjdemerits}          & number          & \\
+\type{pdfprotrudechars}     & number          & \\
+\type{linepenalty}          & number          & \\
+\type{lastlinefit}          & number          & \\
+\type{doublehyphendemerits} & number          & \\
+\type{finalhyphendemerits}  & number          & \\
+\type{hangafter}            & number          & \\
+\type{interlinepenalty}     & number or table & 如果是 table，则为类似 \prm {interlinepenalties} 的数组 \\
+\type{clubpenalty}          & number or table & 如果是 table，则为类似 \prm {clubpenalties} 的数组 \\
+\type{widowpenalty}         & number or table & 如果是 table，则为类似 \prm {widowpenalties} 的数组 \\
+\type{brokenpenalty}        & number          & \\
+\type{emergencystretch}     & number          & 以缩放点为单位 \\
+\type{hangindent}           & number          & 以缩放点为单位 \\
+\type{hsize}                & number          & 以缩放点为单位 \\
+\type{leftskip}             & glue_spec 节点  & \\
+\type{rightskip}            & glue_spec 节点  & \\
+\type{parshape}             & table           & \\
+\bottomrule
+\end{longtable}
+
+注意，\prm {displaywidowpenalties} 没有接口，你必须自己为 \type {widowpenalties}
+传递正确的选择。
+
+确保 \type {listhead} 是一个正确的段落列表是你自己的责任：此函数不会向其
+添加任何节点。确切地说，如果你想替换核心换行，你可能需要执行以下操作（当你
+不在 \cbk {pre_linebreak_filter} 或 \cbk {linebreak_filter} 回调中工作时，
+或者当从 listhead 开始的原始列表是在水平模式下生成时）：
+
+\begin{itemize}\item 在开头添加一个 ``缩进 box，可能还有一个 \nod {local_par} 节点
+    （仅当你需要时）
+
+\item 将找到的任何最终黏胶替换为无限惩罚（或者如果最后一个节点不是黏胶，
+    则添加这样的惩罚）
+
+\item 在该惩罚节点之后为 \prm {parfillskip} 添加一个黏胶节点
+
+\item 确保所有 \type {prev} 指针正确
+
+\end{itemize}
+
+结果是一个节点列表，如果你想将其赋值给 \prm {vbox}，它仍然需要 vpack。
+返回的 \type {info} table 包含四个值，全部为数字：
+
+\begin{longtable}{l p{5cm}}
+\toprule 名称      & 说明 \\
+\midrule
+prevdepth & 断开段落中最后一行的深度 \\
+prevgraf  & 断开段落中的行数 \\
+looseness & 断开段落中的实际 looseness 值 \\
+demerits  & 所选方案的总不良度  \\
+\bottomrule
+\end{longtable}
+
+注意，有几件事你无法通过此函数进行接口：除了通过 \type {pdfadjustspacing}
+之外，你无法影响字体扩展，因为其设置在其他地方进行。hbadness 和 hfuzz 等
+也是如此。所有这些都在 \type {hpack} 例程中，它通过全局变量获取自己的变量。
+
+\subsubsection{\type {shipout}}
+
+\topicindex {shipout}
+
+\libindex{shipout}
+
+\begin{typing}
+tex.shipout(<number> n)
+\end{typing}
+
+将 box 编号 \type {n} 发货到输出文件，并清除该 box 寄存器。
+
+\subsubsection{\type {getpagestate}}
+
+\topicindex {pages}
+
+\libindex{getpagestate}
+
+此辅助函数报告当前页面状态：\type {empty}、\type {box_there} 或
+\type {inserts_only}，以整数值表示。
+
+\subsubsection{\type {getlocallevel}}
+
+\topicindex {nesting}
+
+\libindex{getlocallevel}
+
+此整数报告局部循环的当前层级。它仅用于调试，（相对状态）数字可能随实现而
+变化。
+
+\subsection{随机数生成器}
+
+\libindex{lua_math_random}
+\libindex{lua_math_randomseed}
+\libindex{init_rand}
+\libindex{normal_rand}
+\libindex{uniform_rand}
+\libindex{uniformdeviate}
+
+由于实际原因，\LUATEX 有自己的随机数生成器。原始的 \LUA 随机函数以
+\typ {tex.lua_math_random} 可用。你可以使用新种子通过 \type {init_rand}
+初始化（\typ {lua_math_randomseed} 与此等价）。
+
+有三个生成器：\type {normal_rand}（不使用参数）、\type {uniform_rand}
+（接受一个在使用前会被取整的数字）和 \type {uniformdeviate}，其行为类似于
+原语，期望一个缩放整数，因此
+
+\begin{typing}
+tex.print(tex.uniformdeviate(65536)/65536)
+\end{typing}
+
+将给出一个介于零和一之间的随机数。
+
+\subsection{与 synctex 相关的函数}\label{synctex}
+
+\topicindex {synctex}
+
+\libindex{set_synctex_mode}      \libindex{get_synctex_mode}
+\libindex{set_synctex_no_files}
+\libindex{set_synctex_tag}       \libindex{get_synctex_tag}   \libindex{force_synctex_tag}
+\libindex{set_synctex_line}      \libindex{get_synctex_line}  \libindex{force_synctex_line}
+
+以下辅助函数仅在你实现自己的 synctex 逻辑时才有意义。请记住，编辑器中使用的
+库假定某种逻辑，并且面向 plain 和 \LATEX，因此经过十年，用户期望某种行为。
+
+\begin{longtable}{l p{5cm}}
+\toprule 名称                        & 说明 \\
+\midrule
+\type{set_synctex_mode}     & \type {0} 为默认值，使用正常 synctex
+                                    逻辑，\type {1} 使用以下辅助函数设置的值，
+                                    而 \type {2} 还为字形节点设置这些值；
+                                    \type{3} 设置字形和黏胶，\type {4}
+                                    仅设置字形 \\
+\type{set_synctex_tag}      & 设置当前标签（文件）值（遵循保存栈） \\
+\type{set_synctex_line}     & 设置当前行值（遵循保存栈） \\
+\type{set_synctex_no_files} & 禁用 synctex 文件日志记录 \\
+\type{get_synctex_mode}     & 返回当前模式（值见上文） \\
+\type{get_synctex_tag}      & 获取当前设置的标签（文件）值 \\
+\type{get_synctex_line}     & 获取当前设置的行值 \\
+\type{force_synctex_tag}    & 覆盖标签（文件）值（\type {0} 重置） \\
+\type{force_synctex_line}   & 覆盖行值（\type {0} 重置） \\
+\bottomrule
+\end{longtable}
+
+最后一个有些特殊。由于 \SYNCTEX 中文件的注册方式，如果我们提供自己的替代方案
+且想避免这种开销，我们需要显式禁用该功能。传递值 1 将禁用注册。
+
+\section{\type {texconfig}\label{texconfig}}
+
+\topicindex{libraries+\type{texconfig}}
+
+\topicindex {configuration}
+
+这是一个创建为空的 table。启动 \LUA 脚本可以用一些设置填充此 table，
+这些设置在加载和执行启动文件后由可执行文件读取。
+
+\begin{longtable}{l l l p{5cm}}
+\toprule 键                    & 类型     & 默认值 & 说明 \\
+\midrule
+\type{kpse_init}      & boolean  & true &
+    \type {false} 完全禁用 \KPATHSEA 初始化，并启用以下数值键-值对的解释。
+（仅当你实现了{\it 所有}文件查找回调时才取消设置此项！）
+\\
+    \type{shell_escape} & string & \type {'f'} & 使用 \type {'y'} 或 \type
+    {'t'} 或 \type {'1'} 无条件启用 \type {\write18}，\type {'p'}
+    启用 \type {shell_escape_commands} 中列出的命令
+\\
+    shell_escape_commands & string & & 以逗号分隔的命令名称列表，
+    即使 \type {shell_escape} 设置为 \type {'p'} 时也可由 \type {\write18}
+    执行。逗号周围{\it 不要}使用空格，任何所需的命令参数用空格分隔，
+    对任何需要的参数或路径引用使用 \ASCII 双引号（\type {"}）
+\\
+\type{string_vacancies} & number   &  75000  & 参见 web2c 文档 \\
+\type{pool_free}        & number   &   5000  & 参见 web2c 文档 \\
+\type{max_strings}      & number   &  15000  & 参见 web2c 文档 \\
+\type{strings_free}     & number   &    100  & 参见 web2c 文档 \\
+\type{nest_size}        & number   &     50  & 参见 web2c 文档 \\
+\type{max_in_open}      & number   &     15  & 参见 web2c 文档 \\
+\type{param_size}       & number   &     60  & 参见 web2c 文档 \\
+\type{save_size}        & number   &   4000  & 参见 web2c 文档 \\
+\type{stack_size}       & number   &    300  & 参见 web2c 文档 \\
+\type{dvi_buf_size}     & number   &  16384  & 参见 web2c 文档 \\
+\type{error_line}       & number   &     79  & 参见 web2c 文档 \\
+\type{half_error_line}  & number   &     50  & 参见 web2c 文档 \\
+\type{max_print_line}   & number   &     79  & 参见 web2c 文档 \\
+\type{hash_extra}       & number   &      0  & 参见 web2c 文档 \\
+\type{pk_dpi}           & number   &     72  & 参见 web2c 文档 \\
+\type{trace_file_names} & boolean  & true
+&
+    \type {false} 禁用 \TEX 正常的文件打开-关闭反馈（假设回调会处理这些）
+\\
+\type{trace_extra_newline} & boolean  & false & 在 \type{\tracingmacros} 中添加额外换行 \\
+\type{file_line_error} & boolean & false
+&
+    生成 \type {file:line} 样式的错误消息
+\\
+\type{halt_on_error} & boolean & false
+&
+    在遇到第一个错误时中止运行
+\\
+\type{formatname} & string &
+&
+    如果命令行上未给出格式名称，则将首先测试此键，而不是直接退出
+\\
+\type{jobname} & string &
+&
+    如果命令行上未给出输入文件名，则将首先测试此键，而不是直接放弃
+\\
+\type{level_chr} & number &
+&
+    放在被跟踪宏前面的字符（见下一个值）
+\\
+\type{level_max} & number &
+&
+    当大于零时，设置 \type
+    {\tracingmacros} 时将显示输入嵌套层级；超过此值的层级将被裁剪，
+    并在前面显示层级
+\\
+\type{check_dvi_total_pages} & boolean &
+&
+     在 \DVI 输出模式下，如果为 true，当页数超过 65535 时中止运行。
+     这是默认行为。如果为 false，运行将像在 \TEX 中一样继续。
+\\
+\type{texlua_img} & boolean &
+&
+     如果为 true，允许在 \TEXLUA 模式下访问 \type {img} 库。如果
+     false（默认），\type {img} 库在 \TEXLUA
+     模式下不可用（在 1.22.0 之前的 \LUATEX 版本中是无条件可用的）。
+     注意，此设置为{\bf 实验性}，可能随时被移除，恕不另行通知。
+\\
+\bottomrule
+\end{longtable}
+
+注意：与 web2c 参数匹配的数值仅在 \type {kpse_init} 显式设置为 \type {false}
+时使用。在所有其他情况下，使用 \type {texmf.cnf} 中的正常值。
+
+你可以启动自己的嵌套层级可视化器，例如：
+
+\begin{typing}
+callback.register("input_level_string",function(n)
+ if tex.tracingmacros > 0 and tex.count.tracingstacklevels > 0 then
+    if tex.tracingmacros > 1 then
+        return "! " .. string.rep(">",n) .. " "
+    end
+  end
+  return ""
+end)
+\end{typing}
+
+或者，与其他引擎同步（未检查）：
+
+\newcount\tracingstacklevels
+
+\begin{typing}
+\directlua {
+  callback.register("input_level_string", function(n)
+    if tex.tracingmacros > 0 then
+      local l = tex.count.tracingstacklevels
+      if l > 0 then
+        return string.rep("~",l) .. string.rep(".",n-l)
+      end
+    end
+    return ""
+  end)
+}
+\end{typing}
+
+\section{\type {texio}}
+
+\topicindex{libraries+\type{texio}}
+\topicindex{I/O}
+
+此库负责底层 I/O 接口：写入日志文件和/或控制台。
+
+\subsection{\type {write}}
+
+\libindex{write}
+
+\begin{typing}
+texio.write(<string> target, <string> s, ...)
+texio.write(<string> s, ...)
+\end{typing}
+
+不带 \type {target} 参数时，将所有给定字符串写入 \TEX 此刻写入消息的相同位置。
+如果 \prm {batchmode} 生效，则仅写入日志，否则写入日志和终端。可选的
+\type {target} 可以是三种可能性之一：\type {term}、\type {log} 或
+\type {term and log}。
+
+注意：如果给定多个字符串，且第一个字符串是或可能是上述目标之一，则必须显式
+指定 \type {target}，以防止 \LUA 将第一个字符串解释为目标。
+
+\subsection{\type {write_nl}}
+
+\libindex{write_nl}
+
+\begin{typing}
+texio.write_nl(<string> target, <string> s, ...)
+texio.write_nl(<string> s, ...)
+\end{typing}
+
+此函数的行为类似于 \type {texio.write}，但确保给定字符串出现在新行的开头。
+如果你只想移到下一行，可以传递一个空字符串。
+
+\subsection{\type {setescape}}
+
+\libindex{setescape}
+
+你可以通过传递零值来禁用控制字符的 \type {\textasciicircum\textasciicircum{}} 转义。
+
+\subsection{\type {closeinput}}
+
+\libindex{closeinput}
+
+此函数应谨慎使用。它的作用类似于 \prm {endinput}，但在 \LUA 端。你可以
+使用它（某种程度上）强制跳回 \TEX。通常 \LUA 只会收集打印内容，最后提升
+一个输入层级并刷新这些打印内容。此函数可以帮助你停留在当前层级，但你需要
+知道自己在做什么（或者更准确地说：\TEX 对输入做了什么）。
+
+\section{\type {token}}
+
+\subsection{扫描器}
+
+\topicindex{libraries+\type{token}}
+\topicindex{tokens}
+
+\libindex{scan_keyword}
+\libindex{scan_keyword_cs}
+\libindex{scan_int}
+\libindex{scan_real}
+\libindex{scan_float}
+\libindex{scan_dimen}
+\libindex{scan_glue}
+\libindex{scan_toks}
+\libindex{scan_code}
+\libindex{scan_string}
+\libindex{scan_argument}
+\libindex{scan_word}
+\libindex{scan_csname}
+\libindex{scan_list}
+
+令牌库提供了在 \LUA 级别拦截输入并处理它的手段。该库提供了一个基本扫描器
+基础设施，可用于编写接受各种参数的宏。此接口刻意保持通用，性能也相当不错。
+可以构建额外的解析器，而不会有太多开销。如何从中受益取决于宏包编写者，因为
+\LUATEX 背后的主要原则是提供最小的工具集而非解决方案。扫描函数可能是最
+引人入胜的。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 函数              & 参数           & 结果 \\
+\midrule
+\type{scan_keyword}   & string             & 如果给定关键字被吞掉则返回 true；与常规
+                                                     \TEX 关键字扫描器一样，这是不区分大小写的
+                                                     （且基于 \ASCII） \\
+\type{scan_keyword_cs} & string             & 如果给定关键字被吞掉则返回 true；此变体
+                                                     区分大小写，也适用于 \UTF8 \\
+\type{scan_int}       &                    & 返回一个整数 \\
+\type{scan_real}      &                    & 从例如 \type {1}、\type {1.1}、\type {.1} 返回一个数字，可带有可选的合并符号 \\
+\type{scan_float}     &                    & 从例如 \type {1}、\type {1.1}、\type {.1}、\type {1.1E10}、\type {.1e-10} 返回一个数字，可带有可选的合并符号 \\
+\type{scan_dimen}     & infinity、mu-units & 返回一个表示尺寸的数字和/或两个表示填充和阶的数字 \\
+\type{scan_glue}      & mu-units           & 返回一个黏胶规格节点 \\
+\type{scan_toks}      & definer、expand    & 返回一个令牌 table \\
+\type{scan_code}      & bitset             & 如果字符的类别在给定的 bitset（表示类别码）中则返回该字符 \\
+\type{scan_string}    &                    & 返回 \type {{}} 之间给出的字符串，作为 \type {\macro} 或作为类别码 11 或 12 的字符序列 \\
+\type{scan_argument}  & boolean            & 此函数类似于 \type {scanstring}，但也接受 \type {\cs} \\
+\type{scan_word}      &                    & 返回类别码为 11 或 12 的字符序列作为字符串 \\
+\type{scan_csname}    &                    & 扫描 \type {\foo} 后返回 \type {foo} \\
+\type{scan_list}      &                    & 获取一个 box 规范并返回一个 \type {[h|v]list} 节点 \\
+\bottomrule
+\end{longtable}
+
+除了扫描令牌的那个之外，扫描器可以被认为是稳定的。\type {scan_code} 函数
+接受一个可选数字，\type {keyword} 函数接受一个正常的 \LUA 字符串。
+\type {infinity} 布尔值表示我们还允许 \type {fill} 作为尺寸，\type {mu-units}
+标志扫描器我们期望数学单位。扫描令牌时，我们可以指示正在定义一个宏，在这种
+情况下结果还会提供关于期望什么参数的信息，在结果中这通过一个分隔令牌与含义
+分开。\type {expand} 标志决定列表是否会被展开。
+
+\type {scan_argument} 函数展开给定的参数。当扫描带花括号的参数时，可以通过
+传递 \type {false} 来禁止展开（默认为 \type {true}）。对于控制序列，传递
+\type {false} 将导致一级展开（宏的含义）。
+
+字符串扫描器扫描花括号之间的内容并在过程中展开，或者当看到控制序列时返回
+其含义。否则它会扫描类别码为 \type {letter} 或 \type {other} 的字符。因此，
+给定以下定义：
+
+\begin{typing}
+\def\bar{bar}
+\def\foo{foo-\bar}
+\end{typing}
+bar        : \type{bar}
+foo        : \type{foo}
+myfirstbar : \type{myfirstbar}
+
+\begin{flushleft}
+
+\end{flushleft}
+
+这是按以下方式输入的：
+
+
+
+你看到报告的是 \type {bar} 而不是 \type {myfirstbar} 的原因是，
+\type {\bar} 已在之前的段落中使用过。
+
+如果我们现在说：
+
+\begin{typing}
+\def\foo{}
+\end{typing}
+
+如果我们说
+
+\begin{typing}
+\def\foo{\bar}
+\end{typing}
+
+当从 \LUA 扫描时，我们根本不处于定义（未定义）宏的模式。在那里我们只得到
+真正的原始未定义宏令牌。
+
+\begin{typing}
+\directlua{local t = token.get_next() tex.print(t.id.." "..t.tok)}\myfirstbar
+\directlua{local t = token.get_next() tex.print(t.id.." "..t.tok)}\mysecondbar
+\directlua{local t = token.get_next() tex.print(t.id.." "..t.tok)}\mythirdbar
+\end{typing}
+
+\begin{flushleft}
+
+因此，我们确实得到了一个唯一的令牌，因为毕竟我们需要某种可使用和垃圾回收的
+\LUA 对象，但它基本上是同一个，表示一个未定义的控制序列。
+\end{flushleft}
+
+\section{\type {kpse}}
+
+\topicindex{libraries+\type{kpse}}
+
+此库提供两个独立但几乎相同的 \KPATHSEA 文件搜索功能接口：有一个 ``正常的过程式接口，与 \LUATEX 本身共享其 kpathsea 实例；还有一个完全面向
+对象的接口。
+
+\subsection{\type {set_program_name}}
+
+\libindex{set_program_name}
+\libindex{default_texmfcnf}
+\libindex{new}
+
+库查找变量的方式由 \type {texmf.cmf} 文件驱动，其中当前设置的程序名称用作
+过滤器。你可以通过 \type {default_texmfcnf} 检查使用了哪个文件。
+
+在使用搜索库之前，必须先初始化其数据库。有三种可能性，其中两种属于过程式
+接口。
+
+首先，当 \LUATEX 用于排版文档时，此初始化自动发生，\KPATHSEA 可执行文件
+和程序名称被设置为 \type {luatex}（即，除非用户的启动脚本明确禁止。
+详见~\ref{init}）。
+
+其次，在 \TEXLUA 模式下，必须通过 \type {kpse.set_program_name} 函数显式
+初始化，它设置 \KPATHSEA 可执行文件（以及可选的程序）名称。
+
+\begin{typing}
+kpse.set_program_name(<string> name)
+kpse.set_program_name(<string> name, <string> progname)
+\end{typing}
+
+第二个参数控制 \type {texmf.cnf} 配置文件中 ``点号值的使用，默认为
+第一个参数。
+
+第三，如果你更喜欢面向对象的接口，你必须调用不同的函数。它有相同的参数，
+但返回一个 userdata 变量。
+
+\begin{typing}
+local kpathsea = kpse.new(<string> name)
+local kpathsea = kpse.new(<string> name, <string> progname)
+\end{typing}
+
+除了这两个函数之外，接口的调用约定完全相同。根据所选接口，你调用
+\type {kpse.find_file} 或 \type {kpathsea:find_file}，具有相同的参数和
+返回值。
+
+\subsection{\type {record_input_file}}
+
+\topicindex {files+recording}
+
+\libindex{record_input_file}
+\libindex{record_output_file}
+
+这两个函数可用于注册已使用的文件。因为回调可以自己加载文件，你可能需要
+这些辅助函数（如果你使用记录功能的话）。
+
+\begin{typing}
+kpse.record_input_file(<string> name)
+kpse.record_output_file(<string> name)
+\end{typing}
+
+\subsection{\type {find_file}}
+
+\topicindex {files+finding}
+
+\libindex {find_file}
+
+库中最常用的函数是 \type {find_file}：
+
+\begin{typing}
+<string> f = kpse.find_file(<string> filename)
+<string> f = kpse.find_file(<string> filename, <string> ftype)
+<string> f = kpse.find_file(<string> filename, <boolean> mustexist)
+<string> f = kpse.find_file(<string> filename, <string> ftype, <boolean> mustexist)
+<string> f = kpse.find_file(<string> filename, <string> ftype, <number> dpi)
+\end{typing}
+
+参数：
+
+\begin{itemize}
+
+\sym{filename}
+
+你要查找的文件名，带或不带扩展名。
+
+\sym{ftype}
+
+映射到 \KPSEWHICH 的 \type {-format} 参数。支持的 \type {ftype}
+值与独立 \type {kpsewhich} 程序支持的值相同：\startluacode
+    local list = {
+        "afm",
+        "base",
+        "bib",
+        "bitmap font",
+        "bst",
+        "cid maps",
+        "clua",
+        "cmap files",
+        "cnf",
+        "cweb",
+        "dvips config",
+        "enc files",
+        "fmt",
+        "font feature files",
+        "gf",
+        "graphic|/|figure",
+        "ist",
+        "lig files",
+        "ls-R",
+        "lua",
+        "map",
+        "mem",
+        "MetaPost support",
+        "mf",
+        "mfpool",
+        "mft",
+        "misc fonts",
+        "mlbib",
+        "mlbst",
+        "mp",
+        "mppool",
+        "ocp",
+        "ofm",
+        "opentype fonts",
+        "opl",
+        "other binary files",
+        "other text files",
+        "otp",
+        "ovf",
+        "ovp",
+        "pdftex config",
+        "pk",
+        "PostScript header",
+        "subfont definition files",
+        "tex",
+        "TeX system documentation",
+        "TeX system sources",
+        "texmfscripts",
+        "texpool",
+        "tfm",
+        "Troff fonts",
+        "truetype fonts",
+        "type1 fonts",
+        "type42 fonts",
+        "vf",
+        "web",
+        "web2c files",
+    }
+    table.sort(list)
+    context("{\\tttf \letterpercent, t}",list)
+\stopluacode
+
+默认类型为 \type {tex}。注意：这与 \KPSEWHICH 不同，后者尝试从提供的
+扩展名推断文件类型。
+
+\sym{mustexist}
+
+类似于 \KPSEWHICH 的 \type {-must-exist}，默认为 \type {false}。如果你
+指定 \type {true}（或非零整数），则 \KPSE 库将同时搜索磁盘和 \type {ls-R}
+数据库。
+
+\sym{dpi}
+
+这用于格式 \type {pk}、\type {gf} 和 \type {bitmap font} 的尺寸参数。
+\end{itemize}
+
+如果指定了 \type {--output-directory} 且值为相对路径名，则首先在此处搜索
+文件，如果失败，则在标准树中搜索。
+
+\subsection{\type {lookup}}
+
+\libindex{lookup}
+
+还有一种更强大（但更慢）的通用文件查找方法。它为每个找到的文件返回一个
+字符串。
+
+\begin{typing}
+<string> f, ... = kpse.lookup(<string> filename, <table> options)
+\end{typing}
+
+选项与 \type {kpsewhich} 的命令行参数对应：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键              & 类型     & 说明 \\
+\midrule
+\type{debug}     & number   & 为此查找设置调试标志\\
+\type{format}    & string   & 使用特定文件类型（见上面的列表）\\
+\type{dpi}       & number   & 为此查找使用此分辨率；默认 600\\
+\type{path}      & string   & 在给定路径中搜索\\
+\type{all}       & boolean  & 输出所有匹配项，而不仅仅是第一个\\
+\type{mustexist} & boolean  & 必要时同时搜索磁盘和 ls-R\\
+\type{mktexpk}   & boolean  & 为此查找禁用/启用 mktexpk 生成\\
+\type{mktextex}  & boolean  & 为此查找禁用/启用 mktextex 生成\\
+\type{mktexmf}   & boolean  & 为此查找禁用/启用 mktexmf 生成\\
+\type{mktextfm}  & boolean  & 为此查找禁用/启用 mktextfm 生成\\
+\type{subdir}    & string
+                         或 table & 仅输出目录部分以给定字符串结尾的匹配项 \\
+\bottomrule
+\end{longtable}
+
+如果指定了 \type {--output-directory} 且值为相对路径名，则首先在此处搜索
+文件，然后在标准树中搜索。
+
+\subsection{\type {init_prog}}
+
+\topicindex {initialization+bitmaps}
+
+\libindex{init_prog}
+
+为需要生成位图字体的程序提供额外初始化。
+
+\begin{typing}
+kpse.init_prog(<string> prefix, <number> base_dpi, <string> mfmode)
+kpse.init_prog(<string> prefix, <number> base_dpi, <string> mfmode, <string> fallback)
+\end{typing}
+
+\subsection{\type {readable_file}}
+
+\libindex{readable_file}
+
+测试（绝对）文件名是否为可读文件。
+
+\begin{typing}
+<string> f = kpse.readable_file(<string> name)
+\end{typing}
+
+返回值是你应该使用的实际绝对文件名，因为磁盘名称并不总是与请求的名称相同，
+这是由于别名和例如 \MSDOS 下的系统特定处理。如果文件不存在或不可读则返回
+\type {nil}。
+
+\subsection{\type {expand_path}}
+
+\libindex{expand_path}
+
+类似于 kpsewhich 的 \type {-expand-path}：
+
+\begin{typing}
+<string> r = kpse.expand_path(<string> s)
+\end{typing}
+
+\subsection{\type {expand_var}}
+
+\libindex{expand_var}
+
+类似于 kpsewhich 的 \type {-expand-var}：
+
+\begin{typing}
+<string> r = kpse.expand_var(<string> s)
+\end{typing}
+
+\subsection{\type {expand_braces}}
+
+\libindex{expand_braces}
+
+类似于 kpsewhich 的 \type {-expand-braces}：
+
+\begin{typing}
+<string> r = kpse.expand_braces(<string> s)
+\end{typing}
+
+\subsection{\type {in_name_ok}}
+
+\libindex{in_name_ok}
+
+如果 \type{fname} 可打开读取则返回 true，否则返回 false 并向标准错误写入
+一条消息。
+
+\begin{typing}
+<boolean> r = kpse.in_name_ok(<string> fname)
+\end{typing}
+
+\subsection{\type {in_name_ok_silent_extended}}
+
+\libindex{in_name_ok_silent_extended}
+
+\begin{typing}
+<boolean> r = kpse.in_name_ok_silent_extended(<string> fname)
+\end{typing}
+
+如果 \type{fname} 可打开读取则返回 true；
+还会检查 \type{TEXMFVAR} 和 \type{TEXMFSYSVAR} 的值是否为绝对文件名。
+否则返回 false，但不向标准错误写入消息。
+
+\subsection{\type {out_name_ok}}
+
+\libindex{out_name_ok}
+
+如果 \type{fname} 可打开写入则返回 true。
+
+\begin{typing}
+<boolean> r = kpse.out_name_ok(<string> fname)
+\end{typing}
+
+\subsection{\type {out_name_ok_silent_extended}}
+
+\libindex{out_name_ok_silent_extended}
+
+\begin{typing}
+<boolean> r = kpse.out_name_ok_silent_extended(<string> fname)
+\end{typing}
+
+如果 \type{fname} 可打开写入则返回 true；
+还会检查 \type{TEXMFVAR} 和 \type{TEXMFSYSVAR} 的值是否为绝对文件名。
+否则返回 false，但不向标准错误写入消息。
+
+\subsection{\type {show_path}}
+
+\libindex{show_path}
+
+类似于 kpsewhich 的 \type {-show-path}：
+
+\begin{typing}
+<string> r = kpse.show_path(<string> ftype)
+\end{typing}
+
+\subsection{\type {var_value}}
+
+\libindex{var_value}
+
+类似于 kpsewhich 的 \type {-var-value}：
+
+\begin{typing}
+<string> r = kpse.var_value(<string> s)
+\end{typing}
+
+\subsection{\type {version}}
+
+\libindex{version}
+
+返回 kpathsea 版本字符串。
+
+\begin{typing}
+<string> r = kpse.version()
+\end{typing}
+
+\subsection{\type {check_permission}}
+
+\libindex{check\_permission}
+
+检查 \type{filename} 是否可执行。
+如果可执行则返回 \type{1}、\type{filename} 或安全的 cmd 替代方案，
+否则返回 \type{0} 和错误消息。
+
+\begin{typing}
+<string> res, cmd = kpse.check_permission(<string> filename)
+\end{typing}

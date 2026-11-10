@@ -1,0 +1,1090 @@
+\chapter{\LUA\ 回调}\label{callbacks}
+
+\section{注册回调}
+
+\topicindex{callbacks}
+
+\libindex{register}
+\libindex{list}
+\libindex{find}
+
+本库包含用于注册、查找和列出回调的函数。回调是在明确定义的位置被调用的
+\LUA\ 函数。回调分为两类：一类与现有功能混合，另一类（启用后）替换功能。
+在大多数情况下，第二类应与内置功能表现相似，因为下一步需要特定的数据。
+例如，你可以替换断字例程。该函数接收一个可以（或不可以）断字的列表。
+最终列表必须有效，并且（通常）用于构造段落。另一个函数可以替换连字构建器
+和|/|或字距调整器。做其他事情也是可能的，但最终可能不会给用户带来预期的结果。
+
+你需要做的第一件事是注册一个回调：
+
+\begin{typing}
+id, error =
+    callback.register(<string> callback_name, <function> func)
+id, error =
+    callback.register(<string> callback_name, nil)
+id, error =
+    callback.register(<string> callback_name, false)
+\end{typing}
+
+这里的 \texttt{callback\_name} 是预定义的回调名称，见下文。该函数返回回调的
+内部 \type {id}；如果回调无法注册，则返回 \type {nil}。在后一种情况下，
+\type {error} 包含错误消息，否则为 \type {nil}。
+
+\LUATEX\ 会将回调函数内部化，因此即使你意外地重新定义了一个函数也没有关系。
+
+回调赋值始终是全局的。你可以使用特殊值 \type {nil} 代替函数来清除回调。
+
+为了获得少量速度提升，你可以将布尔值 \type {false} 赋给与文件无关的回调，
+这样做将阻止 \LUATEX\ 执行其默认情况下会执行的任何操作（当完全没有注册
+回调函数时）。请注意：除非你 \notabene {确切地}知道自己在做什么，
+否则这可能会导致各种问题！
+
+\begin{typing}
+<table> info =
+    callback.list()
+\end{typing}
+
+表中的键是已知的回调名称，值是一个布尔值，其中 \type {true} 表示该回调
+当前已设置（处于活动状态）。
+
+\begin{typing}
+<function> f = callback.find(callback_name)
+\end{typing}
+
+如果回调未设置，\type {find} 返回 \type {nil}。
+
+\section{文件发现回调}
+
+本小节中记录的行为被认为是稳定的，即不会再有向后不兼容的更改。
+
+\subsection{\cbk {find_read_file} 与 \cbk {find_write_file}}
+
+你的回调函数应遵循以下约定：
+
+\begin{typing}
+<string> actual_name =
+    function (<number> id_number, <string> asked_name)
+\end{typing}
+
+参数：
+
+\begin{itemize}
+\item[\\texttt{id\_number}]
+
+对于日志文件或 \prm {input} 文件，此数字为零。对于 \TEX 的 \prm {read}
+或 \prm {write}，该数字加一，因此 \type {\read0} 变为~1。
+
+\item[\\texttt{asked\_name}]
+
+这是用户提供的文件名，由 \prm {input}、\prm {openin} 或 \prm {openout}
+找到。
+
+\end{itemize}
+
+返回值：
+
+\begin{itemize}
+\item[\\texttt{actual\_name}]
+
+这是实际使用的文件名。对于 \TEX 读入的第一个文件，你必须确保返回的
+\type {actual_name} 带有扩展名，并且适合用作 \type {jobname}。否则，
+你将不得不在 \LUATEX\ 结束后手动修复日志文件和输出文件的名称，并且
+最终的格式文件名也会变得混乱。这是因为这些文件名依赖于 jobname。
+
+如果找不到文件，你必须返回 \type {nil}。
+
+\end{itemize}
+
+\subsection{\cbk {find_font_file}}
+
+\topicindex{callbacks+font files}
+
+你的回调函数应遵循以下约定：
+
+\begin{typing}
+<string> actual_name =
+    function (<string> asked_name)
+\end{typing}
+
+\type {asked_name} 是一个 \OTF\ 或 \TFM\ 字体度量文件。
+
+如果找不到文件，返回 \type {nil}。
+
+\subsection{\cbk {find_output_file}}
+
+\topicindex{callbacks+output file}
+
+你的回调函数应遵循以下约定：
+
+\begin{typing}
+<string> actual_name =
+    function (<string> asked_name)
+\end{typing}
+
+\type {asked_name} 是用于写入的 \PDF\ 或 \DVI\ 文件。
+
+\subsection{\cbk {find_format_file}}
+
+\topicindex{callbacks+format file}
+
+你的回调函数应遵循以下约定：
+
+\begin{typing}
+<string> actual_name =
+    function (<string> asked_name)
+\end{typing}
+
+\type {asked_name} 是用于读取的格式文件（用于写入的格式文件始终在当前
+目录中打开）。
+
+\subsection{\cbk {find_vf_file}}
+
+\topicindex{callbacks+font files}
+
+类似于 \cbk {find_font_file}，但用于虚拟字体。这同时适用于 \ALEPH 的
+\OVF\ 文件和传统的 Knuth 式 \VF\ 文件。
+
+\subsection{\cbk {find_map_file}}
+
+\topicindex{callbacks+font files}
+
+类似于 \cbk {find_font_file}，但用于 map 文件。
+
+\subsection{\cbk {find_enc_file}}
+
+\topicindex{callbacks+font files}
+
+类似于 \cbk {find_font_file}，但用于 enc 文件。
+
+\subsection{\cbk {find_pk_file}}
+
+\topicindex{callbacks+font files}
+
+类似于 \cbk {find_font_file}，但用于 pk 位图文件。此回调接受两个参数：
+\type {name} 和 \type {dpi}。在你的回调中，你可以决定查找：
+
+\begin{typing}
+<base res>dpi/<fontname>.<actual res>pk
+\end{typing}
+
+但其他策略也是可行的。由你来找到一个与该规格匹配的 ``合理
+位图文件。
+
+\subsection{\cbk {find_data_file}}
+
+\topicindex{callbacks+data files}
+
+类似于 \cbk {find_font_file}，但用于嵌入文件（\type {\pdfobj file '...'}）。
+
+\subsection{\cbk {find_opentype_file}}
+
+\topicindex{callbacks+font files}
+
+类似于 \cbk {find_font_file}，但用于 \OPENTYPE\ 字体文件。
+
+\subsection{\cbk {find_truetype_file} 与 \cbk {find_type1_file}}
+
+\topicindex{callbacks+font files}
+
+你的回调函数应遵循以下约定：
+
+\begin{typing}
+<string> actual_name =
+    function (<string> asked_name)
+\end{typing}
+
+\type {asked_name} 是一个字体文件。此回调在 \LUATEX\ 构建其所需字体文件
+的内部列表时被调用，因此实际的调用时机可能会让你感到意外。你的返回值
+稍后会被反馈到匹配的 \type {read_file} 回调中。
+
+奇怪的是，\cbk {find_type1_file} 也用于 \OPENTYPE{}（\type {OTF}）字体。
+
+\subsection{\cbk {find_image_file}}
+
+\topicindex{callbacks+image files}
+
+你的回调函数应遵循以下约定：
+
+\begin{typing}
+<string> actual_name =
+    function (<string> asked_name)
+\end{typing}
+
+\type {asked_name} 是一个图像文件。你的返回值用于从硬盘打开文件，
+因此请确保返回的内容是你的操作系统认为的有效文件名。
+
+\section{文件读取回调}\label{iocallback}
+
+本小节中记录的行为被认为是稳定的，即不会再有向后不兼容的更改。
+
+\subsection{\cbk {open_read_file}}
+
+\topicindex{callbacks+opening files}
+
+你的回调函数应遵循以下约定：
+
+\begin{typing}
+<table> env =
+    function (<string> file_name)
+\end{typing}
+
+参数：
+
+\begin{itemize}
+\item[\\texttt{file\_name}]
+
+由前一个 \cbk {find_read_file} 返回的文件名；如果没有定义此类回调，
+则为 \type {kpse.find_file()} 的返回值。
+
+\end{itemize}
+
+返回值：
+
+\begin{itemize}
+\item[\texttt{env}]
+
+这是一个表，其中至少包含一个必需的和一个可选的回调函数，用于此文件。
+必需的字段是 \type {reader}，关联的函数将在每读取一行新内容时被调用一次；
+可选的字段是 \type {close}，当 \LUATEX\ 处理完该文件时将被调用一次。
+\LUATEX\ 从不查看表的其余部分，因此你可以用它来存储你私有的逐文件数据。
+这两个回调函数都将该表作为它们唯一的参数。
+
+\end{itemize}
+
+\subsubsection{\type {reader}}
+
+\topicindex{callbacks+reader}
+
+每当 \LUATEX\ 需要从文件中读取新的输入行时，就会运行此函数。
+
+\begin{typing}
+function(<table> env)
+    return <string> line
+end
+\end{typing}
+
+你的函数应返回一个字符串或 \type {nil}。值 \type {nil} 表示已到达文件
+末尾，并将使 \TEX\ 接下来调用可选的 \type {close} 函数。
+
+\subsubsection{\type {close}}
+
+\topicindex{callbacks+closing files}
+
+当 \LUATEX\ 决定关闭文件时，将运行此可选函数。
+
+\begin{typing}
+function(<table> env)
+end
+\end{typing}
+
+你的函数不应返回任何值。
+
+\subsection{通用文件读取器}
+
+\topicindex{callbacks+readers}
+
+有一组回调用于加载二进制数据文件。它们都使用相同的接口：
+
+\begin{typing}
+function(<string> name)
+    return <boolean> success, <string> data, <number> data_size
+end
+\end{typing}
+
+\type {name} 通常是完整路径名，由文件发现回调之一或 \type
+{kpse.find_file()} 的内部版本返回。
+
+\begin{itemize}
+\item[\texttt{success}]
+
+当发生致命错误时返回 \type {false}（例如，当文件终究找不到时）。
+
+\item[\texttt{data}]
+
+构成该文件的字节。
+
+\item[\\texttt{data\_size}]
+
+\type {data} 的长度，以字节为单位。
+
+\end{itemize}
+
+如果找到了文件但读取时出现问题，则返回空字符串和零。
+
+函数列表如下：
+
+\begin{longtable}{l p{5cm}}
+\toprule 函数  & 用途 \\
+\midrule
+\type{read_font_file}     & ofm 或 tfm 文件 \\
+\type{read_vf_file}       & 虚拟字体 \\
+\type{read_map_file}      & map 文件 \\
+\type{read_enc_file}      & 编码文件 \\
+\type{read_pk_file}       & pk 位图文件 \\
+\type{read_data_file}     & 嵌入文件（如 \PDF\ 对象所支持的） \\
+\type{read_truetype_file} & \TRUETYPE\ 字体文件 \\
+\type{read_type1_file}    & \TYPEONE\ 字体文件 \\
+\type{read_opentype_file} & \OPENTYPE\ 字体文件 \\
+\bottomrule
+\end{longtable}
+
+\section{数据处理回调}
+
+\subsection{\cbk {process_input_buffer}}
+
+\topicindex{callbacks+input buffer}
+
+此回调允许你在 \LUATEX\ 实际开始查看行输入缓冲区之前更改其内容。
+
+\begin{typing}
+function(<string> buffer)
+    return <string> adjusted_buffer
+end
+\end{typing}
+
+如果你返回 \type {nil}，\LUATEX\ 将假装你的回调从未发生。你可以从中
+获得少量处理时间。此回调不替换任何内部代码。
+
+\subsection{\cbk {process_output_buffer}}
+
+\topicindex{callbacks+output buffer}
+
+此回调允许你在 \LUATEX\ 因 \prm {write} 命令而实际开始将行输出缓冲区
+写入文件之前更改其内容。它仅在输出到实际文件时被调用（即不包括日志、
+终端以及所谓的 \prm {write} 18 调用）。
+
+\begin{typing}
+function(<string> buffer)
+    return <string> adjusted_buffer
+end
+\end{typing}
+
+如果你返回 \type {nil}，\LUATEX\ 将假装你的回调从未发生。你可以从中
+获得少量处理时间。此回调不替换任何内部代码。
+
+\subsection{\cbk {process_jobname}}
+
+\topicindex{callbacks+jobname}
+
+此回调允许你更改 \TEX 中由 \prm {jobname} 给出、以及 Lua 中由
+\type {tex.jobname} 给出的作业名。它不影响内部作业名，也不影响输出文件
+或日志文件的名称。
+
+\begin{typing}
+function(<string> jobname)
+    return <string> adjusted_jobname
+end
+\end{typing}
+
+唯一的参数是实际的作业名；你不应在此函数内使用 \type {tex.jobname}，
+否则可能发生无限递归。如果你返回 \type {nil}，\LUATEX\ 将假装你的回调
+从未发生。此回调不替换任何内部代码。
+
+\section{节点列表处理回调}
+
+节点和节点列表的描述见~\ref{nodes}。
+
+\subsection{\cbk {contribute_filter}}
+
+\topicindex{callbacks+contributions}
+
+当 \LUATEX\ 向列表添加内容时，会调用此回调：
+
+\begin{typing}
+function(<string> extrainfo)
+end
+\end{typing}
+
+该字符串报告组代码。由此你可以推断出你可以处理哪个列表。
+
+\begin{longtable}{l p{5cm}}
+\toprule 值             & 说明                                  \\
+\midrule
+\type{pre_box}    & 正在添加行间材料            \\
+\type{pre_adjust} & 正在添加 \prm {vadjust} 材料 \\
+\type{box}        & 正在添加一个排版好的盒子（始终被调用） \\
+\type{adjust}     & 正在添加 \prm {vadjust} 材料 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\cbk {buildpage_filter}}
+
+\topicindex{callbacks+building pages}
+
+每当 \LUATEX\ 准备好将内容移至主垂直列表时，就会调用此回调。你可以
+使用此回调对页面构建阶段进行特殊处理，例如拼版或栏平衡。
+
+\begin{typing}
+function(<string> extrainfo)
+end
+\end{typing}
+
+字符串 \type {extrainfo} 提供有关 \TEX 相对于 ``当前页面 的状态的
+一些额外信息。\cbk {buildpage_filter} 回调的可能值为：
+
+\begin{longtable}{l p{5cm}}
+\toprule 值                   & 说明                              \\
+\midrule
+\type{alignment}       & 正在添加一个（部分）对齐    \\
+\type{after_output}    & 输出例程刚刚结束             \\
+\type{new_graf}        & 新段落的开始                 \\
+\type{vmode_par}       & 在垂直模式下遇到了 \prm {par} \\
+\type{hmode_par}       & 在水平模式下遇到了 \prm {par} \\
+\type{insert}          & 添加了一个插入               \\
+\type{penalty}         & 一个处罚点（在垂直模式下）   \\
+\type{before_display}  & 就在显示公式开始之前         \\
+\type{after_display}   & 显示公式结束                 \\
+\type{end}             & \LUATEX\ 正在终止（一切都结束了） \\
+\bottomrule
+\end{longtable}
+
+\subsection{\cbk {build_page_insert}}
+
+\topicindex{callbacks+inserts}
+
+当页面构建器添加插入时，会调用此回调。对这个机制没有太多控制权，
+但此回调允许在插入之前对间距进行一些最后一刻的调整，例如当连续追加
+多个插入（类型）时，这可能会很方便。
+
+\begin{typing}
+function(<number> n, <number> i)
+    return <number> register
+end
+\end{typing}
+
+其中
+
+\begin{longtable}{l p{5cm}}
+\toprule 值     & 说明              \\
+\midrule
+\type{n} & 插入类别         \\
+\type{i} & 插入的顺序       \\
+\bottomrule
+\end{longtable}
+
+返回值是一个数字，指示用于前置间距的 skip 寄存器。例如，这允许使用
+不同的顶部间距（当 \type {i} 等于一时）和中间间距（当 \type {i} 大于一时）。
+当然，你可以随意处理插入盒子，但你需要确保 \LUATEX\ 之后能正常工作。
+
+\subsection{\cbk {pre_linebreak_filter}}
+
+\topicindex{callbacks+linebreaks}
+
+此回调在 \LUATEX\ 开始将节点列表转换为 \prm {hbox} 堆栈之前、
+即添加 \prm {parfillskip} 之后被调用。
+
+\begin{typing}
+function(<node> head, <string> groupcode)
+    return true | false | <node> newhead
+end
+\end{typing}
+
+名为 \type {groupcode} 的字符串标识节点列表在 \TEX 处理过程中的上下文。
+可能的取值范围在下表中给出，但并非所有这些值都实际出现在
+\cbk {pre_linebreak_filter} 中，其中一些属于 \cbk {hpack_filter} 和
+\cbk {vpack_filter} 回调，将在接下来的两段中解释。
+
+\begin{longtable}{l p{5cm}}
+\toprule 值                 & 说明                                   \\
+\midrule
+\type{<empty>}       & 主垂直列表                           \\
+\type{hbox}          & 水平模式下的 \prm {hbox}            \\
+\type{adjusted_hbox} & 垂直模式下的 \prm {hbox}             \\
+\type{vbox}          & \prm {vbox}                            \\
+\type{vtop}          & \prm {vtop}                            \\
+\type{align}         & \prm {halign} 或 \prm {valign}          \\
+\type{disc}          & 断点                                  \\
+\type{insert}        & 打包一个插入                          \\
+\type{vcenter}       & \prm {vcenter}                         \\
+\type{local_box}     & \lpr {localleftbox} 或 \lpr {localrightbox} \\
+\type{split_off}     & \prm {vsplit} 的顶部                   \\
+\type{split_keep}    & \prm {vsplit} 的剩余部分               \\
+\type{align_set}     & 对齐单元                              \\
+\type{fin_row}       & 对齐行                                \\
+\bottomrule
+\end{longtable}
+
+与所有处理节点的回调一样，返回值可以是以下三种之一：
+
+\begin{itemize}\item 布尔值 \type {true} 表示处理成功
+
+\item \type {<node>} 表示应将 ``head 节点替换为返回的节点
+
+\item 布尔值 \type {false} 表示应忽略 ``head 节点列表并将其从
+    内存中清除
+
+\end{itemize}
+
+此回调不替换任何内部代码。
+
+\subsection{\cbk {linebreak_filter}}
+
+\topicindex{callbacks+linebreaks}
+
+此回调替换 \LUATEX 的断行算法。
+
+\begin{typing}
+function(<node> head, <boolean> is_display)
+    return <node> newhead
+end
+\end{typing}
+
+返回的节点是将被添加到主垂直列表的列表头；如果此段落被后续的数学
+显示公式打断，则布尔参数为 true。
+
+如果你返回的不是 \type {<node>}，\LUATEX\ 将对从 \type {<head>} 开始的
+列表应用内部断行算法。否则，你返回的 \type {<node>} 应该是一个节点列表
+的表头，这些节点都在垂直模式下允许，并且其中至少有一个必须表示一个
+hbox。否则将导致致命错误。
+
+将此回调设置为 \type {false} 是可能的，但很危险，因为你可能最终陷入
+一个无法修复的 ``死循环（deadcycles loop）。
+
+\subsection{\type {append_to_vlist_filter}}
+
+\topicindex{callbacks+contributions}
+
+每当 \LUATEX\ 向垂直列表添加盒子时，就会调用此回调：
+
+\begin{typing}
+function (<node> box, <string> locationcode, <number> prevdepth, <boolean> mirrored)
+    return list, prevdepth
+end
+\end{typing}
+
+不返回任何值也是可以的，在这种情况下你还需要清除该盒子或自行处理它。
+prevdepth 也是可选的。位置有 \type {box}、\type {alignment}、
+\type {equation}、\type {equation_number} 和 \type {post_linebreak}。
+你可以传递 \type {nil} 而不是节点。
+
+\subsection{\cbk {post_linebreak_filter}}
+
+\topicindex{callbacks+linebreaks}
+
+此回调在 \LUATEX\ 将节点列表转换为 \prm {hbox} 堆栈之后立即被调用。
+
+\begin{typing}
+function(<node> head, <string> groupcode)
+    return true | false | <node> newhead
+end
+\end{typing}
+
+此回调不替换任何内部代码。
+
+\subsection{\cbk {hpack_filter}}
+
+\topicindex{callbacks+packing}
+
+当 \TEX 准备好开始将某些水平模式材料打包成盒子时，会调用此回调。
+目前数学项和行盒子被忽略。
+
+\begin{typing}
+function(<node> head, <string> groupcode, <number> size,
+         <string> packtype [, <string> direction] [, <node> attributelist])
+    return true | false | <node> newhead
+end
+\end{typing}
+
+\type {packtype} 为 \type {additional} 或 \type {exactly}。如果是
+\type {additional}，则 \type {size} 是一个 \type {\hbox spread ...} 参数。
+如果是 \type {exactly}，则 \type {size} 是一个 \type {\hbox to ...}。
+在两种情况下，该数字都以缩放点为单位。
+
+\type {direction} 是三个字母的方向指示符字符串之一，或者是 \type {nil}。
+
+此回调不替换任何内部代码。
+
+\subsection{\cbk {vpack_filter}}
+
+\topicindex{callbacks+packing}
+
+当 \TEX 准备好开始将某些垂直模式材料打包成盒子时，会调用此回调。
+目前数学显示公式被忽略。
+
+此函数与 \cbk {hpack_filter} 非常相似。除了调用时机不同之外，还有一个
+额外的变量，对应于 \TEX 的 \prm {maxdepth} 设置。
+
+\begin{typing}
+function(<node> head, <string> groupcode, <number> size, <string> packtype,
+        <number> maxdepth [, <string> direction] [, <node> attributelist])
+    return true | false | <node> newhead
+end
+\end{typing}
+
+此回调不替换任何内部代码。
+
+\subsection{\type {hpack_quality}}
+
+\topicindex{callbacks+packing}
+
+此回调可用于拦截因打包水平列表（如段落构建器中发生的）而可能产生的
+overfull 消息。该函数接受几个参数：
+
+\begin{typing}
+function(<string> incident, <number> detail, <node> head, <number> first,
+         <number> last)
+    return <node> whatever
+end
+\end{typing}
+
+incident 是 \type {overfull}、\type {underfull}、\type {loose} 或
+\type {tight} 之一。detail 要么是 \type {overfull} 时的溢出量，要么是
+其他情况下的坏度（badness）。head 是所构建的列表（当启用突出或扩展时，
+这是一个中间列表）。你可以选择返回一个节点，例如 overfull 规则指示器。
+该节点将被追加到列表中（就像 \TEX 自己的规则一样）。
+
+\subsection{\type {vpack_quality}}
+
+\topicindex{callbacks+packing}
+
+此回调可用于拦截因打包垂直列表（如页面构建器中发生的）而可能产生的
+overfull 消息。该函数接受几个参数：
+
+\begin{typing}
+function(<string> incident, <number> detail, <node> head, <number> first,
+         <number> last)
+end
+\end{typing}
+
+incident 是 \type {overfull}、\type {underfull}、\type {loose} 或
+\type {tight} 之一。detail 要么是 \type {overfull} 时的溢出量，要么是
+其他情况下的坏度。head 是所构建的列表。
+
+\subsection{\cbk {process_rule}}
+
+\topicindex{callbacks+rules}
+
+这是一个实验性回调。它可用于子类型~4（用户）的规则。该回调接收三个
+参数：节点、宽度和高度。该回调可以使用 \type {pdf.print} 向 \PDF\ 文件
+写入代码，但请注意不要破坏最终结果。不进行任何检查。
+
+\subsection{\type {pre_output_filter}}
+
+\topicindex{callbacks+output}
+
+当 \TEX 准备好开始为 \prm {output} 打包盒子 255 时，会调用此回调。
+
+\begin{typing}
+function(<node> head, <string> groupcode, <number> size, <string> packtype,
+        <number> maxdepth [, <string> direction])
+    return true | false | <node> newhead
+end
+\end{typing}
+
+此回调不替换任何内部代码。
+
+\subsection{\cbk {hyphenate}}
+
+\topicindex{callbacks+hyphenation}
+
+\begin{typing}
+function(<node> head, <node> tail)
+end
+\end{typing}
+
+无返回值。此回调必须在其接收到的节点列表中插入可选断点节点。
+
+将此回调设置为 \type {false} 将阻止内部的可选断点插入过程。
+
+\subsection{\cbk {ligaturing}}
+
+\topicindex{callbacks+ligature building}
+
+\begin{typing}
+function(<node> head, <node> tail)
+end
+\end{typing}
+
+无返回值。此回调必须对其接收到的节点列表应用连字处理。
+
+你不必担心返回值，因为传递给回调的 \type {head} 节点保证不是 glyph_node
+（如有需要，会前置一个临时节点），因此它不会受到所发生变更的影响。
+回调之后，``列表尾部 的内部值将被重新计算。
+
+\type {head} 的 \type {next} 保证非 nil。
+
+\type {tail} 的 \type {next} 保证为 nil，因此第二个回调参数通常可以忽略。
+提供它是为了保持一致性，并且在需要进行特殊处理时有时会很方便。
+
+将此回调设置为 \type {false} 将阻止内部的连字创建过程。
+
+你不得破坏节点列表。例如，head 通常是一个 local par 节点，而 tail 是
+一个 glue。过度破坏可能会使 \LUATEX\ 进入恐慌模式。
+
+\subsection{\cbk {kerning}}
+
+\topicindex{callbacks+kerning}
+
+\begin{typing}
+function(<node> head, <node> tail)
+end
+\end{typing}
+
+无返回值。此回调必须在其接收到的节点列表中的节点之间应用字距调整。
+调用约定参见 \cbk {ligaturing}。
+
+将此回调设置为 \type {false} 将阻止内部的 kern 插入过程。
+
+你不得破坏节点列表。例如，head 通常是一个 local par 节点，而 tail 是
+一个 glue。过度破坏可能会使 \LUATEX\ 进入恐慌模式。
+
+\subsection{\type {insert_local_par}}
+
+每个段落都以一个 local par 节点开始，该节点用于跟踪例如方向等信息。
+你可以在创建过程中挂接一个回调：
+
+\begin{typing}
+function(<node> local_par, <string> location)
+end
+\end{typing}
+
+没有返回值，你应该确保节点保持有效，否则 \TEX 可能会混乱。
+
+\subsection{\cbk {mlist_to_hlist}}
+
+\topicindex{callbacks+math}
+
+此回调替换 \LUATEX 的数学列表到节点列表的转换算法。
+
+\begin{typing}
+function(<node> head, <string> display_type, <boolean> need_penalties)
+    return <node> newhead
+end
+\end{typing}
+
+返回的节点是将被添加到垂直或水平列表的列表头；字符串参数根据当前
+数学模式为 ``text 或 ``display；如果需要在此列表中插入
+处罚点，布尔参数为 \type {true}，否则为 \type {false}。
+
+将此回调设置为 \type {false} 很糟糕，几乎肯定会导致死循环。
+
+\section{信息报告回调}
+
+\subsection{\cbk {pre_dump}}
+
+\topicindex{callbacks+dump}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+此函数在开始转储到格式文件之前被调用。它不替换任何代码，既没有参数
+也没有返回值。
+
+\subsection{\cbk {start_run}}
+
+\topicindex{callbacks+job run}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+此回调替换打印 \LUATEX 横幅的代码。请注意，要成功使用，此回调必须在
+\LUA\ 初始化脚本中设置，否则它只会在运行已经开始后才被看到。
+
+\subsection{\cbk {stop_run}}
+
+\topicindex{callbacks+job run}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+此回调替换打印 \LUATEX 统计信息和 ``output written to 消息的代码。
+引擎仍可能进行内部整理，因此你不应依赖此挂钩来后处理 \PDF\ 或日志文件。
+
+\subsection{\cbk {start_page_number}}
+
+\topicindex{callbacks+pages}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+替换在 \prm {shipout} 开始时打印 \type {[} 和页码的代码。此回调还将
+覆盖通常在 \prm {tracingoutput} 为正时进行的盒子信息打印。
+
+\subsection{\cbk {stop_page_number}}
+
+\topicindex{callbacks+pages}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+替换在 \prm {shipout} 结束时打印 \type {]} 的代码。
+
+\subsection{\cbk {show_error_hook}}
+
+\topicindex{callbacks+errors}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+此回调从 \TEX 错误函数内部运行，其目的是允许你在 \TEX 已有的操作之上
+进行一些额外的报告（不会移除任何正常操作）。你可能会发现 \type {status}
+表中的一些值很有用。此回调不替换任何内部代码。
+
+\subsection{\cbk {show_error_message}}
+
+\topicindex{callbacks+errors}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+此回调替换打印错误消息的代码。消息之后的常规交互不受影响。
+
+\subsection{\cbk {show_ignored_error_message}}
+
+\topicindex{callbacks+errors}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+此回调替换在启用 \prm {ignoreprimitiveerror} 时打印错误消息的代码。
+与之前一样，消息之后的常规交互不受影响。
+
+\subsection{\cbk {show_lua_error_hook}}
+
+\topicindex{callbacks+errors}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+此回调替换打印额外 \LUA\ 错误消息的代码。
+
+\subsection{\cbk {start_file}}
+
+\topicindex{callbacks+files}
+
+\begin{typing}
+function(category,filename)
+end
+\end{typing}
+
+此回调替换在打开文件时打印 \LUATEX 标记的代码，例如对于普通文件打印
+\type {(filename}。category 是一个数字：
+
+\begin{longtable}{c l}
+\toprule 值   & 含义 \\
+\midrule
+1 & 普通数据文件，如 \TEX\ 源文件 \\
+2 & 字体映射，将字体名称关联到资源 \\
+3 & 图像文件（\type {png}、\type {pdf} 等） \\
+4 & 嵌入的字体子集 \\
+5 & 完全嵌入的字体 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\cbk {stop_file}}
+
+\topicindex{callbacks+files}
+
+\begin{typing}
+function(category)
+end
+\end{typing}
+
+此回调替换在关闭文件时打印 \LUATEX 标记的代码，例如对于普通文件打印
+\type {)}。
+
+\subsection{\cbk {call_edit}}
+
+\topicindex{callbacks+editing}
+
+\begin{typing}
+function(filename,linenumber)
+end
+\end{typing}
+
+当在错误消息提示下按下 ``E 时，此回调替换对外部编辑器的调用。
+回调将控制权返回给主程序后，处理将立即结束。
+
+\subsection{\cbk {finish_synctex}}
+
+\topicindex{callbacks+synctex}
+
+此回调可用于完成替代的 synctex 方法。它在正常的 synctex 终结器之后
+启动（当未启用原生 synctex 时，该终结器会在一次运行后删除 synctex 文件）。
+
+\subsection{\cbk {wrapup_run}}
+
+\topicindex{callbacks+wrapping up}
+
+此回调在 \PDF\ 和日志文件关闭后被调用。使用风险自负。
+
+\section{与 \PDF\ 相关的回调}
+
+\subsection{\cbk {finish_pdffile}}
+
+\topicindex{callbacks+\PDF\ file}
+
+\begin{typing}
+function()
+end
+\end{typing}
+
+当所有文档页面已写入 \PDF\ 文件，且 \LUATEX\ 即将完成输出文档结构时，
+会调用此回调。其预期用途是最终更新 \PDF\ 字典，例如 \type {/Catalog}
+或 \type {/Info}。此回调不替换任何代码。既没有参数也没有返回值。
+
+\subsection{\cbk {finish_pdfpage}}
+
+\topicindex{callbacks+\PDF\ file}
+
+\begin{typing}
+function(shippingout)
+end
+\end{typing}
+
+此回调在 \PDF\ 页面流组装完成之后、页面对象最终确定之前被调用。
+
+\subsection{\cbk {page_order_index}}
+
+\topicindex{callbacks+\PDF\ file}
+
+这是供专家使用的一个回调，用来操纵页面树——一种决定 \PDF\ 文件中
+页面顺序的数据结构：
+
+\begin{typing}
+function(pagenumber)
+  return pagenumber
+end
+\end{typing}
+
+假设我们有 12 页，那么我们可以这样做：
+
+\begin{typing}
+callback.register("page_order_index",function(page)
+        if page ==  1 then return 12
+    elseif page ==  2 then return 11
+    elseif page == 11 then return  2
+    elseif page == 12 then return  1
+    else                   return page
+    end
+end)
+\end{typing}
+
+这将交换前两页和后两页。你需要知道页数，这是实现的一个副作用。
+当你搞砸了的时候，不要抱怨。
+
+\subsection{\cbk {process_pdf_image_content}}
+
+\topicindex{callbacks+image content}
+
+当嵌入 \PDF\ 文件中的一页时，其页面流以及相关对象会被复制到目标文件中。
+但是，页面流中可能包含假定有额外资源的运算符，例如标记文本。你可以
+决定对其进行过滤，为此 \LUATEX\ 提供了一个回调。下面是一个简单的
+使用示例：
+
+\begin{typing}
+pdf.setrecompress(1)
+
+callback.register("process_pdf_image_content",function(s)
+    print(s)
+    return s
+end)
+\end{typing}
+
+你需要显式启用重新压缩，否则内容流将仅以其原始压缩形式传递。
+
+\section{与字体相关的回调}
+
+\subsection{\cbk {define_font}}
+
+\topicindex{callbacks+fonts}
+
+\begin{typing}
+function(<string> name, <number> size, <number> id)
+    return <table> font | <number> id
+end
+\end{typing}
+
+字符串 \type {name} 是字体规范中的文件名部分，由用户给出。
+
+数字 \type {size} 有点特殊：
+
+\begin{itemize}
+\item 如果为正数，则以缩放点指定一个 ``at size（指定字号）。
+
+\item 如果为负数，其绝对值表示相对于字体设计字号的 ``scaled
+    （缩放）设置。
+
+\end{itemize}
+
+\type {id} 是分配给字体的内部编号。
+
+要返回的 \type {font} 表的内部结构在 \ref{fonts} 中解释。
+该表在内部保存，因此你可以在表中放置额外字段供你后续的 \LUA\ 代码使用。
+或者，\type {retval} 可以是先前定义的 fontid。如果可以重用先前的定义
+而不是创建全新的字体结构，这会很有用。
+
+将此回调设置为 \type {false} 没有意义，因为它会完全阻止字体加载，
+但仍然会生成错误。
+
+\subsection{\cbk {glyph_not_found} 与 \cbk {glyph_info}}
+
+\topicindex{callbacks+fonts}
+
+\type {glyph_not_found} 回调在设置后，会在后端无法插入字形时启动。
+如果没有定义回调，则会向日志写入一条消息。
+
+\begin{typing}
+function(<number> id, <number> char)
+    -- do something with font id and char code
+end
+\end{typing}
+
+可以设置 \type {glyph_info} 回调来报告字形的有用表示。
+
+\begin{typing}
+function(<node> g)
+    -- return a string or nil
+end
+\end{typing}
+
+当返回 \type {nil} 时，打印字符代码；否则使用返回的字符串。默认显示
+\UTF\ 表示，这不总是那么有用，尤其是在没有实际表示时。请记住，设置
+此回调可能会以不兼容的方式更改日志。
+
+\subsection{\cbk {provide_charproc_data}}
+
+\topicindex{callbacks+fonts}
+
+当后端正在写出用户定义的 Type~3 字体时，会触发 \type
+{provide_charproc_data} 回调：
+
+\begin{typing}
+function(<number> mode, <number> id, <number> char)
+    if mode == 1 then
+        -- preroll
+        return
+    elseif mode == 2 then
+        -- write out the glyph contents
+        return <number> stream, <number> width
+    elseif mode == 3 then
+        -- the overall font scale
+        return <number> scale
+    end
+end
+\end{typing}
+
+要创建用户定义的 Type~3 字体，你需要在定义字体时在顶层设置
+\type {encodingbytes = 0} 和 \type {psname = "none"}。从
+\type {glyph_not_found} 回调中，你应在 mode~3 时返回整体字体缩放比例
+（通常为 0.001），在 mode~2 时返回 \PDF\ 流的索引（其中第一个运算符为
+\type {d0} 或 \type {d1}）以及字形的宽度（以 sp 为单位）。
+通常可以忽略 mode~1。

@@ -1,0 +1,381 @@
+% !TeX TS-program = xelatex
+% luatex-latex.tex - LaTeX conversion of the LuaTeX Chinese manual
+% Compile with: xelatex luatex-latex.tex (run 2-3 times, then makeindex)
+
+\documentclass[11pt,a4paper,oneside,UTF8,fontset=none]{ctexbook}
+
+% ============ 中文字体 ============
+\setCJKmainfont{Source Han Serif SC}[
+  BoldFont=Source Han Serif SC Bold,
+  ItalicFont=Source Han Serif SC,
+  BoldItalicFont=Source Han Serif SC Bold
+]
+\setCJKsansfont{Source Han Sans SC}[
+  BoldFont=Source Han Sans SC Bold
+]
+\setCJKmonofont{DejaVu Sans Mono}
+
+% ============ 页面布局 ============
+\usepackage[
+  a4paper,
+  left=2.5cm, right=2.5cm,
+  top=2.5cm, bottom=2.5cm,
+  headheight=14pt, headsep=10mm,
+  footskip=10mm
+]{geometry}
+
+% ============ 基础包 ============
+\usepackage{fontspec}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{imakeidx}
+\usepackage{needspace}
+\usepackage[hidelinks]{hyperref}
+\usepackage{bookmark}
+\usepackage{microtype}
+\usepackage{underscore}
+
+% ============ 颜色定义 ============
+\definecolor{maincolor}{rgb}{0,0,0.5}
+\definecolor{darkblue}{rgb}{0,0,0.5}
+\definecolor{keptcolor}{rgb}{0,0,0.5}
+\definecolor{othercolor}{rgb}{0.5,0.5,0.5}
+\definecolor{codegray}{rgb}{0.95,0.95,0.95}
+
+% ============ 页眉页脚 ============
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\leftmark}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% ============ 章节标题样式 ============
+\ctexset{
+  chapter = {
+    format = \Large\bfseries\color{maincolor}\centering,
+    name = {第,章},
+    number = \arabic{chapter},
+    aftername = \hspace{0.5em},
+    nameformat = {},
+    numberformat = {}
+  },
+  section/format = \large\bfseries\color{maincolor},
+  subsection/format = \normalsize\bfseries\color{maincolor},
+  subsubsection/format = \normalsize\bfseries\color{maincolor}
+}
+
+% ============ 索引 ============
+\makeindex[intoc,title={索引}]
+\indexsetup{level=\chapter}
+
+
+% ============ 列表样式 ============
+\setlist[itemize]{leftmargin=2em,itemsep=2pt,parsep=0pt,topsep=4pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt,parsep=0pt,topsep=4pt}
+
+% ============ 代码块（typing） ============
+\usepackage{fancyvrb}
+\DefineVerbatimEnvironment{typing}{Verbatim}{
+  fontsize=\small,
+  frame=none,
+  tabsize=4,
+  baselinestretch=1.1,
+  xleftmargin=1em,
+  xrightmargin=0pt
+}
+
+% ============ ConTeXt 命令映射定义 ============
+
+% --- Logo 命令 ---
+\def\LUATEX{Lua\TeX}
+\def\LUA{Lua}
+\def\TEX{\TeX}
+\def\LATEX{\LaTeX}
+\def\WEB{WEB}
+\def\WEBC{WEBC}
+\def\TDS{TDS}
+\def\KPSE{kpathsea}
+\def\KPATHSEA{kpathsea}
+\def\CPU{CPU}
+\def\zlib{zlib}
+\def\LUAJITTEX{LuaJITTeX}
+\def\LUAJIT{LuaJIT}
+\def\ACROBAT{Acrobat}
+\def\DVIPS{dvips}
+\def\MSWINDOWS{Microsoft Windows}
+\def\UNIX{Unix}
+\def\TRUETYPE{TrueType}
+\def\TYPEONE{Type\,1}
+\def\POSTSCRIPT{PostScript}
+\def\PK{PK}
+\def\TFM{TFM}
+\def\VF{VF}
+\def\TEXLUA{texlua}
+\def\notabene{N.B.}
+\def\PDFTEX{pdf\TeX}
+\def\ETEX{e-\TeX}
+\def\OMEGA{Omega}
+\def\ALEPH{Aleph}
+\def\UTF{UTF}
+\def\OPENTYPE{OpenType}
+\def\UNICODE{Unicode}
+\def\XETEX{Xe\TeX}
+\def\PDF{PDF}
+\def\DVI{DVI}
+\def\CCODE{C}
+\def\METAPOST{MetaPost}
+\def\MP{MetaPost}
+\def\MPLIB{MPlib}
+\def\CONTEXT{Con\TeX t}
+\def\MKIV{MKIV}
+\def\MKII{MKII}
+\def\TEXLIVE{TeX Live}
+\def\ENCTEX{enctex}
+\def\ASCII{ASCII}
+\def\OTF{OTF}
+\def\OVF{OVF}
+\def\ENC{ENC}
+\def\RAM{RAM}
+\def\mathematics#1{\(#1\)}
+% --- 更多 ConTeXt 残留命令占位 ---
+\def\foo{foo}
+\def\sym#1{\item[\texttt{#1}]}
+\def\KPSEWHICH{kpsewhich}
+\def\MSDOS{MSDOS}
+\def\dorecurse#1#2{}
+\def\recurselevel{0}
+\def\externalfigure#1{}
+\def\setlayer#1#2{}
+\def\starttabulate#1{}
+\def\stoptabulate{}
+\def\startluacode{}
+\def\stopluacode{}
+\def\myfirstbar{myfirstbar}
+\def\bar{bar}
+\def\directlua#1{}
+\def\RGB{RGB}
+\def\CMYK{CMYK}
+\def\MICROSOFT{Microsoft}
+\def\FONTFORGE{FontForge}
+\def\DFONT{dfont}
+\def\CFF{CFF}
+\def\CMAP{CMap}
+\def\PATGEN{patgen}
+\def\COCO{coco}
+\def\SUNOS{SunOS}
+\def\BSD{BSD}
+\def\SYSV{sysv}
+\def\DPI{dpi}
+\def\DLL{dll}
+\def\OPENOFFICE{OpenOffice}
+\def\OCP{OCP}
+\def\INITEX{initex}
+\def\PASCAL{Pascal}
+\def\CWEB{CWEB}
+\def\TEXXET{Xetex}
+\def\WEB{WEB}
+\def\TEXEDITOR{TeX editor}
+
+% --- 等宽字体命令（用 detokenize 让反斜杠作为纯文本显示） ---
+% \type{...} - 通用代码/类型标识符
+\def\type#1{\texttt{\detokenize{#1}}}
+% \prm{...} - TeX 原语命令
+\def\prm#1{\texttt{\detokenize{#1}}}
+% \lpr{...} - LuaTeX 扩展原语
+\def\lpr#1{\texttt{\detokenize{#1}}}
+% \orm{...} - 其他原语
+\def\orm#1{\texttt{\detokenize{#1}}}
+% \cbk{...} - 回调名
+\def\cbk#1{\texttt{\detokenize{#1}}}
+% \nod{...} - 节点类型
+\def\nod#1{\texttt{\detokenize{#1}}}
+% \whs{...} - whatsit 节点
+\def\whs#1{\texttt{\detokenize{#1}}}
+% \noa{...} - 节点属性
+\def\noa#1{\texttt{\detokenize{#1}}}
+
+% --- 库函数命令 ---
+\def\lib#1{\texttt{\detokenize{#1}}}
+\def\libindex#1{\index{#1@\texttt{\detokenize{#1}}}}
+\def\libidx#1#2{\index{#1.#2@\texttt{\detokenize{#1.#2}}}}
+\def\lix#1#2{\index{#1.#2@\texttt{\detokenize{#1.#2}}}}
+
+% --- 索引命令 ---
+\def\topicindex#1{\index{\detokenize{#1}}}
+\def\primitiveindex#1{\index{#1@\texttt{\detokenize{#1}}}}
+\def\callbackindex#1{\index{#1@\texttt{\detokenize{#1}}}}
+\def\nodeindex#1{\index{#1@\texttt{\detokenize{#1}}}}
+
+% --- 引用命令 ---
+% \in[label] or \in{section}[label] → \ref{label}
+\def\in#1{\ref}
+\def\at#1{\ref{#1}}
+
+% --- 引用/URL 命令 ---
+\def\useURL#1[#2][#3][#4]{\href{#4}{#3}}
+\def\hyphenatedurl#1{\url{#1}}
+
+% --- 引号命令 ---
+\def\quotation#1{``#1''}
+\def\quote#1{``#1''}
+
+% --- 间距/分页命令 ---
+\def\blank#1{\medskip}
+\def\testpage#1{\needspace{#1\baselineskip}}
+
+% --- 其他文本命令 ---
+\def\high#1{\textsuperscript{#1}}
+\def\startlines{\begin{flushleft}}
+\def\stoplines{\end{flushleft}}
+\def\currentdate{\today}
+
+% --- 动态 Lua 内容的占位定义 ---
+% 这些命令在原 ConTeXt 中通过 Lua 动态生成，
+% 在 LaTeX 版本中我们提供静态输出
+\def\showfields#1#2{}
+\def\showid#1#2{}
+\def\showsubtypes#1{}
+\def\showfontusage{}
+
+% --- ConTeXt 残留命令占位定义 ---
+\def\startfourcolumns{}
+\def\stopfourcolumns{}
+\def\startthreecolumns{}
+\def\stopthreecolumns{}
+\def\startsyntax{\begin{quote}\ttfamily}
+\def\stopsyntax{\end{quote}}
+\def\startpacked{}
+\def\stoppacked{}
+\def\ctxluabuffer#1{}
+\def\inlinebuffer#1{}
+\def\SYNCTEX{Sync\TeX}
+% --- LuaTeX 原语在章节标题中出现时的占位 ---
+\def\nospaces{nospaces}
+\def\glyphdimensionsmode{glyphdimensionsmode}
+\def\discretionaryligaturemode{discretionaryligaturemode}
+\def\tracinglostchars{tracinglostchars}
+% --- 保护章节标题中的命令在 PDF 书签/目录中安全展开 ---
+\pdfstringdefDisableCommands{%
+  \def\type#1{#1}%
+  \def\nod#1{#1}%
+  \def\prm#1{#1}%
+  \def\lpr#1{#1}%
+  \def\cbk#1{#1}%
+  \def\whs#1{#1}%
+  \def\noa#1{#1}%
+  \def\orm#1{#1}%
+  \def\lib#1{#1}%
+  \def\OTF{OTF}%
+}
+\def\start{}
+\def\stop{}
+\def\stopfunctioncall{}
+\def\ATFMfile{}
+\def\AFM{AFM}
+\def\tex#1{\texttt{#1}}
+\def\typ#1{\texttt{\detokenize{#1}}}
+% --- LuaTeX 原语占位（在示例文本中出现，不实际执行） ---
+\def\protrusionboundary#1{}
+\def\VersionHack#1{[Lua输出]}
+% --- ConTeXt 符号/字体命令占位 ---
+\def\tttf{\ttfamily}
+\def\letterbackslash{\texttt{\char`\\}}
+\def\letterhat{\texttt{\^{}}}
+\def\letterpercent{\texttt{\%}}
+\def\endash{--}
+\def\luafunction#1{}
+\def\directlua#1{}
+% --- 更多 ConTeXt 残留命令 ---
+\def\fontid#1{}
+\def\startfunctioncall{\begin{quote}\ttfamily}
+\def\stopfunctioncall{\end{quote}}
+\def\starttwocolumns{}
+\def\stoptwocolumns{}
+\def\setuphead#1{}
+\def\define#1#2{}
+\def\setup#1{}
+\def\startcombination#1{}\def\stopcombination{}
+\def\startitemize#1{}\def\stopitemize{}
+
+% --- 表格辅助命令（ConTeXt tabulate 转换用） ---
+% \starttabulate[|l|l|p|] → \begin{longtable}{lll}
+% \DB = 表头开始, \BC = 表头列分隔, \TB = 表头分隔线
+% \NC = 列分隔(&), \NR = 行结束(\\), \LL = 底部线
+\def\DB{\toprule}
+\def\BC{&}
+\def\TB{\midrule}
+\def\NC{&}
+\def\NR{\\}
+\def\LL{\bottomrule}
+
+% --- 章节标题中的 reference 标签 ---
+% \startchapter[title=xxx,reference=yyy] → \chapter{xxx}\label{yyy}
+% 我们用转换脚本处理，这里定义辅助命令
+\def\chapterref#1{\label{#1}}
+
+% --- 避免中英文混排溢出 ---
+% 允许中文行内自然换行
+\XeTeXlinebreaklocale "zh"
+\XeTeXlinebreakskip = 0pt plus 1pt minus 0.5pt
+
+% ============ 文档内容 ============
+% 目录和索引标题居中
+\makeatletter
+\renewcommand{\tableofcontents}{%
+  \chapter*{\centering\contentsname}%
+  \@starttoc{toc}%
+}
+\makeatother
+
+\begin{document}
+
+% --- 封面 ---
+\begin{titlepage}
+  \centering
+  \vspace*{3cm}
+  {\Huge\bfseries\color{maincolor} Lua\TeX\ 参考手册\par}
+  \vspace{1.5cm}
+  {\Large 中文版\par}
+  \vspace{2cm}
+  {\large Hans Hagen, Taco Hoekwater, Luigi Scarso, Hartmut Henkel\par}
+  \vspace{1cm}
+  {\large 版本 1.24\par}
+  \vfill
+  {\large \today\par}
+\end{titlepage}
+
+% --- 前言和目录 ---
+\frontmatter
+\tableofcontents
+
+% --- 正文 ---
+\mainmatter
+
+\input{converted-introduction.tex}
+\input{converted-preamble.tex}
+\input{converted-enhancements.tex}
+\input{converted-modifications.tex}
+\input{converted-lua.tex}
+\input{converted-languages.tex}
+\input{converted-fonts.tex}
+\input{converted-math.tex}
+\input{converted-nodes.tex}
+\input{converted-callbacks.tex}
+\input{converted-tex.tex}
+\input{converted-graphics.tex}
+\input{converted-fontloader.tex}
+\input{converted-harfbuzz.tex}
+\input{converted-backend.tex}
+
+% --- 索引和附录 ---
+\backmatter
+\printindex
+
+\end{document}

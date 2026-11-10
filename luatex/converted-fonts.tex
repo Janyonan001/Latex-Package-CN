@@ -1,0 +1,871 @@
+\chapter{字体结构}\label{fonts}
+
+\section{字体表}
+
+\topicindex {fonts}
+\topicindex {fonts+tables}
+
+\TEX\ 的所有字体在 \LUA\ 代码中都表示为表（table），在内部则表示为
+\CCODE~结构体。下表中的所有键，如果出现在 \cbk {define_font} 回调所返回
+的表中，就会被保存到内部字体结构体中；如果没有定义 \cbk {define_font}
+回调，则由常规的 \TFM|/|\VF\ 读取例程产生的键也会被保存。
+
+列 ``\VF 表示该键由 \type {font.read_vf()} 例程创建，列
+``\TFM 表示该键由 \type {font.read_tfm()} 例程创建，列 ``used
+表示 \LUATEX\ 引擎本身是否会使用该键。表中的顶层键如下：
+
+\begin{longtable}{l c c c l p{5cm}}
+\toprule 键                     & vf  & tfm & used & 值类型   & 说明 \\
+\midrule
+\type{name}             & yes & yes & yes  & string     & 度量（文件）名 \\
+\type{area}             & no  & yes & yes  & string     & （目录）位置，通常为空 \\
+\type{used}             & no  & yes & yes  & boolean    & 指示是否被使用（初始值：false） \\
+\type{characters}       & yes & yes & yes  & table      & 此字体中已定义的字形 \\
+\type{checksum}         & yes & yes & no   & number     & 默认值：0 \\
+\type{designsize}       & no  & yes & yes  & number     & 期望尺寸（默认值：655360 == 10pt） \\
+\type{direction}        & no  & yes & yes  & number     & 默认值：0 \\
+\type{encodingbytes}    & no  & no  & yes  & number     & 默认值：取决于 \type {format} \\
+\type{encodingname}     & no  & no  & yes  & string     & 编码名称 \\
+\type{fonts}            & yes & no  & yes  & table      & 本地使用的字体 \\
+\quad\type{psname}           & no  & no  & yes  & string     & 这是输入字体源中的 \POSTSCRIPT\ 字体名，
+                                                                        用作 \PDF\ 输出中的字体名标识符。它必须是合法
+                                                                        字符串（例如不能包含空格之类的字符），因为后
+                                                                        端不会做清理。这样就把完全的控制权交给了加载器。 \\
+\quad\type{fullname}         & no  & no  & yes  & string     & 输出字体名，当未设置 \type {psname} 时在
+                                                                        \PDF\ 输出中用作后备 \\
+\quad\type{subfont}          & no  & no  & yes  & number     & 默认值：0，多字体（\type {ttc}）文件中的
+                                                                        子字体索引 \\
+\type{header}           & yes & no  & no   & string     & 头部注释（如果有） \\
+\type{hyphenchar}       & no  & no  & yes  & number     & 默认值：\TEX\ 的 \prm {hyphenchar} \\
+\type{parameters}       & no  & yes & yes  & hash       & 默认值：7 个参数，全部为零 \\
+\type{size}             & no  & yes & yes  & number     & 所需的缩放（默认与 designsize 相同） \\
+\type{skewchar}         & no  & no  & yes  & number     & 默认值：\TEX\ 的 \prm {skewchar} \\
+\type{type}             & yes & no  & yes  & string     & 此字体的基本类型 \\
+\type{format}           & no  & no  & yes  & string     & 磁盘格式类型 \\
+\type{embedding}        & no  & no  & yes  & string     & \PDF\ 嵌入方式  \\
+\type{filename}         & no  & no  & yes  & string     & 磁盘上的字体文件名 \\
+\quad\type{tounicode}        & no  & yes & yes  & number     & 当此项设为~1 时，\LUATEX\ 假定字体中
+                                                                        存在逐字形的 tounicode 条目。 \\
+\quad\type{stretch}          & no  & no  & yes  & number     & 来自 \lpr {expandglyphsinfont} 的
+                                                                        ``stretch 值 \\
+\quad\type{shrink}           & no  & no  & yes  & number     & 来自 \lpr {expandglyphsinfont} 的
+                                                                        ``shrink 值 \\
+\quad\type{step}             & no  & no  & yes  & number     & 来自 \lpr {expandglyphsinfont} 的
+                                                                        ``step 值 \\
+\type{expansion_factor} & no  & no  & no   & number     & 已扩展字体的实际扩展系数 \\
+\type{attributes}       & no  & no  & yes  & string     & \orm {pdffontattr} \\
+\quad\type{cache}            & no  & no  & yes  & string     & 此键控制 \TEX\ 端对 \LUA\ 表的缓存：
+                                                                        \type {yes} 表示使用传递给 \LUATEX\ 的表的引用
+                                                                        （这是默认值）；\type {no} 表示不保存表引用，
+                                                                        也不为该字体缓存任何 \LUA\ 数据；而
+                                                                        \type {renew} 表示不保存表引用，但保存对
+                                                                        首次访问字体某个字段时所创建表的引用。 \\
+\quad\type{nomath}           & no  & no  & yes  & boolean    & 此键可为文本字体带来小幅提速。如果存在且
+                                                                        为 true，\LUATEX\ 将不检查字符条目中的数学
+                                                                        专用键。 \\
+\quad\type{oldmath}          & no  & no  & yes  & boolean    & 此键把字体标记为旧式 \TEX\ 数学字体，
+                                                                        并禁用 \OPENTYPE\ 代码路径。 \\
+\quad\type{slant}            & no  & no  & yes  & number     & 此参数使字体倾斜，作用与 \TYPEONE\ 字体
+                                                                        映射文件中的 \type {SlantFont} 相同。 \\
+\quad\type{extend}           & no  & no  & yes  & number     & 此参数在水平方向上缩放字体，作用与
+                                                                        \TYPEONE\ 字体映射文件中的 \type {ExtendFont}
+                                                                        相同。 \\
+\quad\type{squeeze}          & no  & no  & yes  & number     & 此参数在垂直方向上缩放字体，映射文件中
+                                                                        没有对应项。 \\
+\quad\type{width}            & no  & no  & yes  & number     & 后端会注入设置笔宽的 \PDF\ 运算符。该值
+                                                                        （与 \TEX\ 中惯例一样）除以 1000。它与
+                                                                        \type {mode} 配合使用。 \\
+\quad\type{mode}             & no  & no  & yes  & number     & 后端会注入与绘制模式相关的 \PDF\ 运算符：
+                                                                        0~为填充，1~为轮廓，2~既绘制又填充，
+                                                                        3~完全不绘制。 \\
+\bottomrule
+\end{longtable}
+
+\type {cache} 选项中保存的引用是线程局部的，因此使用协程时要小心：如果
+表已在一个线程中缓存，而你从另一个线程引用它，就会抛出错误。
+
+键 \type {name} 总是必需的。键 \type {stretch}、\type {shrink}、\type
+{step} 只有一起使用时才有意义：它们可用来替代加载后的
+\lpr {expandglyphsinfont} 命令。\LUATEX\ 不支持 \type {auto_expand}
+选项。事实上，那些创建扩展或突出副本的原语大概只在与传统字体配合时有用，
+因为所有这些额外的 \OPENTYPE\ 属性都被排除在外。\type {expansion_factor}
+是一个可以出现在 \type {font.fonts} 中某个字体内部的值。它是由字体扩展
+算法自动生成的字体的实际扩展系数（取值在 \type {-shrink} 与
+\type {stretch} 之间，步长为 \type {step}）。
+
+\type {subfont} 参数可用于指定 \type {ttc} 字体中的子字体。给出该参数时，
+它会取代 \type {psname} 与 \type {fullname} 的组合。第一个子字体的编号
+为~1。值为零表示使用名字进行查找。
+
+由于我们把扩展的实际状态随每个字形一起存储，并且没有专门的字体实例，
+因此可以在构造行之前更改一些与字体相关的参数，例如：
+
+\begin{typing}
+font.setexpansion(font.current(),100,100,20)
+\end{typing}
+
+这主要是为了实验（或用 \LUA\ 编写的优化例程），因此没有对应的原语。
+
+键 \type {attributes} 可用于在 \PDF\ 文件中设置字体属性。键 \type {used}
+由引擎在字体被实际使用时置位，这会确保字体的定义被写入输出文件（\DVI\
+或 \PDF）。\TFM\ 读取器把它设为 false。\type {direction} 是一个数字，
+表示此字体的 ``正常 方向。共有十六种可能：
+
+\begin{longtable}{c c c c c c c c}
+\toprule \# & 方向 & \# & 方向 & \# & 方向 & \# & 方向 \\
+\midrule
+0 & LT  &  4 & RT  &  8 & TT  & 12 & BT  \\
+1 & LL  &  5 & RL  &  9 & TL  & 13 & BL  \\
+2 & LB  &  6 & RB  & 10 & TB  & 14 & BB  \\
+3 & LR  &  7 & RR  & 11 & TR  & 15 & BR  \\
+\bottomrule
+\end{longtable}
+
+这些是 \OMEGA\ 风格的方向缩写：第一个字符表示字符字形的 ``首 边
+（在书写方向上最先看到的边），第二个字符表示 ``顶 边。请记住，
+\LUATEX\ 的方向模型略有不同，因此这些值实际上并不派什么用场。
+
+\type {parameters} 是一个键类型混合的哈希。它有七个可能的字符串键，
+以及若干个整数索引（从 8 开始向上编号）。这七个字符串实际上用来替代
+最下面的七个索引，因为这样的用户界面更友好。
+
+这些名字及其内部重映射如下：
+
+\begin{longtable}{l c}
+\toprule 名称                  & 重映射 \\
+\midrule
+\type {slant}         & 1 \\
+\type {space}         & 2 \\
+\type {space_stretch} & 3 \\
+\type {space_shrink}  & 4 \\
+\type {x_height}      & 5 \\
+\type {quad}          & 6 \\
+\type {extra_space}   & 7 \\
+\bottomrule
+\end{longtable}
+
+键 \type {type}、\type {format}、\type {embedding}、\type {fullname} 和
+\type {filename} 用于把 \OPENTYPE\ 字体嵌入结果 \PDF\ 中。
+
+\type {characters} 表是一个字符哈希列表，以整数作为索引。该整数就是
+\TEX\ 用来识别此字符的 ``内部代码。
+
+还可以使用两个非常特殊的字符串索引：\type {left_boundary} 是一个虚拟
+字符，其连字和字距用于处理单词边界。\type {right_boundary} 与之类似，
+但（目前）实际上并没有派什么用场。
+
+每个字符哈希本身也是一个哈希。例如，下面是字体 \type {cmr10 at 10pt}
+中字符 ``f（十进制 102）的例子。表示尺寸的数字单位是缩放点（sp）。
+
+\begin{typing}
+[102] = {
+    ["width"]  = 200250,
+    ["height"] = 455111,
+    ["depth"]  = 0,
+    ["italic"] = 50973,
+    ["kerns"]  = {
+        [63] = 50973,
+        [93] = 50973,
+        [39] = 50973,
+        [33] = 50973,
+        [41] = 50973
+    },
+    ["ligatures"] = {
+        [102] = { ["char"] = 11, ["type"] = 0 },
+        [108] = { ["char"] = 13, ["type"] = 0 },
+        [105] = { ["char"] = 12, ["type"] = 0 }
+    }
+}
+\end{typing}
+
+字符哈希中可以出现以下顶层键：
+
+\begin{longtable}{l c c c l p{5cm}}
+\toprule 键                     & vf  & tfm & used  & 类型    & 说明 \\
+\midrule
+\type{width}            & yes & yes & yes   & number  & 字符宽度，单位 sp（默认 0） \\
+\type{height}           & no  & yes & yes   & number  & 字符高度，单位 sp（默认 0） \\
+\type{depth}            & no  & yes & yes   & number  & 字符深度，单位 sp（默认 0） \\
+\type{italic}           & no  & yes & yes   & number  & 字符的斜体校正，单位 sp（默认零） \\
+\type{top_accent}       & no  & no  & maybe & number  & 字符的上重音对齐位置，单位 sp（默认零） \\
+\type{bot_accent}       & no  & no  & maybe & number  & 字符的下重音对齐位置，单位 sp（默认零） \\
+\type{left_protruding}  & no  & no  & maybe & number  & 字符的 \lpr {lpcode} \\
+\type{right_protruding} & no  & no  & maybe & number  & 字符的 \lpr {rpcode} \\
+\type{expansion_factor} & no  & no  & maybe & number  & 字符的 \lpr {efcode} \\
+\type{tounicode}        & no  & no  & maybe & string  & 字符对应的 \UNICODE\ 字符，采用 \UTF|-|16BE 十六进制格式 \\
+\type{unicode}           & yes & no  & maybe & table   & 字符对应的 \UNICODE\ 字符，以 \UNICODE\ 码点（整数）数组形式给出 \\
+\type{next}             & no  & yes & yes   & number  & ``下一个更大 的字符索引 \\
+\type{extensible}       & no  & yes & yes   & table   & 可伸缩配方的组成部分 \\
+\type{vert_variants}    & no  & no  & yes   & table   & 竖排变体集合的组成部分 \\
+\type{horiz_variants}   & no  & no  & yes   & table   & 横排变体集合的组成部分 \\
+\type{kerns}            & no  & yes & yes   & table   & 字距调整信息 \\
+\type{ligatures}        & no  & yes & yes   & table   & 连字信息 \\
+\type{commands}         & yes & no  & yes   & array   & 虚拟字体命令 \\
+\type{name}             & no  & no  & no    & string  & 字符的（\POSTSCRIPT）名字 \\
+\type{index}            & no  & no  & yes   & number  & （\OPENTYPE\ 或 \TRUETYPE）字体的字形索引 \\
+\type{used}             & no  & yes & yes   & boolean & 已被排版过（默认：false） \\
+\type{mathkern}         & no  & no  & yes   & table   & 数学切入（cut-in）规格 \\
+\bottomrule
+\end{longtable}
+
+\type {top_accent}、\type {bot_accent} 和 \type {mathkern} 的值仅用于
+数学重音和上标的放置，详见第~\ref{math}~节。\type {left_protruding}
+和 \type {right_protruding} 的值仅在 \lpr {protrudechars} 非零时使用。
+是否使用 \type {expansion_factor} 取决于字体的全局扩展设置以及
+\lpr {adjustspacing} 的值。
+
+\type {tounicode} 的用法如下：如果字体在顶层指定了
+\type {tounicode=1}，那么 \LUATEX\ 会根据字符级别的 \type {tounicode}
+字符串（在有提供的地方）为 \PDF\ 字体（或字体子集）构造
+\type {/ToUnicode} 条目。如果某个字符没有合理的 \UNICODE\ 对应字符，
+就不要提供字符串（不要给空字符串）。
+
+如果没有设置字体级别的 \type {tounicode}，\LUATEX\ 将根据你使用的
+\TEX\ 码点来构建 \type {/ToUnicode}，任何字符级别的 \type {tounicodes}
+都会被忽略。字符串格式正是 Adobe \CMAP\ 文件所期望的格式（十六进制编码
+的 \UTF-16BE），只是去掉了外层的尖括号。例如，\type {fi} 连字的
+\type {tounicode} 应为 \type {00660069}。如果你传入的是数字，转换会
+自动完成。
+
+数学字符可以有一个 \type {next} 字段，指向下一个更大的字形。不过，
+如果同时存在 \type {extensible}，它会覆盖 \type {next}。而
+\type {extensible} 字段又会被 \OPENTYPE\ 版本的 \type {vert_variants}
+覆盖。\type {extensible} 表非常简单：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键        & 类型   & 说明                \\
+\midrule
+\type{top} & number & 顶部字符索引        \\
+\type{mid} & number & 中部字符索引        \\
+\type{bot} & number & 底部字符索引        \\
+\type{rep} & number & 可重复的字符索引    \\
+\bottomrule
+\end{longtable}
+
+\type {horiz_variants} 和 \type {vert_variants} 是组件数组。每个组件
+本身又是一个最多含五个键的哈希：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键             & 类型   & 说明 \\
+\midrule
+\type{glyph}    & number & 字符索引。注意这是编码数字，不是名字。 \\
+\type{extender} & number & 若此部分可重复则为一（1），否则为零（0）。 \\
+\type{start}    & number & 起始侧的最大重叠量（单位：缩放点）。 \\
+\type{end}      & number & 结束侧的最大重叠量（单位：缩放点）。 \\
+\quad\type{advance}  & number & 此项的总前进宽度。它可以为零或缺失，
+                                   此时使用字符 \type {component} 对应字形的
+                                   自然尺寸。 \\
+\bottomrule
+\end{longtable}
+
+\type {kerns} 表是一个以字符索引为键的哈希（``字符索引 定义为
+非负整数或字符串值 \type {right_boundary}），其值为要应用的字距调整量，
+单位为缩放点。
+
+\type {ligatures} 表是一个以字符索引为键的哈希（``字符索引 定义为
+非负整数或字符串值 \type {right_boundary}），其值又是一个小哈希，
+含两个字段：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键         & 类型   & 说明 \\
+\midrule
+\type{type} & number & 此连字命令的类型，默认 0 \\
+\type{char} & number & 结果连字的字符索引 \\
+\bottomrule
+\end{longtable}
+
+连字中的 \type {char} 字段是必需的。连字内部的 \type {type} 字段是
+\TEX\ 支持的八种连字类型之一的数字或字符串值。当 \TEX\ 插入一个新连字时，
+它把新字形放在左右两个字形的中间。原来的左右字形可以选择保留；当至少
+保留其中之一时，还可以把新的 ``插入点 向前移动一位或两位。最终
+位于插入点右侧的字形将成为下一个 ``左 字形。
+
+\begin{longtable}{l c l l}
+\toprule 文字形式（Knuth）      & 数字   & 字符串        & 结果      \\
+\midrule
+\type{l + r =: n}     & 0      & \type{=:}     & \type{|n}   \\
+\type{l + r =:| n}    & 1      & \type{=:|}    & \type{|nr}  \\
+\type{l + r |=: n}    & 2      & \type{|=:}    & \type{|ln}  \\
+\type{l + r |=:| n}   & 3      & \type{|=:|}   & \type{|lnr} \\
+\type{l + r  =:|> n}  & 5      & \type{=:|>}   & \type{n|r}  \\
+\type{l + r |=:> n}   & 6      & \type{|=:>}   & \type{l|n}  \\
+\type{l + r |=:|> n}  & 7      & \type{|=:|>}  & \type{l|nr} \\
+\type{l + r |=:|>> n} & 11     & \type{|=:|>>} & \type{ln|r} \\
+\bottomrule
+\end{longtable}
+
+默认值为~0，可以省略。它表示一个 ``常规 连字，即连字替换原来的
+两个字形。在此表中，\type {|} 表示最终的插入点。
+
+\type {commands} 数组在下面说明。
+
+\section{真实字体}
+
+\topicindex {fonts+real}
+\topicindex {fonts+virtual}
+
+一个 \TEX\ 字体是否是应该写入 \PDF\ 文档的 ``真实 字体，由顶层字体
+结构中的 \type {type} 值决定。如果该值为 \type {real}，则它是一个真正的
+字体，嵌入机制会尝试把所需的字体对象定义添加到 \PDF\ 中。\type {type}
+的取值如下：
+
+\begin{longtable}{l p{5cm}}
+\toprule 取值          & 说明            \\
+\midrule
+\type{real}    & 这是一个基础字体    \\
+\type{virtual} & 这是一个虚拟字体 \\
+\bottomrule
+\end{longtable}
+
+要采取的操作取决于若干不同的变量：
+
+\begin{itemize}
+\item 所用字体是否适合 8 位编码方案。对于通过 \TFM\ 文件通信的传统
+    \TEX\ 字体，答案是肯定的。
+
+\item 磁盘字体文件的类型，例如位图文件，或者轮廓型 \TYPEONE、\TRUETYPE\
+    或 \OPENTYPE\ 字体。
+
+\item 请求的嵌入级别，尽管大多数情况下嵌入的是字符子集。完全不嵌入的
+    时代（至少在我们看来）基本上已经过去了。
+
+\end{itemize}
+
+使用 8 位编码向量之外任何方案的字体，必须以不同方式写入 \PDF。当字体表
+的 \type {encodingbytes} 设为~2 时，它就是宽字体，其他情况都不是。
+对于通过 \LUA\ 加载的 \OPENTYPE\ 和 \TRUETYPE\ 字体，值~2 是默认值。
+对于 \TYPEONE\ 字体，必须显式把 \type {encodingbytes} 设为~2。对于
+\PK\ 位图字体，完全不支持宽字体编码。
+
+如果不需要特殊处理，\LUATEX\ 会回退到 \PDFTEX\ 和 \DVIPS\ 所使用的
+基于映射文件的方案，从而透明地支持旧版字体。如果使用了 ``宽
+字体，新的子系统就会启动，字体结构中必须存在一些额外字段。在这种情况下，
+\LUATEX\ 完全不使用映射文件。这些额外字段是：\type {format}、
+\type {embedding}、\type {fullname}、\type {cidinfo}（如前所述）、
+\type {filename}，以及各个字符中的 \type {index} 键。
+
+\type {format} 变量可取以下值。\type {type3} 字体仅为向后兼容而提供，
+不支持新的宽编码选项。
+
+\begin{longtable}{l p{5cm}}
+\toprule 取值           & 说明                                                      \\
+\midrule
+\type{type1}    & 这是一个 \POSTSCRIPT\ \TYPEONE\ 字体                       \\
+\type{type3}    & 这是一个位图（\PK）字体                                   \\
+\type{truetype} & 这是一个 \TRUETYPE\ 或基于 \TRUETYPE\ 的 \OPENTYPE\ 字体 \\
+\type{opentype} & 这是一个基于 \POSTSCRIPT\ 的 \OPENTYPE\ 字体                \\
+\bottomrule
+\end{longtable}
+
+\type {embedding} 变量的合法取值如下：
+
+\begin{longtable}{l p{5cm}}
+\toprule 取值         & 说明                           \\
+\midrule
+\type{no}     & 完全不嵌入该字体                 \\
+\type{subset} & 包含字体并尝试子集化             \\
+\type{full}   & 完整包含此字体                   \\
+\bottomrule
+\end{longtable}
+
+其余字段的用法如下。\type {fullname} 将作为 \POSTSCRIPT|/|\PDF\ 字体名。
+\type {cidinfo} 将用作字符集，即 CID 的 \type {/Ordering} 和
+\type {/Registry} 键。\type {filename} 指向实际的字体文件。如果你在
+\type {filename} 中给出完整路径，或者文件就在当前目录下，\LUATEX\ 的
+运行效率会稍高一些，因为那种情况下不必重新运行 \type {find_*_file}
+回调。
+
+请注意：在一个文档中混用新旧字体时，可能会产生 \POSTSCRIPT\ 名字冲突，
+从而导致打印错误。出现这种情况时，必须把字体的 \type {fullname} 改成
+更唯一的名字。
+
+排版字符串以宽格式写出，每个字形使用 2~字节，以字符信息中的
+\type {index} 键作为值。整体效果就像是采用了基于数字的编码，而不是
+传统的（\POSTSCRIPT）基于名字的重编码。获取 \TYPEONE\ 字体正确
+\type {index} 编号的一种方法是通过 \type {fontloader.open} 加载字体，
+并把表索引用作 \type {index} 字段。
+
+为了确保最终文档的剪切和粘贴正常工作，最好强制提供 \type {tounicode}
+向量。并非所有 \PDF\ 阅读器都能正确处理这一点，因此请以 \ACROBAT\
+为参照。
+
+\section{虚拟字体}\label{virtualfonts}
+
+\subsection{结构}
+
+\topicindex {fonts+virtual}
+
+如果你想让 \LUATEX\ 把 \cbk {define_font} 返回的表当作虚拟字体处理，
+必须采取以下步骤：
+
+\begin{itemize}
+\item 把顶层键 \type {type} 设为 \type {virtual}。在大多数情况下这是可选的，
+    因为我们反正会查看 \type {commands} 条目。
+
+\item 确保 \type {fonts} 中至少有一个有效条目（见下文），不过在该表缺失时，
+    较新版本的 \LUATEX\ 会添加一个默认条目。
+
+\item 在相关字符上添加 \type {commands} 数组。虚拟字符本身也可以指向其他
+    虚拟字符，但要小心嵌套，因为这可能造成循环并使栈溢出（而栈溢出通常
+    也意味着出错了）。
+
+\end{itemize}
+
+顶层 \type {type} 键取特定值 \type {virtual} 会触发对表中其余虚拟字体
+专用字段的处理，但仅仅存在 'type' 键就足以阻止 \LUATEX\ 自行查找虚拟
+字体。这也可以 ``反向 运用：如果你完全确定某个字体不是虚拟字体，
+把 \type {real} 赋给 \type {type} 会阻止 \LUATEX\ 查找虚拟字体文件，
+从而省去一次磁盘搜索。这只在加载 \TFM\ 文件时才有意义。
+
+\type {fonts} 是一个（带索引的）\LUA\ 表。其值本身是含一两个键的哈希，
+每个条目表示虚拟字体中的一个基础字体。如果你的字体要引用自身，可以使用
+\type {font.nextid()} 函数，它返回下一个将要定义的字体的索引，而那
+很可能就是当前正在定义的字体。因此，一个表看起来像这样：
+
+\begin{typing}
+fonts = {
+  { name = "ptmr8a", size = 655360 },
+  { name = "psyr", size = 600000 },
+  { id = 38 }
+}
+\end{typing}
+
+此虚拟字体中第一个被引用的字体（索引~1）是按 10pt 加载的
+\type {ptmr8a}，第二个是按略大于 9pt 加载的 \type {psyr}。第三个是先前
+定义过的字体，在 \LUATEX\ 中已知为字体 id~38。数组索引编号由属于各字符
+的字符命令定义使用。
+
+\type {commands} 数组是一个哈希，其中每一项又是一个小数组，第一项表示
+命令，其余各项是该命令的参数。允许的命令及其参数如下：
+
+\begin{longtable}{l l l p{5cm}}
+\toprule 命令        & 参数个数 & 类型      & 说明 \\
+\midrule
+\type{font}    & 1         & number    & 从本地 \type {fonts} 表中选择一个新字体 \\
+\type{char}    & 1         & number    & 用当前字体排版此编号字符，并向右移动该字符的宽度 \\
+\type{node}    & 1         & node      & 输出此节点（列表），并向右移动该列表的宽度\\
+\type{slot}    & 2         & 2 numbers & font 与 char 命令组合的快捷方式\\
+\type{push}    & 0         &           & 保存当前位置\\
+\type{nop}     & 0         &           & 什么也不做 \\
+\type{pop}     & 0         &           & 弹出位置 \\
+\type{rule}    & 2         & 2 numbers & 输出一个 $ht*wd$ 的矩形，并向右移动。 \\
+\type{down}    & 1         & number    & 在页面上向下移动 \\
+\type{right}   & 1         & number    & 在页面上向右移动 \\
+\type{special} & 1         & string    & 输出一个 \prm {special} 命令 \\
+\type{pdf}     & 2         & 2 strings & 输出一个 \PDF\ 字面量，第一个字符串取 \type {origin}、
+                                                   \type {page}、\type {text}、\type {font}、\type {direct}
+                                                   或 \type {raw} 之一；如果只有一个字符串，则假定为
+                                                   \type {origin} \\
+\type{lua}     & 1         & string,
+                                     function  & 在嵌入字形时执行一段 \LUA\ 脚本；如果是函数，则会把
+                                                   字体 id 和字符代码传给它 \\
+\type{image}   & 1         & image     & 输出一个图像（参数可以是 \type {<image>} 变量，也
+                                                   可以是 \type {image_spec} 表） \\
+\type{comment} & any       & any       & 此命令的参数被忽略 \\
+\bottomrule
+\end{longtable}
+
+当字体 id 设为~0 时，它会被替换为当前指定的字体 id。这样就避免了对
+未来 id 做取巧处理。通常可以使用 \type {font.nextid}，但如果在此期间
+又构建了更复杂的字体，可能已经加载了其他实例。
+
+\type {pdf} 选项还接受一个 \type {mode} 关键字，此时第三个参数设置模式。
+该选项会以高效方式更改模式（传入空字符串会在 \PDF\ 文件中多出空行）。
+此选项仅对虚拟字体有意义。\type {font} 模式仅在虚拟字体中有意义。各种
+模式的定义有些模糊，部分继承自 \PDFTEX。
+
+\begin{longtable}{l p{5cm}}
+\toprule 模式           & 说明 \\
+\midrule
+\type {origin} & 进入页面模式并设置位置 \\
+\type {page}   & 进入页面模式 \\
+\type {text}   & 进入文本模式 \\
+\type {font}   & 进入字体模式（类似文本模式，仅用于虚拟字体） \\
+\type {always} & 结束当前字符串，并在需要时强制进行变换 \\
+\type {raw}    & 结束当前字符串 \\
+\bottomrule
+\end{longtable}
+
+你始终需要检查生成的 \PDF\ 代码是什么，因为后端的优化可能产生各种干扰，
+而且字体本身就很复杂。下面是一个相当详尽的字形命令示例，使用了这些键：
+
+\begin{typing}
+...
+commands = {
+    { "push" },                     -- remember where we are
+    { "right", 5000 },              -- move right about 0.08pt
+    { "font", 3 },                  -- select the fonts[3] entry
+    { "char", 97 },                 -- place character 97 (ASCII 'a')
+ -- { "slot", 2, 97 },              -- an alternative for the previous two
+    { "pop" },                      -- go all the way back
+    { "down", -200000 },            -- move upwards by about 3pt
+    { "special", "pdf: 1 0 0 rg" }  -- switch to red color
+ -- { "pdf", "origin", "1 0 0 rg" } -- switch to red color (alternative)
+    { "rule", 500000, 20000 }       -- draw a bar
+    { "special", "pdf: 0 g" }       -- back to black
+ -- { "pdf", "origin", "0 g" }      -- back to black (alternative)
+}
+...
+\end{typing}
+
+在 \type {commands} 数组开始处，\type {font} 的默认值总是~1。因此，
+如果虚拟字体本质上只是重编码，通常你不必在数组中显式创建 ``font
+命令。
+
+\type {commands} 数组中的矩形只用两个维度构建：它们没有深度。为了正确
+的垂直放置，可能需要额外的 \type {down} 命令。
+
+无论你在 \type {commands} 内部产生了多少移动，输出指针始终恰好移动
+字符哈希 \type {width} 键所给定的宽度。\type {commands} 数组内部发生的
+任何移动在上层都会被忽略。
+
+special 可以带有 \type {pdf:}、\type {pdf:origin:}、\type {pdf:page:}、
+\type {pdf:direct:} 或 \type {pdf:raw:} 前缀。当需要拼接字符串时，使用
+\type {pdf} 命令可能更高效。
+
+\subsection{人造字体}
+
+即使在 ``真实 字体中，也可以存在虚拟字符。当 \LUATEX\ 在需要
+排版某个字符时遇到该字符内部的 \type {commands} 字段，它就会像处理
+真正的虚拟字符一样解释这些命令。在这种情况下，如果你没有创建
+``fonts 数组，那么默认（也是唯一）的 ``基础 字体就是当前
+字体本身。实际上，这意味着你可以为已有字符创建虚拟副本，这在想要创建
+复合字符时很有用。
+
+注意：此功能{\it 不\/}能反向使用。虚拟字体中不能有 ``真实 字符！
+你也不能用这种技术来做字体重编码；那样做需要一个真正的虚拟字体（因为
+已经存在的字符无法被更改）。
+
+\subsection{虚拟字体示例}
+
+\topicindex {fonts+virtual}
+
+最后，下面是一个展示虚拟字体的 plain \TEX\ 输入文件：
+
+\begin{typing}
+\directlua {
+  callback.register('define_font',
+    function (name,size)
+      if name == 'cmr10-red' then
+        local f = font.read_tfm('cmr10',size)
+        f.name  = 'cmr10-red'
+        f.type  = 'virtual'
+        f.fonts = {
+          { name = 'cmr10', size = size }
+        }
+        for i,v in pairs(f.characters) do
+          if string.char(i):find('[tacohanshartmut]') then
+             v.commands = {
+               { "special", "pdf: 1 0 0 rg" },
+               { "char", i },
+               { "special", "pdf: 0 g" },
+              }
+          end
+        end
+        return f
+      else
+        return font.read_tfm(name,size)
+      end
+    end
+  )
+}
+
+\font\myfont  = cmr10-red at 10pt \myfont  This is a line of text \par
+\font\myfontx = cmr10     at 10pt \myfontx Here is another line of text \par
+\end{typing}
+
+\section{\type {vf}}
+
+当执行字体 \type {commands} 中定义的 \LUA\ 代码时，可以使用
+\type {vf} 库。它提供的函数与命令类似：\type {char}、\type {down}、
+\type {fontid}、\type {image}、\type {node}、\type {nop}、\type {pop}、
+\type {push}、\type {right}、\nod {rule}、\type {special} 和
+\type {pdf}。这个库已经存在一段时间了，但没有怎么宣传和测试，原因之一是
+它很容易定义出无效字体（或者搞乱 \PDF\ 流）。请记住，每次输出一个字符时
+都会执行这些 \LUA\ 片段。
+
+\section{\type {font}}
+
+\topicindex {fonts+library}
+
+font 库提供了访问字体系统内部结构的接口，还包含加载传统 \TEX\ 字体
+度量格式的辅助函数。其他字体加载功能由 \type {fontloader} 库提供，
+下一节将讨论它。
+
+\subsection{加载 \TFM\ 文件}
+
+\topicindex {fonts+tfm}
+
+本小节所记录的行为被认为是稳定的，今后不会再有向后不兼容的更改。
+
+\begin{typing}
+<table> fnt =
+    font.read_tfm(<string> name, <number> s)
+\end{typing}
+
+这个数字有点特别：
+
+\begin{itemize}\item 如果为正，它以缩放点指定 ``at size（按指定尺寸）。
+
+\item 如果为负，其绝对值表示相对于字体 designsize 的 ``scaled
+    （缩放）设置。
+
+\end{itemize}
+
+\subsection{加载 \VF\ 文件}
+
+\topicindex {fonts+vf}
+
+本小节所记录的行为被认为是稳定的，今后不会再有向后不兼容的更改。
+
+\begin{typing}
+<table> vf_fnt =
+    font.read_vf(<string> name, <number> s)
+\end{typing}
+
+数字 \type {s} 的含义和返回表的格式与 \type {read_tfm} 函数中的类似。
+
+\subsection{fonts 数组}
+
+\topicindex {fonts+virtual}
+
+通过一个虚拟数组，\LUA\ 可以访问 \TEX\ 字体的整个表。
+
+\begin{typing}
+font.fonts[n] = { ... }
+<table> f = font.fonts[n]
+\end{typing}
+
+由于这是一个虚拟数组，你不能对它调用 \type {pairs}，但可参见下面的
+\type {font.each} 迭代器。
+
+实现这个虚拟数组的两个元表函数是：
+
+\begin{typing}
+<table> f = font.getfont(<number> n)
+font.setfont(<number> n, <table> f)
+\end{typing}
+
+请注意，目前除非你缓存了它，否则每次访问 \type {font.fonts} 或调用
+\type {font.getfont} 都会为整个字体创建一个 \LUA\ 表。如果你想要内部
+数据的副本，可以使用 \type {font.getcopy}：
+
+\begin{typing}
+<table> f = font.getcopy(<number> n)
+\end{typing}
+
+这个函数返回一个 \TEX\ 所知参数的表。这些参数可能与缓存表中的不同：
+
+\begin{typing}
+<table> p = font.getparameters(<number> n)
+\end{typing}
+
+还要注意：只能对那些已在 \TEX\ 中定义、但自定义以来{\it 完全\/}未被
+访问过的字体进行赋值。这大大限制了写访问 \type {font.fonts} 的可用性，
+今后很可能会实现一套较宽松的规则。
+
+\subsection{检查字体状态}
+
+你可以通过调用此函数来测试字体的状态：
+
+\begin{typing}
+<boolean> f =
+    font.frozen(<number> n)
+\end{typing}
+
+返回值为 \type {true}（不可赋值）、\type {false}（可以更改）或
+\type {nil}（根本不是有效字体）之一。
+
+\subsection{直接定义字体}
+
+\topicindex {fonts+define}
+
+你可以通过调用此函数把自己的字体定义到 \type {font.fonts} 中：
+
+\begin{typing}
+<number> i =
+    font.define(<table> f)
+\end{typing}
+
+返回值是所定义字体的内部 id 编号（即 \type {font.fonts} 中的索引）。
+如果创建字体失败，会抛出错误。该表是一个字体结构。另一种调用形式是：
+
+\begin{typing}
+<number> i =
+    font.define(<number> n, <table> f)
+\end{typing}
+
+其中第一个参数是预留的字体 id（见下文）。
+
+\subsection{Unicode 映射}
+
+\type {glyphtounicode} 扩展与 \PDFTEX\ 中的类似，但不提供按字体设置的
+方法。这与我们存储字体的方式不同、以及可以重载默认字体加载器有关。如果你
+想调整某个特定字体，可以像下面这样在 plain \TEX\ 代码中使用一个
+\LUA\ 辅助函数。
+
+\begin{typing}
+% ToUnicode vectors will be added
+
+\pdfvariable gentounicode 1
+
+% Wrap a helper in a macro:
+
+\def\luaglyphtounicode#1#2%
+  {\directlua{font.settounicode(\fontid\font,\number#1,"#2")}}
+
+% Use the global mapper:
+
+\pdfextension glyphtounicode {A}{0042}
+
+% Test this:
+
+{A \font\test=cmss10 \test  A}
+
+% Define a non unicode symbol font:
+
+\font\orn = OrnementsADF at 10pt
+
+% Register mappings:
+
+\{ \orn
+    \luaglyphtounicode{42}{2B9C}
+    \luaglyphtounicode{65}{2B9D}
+\}
+
+% Test this:
+
+{\orn \char42 \char65 A} A
+
+% And see if cut-n-paste from the pdf file works.
+\end{typing}
+
+当然，把辅助函数包进宏的做法取决于具体的宏包。此功能是为 2026 版添加的，
+不应干扰先前的行为。顺带说明：对于 \TYPEONE\ 字体，向 pdf 文件添加向量
+只在至少存在一个全局扩展条目时发生，但这种由 \LUA\ 驱动的方式没有这个
+限制。这意味着当你使用特定于字体的方法时，它也会为其他 8 位字体触发
+向量的生成。
+
+\subsection{扩展字体}
+
+\topicindex {fonts+extend}
+
+在合理范围内，你可以在字体定义之后扩展它。由于有些属性最好保持不变，
+扩展仅限于添加字符。
+
+\begin{typing}
+font.addcharacters(<number> n, <table> f)
+\end{typing}
+
+传入的表可以含有 \type {characters} 字段，它是一个与 define 中所用类似的
+（子）表；对于虚拟字体，还可以添加 \type {fonts} 表。\type {characters}
+表中定义的字符会被添加（当尚不存在时）或替换已有条目。请记住，替换可能有
+副作用，因为某个字符可能已经被使用过。我们不设置限制，而是期望用户自己
+小心。（\type {setfont} 辅助函数是一种更彻底的替换方式。）
+
+\subsection{预计的下一个字体 id}
+
+\topicindex {fonts+id}
+
+\begin{typing}
+<number> i =
+    font.nextid()
+\end{typing}
+
+它返回如果在代码流的这个位置执行 \type {font.define} 调用时将会返回的
+字体 id 编号。这对于需要引用自身的虚拟字体很有用。如果你传入 \type {true}
+作为参数，该 id 会被预留，之后可作为第一个参数传给 \type {font.define}。
+在创建复杂虚拟字体时这会很方便。
+
+\begin{typing}
+<number> i =
+    font.nextid(true)
+\end{typing}
+
+\subsection{字体 id}
+
+\topicindex {fonts+id}
+\topicindex {fonts+current}
+
+\begin{typing}
+<number> i =
+    font.id(<string> csname)
+\end{typing}
+
+它返回与 \type {csname} 关联的字体 id；如果 \type {csname} 未定义，则
+返回 $-1$。
+
+\begin{typing}
+<number> i =
+    font.max()
+\end{typing}
+
+这是 \type {font.fonts} 中已使用的最大索引。
+
+\begin{typing}
+<number> i = font.current()
+font.current(<number> i)
+\end{typing}
+
+它获取或设置当前使用的字体编号。
+
+\subsection{遍历所有字体}
+
+\topicindex {fonts+iterate}
+
+\begin{typing}
+for i,v in font.each() do
+  ...
+end
+\end{typing}
+
+这是一个遍历每个已定义 \TEX\ 字体的迭代器。返回的第一个值是
+\type {font.fonts} 中的索引，第二个值是字体本身（以 \LUA\ 表形式）。
+索引按递增顺序列出，但它们并不总是构成连续数字的数组：在某些情况下序列中
+可能有空洞。
+
+\subsection{\type{\glyphdimensionsmode}}
+
+早在 \LUATEX\ 的早期，就决定以反映所施垂直偏移的方式来计算字形的有效
+高度和深度。高度加上该偏移，而深度只在偏移大于零时才减去该偏移。现在我们
+可以通过这个模式参数更细致地控制这一行为。偏移会加到高度上，和|/|或从
+深度中减去。有效值永不为负。零模式是默认值。
+
+\begin{longtable}{l p{8cm}}
+\toprule 取值     & 效果 \\
+\midrule
+\quad\type {0} & 旧行为：把偏移加到高度上，并且仅当偏移为正时才从深度
+                  中减去偏移 \\
+\type {1} & 把偏移加到高度上，并从深度中减去偏移 \\
+\quad\type {2} & 把偏移加到高度上并从深度中减去偏移，但保留当前结果与
+                  先前结果的较大值 \\
+\type {3} & 使用字形本身的高度和深度，即不应用偏移 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {\discretionaryligaturemode}}
+
+此参数控制复杂连字如何与断字点（由连字符处理程序插入的）交互。非零值会
+阻止构造所谓的 init 和 select 断字点。
+
+% ConTeXt \definefontfeature/\definefont 演示已省略。
+% 以下为三个模式（0、1、2）的连字与断字交互演示，图已省略。
+
+\subsection{\type{\tracinglostchars}}
+
+这个跟踪器报告缺失的字符。按设计，我们把报告推迟到后端包含它们时、数学
+排版需要它们时，或创建虚拟字体时（1、2、3）。应 \LATEX\ 团队的要求，
+我们另外增加了两个在更早阶段报告的选项，即在字形被打包或在行断行期间
+处理时报告（4 和 5）。
+
+\begin{longtable}{r l}
+    \toprule     & 效果 \\
+    \midrule
+0   & 不报告 \\
+1   & 仅向日志文件发出警告 \\
+2   & 警告并强制输出到终端 \\
+3   & 错误 \\
+4   & 提前警告（并强制输出到终端） \\
+> 4 & 提前报错 \\
+    \bottomrule
+\end{longtable}

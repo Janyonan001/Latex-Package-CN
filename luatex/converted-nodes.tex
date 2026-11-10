@@ -1,0 +1,2495 @@
+\chapter{节点}\label{nodes}
+
+\section{\LUA\ 节点表示}
+
+\topicindex {nodes}
+
+\libindex {fields}
+\libindex {subtypes}
+\libindex {values}
+
+\TEX 的节点在 \LUA\ 中表示为带有可变字段集合的 userdata 对象。在下面的语法表中，
+此类 userdata 对象的类型表示为 \texttt{<node>}。
+
+\type {node.types()} 当前的返回值为：
+% [Lua code block removed]
+. % 句点
+
+\prm {lastnodetype} 原语符合 \ETEX\ 规范。有效范围仍为
+$[-1,15]$，glyph 节点（以前称为 char 节点）编号为~0，而
+ligature 节点映射为~7。这样宏包就可以使用与传统 \ETEX\ 中相同的
+符号名称。请注意，这些 \ETEX\ 节点编号与真实的内部编号不同，而且
+\ETEX\ 节点类型多于~15 种。
+
+你可以用 \type {node.fields} 请求字段列表，用 \type {node.subtypes}
+请求有效的子类型。\type {node.values} 函数报告一些已使用的值。
+有效的参数有 \nod {dir}、\type {direction}、\nod {glue}、\whs
+{pdf_literal}、\whs {pdf_action}、\whs {pdf_window} 和 \whs {color_stack}。
+请注意，设置器通常期望传入一个数字，但这个辅助函数会给出一份哪些数字有意义的
+清单。出于实用考虑，\type {pagestate} 的值也会通过这个辅助函数报告。
+
+\section{主要文本节点}
+
+\topicindex {nodes+text}
+
+这些是构成实际排版命令的节点。无论节点类型如何，所有节点都包含少数几个共同字段，
+它们是：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{next}    & node   & 列表中的下一个节点，或 nil \\
+\type{id}      & number & 该节点的类型（\type {id}）编号 \\
+\type{subtype} & number & 该节点的 \type {subtype} 标识符 \\
+\bottomrule
+\end{longtable}
+
+\type {subtype} 有时只是一个占位条目，因为并非所有节点都实际使用
+\type {subtype}，但这样一来你可以确信所有节点都接受它作为合法字段名，
+这在节点列表遍历中通常很方便。在下面的表中，\type {next} 和
+\type {id} 不再显式列出。
+
+除了这三个字段外，几乎所有节点还有一个 \type {attr} 字段，
+另外还有一个名为 \type {prev} 的字段。最后这个字段始终存在，
+但只在显式请求时才初始化：当调用 \type {node.slide()} 函数时，
+它会在参数节点列表中把 \type {prev} 字段设置为反向指针。
+到目前为止，\TEX 的大多数节点处理都会确保 \type {prev} 节点有效，
+但也可能有例外，尤其是当内部机制使用一个前置 \nod {temp} 节点来临时
+存储状态时。
+
+\subsection{\nod {hlist} 节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段             & 类型   & 说明 \\
+\midrule
+\type{subtype}    & number & [字段列表] \\
+\type{attr}       & node   & 属性列表 \\
+\type{width}      & number & 盒子的宽度 \\
+\type{height}     & number & 盒子的高度 \\
+\type{depth}      & number & 盒子的深度 \\
+\type{shift}      & number & 垂直于字符前进方向的位移 \\
+\quad\type{glue_order} & number & 取值范围在 $[0,4]$ 内的数字，
+                                     表示弹性间距的次序 \\
+\type{glue_set}   & number & 计算出的弹性间距伸缩比 \\
+\quad\type{glue_sign}  & number & 0 = \type {normal}，1 = \type {stretching}，
+                                     2 = \type {shrinking} \\
+\type{head/list}  & node   & 该列表主体的第一个节点 \\
+\type{dir}        & string & 该盒子的方向，见~\ref{dirnodes} \\
+\bottomrule
+\end{longtable}
+
+\topicindex {nodes+lists}
+\topicindex {lists}
+
+警告：切勿将节点列表赋给 \type {head} 字段，除非你确信其内部链接结构正确，
+否则可能导致错误。
+
+注意：字段名 \type {head} 和 \type {list} 都有效。有时用 \type {head}
+指代一个列表更自然，有时用 \type {list} 更自然。
+
+\subsection{\nod {vlist} 节点}
+
+\topicindex {nodes+lists}
+\topicindex {lists}
+
+该节点与 \nod {hlist} 类似，区别在于 ``shift 是垂直于行前进方向的
+位移，且 ``subtype 只有 0、4 和~5 三个值。
+
+\subsection{\nod {rule} 节点}
+
+\topicindex {nodes+rules}
+\topicindex {rules}
+
+与传统 \TEX 不同，\LUATEX 有更多 \prm {rule} 子类型，因为我们还使用
+规则来存储可复用对象和图像。用户节点不可见，可以通过回调拦截。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段            & 类型   & 说明 \\
+\midrule
+\type{subtype}   & number & [字段列表] \\
+\type{attr}      & node   & 属性列表 \\
+\quad\type{width}     & number & 规则的宽度，其中特殊值
+                                    $-1073741824$ 用于 ``running 弹性间距尺寸 \\
+\type{height}    & number & 规则的高度（可为负） \\
+\type{depth}     & number & 规则的深度（可为负） \\
+\type{left}      & number & 左端的位移（也从宽度中减去） \\
+\type{right}     & number &（从宽度中减去） \\
+\type{dir}       & string & 该规则的方向，见~\ref{dirnodes} \\
+\type{index}     & number & 一个可选的索引，可被引用 \\
+\type{transform} & number & 一个私有变量（也用于指定轮廓宽度） \\
+\bottomrule
+\end{longtable}
+
+\type {left} 和 \type {right} 键有些特殊（且属于实验性质）。
+当规则自动适配周围盒子宽度时，你可以通过设置 \type {left} 强制向右偏移。
+该值也会从宽度中减去，而宽度可能是引擎自身设置的值，并不完全受用户控制。
+\type {right} 同样从宽度中减去。这一切都在后端完成，因此它们不影响
+前端的计算（实际上自动设置也在后端完成）。对于垂直规则，\type {left}
+影响高度，\type {right} 影响深度。在 \TEX 端没有对应的接口
+（尽管我们可以为规则增加更多关键字，但那会使事情复杂化并带来速度损失）。
+不过，你完全可以用 \LUA\ 构造一个规则节点，再写入 \TEX\ 输入。
+\type {outline} 子类型只是一个方便的变体，\type {transform} 字段
+指定轮廓的宽度。
+
+\subsection{\nod {ins} 节点}
+
+\topicindex {nodes+insertions}
+\topicindex {insertions}
+
+该节点与 \prm {insert} 原语相关。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段            & 类型   & 说明 \\
+\midrule
+\type{subtype}   & number & 插入类别 \\
+\type{attr}      & node   & 属性列表 \\
+\type{cost}      & number & 与该插入相关的惩罚值 \\
+\type{height}    & number & 插入物的高度 \\
+\type{depth}     & number & 插入物的深度 \\
+\type{head/list} & node   & 该插入物主体的第一个节点 \\
+\bottomrule
+\end{longtable}
+
+还有一组额外字段与相关的弹性间距有关：\type {width}、
+\type {stretch}、\type {stretch_order}、\type {shrink} 和
+\type {shrink_order}。它们都是数字。
+
+警告：切勿将节点列表赋给 \type {head} 字段，除非你确信其内部链接结构
+正确，否则可能导致错误。你可以改用 \type {list}（在函数中你常希望使用
+名称相近的局部变量，两个名字同样合理）。
+
+\subsection{\nod {mark} 节点}
+
+\topicindex {nodes+marks}
+\topicindex {marks}
+
+该节点与 \prm {mark} 原语相关。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{subtype} & number & 未使用 \\
+\type{attr}    & node   & 属性列表 \\
+\type{class}   & number & 标记类别 \\
+\type{mark}    & table  & 表示记号列表的表 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\nod {adjust} 节点}
+
+\topicindex {nodes+adjust}
+\topicindex {adjust}
+
+该节点来自 \prm {vadjust} 原语。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段            & 类型   & 说明 \\
+\midrule
+\type{subtype}   & number & [字段列表] \\
+\type{attr}      & node   & 属性列表 \\
+\type{head/list} & node   & 调整后的材料 \\
+\bottomrule
+\end{longtable}
+
+警告：切勿将节点列表赋给 \type {head} 字段，除非你确信其内部链接结构
+正确，否则可能导致错误。
+
+\subsection{\nod {disc} 节点}
+
+\topicindex {nodes+discretionaries}
+\topicindex {discretionaries}
+
+\prm {discretionary} 和 \prm {-}、\type {-} 字符，以及断字机制
+都会产生这类节点。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{subtype} & number & [字段列表] \\
+\type{attr}    & node   & 属性列表 \\
+\type{pre}     & node   & 指向断字前文本的指针 \\
+\type{post}    & node   & 指向断字后文本的指针 \\
+\type{replace} & node   & 指向不断字文本的指针 \\
+\quad\type{penalty} & number & 与该断行相关的惩罚值，通常为
+                                  \prm {hyphenpenalty} 或 \prm {exhyphenpenalty} \\
+\bottomrule
+\end{longtable}
+
+子类型编号~4 和~5 属于别处给出的 ``of-f-ice 说明。
+这些 disc 节点有些特殊，因为在某个时刻它们还保存着关于断点和嵌套连字的
+信息。
+
+\type {pre}、\type {post} 和 \type {replace} 字段在 \LUA\ 端实际上是
+间接访问的，并且带有一个不为 \type {nil} 的 \type {prev} 指针。
+这意味着，当你改动这三个列表之首时，必须重新赋值，因为那样才能恢复
+正确的 \type {prev} 指针，即：
+
+\begin{typing}
+pre = d.pre
+-- change the list starting with pre
+d.pre = pre
+\end{typing}
+
+否则你可能得到一个与内部现实不符的无效状态，\LUATEX\ 甚至可能直接崩溃。
+这也意味着，向前遍历例如 \type {pre} 是可以的，但向后遍历时你必须在
+\type {pre} 处停下。而且你绝对不能去动 \type {prev} 指向的那个节点，
+原因很简单：它其实不是一个真正的节点，而是 disc 数据结构的一部分
+（所以再次释放它可能会让 \LUATEX\ 崩溃）。
+
+\subsection{\nod {math} 节点}
+
+\topicindex {nodes+math}
+\topicindex {math+nodes}
+
+数学节点表示一个数学公式的边界，通常被包裹在 \type {$} 之中。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段           & 类型   & 说明 \\
+\midrule
+\type{subtype}  & number & [字段列表] \\
+\type{attr}     & node   & 属性列表 \\
+\type{surround} & number & \prm {mathsurround} 紧排的宽度 \\
+\bottomrule
+\end{longtable}
+
+还有一组额外字段与相关的弹性间距有关：\type {width}、
+\type {stretch}、\type {stretch_order}、\type {shrink} 和
+\type {shrink_order}。它们都是数字。
+
+\subsection{\nod {glue} 节点}
+
+\topicindex {nodes+glue}
+\topicindex {glue}
+
+在传统 \TEX 中，弹性间距（skip）几乎是唯一一种不是简单值的数据对象。
+当 \TEX 在文本流中遇到空格时会插入它，\prm {hskip} 和 \prm {vskip}
+也会插入它。表示一个 skip 弹性间距各组成部分的结构称为 \nod {glue_spec}，
+它具有以下可访问字段：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段                & 类型   & 说明 \\
+\midrule
+\type{width}         & number & 水平或垂直位移 \\
+\type{stretch}       & number & 额外的（正向）位移或伸长量 \\
+\type{stretch_order} & number & 作用于伸长量的系数 \\
+\type{shrink}        & number & 额外的（负向）位移或收缩量\\
+\type{shrink_order}  & number & 作用于收缩量的系数 \\
+\bottomrule
+\end{longtable}
+
+某些弹性间距子类型的有效宽度取决于将外层盒子撑满其尺寸所需的伸长或收缩。
+例如在一段落中，行内通常有表示空格的弹性间距，它们通过伸长或收缩使
+内容恰好填满可用空间。\type {effective_glue} 函数接受一个 glue 节点
+和一个父节点（hlist 或 vlist），返回该弹性间距项的有效宽度。
+当你传入第三个参数 \type {true} 时，该值会被取整。
+
+\nod {glue_spec} 节点是一种特殊节点，用于在寄存器中存储一组弹性间距值。
+最初它们还被用于存储 glue 节点的属性（使用引用计数机制），但现在我们把这些
+属性直接保存在 glue 节点自身中，这给 \LUA\ 提供了更干净的接口。
+
+间接 spec 方式实际上是原始 \TEX\ 代码中的一项优化。首先，它可以节省不少内存，
+因为所有这些变成 glue 的空格现在共享同一份规格（只需递增引用计数），
+而且零值判断也稍快一些，因为只需检查指针即可（对于实现了例如
+凸出排版的引擎来说这不再成立，因为在进行边界判断时我们确实需要确保
+零就是零）。另一个副作用是弹性间距规格是只读的，所以最终在 \LUA\ 中使用
+它们时必须复制（对字段的每次赋值都可能产生一份新副本）。因此，共享带来的
+优势其实并不高（而且如今内存已不再是大问题，何况一个 glue 节点只比一个
+spec 多几个内存字）。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{subtype} & number & [字段列表] \\
+\type{attr}    & node   & 属性列表 \\
+\type{leader}  & node   & 指向引导线所用盒子或规则的指针 \\
+\bottomrule
+\end{longtable}
+
+此外还有 \type {width}、\type {stretch}、\type {stretch_order}、
+\type {shrink} 和 \type {shrink_order} 字段。注意，我们在水平和垂直
+弹性间距中都使用键名 \type {width}。这与 \TEX\ 内部实现很契合，所以
+我们决定沿用这个命名。
+
+一个普通的词间空格也会产生一个 \type {spaceskip} 子类型（它过去是
+subtype 为零的 \type {userskip}）。
+
+\subsection{\nod {kern} 节点}
+
+\topicindex {nodes+kerns}
+\topicindex {kerns}
+
+\prm {kern} 命令会创建这类节点，但例如字体和数学机制也可能添加它们。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{subtype} & number & [字段列表] \\
+\type{attr}    & node   & 属性列表 \\
+\type{kern}    & number & 固定的水平或垂直前进量 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\nod {penalty} 节点}
+
+\topicindex {nodes+penalty}
+\topicindex {penalty}
+
+\prm {penalty} 命令就是生成这类节点的命令之一。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{subtype} & number & [字段列表] \\
+\type{attr}    & node   & 属性列表 \\
+\type{penalty} & number & 惩罚值 \\
+\bottomrule
+\end{longtable}
+
+子类型仅作信息用途，\TEX 本身并不使用它们。当你遇到一个
+\type {linebreakpenalty} 时，需要记住它是 \type {club}、\type{widow}
+以及其他相关惩罚值的累加结果。
+
+\subsection{\nod{glyph} 节点}\label{glyphnodes}
+
+\topicindex {nodes+glyph}
+\topicindex {glyphs}
+
+这些大概是最常用的节点，虽然你可以用例如 \prm {char} 把它们压入当前列表，
+但当 \TEX\ 认为某些输入是文本时，通常会替你完成这一工作。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段                   & 类型    & 说明 \\
+\midrule
+\type{subtype}          & number  & 位域 \\
+\type{attr}             & node    & 属性列表 \\
+\type{char}             & number  & 该字符在字体中的索引 \\
+\type{font}             & number  & 字体标识符 \\
+\type{lang}             & number  & 语言标识符 \\
+\type{left}             & number  & 冻结的 \type {\lefthyphenmnin} 值 \\
+\type{right}            & number  & 冻结的 \type {\righthyphenmnin} 值 \\
+\type{uchyph}           & boolean & 冻结的 \prm {uchyph} 值 \\
+\type{components}       & node    & 指向连字组成部分的指针 \\
+\type{xoffset}          & number  & 水平方向上的虚拟位移 \\
+\type{yoffset}          & number  & 垂直方向上的虚拟位移 \\
+\type{width}            & number  & 字符的（原始）宽度 \\
+\type{height}           & number  & 字符的（原始）高度\\
+\type{depth}            & number  & 字符的（原始）深度\\
+\type{expansion_factor} & number  & 待应用的扩展系数 \\
+\type{data}             & number  & 供用户使用的通用字段（我们正好有这个空间） \\
+\bottomrule
+\end{longtable}
+
+\type {width}、\type {height} 和 \type {depth} 的值是只读的。
+\type {expansion_factor} 在段落构造器中赋值，在后端使用。
+
+警告：切勿将节点列表赋给 components 字段，除非你确信其内部链接结构正确，
+否则可能导致错误。\type {subtype} 字段的有效位如下：
+
+\begin{longtable}{c l}
+\toprule 位 & 含义   \\
+\midrule
+0   & character \\
+1   & ligature  \\
+2   & ghost     \\
+3   & left      \\
+4   & right     \\
+\bottomrule
+\end{longtable}
+
+关于 \type {subtype} 字段的详细说明，见 \ref{charsandglyphs}。
+
+\type {expansion_factor} 是作为字体与后端分离的一部分引入的。它是
+对扩展机制更高效实现进行大量实验的结果。早期版本的 \LUATEX\ 已经
+在后端通过缩放替换了多个字体实例，但与 \PDFTEX\ 不同，在 \LUATEX\ 中
+我们现在还摆脱了前端的字体副本，代之以随 glyph 节点携带的扩展系数。
+除了更干净的实现方式外，这也是朝更好地分离前端与后端迈出的一步。
+
+\type {is_char} 函数检查一个节点是否为 subtype 仍小于 256 的 glyph 节点。
+该函数可用于判断对一个 glyph 节点应用字体逻辑是否有意义。当节点不是
+glyph 时返回 \type {nil}；当节点仍被标记为字符时返回一个字符编号；
+否则返回 \type {false}。当返回 nil 时，同时还会返回 id。
+\type {is_glyph} 变体不检查 subtype 是否小于 256，因此它要么返回字符值，
+要么返回 nil 加上 id。这些辅助函数并不总是比单独调用更快，但有时能让
+判断更可读。\type {uses_font} 辅助函数接受一个节点和一个字体 id，
+当 glyph 或 disc 节点引用该字体时返回 true。
+
+\subsection{\nod {boundary} 节点}
+
+\topicindex {nodes+boundary}
+\topicindex {boundary}
+
+该节点与 \prm {noboundary}、\prm {boundary}、\prm
+{protrusionboundary} 和 \prm {wordboundary} 等原语相关。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{subtype} & number & [字段列表] \\
+\type{attr}    & node   & 属性列表 \\
+\type{value}   & number & 0--255 为保留值 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\nod {local_par} 节点}
+
+\topicindex {nodes+paragraphs}
+\topicindex {paragraphs}
+
+该节点插入在段落开头。你不要对它做太多改动。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段                  & 类型   & 说明 \\
+\midrule
+\type{attr}            & node   & 属性列表 \\
+\type{pen_inter}       & number & 局部行间惩罚值（来自 \lpr {localinterlinepenalty}） \\
+\type{pen_broken}      & number & 局部断行惩罚值（来自 \lpr {localbrokenpenalty}） \\
+\type{dir}             & string & 本段落的方向，见~\ref{dirnodes} \\
+\type{box_left}        & node   & \lpr {localleftbox} \\
+\type{box_left_width}  & number & \lpr {localleftbox} 的宽度 \\
+\type{box_right}       & node   & \lpr {localrightbox} \\
+\type{box_right_width} & number & \lpr {localrightbox} 的宽度 \\
+\bottomrule
+\end{longtable}
+
+警告：切勿将节点列表赋给 \type {box_left} 或 \type {box_right}
+字段，除非你确信其内部链接结构正确，否则可能导致错误。
+
+\subsection{\nod{dir} 节点}\label{dirnodes}
+
+\topicindex {nodes+direction}
+\topicindex {directions}
+
+方向节点标记需要改变方向的正文片段，\prm {textdir} 命令会生成它们。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段        & 类型   & 说明 \\
+\midrule
+\type{attr}  & node   & 属性列表 \\
+\type{dir}   & string & 方向（但见下文） \\
+\type{level} & number & 该方向 whatsit 的嵌套层级 \\
+\bottomrule
+\end{longtable}
+
+方向说明符是由 \type {T}、\type {B}、\type {R} 和 \type {L}
+组成的三个字母的组合。它们由三个独立项构成：
+
+\begin{itemize}
+\item 第一个是段落 ``top（顶部）的方向
+
+\item 第二个是行 ``start（起始端）的方向
+
+\item 第三个是 glyph ``top（顶部）的方向
+
+\end{itemize}
+
+不过，只有四种组合被接受：\type {TLT}、\type {TRT}、\type
+{RTT} 和 \type {LTL}。在实际的 \nod {dir} 节点内部，\nod {dir}
+的表示不是三个字母，而是数字的组合。打印时，方向用 \type {+} 或
+\type {-} 表示，指示该值是从方向栈中压入还是弹出。
+
+\subsection{\nod {marginkern} 节点}
+
+\topicindex {nodes+paragraphs}
+\topicindex {paragraphs}
+\topicindex {protrusion}
+
+边距紧排由凸出排版产生。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{subtype} & number & [字段列表] \\
+\type{attr}    & node   & 属性列表 \\
+\type{width}   & number & 紧排的前进量 \\
+\type{glyph}   & node   & 所用的字形 \\
+\bottomrule
+\end{longtable}
+
+\section{数学 noad}
+
+\topicindex {nodes+math}
+\topicindex {math+nodes}
+
+这些就是所谓的 ``noad，即专门与数学处理相关的节点。这些节点
+大多数都包含子节点，因此可能的字段列表实际上相当小。首先是子节点：
+
+\subsection{数学核心子节点}
+
+数学模式中的许多对象字段要么是特定族中的简单字符，要么是数学列表或
+节点列表。有四个相关的子节点表示这些情况（在下面的节点描述中，
+它们用 \type {<kernel>} 一词表示）。
+
+这些子节点的 \type {next} 和 \type {prev} 字段未被使用。
+
+\subsection{\nod {math_char} 与 \nod {math_text_char} 子节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段       & 类型   & 说明 \\
+\midrule
+\type{attr} & node   & 属性列表 \\
+\type{char} & number & 字符索引 \\
+\type{fam}  & number & 族号 \\
+\bottomrule
+\end{longtable}
+
+\nod {math_char} 是最简单的子节点字段，它包含单个字形对象的字符和族。
+\nod {math_text_char} 是一个特殊情况，你通常不会遇到它，它在数学列表
+转换过程中临时出现（其唯一作用是抑制紧随其后的斜体修正量）。
+
+\subsection{\nod {sub_box} 与 \nod {sub_mlist} 子节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段            & 类型 & 说明 \\
+\midrule
+\type{attr}      & node & 属性列表 \\
+\type{head/list} & node & 节点列表 \\
+\bottomrule
+\end{longtable}
+
+这两种子节点类型用于附属列表项。对于 \nod {sub_box}，
+\type {head} 指向一个 ``普通 的 vbox 或 hbox。对于
+\nod {sub_mlist}，\type {head} 指向一个尚未转换的数学列表。
+
+警告：切勿将节点列表赋给 \type {head} 字段，除非你确信其内部链接结构
+正确，否则会触发错误。
+
+\subsection{\nod {delim} 子节点}
+
+还有第五种子节点类型，专门用于分隔符字段。与前面一样，
+\type {next} 和 \type {prev} 字段未被使用。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段             & 类型   & 说明 \\
+\midrule
+\type{attr}       & node   & 属性列表 \\
+\type{small_char} & number & 基础字符的字符索引 \\
+\type{small_fam}  & number & 基础字符的族号 \\
+\type{large_char} & number & 下一个更大字符的字符索引 \\
+\type{large_fam}  & number & 下一个更大字符的族号 \\
+\bottomrule
+\end{longtable}
+
+\type {large_char} 和 \type {large_fam} 字段可以为零，在那种情况下，
+为 \type {small_fam} 设置的字体应当通过将 \type {small_char} 扩展来
+提供大号版本。
+
+\subsection{数学核心节点}
+
+首先，是与简单数学对象相关的对象（\TEX 书称之为 ``atoms）：
+ord、op、bin、rel、open、close、punct、inner、over、under、vcent。
+它们都具有相同的字段，被合并为单一节点类型，通过不同的子类型加以区分。
+
+有些 noad 带有一个选项字段。这个位集中的常用值为：
+
+\begin{longtable}{l r}
+\toprule 含义         & 位                          \\
+\midrule
+set             &               \type{0x08} \\
+internal        & \type{0x00} + \type{0x08} \\
+internal        & \type{0x01} + \type{0x08} \\
+axis            & \type{0x02} + \type{0x08} \\
+no axis         & \type{0x04} + \type{0x08} \\
+exact           & \type{0x10} + \type{0x08} \\
+left            & \type{0x11} + \type{0x08} \\
+middle          & \type{0x12} + \type{0x08} \\
+right           & \type{0x14} + \type{0x08} \\
+no sub script   & \type{0x21} + \type{0x08} \\
+no super script & \type{0x22} + \type{0x08} \\
+no script       & \type{0x23} + \type{0x08} \\
+\bottomrule
+\end{longtable}
+
+\subsection{简单 \nod {noad} 节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型        & 说明 \\
+\midrule
+\type{subtype} & number      & [字段列表] \\
+\type{attr}    & node        & 属性列表 \\
+\type{nucleus} & kernel node & 基座 \\
+\type{sub}     & kernel node & 下标 \\
+\type{sup}     & kernel node & 上标 \\
+\type{options} & number      & 渲染选项位集 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\nod {accent} 节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段             & 类型        & 说明 \\
+\midrule
+\type{subtype}    & number      & [字段列表] \\
+\type{nucleus}    & kernel node & 基座 \\
+\type{sub}        & kernel node & 下标 \\
+\type{sup}        & kernel node & 上标 \\
+\type{accent}     & kernel node & 上方重音 \\
+\type{bot_accent} & kernel node & 下方重音 \\
+\type{fraction}   & number      & 更大的步进判据（除以 1000） \\
+\bottomrule
+\end{longtable}
+
+\subsection{\nod {style} 节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段        & 类型   & 说明    \\
+\midrule
+\type{style} & string & 包含所用样式 \\
+\bottomrule
+\end{longtable}
+
+该字符串值有八种可能：\type {display}、\type {text}、\type {script}
+或 \type {scriptscript} 之一。每一种都可以冠以 \type {cramped} 前缀。
+
+\subsection{\nod {choice} 节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段               & 类型 & 说明 \\
+\midrule
+\type{attr}         & node & 属性列表 \\
+\type{display}      & node & 展示尺寸备选列表 \\
+\type{text}         & node & 文本尺寸备选列表 \\
+\type{script}       & node & 下标尺寸备选列表 \\
+\type{scriptscript} & node & 双下标尺寸备选列表 \\
+\bottomrule
+\end{longtable}
+
+警告：切勿将节点列表赋给 \type {display}、\type {text}、\type
+{script} 或 \type {scriptscript} 字段，除非你确信其内部链接结构
+正确，否则可能发生错误。
+
+\subsection{\nod {radical} 节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型           & 说明 \\
+\midrule
+\type{subtype} & number         & [字段列表] \\
+\type{attr}    & node           & 属性列表 \\
+\type{nucleus} & kernel node    & 基座 \\
+\type{sub}     & kernel node    & 下标 \\
+\type{sup}     & kernel node    & 上标 \\
+\type{left}    & delimiter node & \\
+\type{degree}  & kernel node    & 仅由 \lpr {Uroot} 设置 \\
+\type{width}   & number         & 所需宽度 \\
+\type{options} & number         & 渲染选项位集 \\
+\bottomrule
+\end{longtable}
+
+警告：切勿将节点列表赋给 \type {nucleus}、\type {sub}、\type
+{sup}、\type {left} 或 \type {degree} 字段，除非你确信其内部
+链接结构正确，否则可能触发错误。
+
+\subsection{\nod {fraction} 节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型           & 说明 \\
+\midrule
+\type{attr}    & node           & 属性列表 \\
+\type{width}   & number         &（可选）分数线的宽度 \\
+\type{num}     & kernel node    & 分子 \\
+\type{denom}   & kernel node    & 分母 \\
+\type{left}    & delimiter node & 左侧符号 \\
+\type{right}   & delimiter node & 右侧符号 \\
+\type{middle}  & delimiter node & 中间符号 \\
+\type{options} & number         & 渲染选项位集 \\
+\bottomrule
+\end{longtable}
+
+警告：切勿将节点列表赋给 \type {num} 或 \type {denom} 字段，
+除非你确信其内部链接结构正确，否则可能导致错误。
+
+\subsection{\nod {fence} 节点}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型           & 说明 \\
+\midrule
+\type{subtype} & number         & [字段列表] \\
+\type{attr}    & node           & 属性列表 \\
+\type{delim}   & delimiter node & 分隔符规格 \\
+\type{italic}  & number         & 斜体修正量 \\
+\type{height}  & number         & 所需高度 \\
+\type{depth}   & number         & 所需深度 \\
+\type{options} & number         & 渲染选项位集 \\
+\type{class}   & number         & 与间距相关的类别 \\
+\bottomrule
+\end{longtable}
+
+警告：其中一些字段会被渲染器使用，并可能在过程中被修改。
+
+\section{前端 whatsit}
+
+whatsit 节点有许多子类型，你可以通过运行
+\type {node.whatsits} 来查询：
+% [Lua code block removed]
+. % 句点
+
+其中一些是通用的，与输出模式无关，另一些则与所选后端 \DVI\ 或
+\PDF\ 相关。这里我们讨论通用的前端节点。
+
+\subsection{\whs {open}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段         & 类型   & 说明 \\
+\midrule
+\type{attr}   & node   & 属性列表 \\
+\type{stream} & number & \TEX 的流 id 编号 \\
+\type{name}   & string & 文件名 \\
+\type{ext}    & string & 文件扩展名 \\
+\type{area}   & string & 文件所在区域（以后可能弃用） \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {write}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段         & 类型   & 说明 \\
+\midrule
+\type{attr}   & node   & 属性列表 \\
+\type{stream} & number & \TEX 的流 id 编号 \\
+\type{data}   & string & 表示待写出记号列表的字符串 \\
+\type{value}  & table  & 表示待写出记号列表的表 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {close}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段         & 类型   & 说明 \\
+\midrule
+\type{attr}   & node   & 属性列表 \\
+\type{stream} & number & \TEX 的流 id 编号 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {user_defined}}
+
+用户定义的 whatsit 节点只能由 \LUA\ 代码创建和处理。实际上，它们是
+扩展机制的扩展。\LUATEX\ 引擎会直接跳过这类 whatsit，根本不会查看其内容。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{attr}    & node   & 属性列表 \\
+\type{user_id} & number & id 编号 \\
+\type{type}    & number & 值的类型 \\
+\type{value}   & number & 一个 \LUA\ 数字 \\
+& node   & 一个节点列表 \\
+& string & 一个 \LUA\ 字符串 \\
+& table  & 一个 \LUA\ 表 \\
+\bottomrule
+\end{longtable}
+
+\type {type} 可以取六个不同值之一。该数字是类型名首字符的
+\ASCII\ 码值（所以你可以用 string.byte("l") 代替 \type {108}）。
+
+\begin{longtable}{r c p{5cm}}
+\toprule 值 & 含义 & 说明 \\
+\midrule
+97  & a       & 属性列表（一个节点列表） \\
+100  & d       & 一个 \LUA\ 数字 \\
+108  & l       & 一个 \LUA\ 值（表、数字、布尔值等） \\
+110  & n       & 一个节点列表 \\
+115  & s       & 一个 \LUA\ 字符串 \\
+116  & t       & 以 \LUA\ 表形式表示的 \LUA\ 记号列表（三元组列表） \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {save_pos}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段       & 类型 & 说明 \\
+\midrule
+\type{attr} & node & 属性列表 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {late_lua}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段        & 类型               & 说明 \\
+\midrule
+\type{attr}  & node               & 属性列表 \\
+\type{data}  & string or function & 以 \LUA\ 值形式存储的待写出信息 \\
+\type{token} & string             & 以记号列表形式存储的待写出信息 \\
+\type{name}  & string             & 用于 \LUA\ 错误报告的名称 \\
+\bottomrule
+\end{longtable}
+
+\type {data} 与 \type {string} 的区别在于，在赋值时
+\type {data} 字段会被转换为记号列表，参见作为 \lpr {latelua} 的用法。
+\type {string} 版本则被视为字面字符串。
+
+当使用函数时，它会被调用，第一个参数是触发该调用的节点。
+
+\section{\DVI\ 后端 whatsit}
+
+\subsection{\whs {special}}
+
+\DVI\ 后端只有一种 whatsit，它只是把内容直接冲刷到输出文件。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段       & 类型   & 说明 \\
+\midrule
+\type{attr} & node   & 属性列表 \\
+\type{data} & string & \prm {special} 信息 \\
+\bottomrule
+\end{longtable}
+
+\section{\PDF\ 后端 whatsit}
+
+\subsection{\whs {pdf_literal} 与 \whs {pdf_late_literal}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段        & 类型   & 说明 \\
+\midrule
+\type{attr}  & node   & 属性列表 \\
+\type{mode}  & number & 该字面量的 ``mode 设置 \\
+\type{data}  & string & 以 \LUA\ 字符串形式存储的待写出信息 \\
+\type{token} & string & 以记号列表形式存储的待写出信息 \\
+\bottomrule
+\end{longtable}
+
+可能的 mode 值为：
+
+\begin{longtable}{c p{5cm}}
+\toprule 值 & 关键字        \\
+\midrule
+0     & \type{origin}  \\
+1     & \type{page}    \\
+2     & \type{direct}  \\
+3     & \type{raw}     \\
+4     & \type{text}    \\
+\bottomrule
+\end{longtable}
+
+数字越高，检查越少，你就越容易遇到麻烦。尤其是 \type {raw} 变体
+可能产生糟糕的 \PDF{}，所以你最好检查自己生成的内容。
+
+\subsection{\whs {pdf_refobj}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段         & 类型   & 说明 \\
+\midrule
+\type{attr}   & node   & 属性列表 \\
+\type{objnum} & number & 所引用的 \PDF\ 对象编号 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_annot}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段         & 类型   & 说明 \\
+\midrule
+\type{attr}   & node   & 属性列表 \\
+\type{width}  & number & 宽度（不用于计算） \\
+\type{height} & number & 高度（不用于计算） \\
+\type{depth}  & number & 深度（不用于计算） \\
+\type{objnum} & number & 所引用的 \PDF\ 对象编号 \\
+\type{data}   & string & 注释数据 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_start_link}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段            & 类型   & 说明 \\
+\midrule
+\type{attr}      & node   & 属性列表 \\
+\type{width}     & number & 宽度（不用于计算） \\
+\type{height}    & number & 高度（不用于计算） \\
+\type{depth}     & number & 深度（不用于计算） \\
+\type{objnum}    & number & 所引用的 \PDF\ 对象编号 \\
+\type{link_attr} & table  & 链接属性记号列表 \\
+\type{action}    & node   & 要执行的动作 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_end_link}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段       & 类型 & 说明 \\
+\midrule
+\type{attr} & node & \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_dest}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段              & 类型     & 说明 \\
+\midrule
+\type{attr}        & node     & 属性列表 \\
+\type{width}       & number   & 宽度（不用于计算） \\
+\type{height}      & number   & 高度（不用于计算） \\
+\type{depth}       & number   & 深度（不用于计算） \\
+\type{named_id}    & number   & \type {dest_id} 是否为字符串值？ \\
+\type{dest_id}     & number   & 目标 id \\
+& string   & 目标名称 \\
+\type{dest_type}   & number   & 目标类型 \\
+\type{xyz_zoom}    & number   & 缩放系数（乘以 1000） \\
+\type{objnum}      & number   & \PDF\ 对象编号；对于结构引用，则为所链接结构元素的 \PDF\ 对象编号 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_action}}
+
+这是一类特殊项，只出现在 \PDF\ start link 对象内部。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段              & 类型             & 说明 \\
+\midrule
+\type{action_type} & number           & 所涉及动作的种类 \\
+\type{action_id}   & number or string & 记号列表引用或字符串 \\
+%NC \type{named_id}    & number           & the index of the destination \\
+% a strange key but needed for latex; a probably downward incompable patch instead of a fix
+\type{named_id}    & number           & \type {dest_id} 和 \type {struct_id} 是否为字符串值？ \\
+\type{file}        & string           & 目标文件名 \\
+\type{new_window}  & number           & 目标的窗口状态 \\
+\type{data}        & string           & 目标的名称 \\
+% needed for latex and therefore equivalent to pdftex
+\type{struct_id}   & nil              & 该动作不引用结构目标 \\
+& number           & 所引用结构目标的 id \\
+& string           & 所引用结构目标的名称 \\
+\bottomrule
+\end{longtable}
+
+有效的动作类型为：
+
+\begin{longtable}{l l}
+\toprule 值 & 含义       \\
+\midrule
+0     & \type{page}   \\
+1     & \type{goto}   \\
+2     & \type{thread} \\
+3     & \type{user}   \\
+\bottomrule
+\end{longtable}
+
+有效的窗口类型为：
+
+\begin{longtable}{l l}
+\toprule 值 & 含义       \\
+\midrule
+0     & \type{notset} \\
+1     & \type{new}    \\
+2     & \type{nonew}  \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_thread}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段              & 类型   & 说明 \\
+\midrule
+\type{attr}        & node   & 属性列表 \\
+\type{width}       & number & 宽度（不用于计算） \\
+\type{height}      & number & 高度（不用于计算） \\
+\type{depth}       & number & 深度（不用于计算） \\
+\type{named_id}    & number   & \type {tread_id} 是否为字符串值？ \\
+\type{tread_id}    & number   & 线程 id \\
+& string   & 线程名称 \\
+\type{thread_attr} & number   & 额外的线程信息 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_start_thread}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段              & 类型   & 说明 \\
+\midrule
+\type{attr}        & node   & 属性列表 \\
+\type{width}       & number   & 宽度（不用于计算） \\
+\type{height}      & number   & 高度（不用于计算） \\
+\type{depth}       & number   & 深度（不用于计算） \\
+\type{named_id}    & number   & \type {tread_id} 是否为字符串值？ \\
+\type{tread_id}    & number   & 线程 id \\
+& string   & 线程名称 \\
+\type{thread_attr} & number   & 额外的线程信息 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_end_thread}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段       & 类型 & 说明 \\
+\midrule
+\type{attr} & node & \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_colorstack}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段          & 类型   & 说明 \\
+\midrule
+\type{attr}    & node   & 属性列表 \\
+\type{stack}   & number & 颜色栈 id 编号 \\
+\type{command} & number & 要执行的命令 \\
+\type{data}    & string & 数据 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_setmatrix}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段       & 类型   & 说明 \\
+\midrule
+\type{attr} & node   & 属性列表 \\
+\type{data} & string & 数据 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_save}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段       & 类型   & 说明 \\
+\midrule
+\type{attr} & node   & 属性列表 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\whs {pdf_restore}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段       & 类型   & 说明 \\
+\midrule
+\type{attr} & node   & 属性列表 \\
+\bottomrule
+\end{longtable}
+
+\section{\type {node}}
+
+\subsection{引言}
+
+\type {node} 库包含便于处理（节点）列表及其值的函数。它们允许你创建、
+修改、复制、删除和插入 \LUATEX\ 节点对象，即排版器内部的核心对象。
+
+\LUATEX\ 节点在 \LUA\ 中表示为 userdata，其元数据类型为
+\type {luatex.node}。节点的各个组成部分可以通过命名字段访问。
+
+每个节点至少有 \type {next}、\type {id} 和 \type {subtype} 三个字段：
+
+\begin{itemize}
+
+\item \type {next} 字段返回节点链表中下一个节点的 userdata 对象；
+    如果没有下一个节点，则返回 \type {nil}。
+
+\item \type {id} 指示 \TEX 的 ``节点类型。出于效率考虑，
+    \type {id} 字段取数值，但某些库函数也接受字符串值代替 \type {id}。
+
+\item \type {subtype} 是另一个数字。它通常给出关于特定 \type {id}
+    节点的进一步信息，但在处理 ``whatsit 时最为重要，
+    因为它们仅根据 \type {subtype} 加以区分。
+
+\end{itemize}
+
+其他可用字段取决于节点的 \type {id}（对于 ``whatsit，
+则取决于 \type {subtype}）。
+
+对 \nod {unset}（对齐）节点的支持是部分的：它们可以从 \LUA\ 代码中
+查询和修改，但不能创建。
+
+节点之间可以相互比较，但：你实际上比较的是节点内存中的索引。这意味着
+相等性测试只在非常有限的条件下才可信。当两个节点之一已被释放和/或
+重新分配时，它将无法正确工作：在那种情况下会出现误判。
+
+目前，节点的内存管理仍应由用户显式完成。节点不被 \LUA\ 垃圾回收器
+``看见，所以当你不再需要某个节点（列表）时，必须自行调用
+节点释放函数。节点构成不带引用计数的链表，因此你必须小心：当控制
+返回到 \LUATEX\ 自身时，你没有删除仍被其他地方的 \type {next} 指针
+引用的节点，也没有创建被多次引用的节点。通常设置器和获取器会替你
+处理这些。
+
+关于已分配的节点内存有一些统计信息，便于跟踪调试。
+
+\subsection{\type {is_node}}
+
+\topicindex {nodes+functions}
+
+\libindex {is_node}
+
+\begin{typing}
+<boolean|integer> t =
+    node.is_node(<any> item)
+\end{typing}
+
+如果参数是 \type {<node>} 类型的 userdata 对象，该函数返回一个数字
+（节点的内部索引）；若未传入节点则返回 false。
+
+\subsection{\type {types} 与 \type {whatsits}}
+
+\libindex {types}
+\libindex {whatsits}
+
+该函数返回一个数组，将节点 id 编号映射到节点类型字符串，
+给出可能的顶层 \type {id} 类型概览。
+
+\begin{typing}
+<table> t =
+    node.types()
+\end{typing}
+
+\TEX 的 ``whatsit 都具有相同的 \type {id}。各种子类型由其
+\type {subtype} 字段定义。该函数与 \type {types} 很相似，
+只是它提供的是 \type {subtype} 映射数组。
+
+\begin{typing}
+<table> t =
+    node.whatsits()
+\end{typing}
+
+\subsection{\type {id}}
+
+\libindex{id}
+
+该函数将单个类型名转换为其内部数值表示。
+
+\begin{typing}
+<number> id =
+    node.id(<string> type)
+\end{typing}
+
+\subsection{\type {type} 与 \type {subtype}}
+
+\libindex {type}
+\libindex {subtype}
+
+如果参数是数字，则下一个函数将内部数值表示转换为外部字符串表示。
+否则，如果该对象表示一个节点，它将返回字符串 \type {node}；
+否则返回 \type {nil}。
+
+\begin{typing}
+<string> type =
+    node.type(<any> n)
+\end{typing}
+
+下一个函数将单个 whatsit 名称转换为其内部数值表示
+（\type {subtype}）。
+
+\begin{typing}
+<number> subtype =
+    node.subtype(<string> type)
+\end{typing}
+
+\subsection{\type {fields}}
+
+\libindex {fields}
+
+该函数返回某个特定类型节点的合法字段名数组。如果你想获取
+``whatsit 的合法字段，则必须同时提供第二个参数。在其他情况下，
+任何给出的第二个参数都会被静默忽略。
+
+\begin{typing}
+<table> t =
+    node.fields(<number> id)
+<table> t =
+    node.fields(<number> id, <number> subtype)
+\end{typing}
+
+该函数也接受字符串 \type {id} 和 \type {subtype} 值。
+
+\subsection{\type {has_field}}
+
+\libindex {has_field}
+
+该函数返回一个布尔值，只有当 \type {n} 确实是一个节点、并且它具有
+该字段时才为真。
+
+\begin{typing}
+<boolean> t =
+    node.has_field(<node> n, <string> field)
+\end{typing}
+
+\subsection{\type {new}}
+
+\libindex{new}
+
+\type {new} 函数创建一个新节点。除 \type {id} 和 \type {subtype} 外，
+其所有字段都被初始化为零或 \type {nil}。你也可以使用字符串（名称）
+代替数字。如果创建新的 \nod {whatsit} 节点，第二个参数是必需的。
+与所有节点函数一样，该函数在 \TEX\ 层创建节点。
+
+\begin{typing}
+<node> n =
+    node.new(<number> id)
+<node> n =
+    node.new(<number> id, <number> subtype)
+\end{typing}
+
+\subsection{\type {free}、\type {flush_node} 与 \type {flush_list}}
+
+\libindex{free}
+\libindex{flush_node}
+\libindex{flush_list}
+
+下一个函数将节点 \type {n} 从 \TEX 的内存中移除。注意：它不检查
+该节点是否仍被某个寄存器或某个 \type {next} 字段指向：确保内部数据
+结构保持正确取决于你。
+
+\begin{typing}
+<node> next =
+    node.free(<node> n)
+flush_node(<node> n)
+\end{typing}
+
+\type {free} 函数返回被释放节点的 next 字段，而 \type {flush_node}
+变体不返回任何内容。
+
+以节点 \type {n} 开头的列表也可以从 \TEX 的内存中冲刷掉。注意：
+它不检查这些节点中是否仍有任何一个被某个寄存器或某个 \type {next}
+字段指向：确保内部数据结构保持正确取决于你。
+
+\begin{typing}
+node.flush_list(<node> n)
+\end{typing}
+
+\subsection{\type {copy} 与 \type {copy_list}}
+
+\libindex{copy}
+\libindex{copy_list}
+
+该函数创建节点 \type {n} 的深拷贝，包括所有嵌套列表（如 hlist 或
+vlist 节点的情况）。只有 \type {next} 字段不被复制。
+
+\begin{typing}
+<node> m =
+    node.copy(<node> n)
+\end{typing}
+
+也可以创建从 \type {n} 开始的节点列表的深拷贝。如果同时给出
+\type {m}，则拷贝在节点 \type {m} 之前停止。
+
+\begin{typing}
+<node> m =
+    node.copy_list(<node> n)
+<node> m =
+    node.copy_list(<node> n, <node> m)
+\end{typing}
+
+注意，你不能用这种方式复制属性列表。不过，通常没有必要复制属性列表，
+因为当你对 \type {attr} 字段赋值或修改特定属性时，所需的复制和释放
+会自动进行。
+
+\subsection{\type {prev} 与 \type{next}}
+
+\libindex{prev}
+\libindex{next}
+
+这两个函数返回给定节点之前或之后的节点，如果不存在这样的节点则返回
+\type {nil}。
+
+\begin{typing}
+<node> m =
+    node.next(<node> n)
+<node> m =
+    node.prev(<node> n)
+\end{typing}
+
+\subsection{\type {current_attr}}
+
+\libindex{current_attr}
+
+如果存在当前活动的属性列表，该函数返回它。
+
+\begin{typing}
+<node> m =
+    node.current_attr()
+\end{typing}
+
+\type {current_attr} 的预期用法如下：
+
+\begin{typing}
+local x1 = node.new("glyph")
+x1.attr = node.current_attr()
+local x2 = node.new("glyph")
+x2.attr = node.current_attr()
+\end{typing}
+
+或者：
+
+\begin{typing}
+local x1 = node.new("glyph")
+local x2 = node.new("glyph")
+local ca = node.current_attr()
+x1.attr = ca
+x2.attr = ca
+\end{typing}
+
+属性列表是引用计数的，赋值会负责递增引用计数。当你赋值属性（使用
+\type {tex.setattribute}）或控制已交回给 \TEX\ 时，不能再指望
+值 \type {ca} 仍然有效。
+
+注意：该函数有些实验性质，它返回的是{\it 实际}的属性列表本身，
+而不是其副本。因此，修改列表中任何属性都会改变所有被赋了当前属性列表
+的节点的这些值。
+
+\subsection{\type {hpack}}
+
+\libindex {hpack}
+
+该函数通过将从节点 \type {n} 开始的列表打包成水平盒子来创建新的
+hlist。只带一个参数时，该盒子使用其各组成部分的自然宽度创建。
+在三参数形式中，\type {info} 必须是 \type {additional} 或
+\type {exactly}，而 \type {w} 是所用的附加（\type {\hbox spread}）
+或精确（\type {\hbox to}）宽度。第二个返回值是生成盒子的坏度。
+
+\begin{typing}
+<node> h, <number> b =
+    node.hpack(<node> n)
+<node> h, <number> b =
+    node.hpack(<node> n, <number> w, <string> info)
+<node> h, <number> b =
+    node.hpack(<node> n, <number> w, <string> info, <string> dir)
+\end{typing}
+
+注意：该函数可能有意外副作用，比如更新某些 \prm {marks} 和
+\type {\inserts}。还要注意，\type {h} 的内容就是原始节点列表
+\type {n}：如果你调用 \type {node.free(h)}，也会释放该节点列表本身，
+除非你事先显式将 \type {list} 字段设为 \type {nil}。同样地，
+调用 \type {node.free(n)} 也会使 \type {h} 失效！
+
+\subsection{\type {vpack}}
+
+\libindex {vpack}
+
+该函数通过将从节点 \type {n} 开始的列表打包成垂直盒子来创建新的
+vlist。只带一个参数时，该盒子使用其各组成部分的自然高度创建。
+在三参数形式中，\type {info} 必须是 \type {additional} 或
+\type {exactly}，而 \type {w} 是所用的附加（\type {\vbox spread}）
+或精确（\type {\vbox to}）高度。
+
+\begin{typing}
+<node> h, <number> b =
+    node.vpack(<node> n)
+<node> h, <number> b =
+    node.vpack(<node> n, <number> w, <string> info)
+<node> h, <number> b =
+    node.vpack(<node> n, <number> w, <string> info, <string> dir)
+\end{typing}
+
+第二个返回值是生成盒子的坏度。关于一些内存分配注意事项，见
+\type {hpack} 的描述。
+
+\subsection{\type {prepend_prevdepth}}
+
+\libindex {prepend_prevdepth}
+
+该函数有些特殊，它是一个实验性辅助函数，将行距加到一行上，
+同时把 baselineskip 和 lineskip 考虑在内。
+
+\begin{typing}
+<node> n, <number> delta =
+    node.prepend_prevdepth(<node> n,<number> prevdepth)
+\end{typing}
+
+\subsection{\type {dimensions} 与 \type {rangedimensions}}
+
+\libindex{dimensions}
+\libindex{rangedimensions}
+
+\begin{typing}
+<number> w, <number> h, <number> d  =
+    node.dimensions(<node> n)
+<number> w, <number> h, <number> d  =
+    node.dimensions(<node> n, <string> dir)
+<number> w, <number> h, <number> d  =
+    node.dimensions(<node> n, <node> t)
+<number> w, <number> h, <number> d  =
+    node.dimensions(<node> n, <node> t, <string> dir)
+\end{typing}
+
+该函数计算从节点 \type {n} 开始、到节点 \type {t} 之前结束的节点列表
+的自然行内尺寸（如果没有第二个参数，则到列表末尾）。返回值为缩放点。
+也有一种以前三个参数为弹性间距参数的替代形式：
+
+\begin{typing}
+<number> w, <number> h, <number> d  =
+    node.dimensions(<number> glue_set, <number> glue_sign, <number> glue_order,
+        <node> n)
+<number> w, <number> h, <number> d  =
+    node.dimensions(<number> glue_set, <number> glue_sign, <number> glue_order,
+        <node> n, <string> dir)
+<number> w, <number> h, <number> d  =
+    node.dimensions(<number> glue_set, <number> glue_sign, <number> glue_order,
+        <node> n, <node> t)
+<number> w, <number> h, <number> d  =
+    node.dimensions(<number> glue_set, <number> glue_sign, <number> glue_order,
+        <node> n, <node> t, <string> dir)
+\end{typing}
+
+这种调用方式会把弹性间距设置考虑在内，对于查找已装盒节点子列表的实际
+宽度特别有用，例如在如下代码中，它打印 \type {a} 与 \type {b} 之间
+空格的宽度，就像 \type {\box0} 原样使用时那样：
+
+\begin{typing}
+\setbox0 = \hbox to 20pt {a b}
+
+\directlua{print (node.dimensions(
+    tex.box[0].glue_set,
+    tex.box[0].glue_sign,
+    tex.box[0].glue_order,
+    tex.box[0].head.next,
+    node.tail(tex.box[0].head)
+)) }
+\end{typing}
+
+你需要记住，这是 \TEX 中少数使用浮点数的地方之一，这意味着当你比较
+\type {hpack} 与 \type {dimensions} 报告的宽度时，可能会得到
+微小的取整差异。
+
+第二种替代形式省去了几次查找，在某些情况下更方便：
+
+\begin{typing}
+<number> w, <number> h, <number> d  =
+    node.rangedimensions(<node> parent, <node> first)
+<number> w, <number> h, <number> d  =
+    node.rangedimensions(<node> parent, <node> first, <node> last)
+\end{typing}
+
+\subsection{\type {mlist_to_hlist}}
+
+\libindex {mlist_to_hlist}
+
+\begin{typing}
+<node> h =
+    node.mlist_to_hlist(<node> n, <string> display_type, <boolean> penalties)
+\end{typing}
+
+该函数运行内部的 mlist 到 hlist 转换，将 \type {n} 中的数学列表
+转换为水平列表 \type {h}。其接口与回调 \cbk {mlist_to_hlist} 完全相同。
+
+\subsection{\type {slide}}
+
+\begin{typing}
+<node> m =
+    node.slide(<node> n)
+\end{typing}
+
+返回从 \type {n} 开始的节点列表的最后一个节点。作为副作用，它还会在
+节点之间创建一条由 \type {prev} 指针构成的反向链。
+
+\subsection{\type {tail}}
+
+\libindex {tail}
+
+\begin{typing}
+<node> m =
+    node.tail(<node> n)
+\end{typing}
+
+返回从 \type {n} 开始的节点列表的最后一个节点。
+
+\subsection{\type {length} 与 \type {count}}
+
+\libindex {length}
+\libindex {count}
+
+\begin{typing}
+<number> i =
+    node.length(<node> n)
+<number> i =
+    node.length(<node> n, <node> m)
+\end{typing}
+
+返回从 \type {n} 开始的节点列表所包含的节点数。如果同时给出
+\type {m}，则在 \type {m} 处停止，而不是到列表末尾。节点 \type {m}
+不计入。
+
+\begin{typing}
+<number> i =
+    node.count(<number> id, <node> n)
+<number> i =
+    node.count(<number> id, <node> n, <node> m)
+\end{typing}
+
+返回从 \type {n} 开始的节点列表中、具有匹配 \type {id} 字段的节点数。
+如果同时给出 \type {m}，则计数在 \type {m} 处停止，而不是到列表末尾。
+节点 \type {m} 不计入。该函数也接受字符串 \type {id}。
+
+\subsection{\type {is_char} 与 \type {is_glyph}}
+
+\libindex {is_char}
+\libindex {is_glyph}
+
+glyph 节点的子类型指示该字形是否已经被转换为字符引用。
+
+\begin{typing}
+<boolean> b =
+    node.is_char(<node> n)
+<boolean> b =
+    node.is_glyph(<node> n)
+\end{typing}
+
+\subsection{\type {traverse}}
+
+\libindex {traverse}
+
+\begin{typing}
+<node> t, id, subtype =
+    node.traverse(<node> n)
+\end{typing}
+
+这是一个 \LUA\ 迭代器，遍历从 \type {n} 开始的节点列表。典型代码
+如下所示：
+
+\begin{typing}
+for n in node.traverse(head) do
+   ...
+end
+\end{typing}
+
+在功能上等价于：
+
+\begin{typing}
+do
+  local n
+  local function f (head,var)
+    local t
+    if var == nil then
+       t = head
+    else
+       t = var.next
+    end
+    return t
+  end
+  while true do
+    n = f (head, n)
+    if n == nil then break end
+    ...
+  end
+end
+\end{typing}
+
+从函数 \type {f} 的定义可以清楚地看出，尽管在遍历过程中可以向节点列表
+添加或移除节点，但你必须非常小心，确保所有 \type {next}（以及
+\type {prev}）指针保持有效。
+
+如果你对上面的内容不清楚，请参阅 \LUA\ 参考手册中的
+``For Statement 一节。
+
+\subsection{\type {traverse_id}}
+
+\libindex {traverse_id}
+
+\begin{typing}
+<node> t, subtype =
+    node.traverse_id(<number> id, <node> n)
+\end{typing}
+
+这是一个迭代器，遍历从 \type {n} 开始的列表中所有具有匹配
+\type {id} 字段的节点。
+
+详见上一节。区别在于局部函数 \type {f}，它现在多了一个 while 循环，
+对照上值 \type {id} 进行检查：
+
+\begin{typing}
+ local function f(head,var)
+   local t
+   if var == nil then
+      t = head
+   else
+      t = var.next
+   end
+   while not t.id == id do
+      t = t.next
+   end
+   return t
+ end
+\end{typing}
+
+\subsection{\type {traverse_char} 与 \type {traverse_glyph}}
+
+\libindex {traverse_char}
+\libindex {traverse_glyph}
+
+\type{traverse_char} 迭代器遍历列表中的 \nod {glyph} 节点。
+只看子类型小于 256 的节点。
+
+\begin{typing}
+<node> n, char, font =
+    node.traverse_char(<node> n)
+\end{typing}
+
+\type{traverse_glyph} 迭代器遍历一个列表，返回列表并过滤所有字形：
+
+\begin{typing}
+<node> n, char, font =
+    node.traverse_glyph(<node> n)
+\end{typing}
+
+\subsection{\type {traverse_list}}
+
+\libindex {traverse_list}
+
+该迭代器遍历列表中的 \nod {hlist} 和 \nod {vlist} 节点。
+
+\begin{typing}
+<node> n, id, subtype, list =
+    node.traverse_list(<node> n)
+\end{typing}
+
+与逐个获取这些字段相比，这四个返回值可以节省一些时间，但实际上你
+很少需要它们全部。所以把它看作一项（实验性的副作用带来的）便利。
+
+\subsection{\type {has_glyph}}
+
+\libindex {has_glyph}
+
+该函数返回给定列表中的第一个 glyph 或 disc 节点：
+
+\begin{typing}
+<node> n =
+    node.has_glyph(<node> n)
+\end{typing}
+
+\subsection{\type {end_of_math}}
+
+\libindex {end_of_math}
+
+\begin{typing}
+<node> t =
+    node.end_of_math(<node> start)
+\end{typing}
+
+查找并返回 \type {start} 之后的下一个 \type {math_node}。如果给定节点
+是一个数学结束节点，该辅助函数返回该节点；否则它沿列表前进，返回
+下一个数学结束节点。如果未找到这样的节点，则返回 nil。
+
+\subsection{\type {remove}}
+
+\libindex {remove}
+
+\begin{typing}
+<node> head, current =
+    node.remove(<node> head, <node> current)
+\end{typing}
+
+该函数从 \type {head} 之后的列表中移除节点 \type {current}。
+确保它确实是该列表的一部分取决于你。返回值是新的 \type {head} 和
+\type {current} 节点。返回的 \type {current} 是调用参数中
+\type {current} 之后的节点，传回来只是为了方便（如果没有这样的节点，
+则为 \type {nil}）。返回的 \type {head} 更为重要，因为如果调用时
+\type {current} 等于 \type {head}，它会被改变。
+
+\subsection{\type {insert_before}}
+
+\libindex {insert_before}
+
+\begin{typing}
+<node> head, new =
+    node.insert_before(<node> head, <node> current, <node> new)
+\end{typing}
+
+该函数将节点 \type {new} 插入到 \type {head} 之后的列表中、
+\type {current} 之前。确保 \type {current} 确实是该列表的一部分
+取决于你。返回值是（可能已改变的）\type {head} 和节点 \type {new}，
+后者已被设置为列表的一部分（带有正确的 \type {next} 字段）。
+如果 \type {head} 初始为 \type {nil}，它将变为 \type {new}。
+
+\subsection{\type {insert_after}}
+
+\libindex {insert_after}
+
+\begin{typing}
+<node> head, new =
+    node.insert_after(<node> head, <node> current, <node> new)
+\end{typing}
+
+该函数将节点 \type {new} 插入到 \type {head} 之后的列表中、
+\type {current} 之后。确保 \type {current} 确实是该列表的一部分
+取决于你。返回值是 \type {head} 和节点 \type {new}，后者已被设置为
+列表的一部分（带有正确的 \type {next} 字段）。如果 \type {head}
+初始为 \type {nil}，它将变为 \type {new}。
+
+\subsection{\type {first_glyph}}
+
+\libindex {first_glyph}
+
+\begin{typing}
+<node> n =
+    node.first_glyph(<node> n)
+<node> n =
+    node.first_glyph(<node> n, <node> m)
+\end{typing}
+
+返回从 \type {n} 开始的列表中、第一个子类型指示为字形的 glyph 节点，
+或 \type {nil}。如果给出 \type {m}，处理在该节点处停止（含该节点），
+否则处理在列表末尾停止。
+
+\subsection{\type {ligaturing}}
+
+\libindex {ligaturing}
+
+\begin{typing}
+<node> h, <node> t, <boolean> success =
+    node.ligaturing(<node> n)
+<node> h, <node> t, <boolean> success =
+    node.ligaturing(<node> n, <node> m)
+\end{typing}
+
+对指定节点列表应用 \TEX 风格的连字处理。尾节点 \type {m} 是可选的。
+返回的两个节点 \type {h} 和 \type {t} 是新的头和尾（\type {n} 和
+\type {m} 都可能变成一个新的连字）。
+
+\subsection{\type {kerning}}
+
+\libindex {kerning}
+
+\begin{typing}
+<node> h, <node> t, <boolean> success =
+    node.kerning(<node> n)
+<node> h, <node> t, <boolean> success =
+    node.kerning(<node> n, <node> m)
+\end{typing}
+
+对指定节点列表应用 \TEX 风格的紧排。尾节点 \type {m} 是可选的。
+返回的两个节点 \type {h} 和 \type {t} 是头和尾（其中任何一个都可能是
+插入的 kern 节点，因为在词边界处可能有特殊紧排）。
+
+\subsection{\type {unprotect_glyph[s]}}
+
+\libindex {unprotect_glyphs}
+\libindex {unprotect_glyph}
+
+\begin{typing}
+node.unprotect_glyph(<node> n)
+node.unprotect_glyphs(<node> n,[<node> ,m])
+\end{typing}
+
+从所有 glyph 节点的子类型中减去 256。这个函数和下一个函数是在节点处理
+过程中从 \type {characters} 转换为 \type {glyphs} 的辅助函数。
+第二个参数是可选的，指示一个范围的终点。
+
+\subsection{\type {protect_glyph[s]}}
+
+\libindex {protect_glyphs}
+\libindex {protect_glyph}
+
+\begin{typing}
+node.protect_glyph(<node> n)
+node.protect_glyphs(<node> n,[<node> m])
+\end{typing}
+
+从 \type {n} 开始的节点列表中，给所有 glyph 节点的子类型加 256，
+但如果值为 1，则只加 255。对 1 的特殊处理意味着，\type {characters}
+在减去 256 后会变成 \type {glyphs}。单个字符可以用单数形式调用标记。
+第二个参数是可选的，指示一个范围的终点。
+
+\subsection{\type {last_node}}
+
+\libindex {last_node}
+
+\begin{typing}
+<node> n =
+    node.last_node()
+\end{typing}
+
+该函数从 \TEX 的 ``current list 中弹出最后一个节点。
+它返回该节点；如果当前列表为空，则返回 \type {nil}。
+
+\subsection{\type {write}}
+
+\libindex {write}
+
+\begin{typing}
+node.write(<node> n)
+\end{typing}
+
+该函数将一个节点列表附加到 \TEX 的 ``current list。
+该节点列表不进行深拷贝！也没有错误检查！你可能需要强制进入水平模式，
+才能让它按预期工作。
+
+\subsection{\type {protrusion_skippable}}
+
+\libindex {protrusion_skippable}
+
+\begin{typing}
+<boolean> skippable =
+    node.protrusion_skippable(<node> n)
+\end{typing}
+
+当字符凸出排版启用时，为了行边界查找的目的，如果该节点可以被跳过，
+则返回 \type {true}。
+
+\section{弹性间距处理}
+
+\subsection{\type {setglue}}
+
+\libindex {setglue}
+
+你可以一次性设置一个弹性间距的五个属性。非数字值等价于零，
+并重置一个属性。
+
+\begin{typing}
+node.setglue(<node> n)
+node.setglue(<node> n,width,stretch,shrink,stretch_order,shrink_order)
+\end{typing}
+
+当你传入值时，只有数字类型的参数会被赋值，所以
+
+\begin{typing}
+node.setglue(n,655360,false,65536)
+\end{typing}
+
+将只调整 width 和 shrink。
+
+当传入一个列表节点时，你改为设置它的弹性间距、次序和符号。
+
+\subsection{\type {getglue}}
+
+\libindex {getglue}
+
+下一个调用会返回 5 个值；如果未传入弹性间距，则什么也不返回。
+
+\begin{typing}
+<integer> width, <integer> stretch, <integer> shrink, <integer> stretch_order,
+    <integer> shrink_order = node.getglue(<node> n)
+\end{typing}
+
+当第二个参数为 false 时，只返回 width（这与 \type {tex.get} 一致）。
+
+当传入一个列表节点时，你取回的是所设置的弹性间距、该弹性间距的次序
+以及符号。
+
+\subsection{\type {is_zero_glue}}
+
+\libindex {is_zero_glue}
+
+当 width、stretch 和 shrink 属性都为零时，该函数返回 \type {true}。
+
+\begin{typing}
+<boolean> isglue =
+    node.is_zero_glue(<node> n)
+\end{typing}
+
+\section{属性处理}
+
+\subsection{属性}
+
+\topicindex {attributes}
+
+新引入的属性寄存器并不简单，因为附在节点上的值本质上是一个键值对的
+稀疏数组。通常最容易的做法是使用 \type {node} 库中的专用函数来处理
+属性列表和属性，但为完整起见，这里给出底层接口。
+
+属性在单个节点的 \type {attr} 字段中以 userdata 对象链表的形式出现。
+它们可以被单独处理，但使用与之相关的专用函数要安全和高效得多。
+
+\subsection{\nod {attribute_list} 节点}
+
+\topicindex {nodes+attributes}
+
+一个 \nod {attribute_list} 项用作属性项列表的头指针。它只有一个
+用户可见字段：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段       & 类型 & 说明 \\
+\midrule
+\type{next} & node & 指向第一个属性的指针 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\nod {attr} 节点}
+
+普通节点的属性字段将指向一个 \nod {attribute_list} 类型的项，
+而该项的 \type {next} 字段指向第一个已定义的 ``attribute 项，
+后者的 \type {next} 指向第二个 ``attribute 项，依此类推。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段         & 类型   & 说明 \\
+\midrule
+\type{next}   & node   & 指向下一个属性的指针 \\
+\type{number} & number & 属性类型 id \\
+\type{value}  & number & 属性值 \\
+\bottomrule
+\end{longtable}
+
+如前所述，最好使用官方辅助函数，而不是直接编辑这些字段。例如，
+\type {prev} 字段被用于其他目的，这里没有双向链表。
+
+\subsection{\type {has_attribute}}
+
+\libindex {has_attribute}
+
+\begin{typing}
+<number> v =
+    node.has_attribute(<node> n, <number> id)
+<number> v =
+    node.has_attribute(<node> n, <number> id, <number> val)
+\end{typing}
+
+测试一个节点是否设置了编号为 \type {id} 的属性。如果同时给出
+\type {val}，还测试值是否与 \type {val} 匹配。它返回该值；如果未找到
+匹配，则返回 \type {nil}。
+
+\subsection{\type {get_attribute}}
+
+\libindex {get_attribute}
+
+\begin{typing}
+<number> v =
+    node.get_attribute(<node> n, <number> id)
+\end{typing}
+
+测试一个节点是否设置了编号为 \type {id} 的属性。它返回该值；如果未找到
+匹配，则返回 \type {nil}。如果未给出 \type {id}，则假定为零号属性。
+
+\subsection{\type {find_attribute}}
+
+\libindex {find_attribute}
+
+\begin{typing}
+<number> v, <node> n =
+    node.find_attribute(<node> n, <number> id)
+\end{typing}
+
+查找第一个设置了编号为 \type {id} 属性的节点。如果有匹配，它返回
+该值和节点；否则什么也不返回。
+
+\subsection{\type {set_attribute}}
+
+\libindex {set_attribute}
+
+\begin{typing}
+node.set_attribute(<node> n, <number> id, <number> val)
+\end{typing}
+
+将编号为 \type {id} 的属性设置为值 \type {val}。重复赋值会被忽略。
+
+\subsection{\type {unset_attribute}}
+
+\libindex {unset_attribute}
+
+\begin{typing}
+<number> v =
+    node.unset_attribute(<node> n, <number> id)
+<number> v =
+    node.unset_attribute(<node> n, <number> id, <number> val)
+\end{typing}
+
+取消设置编号为 \type {id} 的属性。如果同时给出 \type {val}，则只有当
+值与 \type {val} 匹配时才执行此操作。缺失的属性或属性值对会被忽略。
+
+如果该属性确实被删除，返回其旧值。否则返回 \type {nil}。
+
+\subsection{\type {slide}}
+
+\libindex {slide}
+
+该辅助函数确保节点列表是双向链接的，并返回找到的尾节点。
+
+\begin{typing}
+<node> tail =
+    node.slide(<node> n)
+\end{typing}
+
+在某些回调之后会自动进行滑动。可以用 \type {node.fix_node_lists(false)}
+关闭此功能，但那样你最好确保自己没有搞乱列表。在大多数情况下，
+\TEX 本身只使用 \type {next} 指针，但你的其他回调可能也期望正确的
+\type {prev} 指针。未来的 \LUATEX\ 版本可以增加更多检查，但这不会影响
+用法。
+
+\subsection{\type {check_discretionary}、\type {check_discretionaries}}
+
+\libindex{check_discretionary}
+\libindex{check_discretionaries}
+
+当你随意摆弄 disc 节点时，需要注意它们有一种特殊的内部数据结构。
+只要你在扩展列表后重新赋值这些字段就没问题，因为那时尾指针会被更新；
+但如果你在没有重新赋值的情况下向列表添加内容，当断行例程介入时，
+就可能陷入麻烦。你可以调用该函数检查列表中 disc 节点的问题。
+
+\begin{typing}
+node.check_discretionary(<node> n)
+node.check_discretionaries(<node> head)
+\end{typing}
+
+复数形式遍历一个列表中的所有 disc 节点，单数形式只检查一个节点
+（它还会检查该节点是否为 disc 节点）。
+
+\subsection{\type {flatten_discretionaries}}
+
+\libindex {flatten_discretionaries}
+
+该函数会移除列表中的断字点，并在 replace 字段被设置时注入它。
+
+\begin{typing}
+<node> head, count = node.flatten_discretionaries(<node> n)
+\end{typing}
+
+\subsection{\type {family_font}}
+
+\libindex {family_font}
+
+当你传入一个正确的族标识符时，下一个辅助函数会返回当前与它关联的字体。
+你通常也可以用普通的字体字段或获取器访问该字体，因为对于 noad，
+它会自动解析族。
+
+\begin{typing}
+<integer> id =
+    node.family_font(<integer> fam)
+\end{typing}
+
+\section{两种访问模型}
+
+\topicindex{nodes+direct}
+\topicindex{direct nodes}
+
+\libindex {todirect}
+\libindex {tonode}
+\libindex {tostring}
+
+在 \TEX 的底层，一个节点有一个数字，它是内存表中的一个数值项。实际上，
+这种由 \TEX\ 管理内存的模型非常快，这也是为什么在节点上操作的回调
+插进来也相当快的原因之一。每个节点都得到一个数字，它实际上是内存表中的
+索引，当你打印节点相关信息时，经常会报告这个数字。你可以在 userdata
+节点和它们的数值引用之间双向转换：
+
+\begin{typing}
+<integer> d = node.direct.todirect(<node> n))
+<node> n = node.direct.tonode(<integer> d))
+\end{typing}
+
+userdata 模型相当健壮，因为它是一个带有额外检查的虚拟接口，而更直接的
+访问则直接使用节点编号。不过，即使用 userdata，当你释放已不再分配的节点
+或搞乱列表时，也会遇到麻烦。如果你对节点应用 \type {tostring}，
+就会看到它的内部（直接）编号和 id。
+
+第一种模型提供基于键的访问，而第二种总是通过函数访问字段：
+
+\begin{typing}
+nodeobject.char
+getfield(nodenumber,"char")
+\end{typing}
+
+如果你使用直接模型，即使知道自己处理的是数字，也不应依赖这一性质，
+而应像对待传统节点一样把它当作一种抽象。实际上，我们使用简单基本数据
+类型的代价是能做的检查更少，但检查更少也是它稍快的原因。一个重要的
+方面是，两种方法不能混用，但你可以对两种模型进行强制转换。所以，
+把一个节点编号相乘没有任何意义。
+
+因此我们的建议是：尽可能使用索引（表）方式，只有在速度确实成为问题时
+才研究直接方式。出于这个原因，\LUATEX\ 还在顶层 node 命名空间中提供了
+\type {get*} 和 \type {set*} 函数。获取器数量有限。在实现这种直接方式时，
+按键索引的常规变体也得到了优化，所以直接访问只有在节点被访问数百万次
+时才有意义（例如在某些字体处理中会发生）。
+
+我们主要谈获取器，因为设置器不那么重要。文档中与内容相关的节点没有那么多，
+设置成千上万属性与数百万次查询相比几乎不算负担。
+
+通常你会这样访问节点：
+
+\begin{typing}
+local next = current.next
+if next then
+    -- do something
+end
+\end{typing}
+
+这里 \type {next} 不是真正的字段，而是一个虚拟字段。访问它会导致
+调用一个元表方法。实际上它归结为查找节点类型，然后根据节点类型检查
+字段名。最坏情况下，你会遇到一个排在查找表末尾的节点类型，以及一个排在
+查找链最后的字段。不过，在 \LUATEX\ 的后续版本中，这些查找已经得到优化，
+最常访问的节点和字段具有更高优先级。
+
+因为在实践中 \type {next} 访问器会导致一次函数调用，所以有一些开销。
+下面这段代码做同样的事，并且稍快一点点（但快不了多少，因为它仍然是
+一次函数调用，只不过这一次它知道要查找什么）。
+
+\begin{typing}
+local next = node.next(current)
+if next then
+    -- do something
+end
+\end{typing}
+
+有些访问器使用频繁，我们为它们提供了更高效的辅助函数：
+
+\begin{longtable}{l p{5cm}}
+\toprule 函数          & 说明 \\
+\midrule
+\type{getnext}    & 解析节点列表总是涉及它 \\
+\type{getprev}    & 使用较少，但作为 \type {getnext} 的逻辑配对 \\
+\type{getboth}    & 返回一个节点的 next 和 prev 指针 \\
+\type{getid}      & 被频繁查询 \\
+\type{getsubtype} & 查询较少，但也名列前茅 \\
+\type{getfont}    & 在 \OPENTYPE\ 处理中大量使用（glyph 节点被频繁查询） \\
+\type{getchar}    & 同上，在其他地方也用 \\
+\quad\type{getwhd}     & 返回列表、规则或（未展开）字形以及弹性间距的
+                          \type {width}、\type {height} 和 \type {depth}（其 spec 会被查看），
+                          还有 unset 节点\\
+\quad\type{getdisc}    & 返回 \type {pre}、\type {post} 和 \type {replace} 字段，
+                          可选地在传入 true 时也返回尾字段 \\
+\type{getlist}    & 我们经常解析嵌套列表，所以这也很方便 \\
+\quad\type{getleader}  & 与 list 类似，在 \TEX\ 中很少用（但像列表一样需要频繁查询；
+                          引导线本可以做成一种专用节点类型） \\
+\quad\type{getfield}   & 通用获取器，其余字段足够使用（其他字段名常常是共享的，
+                          所以专门的获取器就没意义了） \\
+\type{getbox}     & 获取给定的盒子（一个列表节点） \\
+\quad\type{getoffsets} & 获取字形的 \type {xoffset} 和 \type {yoffset}，
+                          或规则的 \type {left} 和 \type {right} 值 \\
+\bottomrule
+\end{longtable}
+
+在直接命名空间中还有更多这类辅助函数，其中大多数都配有对应的设置器。
+获取器和设置器足够聪明，能判断指的是哪个节点。我们不处理 whatsit 节点：
+它们的字段总是按名字访问。为所有字段添加获取器没有意义，我们只识别
+最可能用到的候选者。在复杂文档中，许多节点和字段类型根本不会被看到，
+或只被看到几次，但例如字形就是这种优化的候选者。\type {node.direct}
+接口还有一些辅助函数。
+\footnote {我们可以在 node 命名空间中用 \type {getfield} 定义这些
+辅助函数，效率差不多，所以将来某个时候我们可能把它作为模块提供。}
+
+\type {setdisc} 辅助函数接受三个（可选）参数，再加一个可选的第四个参数
+指示子类型。其对应的 \type {getdisc} 接受一个可选布尔值；当值为
+\type {true} 时，也会返回尾节点。\type {setfont} 辅助函数接受一个可选的
+第二个参数，即字符。直接模式设置器 \type {setlink} 接受一个节点列表并
+将它们链接起来，同时忽略 \type {nil} 项。返回第一个有效节点（注意：
+出于充分理由，它假定是单节点）。对于很少使用的字段，不提供辅助函数；
+有少数几个可能也很少用，但为了一致性而加入了。你当然随时可以用
+\type {getfield} 和 \type {setfield} 定义额外的访问器，开销很小。
+当 \type {setattributelist} 的第二个参数为 \type {true} 时，假定使用
+当前属性列表。
+
+\def\yes{$+$} \def\nop{$-$}
+
+\def\supported#1#2#3%
+  {\type{#1} & #2 & #3 \\}
+
+\begin{longtable}{l c c}
+\toprule 函数 & node & direct \\
+\midrule
+\supported {check_discretionaries}   \yes \yes
+\supported {check_discretionary}     \yes \yes
+\supported {copy_list}               \yes \yes
+\supported {copy}                    \yes \yes
+\supported {count}                   \yes \yes
+\supported {current_attr}            \yes \yes
+\supported {dimensions}              \yes \yes
+\supported {effective_glue}          \yes \yes
+\supported {end_of_math}             \yes \yes
+\supported {family_font}             \yes \nop
+\supported {fields}                  \yes \nop
+\supported {find_attribute}          \yes \yes
+\supported {first_glyph}             \yes \yes
+\supported {fix_node_lists}          \yes \nop
+\supported {flatten_discretionaries} \yes \yes
+\supported {flush_list}              \yes \yes
+\supported {flush_node}              \yes \yes
+\supported {flush_properties_table}  \yes \yes
+\supported {free}                    \yes \yes
+\supported {get_attribute}           \yes \yes
+\supported {get_properties_table}    \yes \yes
+\supported {get_synctex_fields}      \nop \yes
+\supported {getattributelist}        \nop \yes
+\supported {getboth}                 \yes \yes
+\supported {getbox}                  \nop \yes
+\supported {getchar}                 \yes \yes
+\supported {getcomponents}           \nop \yes
+\supported {getdata}                 \nop \yes
+\supported {getdepth}                \nop \yes
+\supported {getdirection}            \nop \yes
+\supported {getdir}                  \nop \yes
+\supported {getdisc}                 \yes \yes
+\supported {getexpansion}            \nop \yes
+\supported {getfam}                  \nop \yes
+\supported {getfield}                \yes \yes
+\supported {getfont}                 \yes \yes
+\supported {getglue}                 \yes \yes
+\supported {getheight}               \nop \yes
+\supported {getid}                   \yes \yes
+\supported {getkern}                 \nop \yes
+\supported {getlang}                 \nop \yes
+\supported {getleader}               \yes \yes
+\supported {getlist}                 \yes \yes
+\supported {getnext}                 \yes \yes
+\supported {getnucleus}              \nop \yes
+\supported {getoffsets}              \nop \yes
+\supported {getpenalty}              \nop \yes
+\supported {getprev}                 \yes \yes
+\supported {getproperty}             \yes \yes
+\supported {getshift}                \nop \yes
+\supported {getsubtype}              \yes \yes
+\supported {getsub}                  \nop \yes
+\supported {getsup}                  \nop \yes
+\supported {getwhd}                  \yes \yes
+\supported {getwidth}                \nop \yes
+\supported {has_attribute}           \yes \yes
+\supported {has_field}               \yes \yes
+\supported {has_glyph}               \yes \yes
+\supported {hpack}                   \yes \yes
+\supported {hyphenating}             \nop \yes
+\supported {id}                      \yes \nop
+\supported {insert_after}            \yes \yes
+\supported {insert_before}           \yes \yes
+\supported {is_char}                 \yes \yes
+\supported {is_direct}               \nop \yes
+\supported {is_glyph}                \yes \yes
+\supported {is_node}                 \yes \yes
+\supported {is_zero_glue}            \yes \yes
+\supported {kerning}                 \yes \yes
+\supported {last_node}               \yes \yes
+\supported {length}                  \yes \yes
+\supported {ligaturing}              \yes \yes
+\supported {make_extensible}         \yes \nop
+\supported {mlist_to_hlist}          \yes \nop
+\supported {new}                     \yes \yes
+\supported {next}                    \yes \nop
+\supported {prepend_prevdepth}       \yes \yes
+\supported {prev}                    \yes \nop
+\supported {protect_glyphs}          \yes \yes
+\supported {protect_glyph}           \yes \yes
+\supported {protrusion_skippable}    \yes \yes
+\supported {rangedimensions}         \yes \yes
+\supported {remove}                  \yes \yes
+\supported {set_attribute}           \yes \yes
+\supported {set_properties_mode}     \yes \yes
+\supported {set_synctex_fields}      \nop \yes
+\supported {setattributelist}        \nop \yes
+\supported {setboth}                 \nop \yes
+\supported {setbox}                  \nop \yes
+\supported {setchar}                 \nop \yes
+\supported {setcomponents}           \nop \yes
+\supported {setdata}                 \nop \yes
+\supported {setdepth}                \nop \yes
+\supported {setdirection}            \nop \yes
+\supported {setdir}                  \nop \yes
+\supported {setdisc}                 \nop \yes
+\supported {setexpansion}            \nop \yes
+\supported {setfam}                  \nop \yes
+\supported {setfield}                \yes \yes
+\supported {setfont}                 \nop \yes
+\supported {setglue}                 \yes \yes
+\supported {setheight}                \nop \yes
+\supported {setkern}                 \nop \yes
+\supported {setlang}                 \nop \yes
+\supported {setleader}               \nop \yes
+\supported {setlink}                 \nop \yes
+\supported {setlist}                 \nop \yes
+\supported {setnext}                 \nop \yes
+\supported {setnucleus}              \nop \yes
+\supported {setoffsets}              \nop \yes
+\supported {setpenalty}              \nop \yes
+\supported {setprev}                 \nop \yes
+\supported {setproperty}             \yes \yes
+\supported {setshift}                \nop \yes
+\supported {setsplit}                 \nop \yes
+\supported {setsubtype}              \nop \yes
+\supported {setsub}                  \nop \yes
+\supported {setsup}                  \nop \yes
+\supported {setwhd}                 \nop \yes
+\supported {setwidth}                \nop \yes
+\supported {slide}                   \yes \yes
+\supported {subtypes}                \yes \nop
+\supported {subtype}                 \yes \nop
+\supported {tail}                    \yes \yes
+\supported {todirect}                \nop \yes
+\supported {tonode}                  \nop \yes
+\supported {tostring}                \yes \yes
+\supported {traverse_char}           \yes \yes
+\supported {traverse_glyph}          \yes \yes
+\supported {traverse_id}             \yes \yes
+\supported {traverse_list}           \nop \yes
+\supported {traverse}                \yes \yes
+\supported {types}                   \yes \nop
+\supported {type}                    \yes \nop
+\supported {unprotect_glyphs}        \yes \yes
+\supported {unprotect_glyph}         \yes \yes
+\supported {unset_attribute}         \yes \yes
+\supported {usedlist}                \yes \yes
+\supported {uses_font}               \yes \yes
+\supported {values}                  \yes \nop
+\supported {vpack}                   \yes \yes
+\supported {whatsits}                \yes \nop
+\supported {write}                   \yes \yes
+\bottomrule
+\end{longtable}
+
+\type {node.next} 和 \type {node.prev} 函数会保留，但为了一致性，
+有分别称为 \type {getnext} 和 \type {getprev} 的变体。我们不得不用
+\type {get}，因为 \type {node.id} 和 \type {node.subtype} 已经被占用
+来提供节点的元信息。注意：获取器只对合法键做基本检查。你应当只坚持使用
+描述节点属性的各节中提到的键。
+
+鉴于字段相关，有些获取器和设置器处理多种节点类型。在那种情况下，
+某些字段名被认为是相似的（如 \type {kern} 与 \type {width}，
+或 \type {data} 与 \type {value}。回过头看，我们本可以把字段名规范化得
+更好，但我们决定尽可能沿用原来的（内部）名称。毕竟在 \LUA\ 端，
+很容易创建同义词。
+
+在 \type {setfield} 和 \type {getfield} 中，special 和 write 把
+\type {data} 和 \type {value} 当作等价键接受。对于 write whatsit，
+获取 \type {value} 会以表的形式返回记号列表，而 \type {data} 则以
+字符串形式返回展开结果（版本 1.23.2，2025）。
+
+有些节点带有间接引用。例如一个数学字符引用的是一个族而不是字体。
+在那种情况下，我们提供一个虚拟字体字段作为访问器。所以，\type {getfont}
+和 \type {.font} 可以用于它们。弹性间距节点的 \type {width}、
+\type {height} 和 \type {depth} 也是如此。它们实际上访问的是 spec 节点
+属性，在这里我们既可以设置也可以获取这些值。
+
+在某些地方，\LUATEX\ 可以对合法节点列表做一些额外检查，你可以用下面的
+方式启用：
+
+\begin{typing}
+node.fix_node_lists(<boolean> b)
+\end{typing}
+
+你可以为弹性间距、kern、hlist、vlist、rule 和 math 节点以及 glyph 节点
+设置和查询 \SYNCTEX\ 字段（一个文件编号即 tag，和一个行号）（不过最后
+这一种在原生 \SYNCTEX\ 中不使用）。
+
+\begin{typing}
+node.direct.set_synctex_fields(<integer> n, <integer> f, <integer> l)
+<integer> f, <integer> l =
+    node.direct.get_synctex_fields(<integer> n)
+\end{typing}
+
+当然，你需要知道自己在做什么，因为不对合理的值做检查。而且，编辑器中使用的
+synctex 解释器相当古怪，有一些假设（启发式规则）。
+
+\section{属性表（properties）}
+
+\topicindex {nodes+properties}
+\topicindex {properties}
+
+\libindex{flush_properties_table}
+\libindex{get_properties_table}
+\libindex{set_properties_mode}
+
+属性是将额外信息关联到节点的一种便捷方式。你可以在 \TEX\ 端以及
+\LUA\ 端给它们赋值，并在 \LUA\ 端查询。一大优点是它们遵守分组。
+它们是链表，通常检查它们相当高效，即使你使用大量属性。宏包必须在
+\TEX\ 端提供某种管理这些属性的方式，否则它们的使用可能发生冲突。
+
+每个节点还可以有一个属性表，你可以用 \type {setproperty} 函数给这个表
+赋值，用 \type {getproperty} 函数获取属性。管理 properties 比管理属性
+要求高得多。
+
+看下面的例子：
+
+\begin{typing}
+\directlua {
+    local n = node.new("glyph")
+
+    node.setproperty(n,"foo")
+    print(node.getproperty(n))
+
+    node.setproperty(n,"bar")
+    print(node.getproperty(n))
+
+    node.free(n)
+}
+\end{typing}
+
+这会打印 \type {foo} 和 \type {bar}，当多种机制都想使用这一特性时，
+它本身并不那么有用。另一种变体是：
+
+\begin{typing}
+\directlua {
+    local n = node.new("glyph")
+
+    node.setproperty(n,{ one = "foo", two = "bar" })
+    print(node.getproperty(n).one)
+    print(node.getproperty(n).two)
+
+    node.free(n)
+}
+\end{typing}
+
+这一次我们在节点上存储了两个属性。用一个表作为属性确实很有意义，
+因为那样我们就能存更多东西。但为了让它正常工作，你需要这样做：
+
+\begin{typing}
+\directlua {
+    local n = node.new("glyph")
+
+    local t = node.getproperty(n)
+
+    if not t then
+        t = { }
+        node.setproperty(n,t)
+    end
+    t.one = "foo"
+    t.two = "bar"
+
+    print(node.getproperty(n).one)
+    print(node.getproperty(n).two)
+
+    node.free(n)
+}
+\end{typing}
+
+这样我们自己的属性就不会覆盖其他用户的属性，当然，除非他们使用相同的键。
+所以最终你会得到类似这样的东西：
+
+\begin{typing}
+\directlua {
+    local n = node.new("glyph")
+
+    local t = node.getproperty(n)
+
+    if not t then
+        t = { }
+        node.setproperty(n,t)
+    end
+    t.myself = { one = "foo", two = "bar" }
+
+    print(node.getproperty(n).myself.one)
+    print(node.getproperty(n).myself.two)
+
+    node.free(n)
+}
+\end{typing}
+
+这假定只有你使用 \type {myself} 作为子表。可能性是无穷的，但需要小心。
+例如，随 \CONTEXT\ 一起发布的通用字体处理器使用 \type {injections} 子表，
+你不应该去动它！
+
+有几个辅助函数，作为用户你通常不应碰它们：\type
+{flush_properties_table} 会清空整个表（通常是个坏主意），\type
+{get_properties_table} 会给出存储属性的表（使用直接条目），你最好也不要
+对它做太多改动，因为 \LUATEX\ 自身会确保与节点相关的条目在节点被释放时
+被清除，从而让 \LUA\ 垃圾回收器能正常工作。实际上，我们之所以有这套机制，
+主要是为了替用户（或宏包）省去一些工作。你可以很容易地在 \LUA\ 中写一套
+属性机制，在 shipout 后清理属性，但要确保每个被释放的节点的属性也随之
+释放并不那么简单，因为可能有一些节点遗留到下一页。而给节点释放器绑定
+一个回调会带来太多开销。
+
+在节点（释放）分配函数中管理 properties 默认是关闭的，可通过下面的方式
+启用：
+
+\begin{typing}
+node.set_properties_mode(true)
+\end{typing}
+
+当我们复制一个带有表属性的节点列表时，有几种可能：像对待新节点一样
+处理；把该条目复制到 properties 中的表里（一个引用）；对 properties 中的
+表做深拷贝；创建一个新表，并把原表作为它的元表。在对这些方案做了一些
+实验（也包括计时）之后，我们决定深拷贝没意义，置空也没意义。最终，
+浅拷贝和元表变体都可以接受，尽管第二种更慢。需要记住的最重要一点是，
+properties 中对其他节点的引用，对那份拷贝来说可能不再有效。我们本可以用
+两个表（一个唯一、一个共享）或元表，但那只会让事情更复杂。
+
+在定义新节点时，我们本可以立刻分配一个表，但在 lua 端做这件事相当容易，
+例如用元表 \type {__index} 方法。这样它就处于宏包的控制之下。删除节点时，
+我们本可以保留这个槽（例如把它设为 false），但当我们有临时的大型节点列表、
+之后又只有小列表时，这可能导致内存消耗不必要地上升。两种做法都没有采用。
+
+所以最终现在是这样：当一个节点被复制、且它有一个表属性时，新节点会共享
+那个表。如果 \type {set_properties_mode} 的第二个参数为 \type {true}，
+则选择元表方式：拷贝得到自己的表，以原表作为元表。如果你使用通用字体
+加载器，模式就是以这种方式启用的。
+
+还做了一些其他实验。例如：把属性复制到 properties 中，以便在 \LUA\ 端
+快速访问。最终，速度和便利所带来的收益抵不过开销；实际上，访问属性并没有
+那么慢。所以这一方案被否决。
+
+另一个实验涉及在节点中放一个位集，但同样，与属性相比收益微乎其微，
+而且可用位数量很少，这还要求就哪个位代表什么达成相当强的一致，而这在
+\TEX\ 社区中不太可能成功。它不值得。
+
+如果有人想知道为什么 properties 有意义：我们得到的与其说是速度，不如说是
+便利：把各种（临时）数据存在属性里并不愉快，而这套机制确保节点被释放时
+属性会被清理。此外，拥有一个或多或少全局的 properties 表的优点是，
+我们待在 \LUA\ 端。另一种做法是在节点自身中存一个引用，但这会因为寄存器
+有一些限制（不能用数字键）而变得复杂，而且我们也不想过多地动它。

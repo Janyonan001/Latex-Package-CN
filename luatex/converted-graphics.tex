@@ -1,0 +1,767 @@
+% mp solve_path
+
+\chapter{图形库}\label{graphics}
+
+\section{\type {img}}
+
+\topicindex {images}
+\topicindex {images+library}
+\topicindex {graphics}
+
+\type {img} 库可用作 \orm {pdfximage} 和 \orm {pdfrefximage} 的替代方案，以及相关
+``卫星 命令（如 \type {\pdfximagebbox}）的替代。图像对象也可在虚拟字体
+中通过 \ref{virtualfonts} 中列出的 \type {image} 命令使用。
+
+\subsection{\type {new}}
+
+\libindex{new}
+
+\begin{typing}
+<image> var = img.new()
+<image> var = img.new(<table> image_spec)
+\end{typing}
+
+此函数创建一个类型为 ``image 的 userdata 对象。\type
+{image_spec} 参数是可选的。如果给出，它必须是一个 table，且该 table 必须包含
+\type {filename} 键。其他一些键也可能有用，下面逐一说明。
+
+你可以这样写
+
+\begin{typing}
+a = img.new()
+\end{typing}
+
+然后
+
+\begin{typing}
+a.filename = "foo.png"
+\end{typing}
+
+或者你可以直接将文件名（以及部分或全部其他键）放入一个 table，像这样：
+
+\begin{typing}
+a = img.new({filename='foo.pdf', page=1})
+\end{typing}
+
+生成的 \type {<image>} userdata 对象允许访问一组用户指定的值，以及一组通常由
+\LUATEX\ 自动填充和更新的值。其中一些来自实际的图像文件，另一些则更新以反映
+对象的 \PDF\ 输出状态。
+
+有一个必需的用户指定字段：文件名（\type {filename}）。它可以选择性地附加所
+请求的图像尺寸（\type {width}、\type {depth}、\type {height}）、用户指定的
+图像属性（\type {attr}）、所请求的 \PDF\ 页标识（\type {page}）、所请求的
+包围盒（\type {pagebox}）用于 \PDF\ 包含、所请求的色彩空间对象（\type
+{colorspace}）。
+
+函数 \type {img.new} 不访问实际的图像文件，它只创建 \type {<image>}
+userdata 对象并初始化一些内存结构。\type {<image>} 对象及其内部结构会被自动
+垃圾回收。
+
+一旦图像被扫描，\type {<image>} 中除 \type {width}、\type {height} 和
+\type {depth} 之外的所有值都会冻结，你不能再更改它们。
+
+你可以使用 \type {pdf.setignoreunknownimages(1)}（或在 \TEX\ 端使用 \lpr
+{pdfvariable} \type {ignoreunknownimages}）来绕过未找到已知图像类型（根据名称
+或序言判断）时的退出。注意：这无法捕获无效图像，我们也不能保证没有副作用。
+零尺寸图像在请求时仍会被包含。不设置特殊标志。正确的工作流程不应依赖这种捕获，
+而应确保图像有效。
+
+\subsection{\type {fields}}
+
+\libindex{fields}
+
+\begin{typing}
+<table> keys = img.fields()
+\end{typing}
+
+此函数返回所有可能的 \type {image_spec} 键的列表，包括用户提供的和自动生成
+的。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段名             & 类型     & 说明 \\
+\midrule
+\type{attr}            & string   & 供 \LUATEX 使用的图像属性 \\
+\type{bbox}            & table    & 包含 4 个包围盒尺寸 \type
+                                            {llx}、\type {lly}、\type {urx} 和 \type
+                                            {ury} 的 table，覆盖 \type {pagebox} 条目 \\
+\type{colordepth}      & number   & 色彩空间使用的位数 \\
+\type{colorspace}      & number   & 色彩空间对象编号 \\
+\type{depth}           & number   & 供 \LUATEX 使用的图像深度 \\
+\type{filename}        & string   & 图像文件名 \\
+\type{filepath}        & string   & 图像的完整（展开后）文件名\\
+\type{height}          & number   & 供 \LUATEX 使用的图像高度 \\
+\type{imagetype}       & string   & 以下之一：\type {pdf}、\type {png}、\type {jpg}、
+                                            \type {jp2} 或 \type {jbig2} \\
+\type{index}           & number   & \PDF\ 图像名称后缀 \\
+\type{objnum}          & number   & \PDF\ 图像对象编号 \\
+\type{page}            & number   & 所请求图像页的标识 \\
+\type{pagebox}         & string   & 所请求的包围盒，以下之一：
+                                            \type {none}、\type {media}、\type {crop}、
+                                            \type {bleed}、\type {trim}、\type {art} \\
+\type{pages}           & number   & 可用页数总数 \\
+\type{rotation}        & number   & 来自所包含 \PDF\ 文件的图像旋转，
+                                            以 90~度的倍数计。 \\
+\type{stream}          & string   & \type {/Xobject}
+                                            \type {/Form} 对象的原始流数据\\
+\type{transform}       & number   & 图像变换，整数 0..7 \\
+\type{orientation}     & number   & (jpeg) 图像方向，整数 1..8
+                                            （0 表示未设置） \\
+\type{width}           & number   & 供 \LUATEX 使用的图像宽度 \\
+\type{xres}            & number   & 水平自然图像分辨率
+                                            （以 \DPI 为单位） \\
+\type{xsize}           & number   & 自然图像宽度 \\
+\type{yres}            & number   & 垂直自然图像分辨率
+                                            （以 \DPI 为单位） \\
+\type{ysize}           & number   & 自然图像高度 \\
+\type{visiblefilename} & string   & 设置后，此名称将以 \type {PTEX}
+                                            规范的形式出现在 \PDF\ 文件中；当
+                                            赋值为空字符串时不写入文件；
+                                            否则使用自然文件名 \\
+\type{userpassword}   & string   & 打开 \PDF\ 文件所需的用户密码 \\
+\type{ownerpassword}  & string   & 打开 \PDF\ 文件所需的所有者密码 \\
+\type{keepopen}       & boolean  & 保持 \PDF\ 文件打开 \\
+\type{nobbox}         & boolean  & 不为流添加包围盒规范 \\
+\type{nolength}       & boolean  & 不为流添加 length 键也不压缩 \\
+\type{nosize}         & boolean  & 不为流添加尺寸字段 \\
+\bottomrule
+\end{longtable}
+
+\type {width}、\type {height} 或 \type {depth} 中的运行中（未定义）尺寸在
+\LUA\ 中表示为 \type {nil}，因此如果你想以 ``自然 尺寸加载图像，不必指定
+这三个字段中的任何一个。
+
+\type {stream} 参数允许从给出流内容的字符串构造一个 \type {/XObject} \type
+{/Form} 对象，例如一个填充矩形：
+
+\begin{typing}
+a.stream = "0 0 20 10 re f"
+\end{typing}
+
+写入图像时，会创建一个 \type {/Xobject} \type {/Form} 对象，就像嵌入 \PDF\ 文件
+写入时一样。该对象只写出一次。\type {stream} 键要求同时给出 \type {bbox}
+table。\type {stream} 键与 \type {filename} 键冲突。\type {transform} 键
+在使用 \type {stream} 时照常工作。
+
+\type {bbox} 键需要一个包含四个包围盒值的 table，例如：
+
+\begin{typing}
+a.bbox = { "30bp", 0, "225bp", "200bp" }
+\end{typing}
+
+这会替换并覆盖任何给定的 \type {pagebox} 值；给定 \type {bbox} 时，嵌入
+\PDF\ 文件附带的盒尺寸将被忽略。图像缩放时，\type {xsize} 和 \type {ysize}
+尺寸会相应设置。对于非 \PDF\ 图像，\type {bbox} 参数被忽略。
+
+\type {transform} 允许以 90~度为步长镜像和旋转图像。默认值~$0$ 给出未镜像、
+未旋转的图像。值 $1-3$ 分别给出逆时针旋转 $90$、$180$ 或 $270$~度，而值
+$4-7$ 则先镜像图像，再逆时针旋转 $90$、$180$ 或 $270$~度。\type {transform}
+操作给出与你用图形工具在外部预处理图像再由 \LUATEX 使用时相同的视觉结果。
+如果要嵌入的 \PDF\ 文件已包含 \type {/Rotate} 规范，旋转结果是 \type
+{/Rotate} 旋转后再执行 \type {transform} 操作的组合。
+
+\subsection{\type {scan}}
+
+\libindex{scan}
+
+\begin{typing}
+<image> var = img.scan(<image> var)
+<image> var = img.scan(<table> image_spec)
+\end{typing}
+
+当你对一个新图像执行 \type {img.scan(a)} 时，文件会被扫描，\type {xsize}、
+\type {ysize}、图像 \type {type}、\type {pages} 数量和分辨率等变量会被提取
+出来。\type {width}、\type {height}、\type {depth} 字段会根据图像尺寸设置，
+前提是它们尚未被显式赋值。对于给定的图像变量，图像文件绝不会被扫描超过一次。
+之后所有的 \type {img.scan(a)} 调用只会重新设置尺寸（如果用户在此期间更改了
+它们）。
+
+为了便于使用，你可以直接执行
+
+\begin{typing}
+<image> a = img.scan { filename = "foo.png" }
+\end{typing}
+
+而无需事先 \type {img.new}。
+
+此时还没有写入任何内容，所以你可以执行 \type {a=img.scan}，检索可用信息如图像
+宽度和高度，然后通过 \type {a=nil} 丢弃 \type {a}。在这种情况下，PDF 中不会
+保留任何图像对象，使用的内存也会被自动清理。
+
+\subsection{\type {copy}}
+
+\libindex{copy}
+
+\begin{typing}
+<image> var = img.copy(<image> var)
+<image> var = img.copy(<table> image_spec)
+\end{typing}
+
+如果你执行 \type {a = b}，则两个变量指向同一个 \type {<image>} 对象。如果
+你想以不同尺寸写出一个图像，可以执行 \type {b = img.copy(a)}。
+
+之后，\type {a} 和 \type {b} 仍引用同一个实际图像字典，但 \type {b} 的尺寸
+现在可以从刚从 \type {a} 复制来的初始值进行更改。
+
+\subsection{\type {write}、\type {immediatewrite}、\type {immediatewriteobject}}
+
+\topicindex {images+injection}
+\topicindex {images+immediate}
+\topicindex {images+object}
+
+\libindex{write}
+\libindex{immediatewrite}
+\libindex{immediatewriteobject}
+
+\begin{typing}
+<image> var = img.write(<image> var)
+<image> var = img.write(<table> image_spec)
+\end{typing}
+
+通过 \type {img.write(a)} 分配一个 \PDF\ 对象编号，并生成一个子类型为
+\type {image} 的规则节点放入输出列表。由此图像 \type {a} 被放入页面流，当前页
+面发货完成后图像文件被写出为一个图像流对象。
+
+同样你可以使用简洁的调用方式
+
+\begin{typing}
+img.write { filename = "foo.png" }
+\end{typing}
+
+\type {<image>} 变量会被返回，以备后续处理使用。你也可以写出一个对象。
+
+通过 \type {img.immediatewrite(a)} 分配一个 \PDF\ 对象编号，图像 \type {a} 的
+图像文件立即作为图像流对象写入 \PDF\ 文件（类似于 \prm {immediate}\orm {pdfximage}）。
+图像流字典的对象编号随后可通过 \type {objnum} 键获取。不生成 \type {pdf_refximage}
+whatsit 节点。你需要调用 \type {img.write(a)} 或 \type {img.node(a)} 才能让图像
+出现在页面上，或者通过其他方式引用它；否则你将在 \PDF\ 文件中留下一个悬空的
+图像对象。
+
+\begin{typing}
+<image> var = img.immediatewrite(<image> var)
+<image> var = img.immediatewrite(<table> image_spec)
+\end{typing}
+
+这里同样可以使用简洁的调用方式
+
+\begin{typing}
+a = img.immediatewrite { filename = "foo.png" }
+\end{typing}
+
+\type {<image>} 变量会被返回，你很可能需要它。
+
+下一个函数有些特殊，它从一个（\PDF）图像文件复制一个对象。此功能是实验性的，
+可能会消失。
+
+\begin{typing}
+<integer> objnum = img.immediatewriteobject(<image> var, <integer> objnum)
+<integer> objnum = img.immediatewriteobject(<table> image_spec, <integer> objnum)
+\end{typing}
+
+\subsection{\type {node}}
+
+\libindex{node}
+
+\begin{typing}
+<node> n = img.node(<image> var)
+<node> n = img.node(<table> image_spec)
+\end{typing}
+
+此函数分配一个 \PDF\ 对象编号并返回一个子类型为 \type {pdf_refximage} 的
+whatsit 节点，填充有图像参数 \type {width}、\type {height}、\type {depth} 和
+\type {objnum}。这里同样可以使用简洁的调用方式：
+
+\begin{typing}
+n = img.node ({ filename = "foo.png" })
+\end{typing}
+
+以下示例输出一个图像：
+
+\begin{typing}
+node.write(img.node{filename="foo.png"})
+\end{typing}
+
+\subsection{\type {types}}
+
+\topicindex {images+types}
+
+\libindex{types}
+
+\begin{typing}
+<table> types = img.types()
+\end{typing}
+
+此函数返回一个支持的图像文件类型名称列表，目前包括 \type {pdf}、\type {png}、
+\type {jpg}、\type {jp2}（JPEG~2000）和 \type {jbig2}。
+
+\subsection{\type {boxes}}
+
+\libindex{boxes}
+
+\begin{typing}
+<table> boxes = img.boxes()
+\end{typing}
+
+此函数返回一个支持的 \PDF\ 页面盒名称列表，目前包括 \type {media}、
+\type {crop}、\type {bleed}、\type {trim} 和 \type {art}，均为小写。
+
+\PDF\ 文件在确定其属性后保持打开状态。当引用该图像的页面被刷新时包含完成后，
+文件才关闭。这意味着如果一个页面上有数千张图像，你的操作系统可能会决定中止
+本次运行。当你从一个 \PDF\ 文件中包含多个页面时，可以在分配图像对象时设置
+\type {keepopen} 标志，或者在通过 \lpr {useimageresource} 引用图像时传递
+\type {keepopen} 指令。这仅在嵌入多个页面时才有意义。应用于 \lpr
+{saveimageresource} 的 \prm {immediate} 也会在包含后强制关闭。
+
+\begin{typing}
+\immediate\useimageresource{foo.pdf}%
+          \saveimageresource         \lastsavedimageresourceindex % closed
+          \useimageresource{foo.pdf}%
+          \saveimageresource         \lastsavedimageresourceindex % kept open
+          \useimageresource{foo.pdf}%
+          \saveimageresource keepopen\lastsavedimageresourceindex % kept open
+
+\directlua{img.write(img.scan{ file = "foo.pdf" })}                  % closed
+\directlua{img.write(img.scan{ file = "foo.pdf", keepopen = true })} % kept open
+\end{typing}
+
+\section{\type {mplib}}
+
+\topicindex {\METAPOST}
+\topicindex {\METAPOST+mplib}
+\topicindex {images+mplib}
+\topicindex {images+\METAPOST}
+
+\libindex{version}
+
+\MP\ 库接口在 table \type {mplib} 中注册自身。它基于 \MPLIB\ 版本
+[Lua输出]。
+
+\subsection{\type {new}}
+
+\libindex{new}
+
+要创建一个新的 \METAPOST\ 实例，调用
+
+\begin{typing}
+<mpinstance> mp = mplib.new({...})
+\end{typing}
+
+这会创建 \type {mp} 实例对象。参数 hash 可以有多个不同字段，如下：
+
+\begin{longtable}{l l p{4cm} p{3cm}}
+\toprule 名称               & 类型     & 说明              & 默认值           \\
+\midrule
+\type{error_line}  & number   & 错误行宽         & 79                \\
+\type{print_line}  & number   & ps 输出中的行长度 & 100               \\
+\type{random_seed} & number   & 初始随机种子      & 随机值            \\
+\type{math_mode}   & string   & 使用的数制：
+                                        \type {scaled}、
+                                        \type {double} 或
+                                      % \type {binary} 或
+                                        \type {decimal}          & \type {scaled}    \\
+\type{interaction} & string   & 交互模式：
+                                        \type {batch}、
+                                        \type {nonstop}、
+                                        \type {scroll} 或
+                                        \type {errorstop}        & \type {errorstop} \\
+\type{job_name}    & string   & \type {--jobname}        & \type {mpout}     \\
+\type{find_file}   & function & 用于查找文件的函数 & 仅本地文件  \\
+\bottomrule
+\end{longtable}
+
+在 \MPLIB\ 的 \LUATEX\ 版本中，二进制模式不再可用。它没有实际优势，反而带来
+大量具有平台特定属性的额外库，我们现在可以避免这些。我们可能会在某个时候引入
+高分辨率 scaled 变体，但前提是这在性能上有所回报。
+
+\type {find_file} 函数应具有以下形式：
+
+\begin{typing}
+<string> found = finder (<string> name, <string> mode, <string> type)
+\end{typing}
+
+其中：
+
+\begin{longtable}{l p{5cm}}
+\toprule 名称        & 所请求的文件 \\
+\midrule
+\type{mode} & 文件模式：\type {r} 或 \type {w} \\
+\type{type} & 文件种类，以下之一：\type {mp}、\type {tfm}、\type {map}、
+                    \type {pfb}、\type {enc} \\
+\bottomrule
+\end{longtable}
+
+返回找到文件的完整路径名，如果找不到文件则返回 \type {nil}。
+
+注意，新版本的 \MPLIB\ 不再使用二进制 mem 文件，因此预加载一组宏的方法就是在
+第一次 \type {execute} 调用中以 \type {input} 命令开始。
+
+当你处理一段以 \type {btex} 开头、以 \type {etex} 或 \type {verbatimtex} 结尾的
+文本片段时，\METAPOST\ 的 \type {texscriptmode} 参数控制空格和换行如何被处理。
+默认值为~1。可能的值有：
+
+\begin{longtable}{l p{5cm}}
+\toprule 名称      & 含义 \\
+\midrule
+\type {0} & 无换行 \\
+\type {1} & \type {verbatimtex} 中的换行 \\
+\type {2} & \type {verbatimtex} 和 \type {etex} 中的换行 \\
+\type {3} & \type {verbatimtex} 中不去除首尾空白 \\
+\type {4} & \type {verbatimtex} 和 \type {btex} 中不去除首尾空白 \\
+\bottomrule
+\end{longtable}
+
+这样 \LUA\ 处理器（分配给 \type {make_text}）就可以按自己的意愿处理。
+\type {etex} 后面必须跟一个空格或 \type {;}，或位于行尾；前面必须跟一个空格
+或位于行首。
+
+\subsection{\type {statistics}}
+
+\libindex{statistics}
+
+你可以通过以下方式请求统计信息：
+
+\begin{typing}
+<table> stats = mp:statistics()
+\end{typing}
+
+此函数返回 \MPLIB\ 实例的重要统计数据。共有四个字段，给出四个已分配对象类中
+每类使用项目的最大数量：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{memory} & number & 内存大小 \\
+\type{hash}   & number & 哈希表大小\\
+\type{params} & number & 同时存在的宏参数\\
+\type{open}   & number & 输入文件嵌套层级\\
+\bottomrule
+\end{longtable}
+
+注意在新版本的 \MPLIB 中，这仅供参考。所有对象都是动态分配的，因此除非可用的
+系统内存耗尽，否则不会有空间不足的风险。
+
+\subsection{\type {execute}}
+
+\libindex{execute}
+
+你可以通过调用以下函数让 \METAPOST\ 解释器运行一段代码
+
+\begin{typing}
+<table> rettable = execute(mp,"metapost code")
+\end{typing}
+
+用于处理各种 \METAPOST\ 语言输入。务必检查 \type
+{rettable.status}（见下文），因为当发生致命的 \METAPOST\ 错误时，\MPLIB\
+实例此后将不可用。
+
+一般来说，最好保持代码段较小，但请注意所有代码段都必须遵循正确的语法，就像
+每个代码段都是一个小文件一样。例如，你不能将一条语句拆分到多个代码段中。
+
+与通常的独立 \type {mpost} 命令不同，第一个代码段开头\notabene {没有}隐含的
+``input。
+
+\subsection{\type {finish}}
+
+\libindex{finish}
+
+\begin{typing}
+<table> rettable = finish(mp)
+\end{typing}
+
+如果由于某种原因你想在处理尚未实际完成时停止使用某个 \MPLIB\ 实例，可以调用
+\type{finish}。最终，使用的内存会被释放、打开的文件会被 \LUA\ 垃圾回收器
+关闭，但显式的 \type{finish} 是捕获输出流最后部分的唯一方法。
+
+\subsection{结果表}
+
+\libindex {fields}
+
+\type {execute} 和 \type {finish} 的返回值是一个 table，包含几个可能的键
+（只有 \type {status} 保证一定存在）。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{log}    & string & 输出到 ``log 流 \\
+\type{term}   & string & 输出到 ``term 流 \\
+\type{error}  & string & 输出到 ``error 流
+                                 （仅用于 ``内存不足） \\
+\type{status} & number & 返回值：
+                                 \type {0} = 正常，
+                                 \type {1} = 警告，
+                                 \type {2} = 错误，
+                                 \type {3} = 致命错误 \\
+\type{fig}    & table  & 生成的图形数组（如果有） \\
+\bottomrule
+\end{longtable}
+
+当 \type {status} 等于~3 时，你应立即停止使用此 \MPLIB\ 实例，它已不再能够
+处理输入。
+
+如果存在，\type {fig} 数组中的每个条目都是一个表示图形对象的 userdata，每个
+对象都有一些可以调用的方法：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{boundingbox}  & function & 返回包围盒，为 4
+                                         个值的数组 \\
+\type{postscript}   & function & 返回一个字符串，即
+                                         \type {fig} 的 ps 输出。此函数接受
+                                         两个可选整数参数，分别用于指定
+                                         \type {prologues}（第一个参数）和
+                                         \type
+                                         {procset}（第二个参数）的值 \\
+\type{svg}          & function & 返回一个字符串，即
+                                         \type {fig} 的 svg 输出。此函数接受
+                                         一个可选整数参数，用于指定
+                                         \type {prologues} 的值 \\
+\type{objects}      & function & 返回此 \type {fig} 中
+                                         图形对象的实际数组 \\
+\type{copy_objects} & function & 返回此 \type {fig} 中
+                                         图形对象数组的深拷贝 \\
+\type{filename}     & function & 独立模式下此
+                                         \type {fig} 的 \POSTSCRIPT\
+                                         输出会写入的文件名 \\
+\type{width}        & function & \type {fontcharwd} 值 \\
+\type{height}       & function & \type {fontcharht} 值 \\
+\type{depth}        & function & \type {fontchardp} 值 \\
+\type{italcorr}     & function & \type {fontcharit} 值 \\
+\type{charcode}     & function & （取整后的）\type {charcode} 值 \\
+\bottomrule
+\end{longtable}
+
+注意：对于任何一个 \type {fig} 对象，你只能调用一次 \type {fig:objects()}！
+
+当包围盒表示一个 ``取反矩形 时，即第一组坐标大于第二组坐标时，该图为空。
+
+图形对象有多种类型，每种类型都有不同的可访问值列表。类型包括：\type {fill}、
+\type {outline}、\type {text}、\type {start_clip}、\type {stop_clip}、
+\type {start_bounds}、\type {stop_bounds}、\type {special}。
+
+有一个辅助函数（\type {mplib.fields(obj)}）可用于获取特定对象的可访问值列表，
+但你也可以直接使用下面给出的 table。
+
+所有图形对象都有一个 \type {type} 字段，以字符串值给出对象类型；下表中不再
+显式列出。在下文中，\type {number} 是 \POSTSCRIPT\ 点，以浮点数表示，除非另
+有说明。类型为 \type {table} 的字段值将在下一节说明。
+
+\subsubsection{fill}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{path}       & table  & 节点列表 \\
+\type{htap}       & table  & 反向轨迹的节点列表 \\
+\type{pen}        & table  & 笔的节点 \\
+\type{color}      & table  & 对象的颜色 \\
+\type{linejoin}   & number & 线连接样式（裸数字）\\
+\type{miterlimit} & number & miterlimit\\
+\type{prescript}  & string & prescript 文本 \\
+\type{postscript} & string & postscript 文本 \\
+\bottomrule
+\end{longtable}
+
+\type {htap} 和 \type {pen} 条目是可选的。
+
+\subsubsection{outline}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{path}       & table  & 节点列表 \\
+\type{pen}        & table  & 笔的节点 \\
+\type{color}      & table  & 对象的颜色 \\
+\type{linejoin}   & number & 线连接样式（裸数字）\\
+\type{miterlimit} & number & miterlimit\\
+\type{linecap}    & number & 线端点样式（裸数字）\\
+\type{dash}       & table  & 虚线列表的表示 \\
+\type{prescript}  & string & prescript 文本 \\
+\type{postscript} & string & postscript 文本 \\
+\bottomrule
+\end{longtable}
+
+\type {dash} 条目是可选的。
+
+\subsubsection{text}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{text}       & string & 文本 \\
+\type{font}       & string & 字体 tfm 名称 \\
+\type{dsize}      & number & 字号 \\
+\type{color}      & table  & 对象的颜色 \\
+\type{width}      & number & \\
+\type{height}     & number & \\
+\type{depth}      & number & \\
+\type{transform}  & table  & 文本变换 \\
+\type{prescript}  & string & prescript 文本 \\
+\type{postscript} & string & postscript 文本 \\
+\bottomrule
+\end{longtable}
+
+\subsubsection{special}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{prescript} & string & special 文本 \\
+\bottomrule
+\end{longtable}
+
+\subsubsection{start_bounds、start_clip}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{path} & table & 节点列表 \\
+\bottomrule
+\end{longtable}
+
+\subsubsection{stop_bounds、stop_clip}
+
+此处没有可用字段。
+
+\subsection{辅助表格式}
+
+\subsubsection{路径和笔}
+
+路径和笔（就 \MPLIB\ 而言，笔实际上只是一种特殊类型的路径）由一个数组表示，
+每个条目是一个表示节点的 table。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{left_type}  & string & 存在时：端点，但通常不存在 \\
+\type{right_type} & string & 同 \type {left_type} \\
+\type{x_coord}    & number & 此节点的 X 坐标 \\
+\type{y_coord}    & number & 此节点的 Y 坐标 \\
+\type{left_x}     & number & 此节点前控点的 X 坐标 \\
+\type{left_y}     & number & 此节点前控点的 Y 坐标 \\
+\type{right_x}    & number & 此节点后控点的 X 坐标 \\
+\type{right_y}    & number & 此节点后控点的 Y 坐标 \\
+\bottomrule
+\end{longtable}
+
+有一个特殊情况：（可能经过变换的）椭圆笔除了包含节点列表的数组部分外，还有
+一个值为 \type {elliptical} 的额外字符串键 \type {type}。
+
+\subsubsection{颜色}
+
+颜色是一个包含 0、1、3 或 4 个值的整数数组：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{0} & 仅标记 & 无值                                                     \\
+\type{1} & 灰度    & 一个在 $(0,1)$ 范围内的值，``黑 为 $0$         \\
+\type{3} & \RGB     & 三个在 $(0,1)$ 范围内的值，``黑 为 $0,0,0$  \\
+\type{4} & \CMYK    & 四个在 $(0,1)$ 范围内的值，``黑 为 $0,0,0,1$ \\
+\bottomrule
+\end{longtable}
+
+如果内部对象的颜色模型是 \type {uninitialized}，则它被初始化为在 \type
+{shipout} 时生效的色彩空间 \type {defaultcolormodel} 中表示 ``黑 的值。
+
+\subsubsection{变换}
+
+每个变换是一个六元素数组。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 索引  & 类型 & 说明 \\
+\midrule
+\type{1} & number & 表示 x  \\
+\type{2} & number & 表示 y  \\
+\type{3} & number & 表示 xx \\
+\type{4} & number & 表示 yx \\
+\type{5} & number & 表示 xy \\
+\type{6} & number & 表示 yy \\
+\bottomrule
+\end{longtable}
+
+注意平移（索引 1 和 2）在前。这与 \POSTSCRIPT\ 中的顺序不同，在 \POSTSCRIPT\
+中平移在最后。
+
+\subsubsection{虚线}
+
+每个 \type {dash} 是一个双元素 hash，使用与 \POSTSCRIPT\ 相同的模型表示虚线
+列表。\type {dashes} 是一个由 ``开 和 ``关 值组成的数组，
+\type {offset} 是图案的相位。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{dashes} & hash   & 开-关数字的数组 \\
+\type{offset} & number & 起始偏移值  \\
+\bottomrule
+\end{longtable}
+
+\subsection{笔和 \type {pen_info}}
+
+\libindex{pen_info}
+
+有一个辅助函数（\type {pen_info(obj)}）返回一个 table，其中包含所用笔的一
+些重要特性（所有值都是浮点数）：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 字段  & 类型 & 说明 \\
+\midrule
+\type{width} & number & 笔的宽度 \\
+\type{sx}    & number & $x$ 比例        \\
+\type{rx}    & number & $xy$ 乘数  \\
+\type{ry}    & number & $yx$ 乘数  \\
+\type{sy}    & number & $y$ 比例        \\
+\type{tx}    & number & $x$ 偏移       \\
+\type{ty}    & number & $y$ 偏移       \\
+\bottomrule
+\end{longtable}
+
+\subsection{字符尺寸信息}
+
+这些函数查找指定字体中一个字形的尺寸。\type {fontname} 与 \type {infont}
+的参数名称相同；\type {char} 是一个范围在 0 到 255 之间的字形 id；返回的
+\type {w} 以 AFM 单位表示。
+
+\subsubsection{\type {char_width}}
+
+\libindex{char_width}
+
+\begin{typing}
+<number> w = char_width(mp,<string> fontname, <number> char)
+\end{typing}
+
+\subsubsection{\type {char_height}}
+
+\libindex{char_height}
+
+\begin{typing}
+<number> w = char_height(mp,<string> fontname, <number> char)
+\end{typing}
+
+\subsubsection{\type {char_depth}}
+
+\libindex{char_depth}
+
+\begin{typing}
+<number> w = char_depth(mp,<string> fontname, <number> char)
+\end{typing}
+
+\subsubsection{\type {get_[boolean|numeric|string|path]}}
+
+\libindex{get_boolean}
+\libindex{get_numeric}
+\libindex{get_path}
+\libindex{get_string}
+
+当脚本调用将你从 \METAPOST\ 运行（暂时）带回 \LUA 时，你可以访问变量，但
+前提是它们是已知的（例如循环变量等匿名 capsule 不可访问）。
+
+\begin{typing}
+<boolean> w = get_boolean(mp,<string> name)
+<number>  n = get_numeric(mp,<string> name)
+<string>  s = get_string (mp,<string> name)
+<table>   p = get_path   (mp,<string> name)
+\end{typing}
+
+路径以一个包含子 table 的 table 返回，每个子 table 有六个数字：点坐标、前控点
+和后控点。\type {cycle} 字段指示路径是否是闭合的。

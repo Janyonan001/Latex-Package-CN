@@ -10,3 +10,5 @@
 - hyperref 2026-10-09 v7.01s
 - tex by topic v1.1
 - standalone 版本v1.5a ——2025/02/22
+- luatex v1.24
+- pgfornament-doc-zh v1.4 2026/10/17 装饰宏包

@@ -1,0 +1,477 @@
+\chapter{语言、字符、字体与字形}\label{languages}
+
+\section{引言}
+
+\topicindex {languages}
+
+\LUATEX\ 内部对待最终被排版出来的字符与字形的方式，与 \TEX82\ 处理同一批对象的方式
+大不相同。解释这种差异最简单的办法，是先聚焦于不受限的水平模式（即段落）和断字。
+之后再处理水平模式和数学模式中出现的差异就容易了。
+
+在 \TEX82\ 中，你键入的字符在被主控制循环遇到时会被转换为 \type {char} 节点记录。
+\TEX\ 在创建这些记录的同时附加并处理字体信息，因此得到的 ``水平列表
+中已经包含连字和隐含字距的最终形态。这种打包是必要的，因为我们可能需要获取
+比如一个水平盒子的有效宽度。
+
+当需要对段落中的单词进行断字时，\TEX\ 会（一次处理一个词）把 \type {char} 节点记录
+转换为一个字符串：用连字的组成部分替换连字，并忽略字距。然后在这个字符串上运行
+断字算法，再把断字结果转换回一个 ``水平列表，依次拼回段落流中。
+请记住，段落中可能含有未装箱的水平内容，其中已经包含连字和字距，
+而其中的单词同样参与断字过程。
+
+那些 \type {char} 节点记录的名字多少有些误导，因为它们其实是特定字体中的字形位置，
+并非语言学意义上的 ``字符。\type {char} 节点记录内部根本没有语言信息。
+相反，语言信息是通过水平列表中的 \type {language whatsit} 节点传递的。
+
+在 \LUATEX\ 中情况则大不相同。你键入的字符总是被转换为 \nod {glyph} 节点记录，
+并带有一个特殊子类型，以标明它们是作为语言学字符使用的。\LUATEX\ 把所需的
+语言信息存放在这些记录中，但在创建节点时并不做任何与字体相关的处理。
+它只保存当前字体的索引，以及该字体中某个字符的引用。
+
+当需要排版一个段落时，\LUATEX\ 先把所有断字点直接插入整个节点列表。
+接着处理整个列表中的全部字体信息（创建连字并调整字距），最后调整所有子类型标识，
+使这些记录从此成为 ``字形节点。
+
+\section{字符、字形与断字}\label{charsandglyphs}
+
+\topicindex {characters}
+\topicindex {glyphs}
+\topicindex {hyphenation}
+
+\TEX82（包括 \PDFTEX）区分 \type {char} 节点和 \type
+{lig} 节点。前者是简单条目，只含一个 ``字符 字段和一个 ``字体 字段，
+与记号存在同一块内存中。后者还包含一个组成部分列表，以及一个子类型，
+用以标明该连字是否由词界产生；它与盒子、字距、粘胶等其他节点存放在同一处。
+
+在 \LUATEX\ 中，这两种类型被合并为一个稍大的结构，称为 \nod {glyph} 节点。
+除了原有的字符、字体和组成部分字段外，还有另外几个字段，例如我们将在
+\ref{glyphnodes} 中看到的 ``attr；这些节点还含有一个子类型，
+它编码了四种主要类型和两种附加的“幽灵”类型。对于连字，可以同时置多位
+（当一个词只有单个字形时）。
+
+\begin{itemize}\item \type {character}，用于需要断字的字符：最低位（bit 0）置 1。
+    
+    \item \nod {glyph}，用于特定字体字形：最低位（bit 0）不置位。
+    
+    \item \type {ligature}，用于构造出的连字，bit 1 置位。
+    
+    \item \type {ghost}，用于所谓的 ``幽灵对象，bit 2 置位。
+    
+    \item \type {left}，用于由左词界产生的连字，以及由 \lpr {leftghost}
+        产生的幽灵，bit 3 置位。
+    
+    \item \type {right}，用于由右词界产生的连字，以及由 \lpr {rightghost}
+        产生的幽灵，bit 4 置位。
+    
+\end{itemize}
+
+\nod {glyph} 节点还含有语言数据，分为四项，都是节点创建时的当前值：
+\prm {setlanguage}（15~位）、\prm {lefthyphenmin}（8~位）、
+\prm {righthyphenmin}（8~位）和 \prm {uchyph}（1~位）。
+
+顺带一提，\LUATEX\ 允许 16383 种不同语言，单词最长可达 256 个字符。
+语言信息随每个字符一同保存。你可以把 \prm {firstvalidlanguage}
+设为例如~1，从而使语言~0 成为一个被忽略的断字语言。
+
+新原语 \lpr {hyphenationmin} 可用于指定一个词的最小长度。
+该值随（当前）语言一同保存。
+
+由于 \prm {uchyph} 的值保存在实际节点中，它的处理与 \TEX82\ 略有不同：
+对 \prm {uchyph} 的改动立即生效，而不是在当前段落末尾才生效。
+
+已排版的盒子现在总是把语言信息嵌入节点自身，因此不再可能依赖周围的语言设置。
+在 \TEX82\ 中，段落中部出现的 \type {\unhbox0} 之类语句会使用当前段落语言处理盒子，
+除非盒子内部发出过 \prm {setlanguage}。在 \LUATEX\ 中，所有语言变量都已冻结。
+
+在传统 \TEX\ 中，断字过程由 \type {lccode} 驱动。在 \LUATEX\ 中我们弱化了这种依赖。
+可以有几种策略。什么都不做时，加载模式、设置例外或对列表断字都会使用当前生效的
+\type {lccode}。
+
+当你把 \prm {savinghyphcodes} 设为大于零的值时，当前这组 \type {lccode}
+会随语言一同保存。这种情况下，之后改动某个 \type {lccode} 不再起作用。
+不过你可以用如下方式调整这组代码：
+
+\begin{typing}
+\hjcode`a=`a
+\end{typing}
+
+这个改动是全局性的——如果你记住断字发生的时刻通常是构造段落或水平盒子之时，
+这就说得通了。语言初始化时若 \prm {savinghyphcodes} 为零，则你一开始什么都没有；
+否则你已经有了一组代码。
+
+当某个 \lpr {hjcode} 大于 0 但小于 32 时，它表示要使用的长度。在下面的例子中，
+我们把一个字符（\type {x}）映射到模式中的另一个字符，并告诉引擎 \type {œ}
+算作一个字符。由于传统上 0 本身被保留用于禁止断字，值 32 被当作 0 处理。
+
+下面是一些例子（我们假设使用法语模式）：
+
+\begin{longtable}{l l l}
+\toprule & \type{foobar} & \type{foo-bar} \\
+\midrule
+\type{\hjcode`x=`o}              & \type{fxxbar} & \type{fxx-bar} \\
+\type{\lefthyphenmin3}           & \type{œdipus} & \type{œdi-pus} \\
+\type{\lefthyphenmin4}           & \type{œdipus} & \type{œdipus}  \\
+\type{\hjcode`œ=2}               & \type{œdipus} & \type{œdi-pus} \\
+\type{\hjcode`i=32 \hjcode`d=32} & \type{œdipus} & \type{œdipus}  \\
+\bottomrule
+\end{longtable}
+
+让每个字形都携带这全部信息会带来过大的开销，也会使设置这些代码的过程更加复杂。
+我们曾考虑过用 \type {hjcode} 集合的方案，但最终放弃了，因为实践中当前的做法已经足够，
+而且无论如何都无法做到兼容。
+
+请注意：这些值总是会被保存到格式文件中，与转储格式时 \prm {savinghyphcodes}
+的设置无关。
+
+边界节点通常会标记一个词的结束，这会干扰例如断字插入。为此你可以把
+\prm {wordboundary} 用作触发器。下面是几个用法示例：
+
+\begin{typing}
+    discrete---discrete
+\end{typing}
+
+%（以下为 ConTeXt 演示示例图，已省略。）
+
+在传统 \TEX\ 中，连字构造与断字和换行机制交织在一起。在 \LUATEX\ 中这些阶段是隔离的。
+因此我们对（一连串）显式连字符的处理方式有所不同。我们已经添加了一些对断字各方面的
+控制，而又一项新的控制涉及自动连字符（例如输入中的 \type {-} 字符）。
+
+当 \lpr {automatichyphenmode} 取值为 0 时，一个连字符会被转换为自动断字符。
+它前后的片段不会被断字。一个副作用是，行首连字符可能导致断行，但人们很少遇到这种情况。
+设置前、后字符会使这一现象更明显。取值为 1 会避免这个副作用；取值为 2 则不把连字符
+转换为断字符。其他选项的实验（例如允许对两侧单词断字）已被放弃。
+
+\begin{typing}
+% before-after \par
+% before--after \par
+% before---after \par
+\end{typing}
+
+\begin{typing}
+% -before \par
+% after- \par
+% --before \par
+% after-- \par
+% ---before \par
+% after--- \par
+\end{typing}
+
+\begin{typing}
+% before-after \par
+% before--after \par
+% before---after \par
+\end{typing}
+
+\begin{typing}
+% ConTeXt \framed 演示块，已省略
+\end{typing}
+
+% ConTeXt 自动断字模式演示图（automatichyphenmode:1, automatichyphenmode:2），已省略
+
+在下面的讨论中，
+我们展示了三个样本的情况：
+
+输入 A、B、C 的演示输出已省略（原 ConTeXt 图）。
+
+与其他单字符命令的原语同伴一样，\prm {-} 命令有一个更冗长的原语版本
+\lpr {explicitdiscretionary}；而断字器中通常被截获的字符 \type {-}
+（或任何被配置的字符）则可作为 \lpr {automaticdiscretionary} 使用。
+
+\section{主控制循环}
+
+\topicindex {main loop}
+\topicindex {hyphenation}
+
+在 \LUATEX\ 的主循环中，几乎所有待排版的输入字符都会被转换为子类型为
+``character 的 \nod {glyph} 节点记录，但有少数例外。
+
+\begin{itemize}
+
+\item \prm {accent} 原语创建的节点子类型是 ``glyph 而不是 ``character：
+    一个用于实际的重音符号，一个用于被加重音的字符。这样做的首要原因是，
+    \TEX82 中的 \prm {accent} 明确依赖于当前字体编码，因此给该原语的名字赋予新含义
+    没什么意义，那会使许多旧文档和宏包失效。次要原因是，在 \TEX82\ 中
+    \prm {accent} 会禁止对当前单词断字。由于在 \LUATEX\ 中只对 ``character
+    节点进行断字，所以可以达到同样的效果。当然，现代具备 \UNICODE\ 感知能力的宏包
+    根本不会使用 \prm {accent} 原语，而是直接映射到组合字符。
+
+    \prm {char} 确实发生了这种含义变化：它现在生成带子类型 character 的
+    ``glyph 节点。在传统 \TEX\ 中，8 位输入编码、断字与从字体中取字形之间
+    存在紧密关系。在 \LUATEX\ 中我们使用 \UTF\ 输入，大多数情况下它直接映射到字体中的
+    一个字符，字体引擎中的字形替换除外。如果你想直接访问字体中的任意字形，
+    随时可以用 \LUA\ 来做，因为字体是以 \LUA\ 表的形式可用的。
+
+\item 数学模式中处理的所有结果，最终都成为子类型为 ``glyph 的节点。
+    事实上，数学处理的结果就是一个由字形、字距、粘胶、罚分、盒子等组成的普通列表。
+
+\item 由 \ALEPH\ 派生的命令 \lpr {leftghost} 和 \lpr {rightghost} 创建第三种
+    子类型的节点：``ghost。这些节点在后续所有处理中被完全忽略，
+    直到添加字形间字距的阶段才会被处理。
+
+\item 自动断字符的处理方式不同。\TEX82\ 在感知到一个与当前字体 \prm {hyphenchar}
+    匹配的输入字符后，会插入一个空断字符。我们认为这种检测方式是错误的：
+    是否断字不应依赖于当前字体，它是一种语言属性。
+    \footnote {\TEX\ 刚出现时我们还没有 \UNICODE，而局限于 8 位意味着有时不得不在
+    支持字符输入、字形渲染和断字之间做出妥协。}
+
+    在 \LUATEX\ 中，工作方式如下：当 \LUATEX\ 感知到一串输入字符与新整数参数
+    \prm {exhyphenchar} 的值匹配时，会在这串节点之后插入一个显式断字符。
+    初始时 \TEX\ 把 \type {\exhyphenchar=`\-}。顺带一提，这是一个全局参数而非
+    语言相关参数，因为根据文档结构而不是文本语言来改变它的值可能更有用。
+
+    在一连串显式连字符之后插入断字符的工作，与其他断字处理同时发生，
+    而{\it 不是}在主控制循环内部。
+
+    \LUATEX\ 对 \prm {hyphenchar} 的唯一用途，是检查一个词是否根本应该被纳入断字。
+    如果一个词中第一个字符节点所附字体的 \prm {hyphenchar} 为负，则立即放弃对该词的
+    断字。这种行为仅是为了向后兼容而添加的，在新的 \LUATEX\ 文档中不应再使用
+    \type {\hyphenchar=-1} 作为阻止断字的手段。
+
+\item \prm {setlanguage} 命令不再创建 whatsit。\prm {setlanguage} 的含义被改为一个
+    与其他参数一样的整数参数。这个整数参数在创建 \type {\glyph_node} 时被用来
+    向字形节点添加语言信息。相应地，\prm {language} 原语也被扩展，使其总是同时更新
+    \prm {setlanguage} 的值。
+
+\item \prm {noboundary} 命令（用于在通常会发生词界处理的地方禁止该处理）现在确实会
+    创建节点。这些节点是必需的，因为 \prm {noboundary} 命令在输入流中的确切位置
+    必须保留到连字和字体处理阶段之后。
+
+\item 代码中不再有 \type {main_loop} 标号。请记住，\TEX82\ 在向水平列表添加
+    \type {char_nodes} 时做了大量处理。出于速度考虑，它把那段处理代码放在
+    ``主控制 循环之外，只有任何 ``词 的第一个字符才由那个
+    ``主控制 循环处理。在 \LUATEX\ 中不再需要这样做（所有重活都在后面完成），
+    那些（现在非常短小的）字符处理代码已经移回内联。当打开 \prm {tracingcommands} 时，
+    这一点可以看出来：报告的是整个词，而不仅仅是首字符。
+
+\end{itemize}
+
+由于我们倾向于把硬编码的行为改为可配置，又添加了几个新原语：
+
+\begin{typing}
+\hyphenpenaltymode
+\automatichyphenpenalty
+\explicithyphenpenalty
+\end{typing}
+
+第一个参数对自动断字符（即由 \prm {exhyphenchar} 产生的断字符）有以下影响：
+
+\begin{longtable}{c l l}
+\toprule 模式     & 自动断字符 \type {-}      & 显式断字符 \prm{-}         \\
+\midrule
+\type{0} & \prm {exhyphenpenalty}        & \prm {exhyphenpenalty}        \\
+\type{1} & \prm {hyphenpenalty}          & \prm {hyphenpenalty}          \\
+\type{2} & \prm {exhyphenpenalty}        & \prm {hyphenpenalty}          \\
+\type{3} & \prm {hyphenpenalty}          & \prm {exhyphenpenalty}        \\
+\type{4} & \lpr {automatichyphenpenalty} & \lpr {explicithyphenpenalty}  \\
+\type{5} & \prm {exhyphenpenalty}        & \lpr {explicithyphenpenalty}  \\
+\type{6} & \prm {hyphenpenalty}          & \lpr {explicithyphenpenalty}  \\
+\type{7} & \lpr {automatichyphenpenalty} & \prm {exhyphenpenalty}        \\
+\type{8} & \lpr {automatichyphenpenalty} & \prm {hyphenpenalty}          \\
+\bottomrule
+\end{longtable}
+
+其他值则执行我们在 \LUATEX\ 中一直以来的做法：插入 \prm {exhyphenpenalty}。
+
+\section{加载断字模式与例外词}\label{patternsexceptions}
+
+\topicindex {hyphenation}
+\topicindex {hyphenation+patterns}
+\topicindex {hyphenation+exceptions}
+\topicindex {patterns}
+\topicindex {exceptions}
+
+尽管我们保留了传统的断字方法（它依然更优越），但 \LUATEX\ 中断字算法的实现与
+\TEX82\ 大不相同。
+
+\prm {patterns} 的参数经过展开后必须是合法的 \UTF8，各模式之间以空格分隔，
+不允许出现 \prm {char} 或 \prm {chardef} 命令。当前实现相当严格，会拒绝所有
+非-\UNICODE\ 字符。同样，\prm {hyphenation} 展开后的参数也必须是合法的 \UTF8，
+但这里额外提供了一点语法：
+
+\begin{itemize}
+\item 花括号中的三组参数（\type {{}{}{}}）表示所需的复合断字符，
+    参数与普通文档输入中 \prm {discretionary} 命令的参数相同。
+
+\item 一个 \type {-} 表示所需的简单断字符，参见普通文档输入中的
+    \type {\-} 和 \type {\discretionary{-}{}{}}。
+
+\item 内部命令名会被忽略。这条规则专门为 \prm {discretionary} 提供，
+    但它也有助于处理可能混入的 \prm {relax} 命令。
+
+\item 一个 \type {=} 表示文档输入中的一个（非断字符）连字符。
+
+\end{itemize}
+
+展开后的参数首先被转换回一个空格分隔的字符串，同时丢弃内部命令名。
+然后由一个例程把这个字符串转换为字典：通过转换其他列出的项来创建键|-|值对。
+需要重要注意的是，例外字典中的键总是可以由值推导出来。下面是几个例子：
+
+\begin{longtable}{l l l}
+\toprule 取值                  & 推导键（输入） & 效果 \\
+\midrule
+\type {ta-ble}         & table               & \type {ta\-ble} ($=$ \type {ta\discretionary{-}{}{}ble}) \\
+\type {ba{k-}{}{c}ken} & backen              & \type {ba\discretionary{k-}{}{c}ken} \\
+\bottomrule
+\end{longtable}
+
+得到的模式和例外字典会保存在 \prm {language} 当前值所对应的语言代码之下。
+
+在表格的最后一行中，你可以看到值中没有 \prm {discretionary} 命令：
+在基于 \TEX\ 的输入语法中，该命令是可选的。其背后的原因是，可以设想把一整本
+单词字典存为纯文本文件，再用 \LUA\ \type {lang} 库中的某个函数加载进 \LUATEX。
+这种加载方式比走 \TEX\ 语言原语快不少，但如果在加载时还要解释命令序列，
+那部分（大部分）速度优势就会丧失。
+
+可以用 \type {{-}{}{-}} 为复合词中的显式连字符指定额外的断字点
+（如有需要，把 \type {-} 换成实际的显式连字符）。例如，下面这条与单词
+``multi|-|word|-|boundaries 匹配，并允许在 ``boun 和
+``daries 之间额外断行：
+
+\begin{typing}
+{}{-}word{-}{}{-}boun-daries}
+\end{typing}
+
+\ETEX\ 扩展 \prm {savinghyphcodes} 的动机，是断字过去严重依赖于字体编码。
+在 \LUATEX\ 中情况已不再如此，对应的原语基本被忽略了。因为我们现在有了
+\lpr {hjcode}，大小写相关代码可以专门用于 \prm {uppercase} 和 \prm {lowercase}。
+
+例外词中的三对花括号模式可能有些出人意料，所以我们通过例子来解释。
+模式 \type {foo{}{}{x}bar} 会创建查找键 \type {fooxbar}，而模式
+\type {foo{}{}{}bar} 创建 \type {foobar}。然后，当命中发生时，
+有一个替换文本（\type {x}）或没有。由于我们在断字符节点中引入了罚分，
+例外语法现在还可以带罚分说明。方括号中的值是 \lpr {exceptionpenalty} 的倍数。
+这里我们把它设为 10000，因此在例子中实际得到 30000。
+
+% ConTeXt \ShowSample 演示宏（使用 \bTABLE/\bTR/\bTD 等 ConTeXt 表格命令），已省略。
+% 以下为原示例断字串：
+% x{a-}{-b}{}x{a-}{-b}{}x{a-}{-b}{}x{a-}{-b}{}xx
+% x{a-}{-b}{}x{a-}{-b}{}[3]x{a-}{-b}{}[1]x{a-}{-b}{}xx
+% z{a-}{-b}{z}{a-}{-b}{z}{a-}{-b}{z}{a-}{-b}{z}z
+% z{a-}{-b}{z}{a-}{-b}{z}[3]{a-}{-b}{z}[1]{a-}{-b}{z}z
+
+\section{应用断字}
+
+\topicindex {hyphenation+how it works}
+\topicindex {hyphenation+discretionaries}
+\topicindex {discretionaries}
+
+\LUATEX\ 在单词中插入断字符所使用的内部结构与 \TEX82\ 非常不同，这意味着在处理上
+也有一些值得注意的差异。
+
+首要一点是，断字过程中不涉及 ``压缩 trie。算法仍然读取由 \PATGEN\ 生成的
+模式文件，但 \LUATEX\ 使用有限状态哈希把模式与待断字单词进行匹配。该算法基于
+\OPENOFFICE\ 所用的 ``libhnj 库，而后者又受 \TEX\ 启发。
+
+由于实现方式的原因，\LUATEX\ 与 \TEX82\ 之间存在一些差异：
+
+\begin{itemize}\item \LUATEX\ 可以愉快地对整个 \UNICODE\ 字符范围断字。
+
+\item 模式和例外字典的大小只受可用内存限制，所有分配都是动态进行的。
+    \type {texmf.cnf} 中与 trie 相关的设置会被忽略。
+
+\item 由于不存在 ``trie 准备 阶段，语言模式永远不会被冻结。这意味着原语
+    \prm {patterns}（及其 \LUA\ 对应项 \type {lang.patterns}）可以在任何时候使用，
+    而不仅仅在 ini\TEX\ 中。
+
+\item 格式文件中只保存 \prm {patterns} 和 \prm {hyphenation} 的字符串表示。
+    在加载格式时，它们只是被重新求值。由此可见，没有真正理由在格式文件中预加载语言。
+    事实上，这样做通常并不好。更聪明的做法是，直到真正需要某种模式时才加载它。
+
+\item \LUATEX\ 在创建隐含断字符时使用语言相关变量 \lpr {prehyphenchar} 和
+    \lpr {posthyphenchar}，而不是 \TEX82 的 \prm {hyphenchar}；
+    并使用语言相关变量 \lpr {preexhyphenchar} 和 \lpr {postexhyphenchar} 的值
+    来创建显式断字符（而不是 \TEX82 的空断字符）。
+
+\item 与断字相关的两个计数器 \prm {hyphenpenalty} 和 \prm {exhyphenpenalty} 的值，
+    现在保存在断字符节点中。这允许对显式 \prm {discretionary} 命令进行局部覆盖。
+    应用断字遍历时所使用的是当时的当前值。不使用回调时，这与传统 \TEX\ 兼容。
+    当你调用 \LUA\ 函数 \type {lang.hyphenate} 时，使用的也是当前值。
+
+\item 断字例外字典以键|-|值哈希的形式维护，而且同样是动态的，
+    因此 \type {hyph_size} 设置也不再被使用。
+
+\end{itemize}
+
+因为我们在断字符节点中保存了罚分，\prm {discretionary} 命令被扩展为可以接受一个
+可选的罚分说明，于是你可以这样做：
+
+\begin{typing}
+\hsize1mm
+1:foo{\hyphenpenalty 10000\discretionary{}{}{}}bar\par
+2:foo\discretionary penalty 10000 {}{}{}bar\par
+3:foo\discretionary{}{}{}bar\par
+\end{typing}
+
+结果如下（演示输出已省略）。
+
+\libindex {prehyphenchar}
+\libindex {posthyphenchar}
+\libindex {preexhyphenchar}
+\libindex {postexhyphenchar}
+
+\begin{typing}
+<number> n = lang.prehyphenchar(<language> l)
+lang.prehyphenchar(<language> l, <number> n)
+
+<number> n = lang.posthyphenchar(<language> l)
+lang.posthyphenchar(<language> l, <number> n)
+\end{typing}
+
+这两个函数用于获取或设置该语言中隐含断字的 ``断前 和 ``断后
+连字符。初始值为十进制 45（连字符）和十进制~0（表示为空）。
+
+\begin{typing}
+<number> n = lang.preexhyphenchar(<language> l)
+lang.preexhyphenchar(<language> l, <number> n)
+
+<number> n = lang.postexhyphenchar(<language> l)
+lang.postexhyphenchar(<language> l, <number> n)
+\end{typing}
+
+这两个函数用于获取或设置该语言中显式断字的 ``断前 和 ``断后
+连字符。两者初始值均为十进制~0（表示为空）。
+
+\subsection {\type {hyphenate}}
+
+\libindex {hyphenate}
+
+下一个调用在节点列表中插入断字点（断字符节点）。如果以 \type {tail} 为参数，
+则处理到该节点即停止。目前，如果 \type {head}（以及指定的 \type {tail}）
+是合法节点，无论是否可能有其他错误，\type {success} 总是为真。
+
+\begin{typing}
+<boolean> success = lang.hyphenate(<node> head)
+<boolean> success = lang.hyphenate(<node> head, <node> tail)
+\end{typing}
+
+断字只作用于 ``character，即所有字形节点中子类型取值为 \type {1} 的那个
+特殊子类型。子类型不同的字形模式不被处理。更多细节见
+\ref{charsandglyphs}。
+
+\subsection {\type {[set|get]hjcode}}
+
+\libindex {sethjcode}
+\libindex {gethjcode}
+
+以下两条命令可用于设置或查询 hj code：
+
+\begin{typing}
+lang.sethjcode(<language> l, <number> char, <number> usedchar)
+<number> usedchar = lang.gethjcode(<language> l, <number> char)
+\end{typing}
+
+当你设置一个 hjcode 时，当前这组代码会被初始化，除非该组已经因为
+\prm {savinghyphcodes} 大于零而初始化过。
+
+% \parindent0pt \hsize=1.1cm
+% 12-34-56 \par
+% 12-34-\hbox{56} \par
+% 12-34-\vrule width 1em height 1.5ex \par
+% 12-\hbox{34}-56 \par
+% 12-\vrule width 1em height 1.5ex-56 \par
+% \hjcode`\1=`\1 \hjcode`\2=`\2 \hjcode`\3=`\3 \hjcode`\4=`\4 \vskip.5cm
+% 12-34-56 \par
+% 12-34-\hbox{56} \par
+% 12-34-\vrule width 1em height 1.5ex \par
+% 12-\hbox{34}-56 \par
+% 12-\vrule width 1em height 1.5ex-56 \par

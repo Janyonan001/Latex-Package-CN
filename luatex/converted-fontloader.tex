@@ -1,0 +1,1045 @@
+\chapter{字体加载器}\label{fontloader}
+
+\topicindex {fonts+loading}
+
+fontloader 库在某种程度上独立于其余部分：它可以把字体加载到一个
+\LUA\ 表中，然后再把该表转换成适合 \TEX\ 使用的表。这个库改编自
+\FONTFORGE\ 的一个子集，因此它以类似的视角呈现字体（这在调试时很有
+优势）。我们不会在这里详细讨论 \OPENTYPE，因为 \MICROSOFT\ 网站已经
+提供了足够的相关信息。加载器返回的表与标准相去不远。我们没有扩展加载器
+的计划（它甚至可能在某个时候变成一个外部模块）。
+
+\section{快速获取字体信息}
+
+\topicindex {fonts+information}
+
+\libindex{info}
+
+当你想按名字定位字体时，需要一些隐藏在字体文件中的基本信息。为此我们
+提供了一个高效的辅助函数，它无需加载整个字体就能获取基本信息。通常这个
+辅助函数用于创建字体（名称）数据库。
+
+\begin{typing}
+<table> info =
+    fontloader.info(<string> filename)
+\end{typing}
+
+此函数返回 \type {nil}、一个 \type {table}，或者一个由小表组成的数组
+（在 \TRUETYPE\ 字体集合的情况下）。返回的表中会包含文件所定义字体的
+一些相当有用的信息项：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                 & 类型     & 说明 \\
+\midrule
+\type{fontname}     & string   & 字体的 \POSTSCRIPT\ 名字\\
+\type{fullname}     & string   & 字体的正式名称\\
+\type{familyname}   & string   & 此字体所属的族名\\
+\type{weight}       & string   & 表示字体粗细值的字符串\\
+\type{version}      & string   & 字体内部版本号\\
+\type{italicangle}  & float    & 倾斜角\\
+\type{units_per_em} & number   & 基于 \POSTSCRIPT\ 的字体为 1000，\TRUETYPE\ 通常为 2048\\
+\type{pfminfo}      & table    & （见 \ref{fontloaderpfminfotable}）\\
+\bottomrule
+\end{longtable}
+
+通过此函数获取信息比正常加载字体高效得多（有时是数量级的提升），因此在
+你想根据目录内容创建可用字体词典时非常方便。
+
+\section{加载 \OPENTYPE\ 或 \TRUETYPE\ 文件}
+
+\topicindex {\OPENTYPE}
+\topicindex {\TRUETYPE}
+
+\libindex{open}
+\libindex{close}
+\libindex{to_table}
+
+如果你想使用 \OPENTYPE\ 字体，就必须从某处获取度量信息。使用
+\type {fontloader} 库，获取该信息最简单的方法如下：
+
+\begin{typing}
+function load_font (filename)
+  local metrics = nil
+  local font = fontloader.open(filename)
+  if font then
+     metrics = fontloader.to_table(font)
+     fontloader.close(font)
+  end
+  return metrics
+end
+
+myfont = load_font('/opt/tex/texmf/fonts/data/arial.ttf')
+\end{typing}
+
+主要的函数调用是
+
+\begin{typing}
+<userdata> f, <table> w = fontloader.open(<string> filename)
+<userdata> f, <table> w = fontloader.open(<string> filename, <string> fontname)
+\end{typing}
+
+第一个返回值是字体的 userdata 表示。第二个返回值是一个表，包含 fontloader
+在打开字体时报告的所有警告和错误。在正常排版中，你可能会忽略第二个参数，
+但它在调试时很有用。
+
+对于 \TRUETYPE\ 集合（文件名以 'ttc' 结尾时）和 \DFONT\ 集合，必须
+使用第二个字符串参数来指定想从集合中取哪个字体。请使用 \type
+{fontloader.info} 返回的 \type {fontname} 字符串。
+
+要把字体转成表，对 \type {fontloader.open} 返回的字体使用
+\type {fontloader.to_table}。
+
+\begin{typing}
+<table> f = fontloader.to_table(<userdata> font)
+\end{typing}
+
+这个表不能直接被 \LUATEX\ 使用，应该按照 \ref{fonts} 中的描述
+把它转换成另一个表。不要忘记把 \type {fontname} 值存入要返回给
+\LUATEX\ 的度量表的 \type {psname} 字段，否则字体嵌入后端将无法在集合中
+找到正确的字体。
+
+关于 \type {fontloader.open} 返回的 userdata 对象以及 \type
+{fontloader.to_table} 返回的 \type {metrics} 表的结构，详见
+\ref{fontloadertables}。
+
+字体文件由来自 \FONTFORGE\ 的字体加载例程解析并做部分解释。文件格式可以
+是 \OPENTYPE、\TRUETYPE、\TRUETYPE\ Collection、\CFF\ 或 \TYPEONE。
+
+与我们自己直接读取字体文件相比，这种方法有几点优势：
+
+\begin{itemize}\item 字体会被自动重编码，因此 \TRUETYPE\ 和 \OPENTYPE\ 字体的
+    \type {metrics} 表使用 \UNICODE\ 作为字符索引。
+
+\item 许多特性会被预处理成比原始表更容易处理的格式。
+
+\item 基于 \POSTSCRIPT\ 的 \OPENTYPE\ 字体不在字体文件中存储字符的高度和
+    深度，因此字符包围盒必须以某种方式计算出来。
+
+\end{itemize}
+
+加载过的字体用以下函数释放：
+
+\begin{typing}
+fontloader.close(<userdata> font)
+\end{typing}
+
+\section{应用 ``特性文件}
+
+\libindex{apply_featurefile}
+
+你可以把一个 ``特性文件 应用到已加载的字体上：
+
+\begin{typing}
+<table> errors = fontloader.apply_featurefile(<userdata> font, <string> filename)
+\end{typing}
+
+``特性文件 是 \OPENTYPE\ 字体中各项特性的文本表示。参见
+
+\begin{typing}
+http://www.adobe.com/devnet/opentype/afdko/topic_feature_file_syntax.html
+\end{typing}
+
+和
+
+\begin{typing}
+http://fontforge.sourceforge.net/featurefile.html
+\end{typing}
+
+以获取关于特性文件的更详细说明。
+
+如果函数失败，返回值是一个表，包含 fontloader 在应用特性文件时报告的
+错误。成功时返回 \type {nil}。
+
+\section{应用 ``\AFM\ 文件}
+
+\topicindex {\TYPEONE}
+
+\libindex{apply_afmfile}
+
+你可以把一个 ``\AFM\ 文件 应用到已加载的字体上：
+
+\begin{typing}
+<table> errors = fontloader.apply_afmfile(<userdata> font, <string> filename)
+\end{typing}
+
+\AFM\ 文件是 \TYPEONE\ 字体中（部分）元信息的文本表示。参见
+
+\begin{typing}
+ftp://ftp.math.utah.edu/u/ma/hohn/linux/postscript/5004.AFM_Spec.pdf
+\end{typing}
+
+以获取关于 \AFM\ 文件的更多信息。
+
+注意：如果你用 \type {fontloader.open} 打开名为 \type {font.pfb} 的
+\TYPEONE\ 文件，库会自动在与 \type {font.pfb} 相同的目录中查找
+\type {font.afm}（如果存在）并应用它。那种情况下无需显式调用
+\type {apply_afmfile()}。
+
+如果函数失败，返回值是一个表，包含 fontloader 在应用 AFM 文件时报告的
+错误。成功时返回 \type {nil}。
+
+\section{fontloader 字体表}\label{fontloadertables}
+
+\topicindex {fontloader+tables}
+
+\libindex{fields}
+
+如前所述，\type {fontloader.open} 的返回值是一个 userdata 对象。访问
+实际度量的一种方法是对此对象调用 \type {fontloader.to_table}，它返回
+后面几节所说明的表结构。在后面几节中，我们不会详细解释每个字段。大多数
+字段顾名思义，更技术性的细节需要查阅相关的字体参考资料。
+
+事实证明，\type {fontloader.to_table} 的结果有时需要非常大的内存
+（取决于字体的复杂度和大小），因此可以直接访问 userdata 对象。
+
+\begin{itemize}\item \type {to_table()} 会返回的所有顶层键也都可以直接访问。
+
+\item 顶层键 ``glyphs 返回一个{\it 虚拟\/}数组，允许使用从
+    \type {f.glyphmin} 到（\type {f.glyphmax}）的索引。
+
+\item 该虚拟数组中的各项（实际的字形）本身也是 userdata 对象，每个对象
+    都具有对下面 ``字形项 一节所说明所有键的访问器。
+
+\item 顶层键 ``subfonts 返回一个{\it 实际的} userdata 对象数组，
+    每个子字体一个（如果没有子字体则为 nil）。
+
+\end{itemize}
+
+下面这个简短示例或许有帮助。这段代码打印出字体 \type {PunkNova.kern.otf}
+中所有字形的名字：
+
+\begin{typing}
+local f = fontloader.open('PunkNova.kern.otf')
+print (f.fontname)
+local i = 0
+if f.glyphcnt > 0 then
+    for i=f.glyphmin,f.glyphmax do
+       local g = f.glyphs[i]
+       if g then
+          print(g.name)
+       end
+       i = i + 1
+    end
+end
+fontloader.close(f)
+\end{typing}
+
+在这种情况下，测试计算机上 \LUATEX\ 的内存需求保持在 100MB 以下，而
+\type {to_table()} 生成的内部结构需要超过 2GB 的内存（该字体本身在
+磁盘上为 6.9MB）。
+
+只有顶层字体、子字体表条目和字形是虚拟对象，其余一切仍然产生普通的
+\LUA\ 值和表。
+
+如果你想知道字体或字形结构中有哪些合法字段，请在特定类型（字形或字体）
+的对象上调用 \type {fields} 函数：
+
+\begin{typing}
+<table> fields = fontloader.fields(<userdata> font)
+<table> fields = fontloader.fields(<userdata> font_glyph)
+\end{typing}
+
+例如：
+
+\begin{typing}
+local fields = fontloader.fields(f)
+local fields = fontloader.fields(f.glyphs[0])
+\end{typing}
+
+\section{表类型}
+
+\subsection{主表}
+
+返回表中的顶层键如下（本文档这一部分的说明尚未写完）：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                                 & 类型     & 说明 \\
+\midrule
+\type{table_version}                & string   & 表示度量版本（当前为~0.3）\\
+\type{fontname}                     & string   & \POSTSCRIPT\ 字体名\\
+\type{fullname}                     & string   & 官方（面向人阅读的）字体名\\
+\type{familyname}                   & string   & 族名\\
+\type{weight}                       & string   & 粗细指示\\
+\type{copyright}                    & string   & 版权信息\\
+\type{filename}                     & string   & 文件名\\
+\type{version}                      & string   & 字体版本\\
+\type{italicangle}                  & float    & 倾斜角\\
+\type{units_per_em}                & number   & 基于 \POSTSCRIPT\ 的字体为 1000，\TRUETYPE\ 通常为 2048\\
+\type{ascent}                       & number   & 上升部高度，单位为 \type {units_per_em}\\
+\type{descent}                      & number   & 下降部深度，单位为 \type {units_per_em}\\
+\type{upos}                         & float    & \\
+\type{uwidth}                       & float    & \\
+\type{uniqueid}                     & number   & \\
+\type{glyphs}                       & array    & \\
+\type{glyphcnt}                     & number   & 包含的字形数量\\
+\type{glyphmax}                     & number   & glyphs 数组中已使用的最大索引\\
+\type{glyphmin}                     & number   & glyphs 数组中已使用的最小索引\\
+\type{notdef_loc}                   & number   & \type {.notdef} 字形的位置；不存在时为
+                                                         \type {-1} \\
+\type{hasvmetrics}                  & number   & \\
+\type{onlybitmaps}                  & number   & \\
+\type{serifcheck}                   & number   & \\
+\type{isserif}                      & number   & \\
+\type{issans}                       & number   & \\
+\type{encodingchanged}              & number   & \\
+\type{strokedfont}                  & number   & \\
+\type{use_typo_metrics}             & number   & \\
+\type{weight_width_slope_only}      & number   & \\
+\type{head_optimized_for_cleartype} & number   & \\
+\type{uni_interp}                   & enum     & \nod {unset}, \type {none}, \type {adobe},
+                                                         \type {greek}, \type {japanese}, \type {trad_chinese},
+                                                         \type {simp_chinese}, \type {korean}, \type {ams}\\
+\type{origname}                     & string   & 文件名，由用户提供\\
+\type{map}                          & table    & \\
+\type{private}                      & table    & \\
+\type{xuid}                         & string   & \\
+\type{pfminfo}                      & table    & \\
+\type{names}                        & table    & \\
+\type{cidinfo}                      & table    & \\
+\type{subfonts}                     & array    & \\
+\type{commments}                    & string   & \\
+\type{fontlog}                      & string   & \\
+\type{cvt_names}                    & string   & \\
+\type{anchor_classes}               & table    & \\
+\type{ttf_tables}                   & table    & \\
+\type{ttf_tab_saved}                & table    & \\
+\type{kerns}                        & table    & \\
+\type{vkerns}                       & table    & \\
+\type{texdata}                      & table    & \\
+\type{lookups}                      & table    & \\
+\type{gpos}                         & table    & \\
+\type{gsub}                         & table    & \\
+\type{mm}                           & table    & \\
+\type{chosenname}                   & string   & \\
+\type{macstyle}                     & number   & \\
+\type{fondname}                     & string   & \\
+%NC \type{design_size}                  & number   & \\
+\type{fontstyle_id}                 & number   & \\
+\type{fontstyle_name}               & table    & \\
+%NC \type{design_range_bottom}          & number   & \\
+%NC \type{design_range_top}             & number   & \\
+\type{strokewidth}                  & float    & \\
+\type{mark_classes}                 & table    & \\
+\type{creationtime}                 & number   & \\
+\type{modificationtime}             & number   & \\
+\type{os2_version}                  & number   & \\
+\type{math}                         & table    & \\
+\type{validation_state}             & table    & \\
+\type{horiz_base}                   & table    & \\
+\type{vert_base}                    & table    & \\
+\type{extrema_bound}                & number   & \\
+\type{truetype}                     & boolean  & 表示这是一个 \TRUETYPE\ 字体 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {glyphs}}
+
+\type {glyphs} 是一个数组，包含逐字符的信息（其中不少字段仅在非零时
+才存在）。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                      & 类型     & 说明 \\
+\midrule
+\type{name}              & string   & 字形名 \\
+\type{unicode}           & number   & unicode 码点，或 -1 \\
+\type{boundingbox}       & array    & 由四个数字组成的数组，见下面的说明 \\
+\type{width}             & number   & 仅用于横排字体 \\
+\type{vwidth}            & number   & 仅用于竖排字体 \\
+\type{tsidebearing}      & number   & 仅用于竖排 ttf/otf 字体，且仅在非零时存在 \\
+\type{lsidebearing}      & number   & 仅在非零且不等于 boundingbox[1] 时存在 \\
+\type{class}             & string   & 取 "none"、"base"、"ligature"、"mark"、"component"
+                                              之一（如果不存在，则字形类为 ``自动） \\
+\type{kerns}             & array    & 仅用于横排字体，且在设置时存在 \\
+\type{vkerns}            & array    & 仅用于竖排字体，且在设置时存在 \\
+\type{dependents}        & array    & 字形名字符串的线性数组，仅在非空时存在\\
+\type{lookups}           & table    & 仅在非空时存在 \\
+\type{ligatures}         & table    & 仅在非空时存在 \\
+\type{anchors}           & table    & 仅在设置时存在 \\
+\type{comment}           & string   & 仅在设置时存在 \\
+\type{tex_height}        & number   & 仅在设置时存在 \\
+\type{tex_depth}         & number   & 仅在设置时存在 \\
+\type{italic_correction} & number   & 仅在设置时存在 \\
+\type{top_accent}        & number   & 仅在设置时存在 \\
+\type{is_extended_shape} & number   & 仅当此字符是数学扩展列表的一部分时存在 \\
+\type{altuni}            & table    & 备用 \UNICODE\ 项 \\
+\type{vert_variants}     & table    & \\
+\type{horiz_variants}    & table    & \\
+\type{mathkern}          & table    & \\
+\bottomrule
+\end{longtable}
+
+关于 \type {boundingbox}：\TRUETYPE\ 字体和基于 \TRUETYPE\ 的 \OTF\
+字体的包围盒信息直接从字体文件中读取。基于 \POSTSCRIPT\ 的字体没有这个
+信息，因此传统 \POSTSCRIPT\ 字体的包围盒是通过解释实际的贝塞尔曲线来
+精确计算的。这可能是一个缓慢的过程，所以基于 \POSTSCRIPT\ 的 \OTF\
+字体（以及原始 \CFF\ 字体）的包围盒是根据仅基于实际字形点的字形形状
+近似值计算的，而不考虑整条曲线。这意味着在极值处缺少点的字形会得到一个
+过紧的包围盒，但处理速度快得多，因此我们认为这种折中是值得的。
+
+\type {kerns} 和 \type {vkerns} 是由小哈希组成的线性数组：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键           & 类型   & 说明 \\
+\midrule
+\type{char}   & string & \\
+\type{off}    & number & \\
+\type{lookup} & string & \\
+\bottomrule
+\end{longtable}
+
+\type {lookups} 是一个以 lookup 子表名为键的哈希，每个键的值是一个由
+小哈希组成的线性数组：
+
+% TODO: fix this description
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                  & 类型 & 说明 \\
+\midrule
+\type{type}          & enum & \type {position}, \type {pair}, \type
+                                      {substitution}, \type {alternate}, \type
+                                      {multiple}, \type {ligature}, \type
+                                      {lcaret}, \cbk {kerning}, \type {vkerning},
+                                      \type {anchors}, \type {contextpos}, \type
+                                      {contextsub}, \type {chainpos}, \type
+                                      {chainsub}, \type {reversesub}, \type
+                                      {max}, \type {kernback}, \type {vkernback}
+\\
+\type{specification} & table & 额外数据 \\
+\bottomrule
+\end{longtable}
+
+对于 \type {type} 的前七个取值，可以有额外的子信息，存储在子表
+\type {specification} 中：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 取值               & 类型     & 说明 \\
+\midrule
+\type{position}     & table    & 一个 \type {offset_specs} 类型的表 \\
+\type{pair}         & table    & 一个字符串：\type {paired}，以及由一两个
+                                         \type {offset_specs} 表组成的数组：\type {offsets} \\
+\type{substitution} & table    & 一个字符串：\type {variant} \\
+\type{alternate}    & table    & 一个字符串：\type {components} \\
+\type{multiple}     & table    & 一个字符串：\type {components} \\
+\type{ligature}     & table    & 两个字符串：\type {components}, \type {char} \\
+\type{lcaret}       & array    & 由数字组成的线性数组 \\
+\bottomrule
+\end{longtable}
+
+\type {offset_specs} 表最多含四个数值字段：\type {x}（水平偏移）、
+\type {y}（垂直偏移）、\type {h}（前进宽度修正）和 \type {v}（前进高度
+修正）。
+
+\type {ligatures} 是由小哈希组成的线性数组：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键               & 类型   & 说明 \\
+\midrule
+\type{lig}        & table  & 使用与上面说明的 \type {lookups} 表中单个项
+                                     相同的子结构 \\
+\type{char}       & string & \\
+\type{components} & array  & 由具名组件组成的线性数组 \\
+\type{ccnt}       & number & \\
+\bottomrule
+\end{longtable}
+
+\type {anchor} 表以表示锚点类型的字符串为索引，类型取以下之一：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键             & 类型  & 说明 \\
+\midrule
+\type{mark}     & table & 放置标记 \\
+\type{basechar} & table & 用于把组合附加符号附着到基础字符上的标记 \\
+\type{baselig}  & table & 用于把组合附加符号附着到连字上的标记 \\
+\type{basemark} & table & 用于连接组合附加符号的通用标记 \\
+\type{centry}   & table & 草书连笔入口点 \\
+\type{cexit}    & table & 草书连笔出口点 \\
+\bottomrule
+\end{longtable}
+
+它们的内容是一个由已定义锚点组成的短数组，条目的键是锚点名。除
+\type {baselig} 外，值都是单个表，定义如下：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                 & 类型   & 说明 \\
+\midrule
+\type{x}            & number & x 位置 \\
+\type{y}            & number & y 位置 \\
+\type{ttf_pt_index} & number & truetype 点索引，仅在给出时存在 \\
+\bottomrule
+\end{longtable}
+
+对于 \type {baselig}，值是一个由这类锚点集合组成的小数组，连字的每个
+组成项各有一个。
+
+为清楚起见，一个锚点表例如可能像这样：
+
+\begin{typing}
+['anchor'] = {
+    ['basemark'] = {
+        ['Anchor-7'] = { ['x']=170, ['y']=1080 }
+    },
+    ['mark'] ={
+        ['Anchor-1'] = { ['x']=160, ['y']=810 },
+        ['Anchor-4'] = { ['x']=160, ['y']=800 }
+    },
+    ['baselig'] = {
+        [1] = { ['Anchor-2'] = { ['x']=160, ['y']=650 } },
+        [2] = { ['Anchor-2'] = { ['x']=460, ['y']=640 } }
+        }
+    }
+\end{typing}
+
+注意：\type {baselig} 表可以是稀疏的！
+
+\subsection{\type {map}}
+
+顶层 map 是一个编码映射列表。每一项本身也是一个表。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键             & 类型   & 说明 \\
+\midrule
+\type{enccount} & number & \\
+\type{encmax}   & number & \\
+\type{backmax}  & number & \\
+\type{remap}    & table  & \\
+\type{map}      & array  & 非线性的映射数组\\
+\type{backmap}  & array  & 非线性的反向映射数组\\
+\type{enc}      & table  & \\
+\bottomrule
+\end{longtable}
+
+\type {remap} 表非常小：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键             & 类型   & 说明 \\
+\midrule
+\type{firstenc} & number & \\
+\type{lastenc}  & number & \\
+\type{infont}   & number & \\
+\bottomrule
+\end{longtable}
+
+\type {enc} 表要详尽一些：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                     & 类型   & 说明 \\
+\midrule
+\type{enc_name}         & string & \\
+\type{char_cnt}         & number & \\
+\type{char_max}         & number & \\
+\type{unicode}          & array  & 由 \UNICODE\ 位置编号组成\\
+\type{psnames}          & array  & 由 \POSTSCRIPT\ 字形名组成\\
+\type{builtin}          & number & \\
+\type{hidden}           & number & \\
+\type{only_1byte}       & number & \\
+\type{has_1byte}        & number & \\
+\type{has_2byte}         & number & \\
+\type{is_unicodebmp}    & number & 仅在非零时存在\\
+\type{is_unicodefull}   & number & 仅在非零时存在\\
+\type{is_custom}        & number & 仅在非零时存在\\
+\type{is_original}      & number & 仅在非零时存在\\
+\type{is_compact}       & number & 仅在非零时存在\\
+\type{is_japanese}      & number & 仅在非零时存在\\
+\type{is_korean}        & number & 仅在非零时存在\\
+\type{is_tradchinese}   & number & 仅在非零时存在 [名字？]\\
+\type{is_simplechinese} & number & 仅在非零时存在\\
+\type{low_page}         & number & \\
+\type{high_page}        & number & \\
+\type{iconv_name}       & string & \\
+\type{iso_2022_escape}  & string & \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {private}}
+
+这是字体的私有 \POSTSCRIPT\ 字典（如果有的话）。键和值都是字符串。
+
+\subsection{\type {cidinfo}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键               & 类型   & 说明 \\
+\midrule
+\type{registry}   & string & \\
+\type{ordering}   & string & \\
+\type{supplement} & number & \\
+\type{version}    & number & \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {pfminfo}\label{fontloaderpfminfotable}}
+
+\type {pfminfo} 表包含大部分 OS/2 信息：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                     & 类型   & 说明 \\
+\midrule
+\type{pfmset}           & number & \\
+\type{winascent_add}    & number & \\
+\type{windescent_add}   & number & \\
+\type{hheadascent_add}  & number & \\
+\type{hheaddescent_add} & number & \\
+\type{typoascent_add}   & number & \\
+\type{typodescent_add}  & number & \\
+\type{subsuper_set}     & number & \\
+\type{panose_set}       & number & \\
+\type{hheadset}         & number & \\
+\type{vheadset}         & number & \\
+\type{pfmfamily}        & number & \\
+\type{weight}           & number & \\
+\type{width}            & number & \\
+\type{avgwidth}         & number & \\
+\type{firstchar}        & number & \\
+\type{lastchar}         & number & \\
+\type{fstype}           & number & \\
+\type{linegap}          & number & \\
+\type{vlinegap}         & number & \\
+\type{hhead_ascent}     & number & \\
+\type{hhead_descent}    & number & \\
+\type{os2_typoascent}   & number & \\
+\type{os2_typodescent}  & number & \\
+\type{os2_typolinegap}  & number & \\
+\type{os2_winascent}    & number & \\
+\type{os2_windescent}   & number & \\
+\type{os2_subxsize}     & number & \\
+\type{os2_subysize}     & number & \\
+\type{os2_subxoff}      & number & \\
+\type{os2_subyoff}      & number & \\
+\type{os2_supxsize}     & number & \\
+\type{os2_supysize}     & number & \\
+\type{os2_supxoff}      & number & \\
+\type{os2_supyoff}      & number & \\
+\type{os2_strikeysize}  & number & \\
+\type{os2_strikeypos}   & number & \\
+\type{os2_family_class} & number & \\
+\type{os2_xheight}      & number & \\
+\type{os2_capheight}    & number & \\
+\type{os2_defaultchar}  & number & \\
+\type{os2_breakchar}    & number & \\
+\type{os2_vendor}       & string & \\
+\type{codepages}        & table  & 由两个数字组成的已编码代码页数组 \\
+\type{unicoderages}     & table  & 由四个数字组成的已编码 unicode 范围数组 \\
+\type{panose}           & table  & \\
+\bottomrule
+\end{longtable}
+
+\type {panose} 子表恰好有 10 个字符串键：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                    & 类型    & 说明 \\
+\midrule
+\type{familytype}      & string  & 取值同 \OPENTYPE\ 字体规范：
+                                           \type {Any}, \type {No Fit},
+                                           \type {Text and Display}, \type {Script},
+                                           \type {Decorative}, \type {Pictorial}
+                                           \\
+\type{serifstyle}      & string  & 取值见 \OPENTYPE\ 字体规范 \\
+\type{weight}          & string  & 同上 \\
+\type{proportion}      & string  & 同上 \\
+\type{contrast}        & string  & 同上 \\
+\type{strokevariation} & string  & 同上 \\
+\type{armstyle}        & string  & 同上 \\
+\type{letterform}      & string  & 同上 \\
+\type{midline}         & string  & 同上 \\
+\type{xheight}         & string  & 同上 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {names}\label{fontloadernamestable}}
+
+每一项有两个顶层键：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键          & 类型   & 说明 \\
+\midrule
+\type{lang}  & string & 此条目所用的语言 \\
+\type{names} & table  & \\
+\bottomrule
+\end{longtable}
+
+\type {names} 的键就是实际的 \TRUETYPE\ 名字字符串。可能的键有：
+\type {copyright}, \type {family}, \type {subfamily}, \type {uniqueid},
+\type {fullname}, \type {version}, \type {postscriptname}, \type {trademark},
+\type {manufacturer}, \type {designer}, \type {descriptor}, \type {venderurl},
+\type {designerurl}, \type {license}, \type {licenseurl}, \type {idontknow},
+\type {preffamilyname}, \type {prefmodifiers}, \type {compatfull}, \type
+{sampletext}, \type {cidfindfontname}, \type {wwsfamily} and \type
+{wwssubfamily}.
+
+\subsection{\type {anchor_classes}}
+
+anchor_classes 类：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键           & 类型   & 说明 \\
+\midrule
+\type{name}   & string & 此锚点类的描述性 id\\
+\type{lookup} & string & \\
+\type{type}   & string & 取 \nod {mark}, \type {mkmk}, \type {curs}, \type {mklg} 之一 \\
+\bottomrule
+\end{longtable}
+
+% type is actually a lookup subtype, not a feature name. Officially, these
+% strings should be gpos_mark2mark etc.
+
+\subsection{\type {gpos}}
+
+\type {gpos} 表对每个 lookup 有一个数组条目。（\type {gpos_} 前缀有点多余。）
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键              & 类型   & 说明 \\
+\midrule
+\type{type}      & string & 取 \type {gpos_single}, \type {gpos_pair},
+                                    \type {gpos_cursive}, \type {gpos_mark2base},\\
+                                    \type {gpos_mark2ligature}, \type {gpos_mark2mark}, \type {gpos_context},\\ \type {gpos_contextchain} 之一 \\
+\type{flags}     & table  & \\
+\type{name}      & string & \\
+\type{features}  & array  & \\
+\type{subtables} & array  & \\
+\bottomrule
+\end{longtable}
+
+flags 表中，每个实际被设置的 lookup 标志对应一个 true 值：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                         & 类型    & 说明 \\
+\midrule
+\type{r2l}                  & boolean & \\
+\type{ignorebaseglyphs}     & boolean & \\
+\type{ignoreligatures}      & boolean & \\
+\type{ignorecombiningmarks} & boolean & \\
+\type{mark_class}           & string  & \\
+\bottomrule
+\end{longtable}
+
+gpos 的 features 子表项含有：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键            & 类型   & 说明 \\
+\midrule
+\type{tag}     & string & \\
+\type{scripts} & table  & \\
+\bottomrule
+\end{longtable}
+
+features 中的 scripts 表含有：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键           & 类型             & 说明 \\
+\midrule
+\type{script} & string           & \\
+\type{langs}  & array of strings & \\
+\bottomrule
+\end{longtable}
+
+subtables 表含有：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                     & 类型   & 说明 \\
+\midrule
+\type{name}             & string & \\
+\type{suffix}           & string & （仅在使用时存在）\\ % used by gpos_single to get a default
+\type{anchor_classes}   & number & （仅在使用时存在）\\
+\type{vertical_kerning} & number & （仅在使用时存在）\\
+\type{kernclass}        & table  & （仅在使用时存在）\\
+\bottomrule
+\end{longtable}
+
+带子表的 kernclass 表含有：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键            & 类型             & 说明 \\
+\midrule
+\type{firsts}  & array of strings & \\
+\type{seconds} & array of strings & \\
+\type{lookup}  & string or array  & 关联的 lookup \\
+\type{offsets} & array of numbers & \\
+\bottomrule
+\end{longtable}
+
+注意：kernclass（就我们所见）总是只有一个条目，因此它本可以浅一层。另外，
+seconds 从 \type {[2]} 开始，这接近 fontforge 的内部结构，所以我们也
+保留了这一点。
+
+\subsection{\type {gsub}}
+
+它的布局与 \type {gpos} 表完全相同，只是 type 不同：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键         & 类型   & 说明 \\
+\midrule
+\type{type} & string & 取 \type {gsub_single}, \type {gsub_multiple},
+                               \type {gsub_alternate}, \type {gsub_ligature},\\
+                               \type {gsub_context}, \type {gsub_contextchain},
+                               \type {gsub_reversecontextchain} 之一 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {ttf_tables}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键           & 类型   & 说明 \\
+\midrule
+\type{tag}    & string & \\
+\type{len}    & number & \\
+\type{maxlen} & number & \\
+\type{data}   & number & \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {mm}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                   & 类型   & 说明 \\
+\midrule
+\type{axes}           & table  & 轴名数组 \\
+\type{instance_count} & number & \\
+\type{positions}      & table  & 实例位置数组
+                                         （\#axes * 实例数）\\
+\type{defweights}     & table  & 各实例默认粗细的数组 \\
+\type{cdv}            & string & \\
+\type{ndv}            & string & \\
+\type{axismaps}       & table  & \\
+\bottomrule
+\end{longtable}
+
+\type {axismaps}：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键            & 类型   & 说明 \\
+\midrule
+\type{blends}  & table  & 混合点数组 \\
+\type{designs} & table  & 设计值数组 \\
+\type{min}     & number & \\
+\type{def}     & number & \\
+\type{max}     & number & \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {mark_classes}}
+
+此表中的键是标记类名，值是该类中字形名组成的、以空格分隔的字符串。
+
+\subsection{\type {math}}
+
+math 表含有在数学一章中也讨论过的那些变量：\type {ScriptPercentScaleDown}, \type {ScriptScriptPercentScaleDown}, \type
+{DelimitedSubFormulaMinHeight}, \type {DisplayOperatorMinHeight}, \type
+{MathLeading}, \type {AxisHeight}, \type {AccentBaseHeight}, \type
+{FlattenedAccentBaseHeight}, \type {SubscriptShiftDown}, \type {SubscriptTopMax},
+\type {SubscriptBaselineDropMin}, \type {SuperscriptShiftUp}, \type
+{SuperscriptShiftUpCramped}, \type {SuperscriptBottomMin}, \type
+{SuperscriptBaselineDropMax}, \type {SubSuperscriptGapMin}, \type
+{SuperscriptBottomMaxWithSubscript}, \type {SpaceAfterScript}, \type
+{UpperLimitGapMin}, \type {UpperLimitBaselineRiseMin}, \type {LowerLimitGapMin},
+\type {LowerLimitBaselineDropMin}, \type {StackTopShiftUp}, \type
+{StackTopDisplayStyleShiftUp}, \type {StackBottomShiftDown}, \type
+{StackBottomDisplayStyleShiftDown}, \type {StackGapMin}, \type
+{StackDisplayStyleGapMin}, \type {StretchStackTopShiftUp}, \type
+{StretchStackBottomShiftDown}, \type {StretchStackGapAboveMin}, \type
+{StretchStackGapBelowMin}, \type {FractionNumeratorShiftUp}, \type
+{FractionNumeratorDisplayStyleShiftUp}, \type {FractionDenominatorShiftDown},
+\type {FractionDenominatorDisplayStyleShiftDown}, \type
+{FractionNumeratorGapMin}, \type {FractionNumeratorDisplayStyleGapMin} \type
+{FractionRuleThickness}, \type {FractionDenominatorGapMin}, \type
+{FractionDenominatorDisplayStyleGapMin}, \type {SkewedFractionHorizontalGap},
+\type {SkewedFractionVerticalGap}, \type {OverbarVerticalGap}, \type
+{OverbarRuleThickness}, \type {OverbarExtraAscender}, \type
+{UnderbarVerticalGap}, \type {UnderbarRuleThickness}, \type
+{UnderbarExtraDescender}, \type {RadicalVerticalGap}, \type
+{RadicalDisplayStyleVerticalGap}, \type {RadicalRuleThickness}, \type
+{RadicalExtraAscender}, \type {RadicalKernBeforeDegree}, \type
+{RadicalKernAfterDegree}, \type {RadicalDegreeBottomRaisePercent}, \type
+{MinConnectorOverlap}, \type {FractionDelimiterSize} and \type
+{FractionDelimiterDisplayStyleSize}.
+
+\subsection{\type {validation_state}}
+
+这只是一个附带的表，其键为：\type {bad_ps_fontname}, \type {bad_glyph_table}, \type {bad_cff_table}, \type {bad_metrics_table}, \type {bad_cmap_table}, \type {bad_bitmaps_table}, \type {bad_gx_table}, \type {bad_ot_table}, \type {bad_os2_version} 和 \type {bad_sfnt_header}.
+
+\subsection{\type {horiz_base}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键            & 类型  & 说明 \\
+\midrule
+\type{tags}    & table & 书写系统列表标签的数组\\
+\type{scripts} & table & \\
+\bottomrule
+\end{longtable}
+
+\type {scripts} 子表：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                     & 类型    & 说明 \\
+\midrule
+\type{baseline}         & table   & \\
+\type{default_baseline} & number  & \\
+\type{lang}             & table   & \\
+\bottomrule
+\end{longtable}
+
+\type {lang} 子表：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键             & 类型   & 说明 \\
+\midrule
+\type{tag}      & string & 书写系统标签 \\
+\type{ascent}   & number & \\
+\type{descent}  & number & \\
+\type{features} & table  & \\
+\bottomrule
+\end{longtable}
+
+\type {features} 指向一个表数组，这些表的布局相同，只是在这些嵌套表中，
+tag 表示的是语言。
+
+\subsection{\type {altuni}}
+
+备用 \UNICODE\ 值的数组。该数组内是含以下字段的哈希：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键            & 类型   & 说明 \\
+\midrule
+\type{unicode} & number & 此字形也用于此 unicode \\
+\type{variant} & number & 该备用字形由此 unicode 选择符驱动 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {vert_variants}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                      & 类型   & 说明 \\
+\midrule
+\type{variants}          & string & \\
+\type{italic_correction} & number & \\
+\type{parts}             & table  & \\
+\bottomrule
+\end{longtable}
+
+\type {parts} 表是由更小的表组成的数组：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键              & 类型   & 说明 \\
+\midrule
+\type{component} & string & \\
+\type{extender}  & number & \\
+\type{start}     & number & \\
+\type{end}       & number & \\
+\type{advance}   & number & \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {mathkern}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                 & 类型  & 说明 \\
+\midrule
+\type{top_right}    & table & \\
+\type{bottom_right} & table & \\
+\type{top_left}     & table & \\
+\type{bottom_left}  & table & \\
+\bottomrule
+\end{longtable}
+
+每个子表都是由含两个键的小哈希组成的数组：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键           & 类型   & 说明 \\
+\midrule
+\type{height} & number & \\
+\type{kern}   & number & \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {kerns}}
+
+子结构与逐字形子表相同。
+
+\subsection{\type {vkerns}}
+
+子结构与逐字形子表相同。
+
+\subsection{\type {texdata}}
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键           & 类型   & 说明 \\
+\midrule
+\type{type}   & string & \nod {unset}, \type {text}, \nod {math}, \type {mathext} \\
+\type{params} & array  & 22 个字体数值参数 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\type {lookups}}
+
+顶层 \type {lookups} 与字符级的 lookups 大不相同。这个哈希中的键是字符串，
+值是实际的 lookup，以字典表表示。
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                  & 类型   & 说明 \\
+\midrule
+\type{type}          & string & \\
+\type{format}        & enum   & 取 \type {glyphs}, \type {class}, \type {coverage},
+                                        \type {reversecoverage} 之一 \\
+\type{tag}           & string & \\
+\type{current_class} & array  & \\
+\type{before_class}  & array  & \\
+\type{after_class}   & array  & \\
+\type{rules}         & array  & 规则项数组\\
+\bottomrule
+\end{longtable}
+
+规则项有一个公共项和一个专用项：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                    & 类型  & 说明 \\
+\midrule
+\type{lookups}         & array & lookup 名的线性数组                         \\
+\type{glyphs}          & array & 仅当父表的 format 为 \type {glyphs} 时存在          \\
+\type{class}           & array & 仅当父表的 format 为 \type {class} 时存在           \\
+\type{coverage}        & array & 仅当父表的 format 为 \type {coverage} 时存在        \\
+\type{reversecoverage} & array & 仅当父表的 format 为 \type {reversecoverage} 时存在 \\
+\bottomrule
+\end{longtable}
+
+一个 glyph 表为：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键          & 类型   & 说明 \\
+\midrule
+\type{names} & string & \\
+\type{back}  & string & \\
+\type{fore}  & string & \\
+\bottomrule
+\end{longtable}
+
+一个 class 表为：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键            & 类型  & 说明 \\
+\midrule
+\type{current} & array & 由数字组成  \\
+\type{before}  & array & 由数字组成  \\
+\type{after}   & array & 由数字组成  \\
+\bottomrule
+\end{longtable}
+
+对于 coverage：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键            & 类型  & 说明 \\
+\midrule
+\type{current} & array & 由字符串组成 \\
+\type{before}  & array & 由字符串组成 \\
+\type{after}   & array & 由字符串组成 \\
+\bottomrule
+\end{longtable}
+
+而对于 reverse coverage：
+
+\begin{longtable}{l l p{5cm}}
+\toprule 键                 & 类型   & 说明 \\
+\midrule
+\type{current}      & array  & 由字符串组成  \\
+\type{before}       & array  & 由字符串组成  \\
+\type{after}        & array  & 由字符串组成  \\
+\type{replacements} & string &             \\
+\bottomrule
+\end{longtable}

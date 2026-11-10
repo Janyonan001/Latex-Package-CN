@@ -1,0 +1,940 @@
+\chapter{数学排版}\label{math}
+
+\section{传统方式与 \OPENTYPE 并用}
+
+\topicindex {math}
+
+\LUATEX\ 中数学排版的处理方式与 \TEX82（以及 \PDFTEX）有相当大的不同。首先，\LUATEX\ 新增了若干原语并扩展了另一些原语，以便轻松使用 \UNICODE\ 输入。其次，\TEX82\ 的所有内部特殊值（例如算符间距）都已通过控制序列暴露出来并可修改。第三，新增了若干扩展以便使用 \OPENTYPE\ 数学字体。最后，过去曾被提出或考虑过的一些扩展现已加入引擎。
+
+\section{Unicode 数学字符}
+
+\topicindex {math+\UNICODE}
+\topicindex {\UNICODE+math}
+
+字符处理现已扩展到完整的 \UNICODE\ 范围（即 \type {\U} 前缀），这与 \XETEX\ 兼容。
+
+\TEX\ 中的数学原语保持原样，但从输入转换为数学命令的那两个除外：\type {mathcode} 和 \type {delcode}。这两个命令现在允许在等号左侧使用 21 位字符参数。
+
+一些新的 \LUATEX\ 原语会读取多个独立值。下表中用加号表示这一点。
+
+此类原语的输入如下所示：
+
+\begin{typing}
+\def\overbrace{\Umathaccent 0 1 "23DE }
+\end{typing}
+
+被修改过的 \TEX82\ 原语有：
+
+\begin{longtable}{l l r c l r}
+\toprule primitive       & min & max    & \kern 2em & min & max    \\
+\midrule
+\prm {mathcode} & 0   & 10FFFF & =         & 0   & 8000   \\
+\prm {delcode}  & 0   & 10FFFF & =         & 0   & FFFFFF \\
+\bottomrule
+\end{longtable}
+
+未被修改的有：
+
+\begin{longtable}{l l r}
+\toprule primitive          & min & max     \\
+\midrule
+\prm {mathchardef} & 0   &    8000 \\
+\prm {mathchar}    & 0   &    7FFF \\
+\prm {mathaccent}  & 0   &    7FFF \\
+\prm {delimiter}   & 0   & 7FFFFFF \\
+\prm {radical}     & 0   & 7FFFFFF \\
+\bottomrule
+\end{longtable}
+
+出于实用原因，\prm {mathchardef} 会静默接受大于 \type {0x8000} 的值，并将其解释为 \lpr {Umathcharnumdef}。这是为了兼容旧的宏包。
+
+以下新原语与 \XETEX\ 兼容：
+
+% somewhat fuzzy:
+
+\begin{longtable}{l l r c l r}
+\toprule primitive                             & min       & max         & \kern 2em & min       & max         \\
+\midrule
+\lpr {Umathchardef}                   & 0+0+0     & 7+FF+10FFFF &           &           &             \\
+\lpr {Umathcharnumdef}\textsuperscript{5} & -80000000 &    7FFFFFFF &           &           &             \\
+\lpr {Umathcode}                      & 0         &      10FFFF & =         & 0+0+0     & 7+FF+10FFFF \\
+\lpr {Udelcode}                       & 0         &      10FFFF & =         & 0+0       &   FF+10FFFF \\
+\lpr {Umathchar}                      & 0+0+0     & 7+FF+10FFFF &           &           &             \\
+\lpr {Umathaccent}                    & 0+0+0     & 7+FF+10FFFF &           &           &             \\
+\lpr {Udelimiter}                     & 0+0+0     & 7+FF+10FFFF &           &           &             \\
+\lpr {Uradical}                       & 0+0       &   FF+10FFFF &           &           &             \\
+\lpr {Umathcharnum}                   & -80000000 &    7FFFFFFF &           &           &             \\
+\lpr {Umathcodenum}                   & 0         &      10FFFF & =         & -80000000 &    7FFFFFFF \\
+\lpr {Udelcodenum}                    & 0         &      10FFFF & =         & -80000000 &    7FFFFFFF \\
+\bottomrule
+\end{longtable}
+
+其指定格式通常如下：
+
+\begin{typing}
+\Umathchardef\xx="1"0"456
+\Umathcode   123="1"0"789
+\end{typing}
+
+处理定界符样式对象的新原语不会设置 ``大字族。用于展示目的的合适字号选择应由字体通过 \lpr {Umathoperatorsize} 参数来处理。
+
+对于其中一些原语，所有信息被打包进单个有符号整数中。对于前两个（\lpr {Umathcharnum} 和 \lpr {Umathcodenum}），最低 21 位是字符编码，其上 3 位表示数学类，字族数据保存在最高位。这意味着数学字族 128--255 的值实际上是负数。对于 \lpr {Udelcodenum} 则没有数学类。数学字族信息保存在紧接字符编码之上的位中。使用这三个命令不如使用双值和三值命令直观，因此除非你确切知道自己在做什么并且确实需要更快输入扫描所带来的加速，否则最好使用冗长形式的命令。
+
+\lpr {Umathaccent} 命令接受可选关键字来控制数学重音符号的各种细节。详见下文 \ref{mathacc}。
+
+还有更多新原语，它们将在后续章节中说明：
+
+\begin{longtable}{l l}
+\toprule primitive                & value range (in hex) \\
+\midrule
+\lpr {Uroot}           & 0 + 0--FF + 10FFFF   \\
+\lpr {Uoverdelimiter}  & 0 + 0--FF + 10FFFF   \\
+\lpr {Uunderdelimiter} & 0 + 0--FF + 10FFFF   \\
+\lpr {Udelimiterover}  & 0 + 0--FF + 10FFFF   \\
+\lpr {Udelimiterunder} & 0 + 0--FF + 10FFFF   \\
+\bottomrule
+\end{longtable}
+
+除了伪类变量 (7) 之外，你还可以使用字族号作为信号来指示使用当前字族。这样既可以为字符指定类别，又能让字族自适应。触发性字族通过 \lpr {variablefam} 设置。因此：
+
+\begin{typing}
+\variablefam"24
+\Umathchardef\foo "3 "24 123
+\foo \fam9
+\end{typing}
+
+结果是一个取自字族 9 的花左括号，类别为 ``relation，其周围间距也相应处理。
+
+\section{数学样式}
+
+\subsection{\lpr {mathstyle}}
+
+\topicindex {math+styles}
+
+可以用可展开方式探测公式将使用的数学样式（在数学表仍被读取时）。为此，\LUATEX\ 新增了原语：\lpr {mathstyle}。这是一个类似 \prm {romannumeral} 的 ``转换命令：其值只能读取，不能设置。
+
+返回值在数学模式下为 0 到 7 之间，在其他模式下为 $-1$。为便于测试，八个数学样式命令已被修改为可用作数值，因此你可以编写如下代码：
+
+\begin{typing}
+\ifnum\mathstyle=\textstyle
+    \message{normal text style}
+\else \ifnum\mathstyle=\crampedtextstyle
+    \message{cramped text style}
+\fi \fi
+\end{typing}
+
+有时你不会得到预期结果，稍作解释有助于理解发生了什么。当数学被解析和展开时，它会被转换为一个链表。第二趟才构造公式。这与以下事实有关：为了确定自动选择的字号（例如在分式中），后面的内容可以影响前面的字号。其副作用之一是不能修改字体字族的定义（从而重用编号），因为被使用的编号会被存储并在第二趟中使用（所以在公式中途改变 \type {\fam 12} 会影响到该字族此前的使用）。
+
+像 \prm {textstyle} 这样的样式切换原语会被转换为节点，因此其中设置的样式被冻结。\prm {mathchoice} 原语会构造四个表，第二趟使用其中一个。某些自动样式尚不可知这一事实也意味着 \lpr {mathstyle} 原语展开为当前样式，它当然可能与实际使用的样式不同。它是第一趟状态的快照。因此在下面的示例中，你得到的是被排版的样式编号（第一趟），它实际上可能与所使用的样式（第二趟）不同。当数学选择在未分组的情况下使用时，所选样式在选择之后仍然生效，除非你进行了分组。
+
+\begin{typing}
+    [a:\mathstyle]\quad
+    \{
+    \mathchoice
+        {\bf \scriptstyle       (x:d :\mathstyle)}
+        {\bf \scriptscriptstyle (x:t :\mathstyle)}
+        {\bf \scriptscriptstyle (x:s :\mathstyle)}
+        {\bf \scriptscriptstyle (x:ss:\mathstyle)}
+    \}
+    \quad[b:\mathstyle]\quad
+    \mathchoice
+        {\bf \scriptstyle       (y:d :\mathstyle)}
+        {\bf \scriptscriptstyle (y:t :\mathstyle)}
+        {\bf \scriptscriptstyle (y:s :\mathstyle)}
+        {\bf \scriptscriptstyle (y:ss:\mathstyle)}
+    \quad[c:\mathstyle]\quad
+    \{
+    \mathchoice
+        {\bf \scriptstyle       (z:d :\mathstyle)}
+        {\bf \scriptscriptstyle (z:t :\mathstyle)}
+        {\bf \scriptscriptstyle (z:s :\mathstyle)}
+        {\bf \scriptscriptstyle (z:ss:\mathstyle)}
+    \}
+    \quad[d:\mathstyle]
+\end{typing}
+
+\begin{typing}
+    [a:\mathstyle]\quad
+    \begingroup
+    \mathchoice
+        {\bf \scriptstyle       (x:d :\mathstyle)}
+        {\bf \scriptscriptstyle (x:t :\mathstyle)}
+        {\bf \scriptscriptstyle (x:s :\mathstyle)}
+        {\bf \scriptscriptstyle (x:ss:\mathstyle)}
+    \endgroup
+    \quad[b:\mathstyle]\quad
+    \mathchoice
+        {\bf \scriptstyle       (y:d :\mathstyle)}
+        {\bf \scriptscriptstyle (y:t :\mathstyle)}
+        {\bf \scriptscriptstyle (y:s :\mathstyle)}
+        {\bf \scriptscriptstyle (y:ss:\mathstyle)}
+    \quad[c:\mathstyle]\quad
+    \begingroup
+    \mathchoice
+        {\bf \scriptstyle       (z:d :\mathstyle)}
+        {\bf \scriptscriptstyle (z:t :\mathstyle)}
+        {\bf \scriptscriptstyle (z:s :\mathstyle)}
+        {\bf \scriptscriptstyle (z:ss:\mathstyle)}
+    \endgroup
+    \quad[d:\mathstyle]
+\end{typing}
+
+
+
+% % [buffer type][2]
+
+结果如下（演示输出已省略）。
+
+改用 \prm {begingroup} 和 \prm {endgroup} 则得到：
+
+（演示输出已省略。）这看起来可能不对，但它只是 \lpr {mathstyle} 展开为当前（第一趟）样式而该编号被注入第二趟转换的表中所产生的副作用。这一切都有道理，也说明了分组的重要性。事实上，数学选择样式在之后仍然生效是有好处的。否则很难做到这一点。
+
+\subsection{\lpr {Ustack}}
+
+\topicindex {math+stacks}
+
+\TEX\ 中有少数数学命令，其将要使用的样式并非从一开始就已知。这些命令（\prm {over}、\prm {atop}、\prm {overwithdelims}、\prm {atopwithdelims}）因此通常会为 \lpr {mathstyle} 返回错误值。为解决此问题，\LUATEX\ 引入了一个特殊前缀命令：\lpr {Ustack}：
+
+\begin{typing}
+$\Ustack {a \over b}$
+\end{typing}
+
+\lpr {Ustack} 命令会扫描下一个花括号，并以正确的（分子）数学样式开始一个新的数学组。
+
+\subsection{压缩数学样式}
+
+\topicindex {math+styles}
+\topicindex {math+spacing}
+\topicindex {math+cramped}
+
+\LUATEX\ 有四个新原语可直接设置压缩数学样式：
+
+\begin{typing}
+\crampeddisplaystyle
+\crampedtextstyle
+\crampedscriptstyle
+\crampedscriptscriptstyle
+\end{typing}
+
+这些附加命令本身并不那么有用，但作为即将添加的数学参数设置的参数时却很方便。
+
+在 Eijkhout 的《\TEX\ by Topic》中，关于上下标中样式处理的规则描述如下：
+
+\begin{itemize}\item 在任何样式中，上标和下标都取自下一个较小的样式。例外：在展示样式中它们使用脚本样式。
+
+\item 下标始终使用该样式的压缩变体；上标仅在原始样式为压缩时才压缩。
+
+\item 在 \type {..\over..} 公式中，任何样式下分子和分母都取自下一个较小的样式。
+
+\item 分母始终使用压缩样式；分子仅在原始样式为压缩时才使用压缩样式。
+
+\item \type {\sqrt} 或 \prm {overline} 下的公式使用压缩样式。
+
+\end{itemize}
+
+在 \LUATEX\ 中可以更细致地设置样式，这意味着有时必须同时设置普通样式和压缩样式才能获得所需效果。（即使）我们使用 \prm {scriptstyle} 和 \lpr {crampedscriptstyle} 在脚本中强制样式，得到如下结果：
+
+\begin{typing}
+\begin{longtable}{l l}
+\toprule style         & example \\
+\midrule
+default       & $b_{x=xx}^{x=xx}$ \\
+script        & $b_{\scriptstyle x=xx}^{\scriptstyle x=xx}$ \\
+crampedscript & $b_{\crampedscriptstyle x=xx}^{\crampedscriptstyle x=xx}$ \\
+\bottomrule
+\end{longtable}
+\end{typing}
+
+
+
+现在我们设置以下参数：
+
+\begin{typing}
+\Umathordrelspacing\scriptstyle=30mu
+\Umathordordspacing\scriptstyle=30mu
+\end{typing}
+
+
+
+这产生不同的结果（演示输出已省略）。
+
+但是，由于这并非（视觉上）所预期的，我们应该这样说：
+
+\begin{typing}
+% \Umathordrelspacing\scriptstyle=30mu
+% \Umathordordspacing\scriptstyle=30mu
+% \Umathordrelspacing\crampedscriptstyle=30mu
+% \Umathordordspacing\crampedscriptstyle=30mu
+\end{typing}
+
+现在我们得到（演示输出已省略）。
+
+\section{数学参数设置}
+
+\subsection {大量新的 \lpr {Umath*} 原语}
+
+\topicindex {math+parameters}
+
+在 \LUATEX\ 中，\TEX\ 在数学排版中使用的字体尺寸参数现在可通过原语命令访问。事实上，数学引擎的重构带来了比以前可访问参数多得多的参数。
+
+\begin{longtable}{l p{10cm}}
+\toprule primitive name                   & description \\
+\midrule
+\lpr {Umathquad}               & 18 个 mu 的宽度 \\
+\lpr {Umathaxis}               & 数学公式垂直中心轴在基线以上的高度 \\
+\lpr {Umathoperatorsize}       & 展示模式中大算符的最小尺寸 \\
+\lpr {Umathoverbarkern}        & 横线上方的垂直间隙 \\
+\lpr {Umathoverbarrule}        & 横线的粗细 \\
+\lpr {Umathoverbarvgap}        & 横线下方的垂直间隙 \\
+\lpr {Umathunderbarkern}       & 横线下方的垂直间隙 \\
+\lpr {Umathunderbarrule}       & 横线的粗细 \\
+\lpr {Umathunderbarvgap}       & 横线上方的垂直间隙 \\
+\lpr {Umathradicalkern}        & 根号上方的垂直间隙 \\
+\lpr {Umathradicalrule}        & 根号线的粗细 \\
+\lpr {Umathradicalvgap}        & 根号线下方的垂直间隙 \\
+\lpr {Umathradicaldegreebefore}& 放置根号次数之前的前向字距 \\
+\lpr {Umathradicaldegreeafter} & 放置根号次数之后的后向字距 \\
+\lpr {Umathradicaldegreeraise} & 次数相对于根号总高和深所提升的百分比；以 \type {percents} 表示，因此 60\% 表示为整数 $60$ \\
+\lpr {Umathstackvgap}          & \prm {atop} 堆叠中两个元素之间的垂直间隙 \\
+\lpr {Umathstacknumup}         & \prm {atop} 堆叠中分子的上移量 \\
+\lpr {Umathstackdenomdown}     & \prm {atop} 堆叠中分母的下移量 \\
+\lpr {Umathfractionrule}       & \prm {over} 分式中横线的粗细 \\
+\lpr {Umathfractionnumvgap}    & 分子与横线之间的垂直间隙 \\
+\lpr {Umathfractionnumup}      & \prm {over} 中分子的上移量 \\
+\lpr {Umathfractiondenomvgap}  & 分母与横线之间的垂直间隙 \\
+\lpr {Umathfractiondenomdown}  & \prm {over} 中分母的下移量 \\
+\lpr {Umathfractiondelsize}    & \type {\...withdelims} 的最小定界符尺寸 \\
+\lpr {Umathlimitabovevgap}     & 算符上方极限的垂直间隙 \\
+\lpr {Umathlimitabovebgap}     & 算符上方极限的基线垂直间隙 \\
+\lpr {Umathlimitabovekern}     & 极限顶部预留空间 \\
+\lpr {Umathlimitbelowvgap}     & 算符下方极限的垂直间隙 \\
+\lpr {Umathlimitbelowbgap}     & 算符下方极限的基线垂直间隙 \\
+\lpr {Umathlimitbelowkern}     & 极限底部预留空间 \\
+\lpr {Umathoverdelimitervgap}  & 定界符上方极限的垂直间隙 \\
+\lpr {Umathoverdelimiterbgap}  & 定界符上方极限的基线垂直间隙 \\
+\lpr {Umathunderdelimitervgap} & 定界符下方极限的垂直间隙 \\
+\lpr {Umathunderdelimiterbgap} & 定界符下方极限的基线垂直间隙 \\
+\lpr {Umathsubshiftdrop}       & 盒子和子公式的下标下移量 \\
+\lpr {Umathsubshiftdown}       & 字符的下标下移量 \\
+\lpr {Umathsupshiftdrop}       & 盒子和子公式的上标下移量（实际为提升量） \\
+\lpr {Umathsupshiftup}         & 字符的上标提升量 \\
+\lpr {Umathsubsupshiftdown}    & 存在上标时的下标下移量 \\
+\lpr {Umathsubtopmax}          & 独立下标顶部在基线上方不能超过此高度 \\
+\lpr {Umathsupbottommin}       & 独立上标底部在基线上方不能低于此高度 \\
+\lpr {Umathsupsubbottommax}    & 同时有上下标时，上标底部在基线上方至少要达到此高度 \\
+\lpr {Umathsubsupvgap}         & 上下标之间的垂直间隙 \\
+\lpr {Umathspaceafterscript}   & 上下标之后添加的附加间距 \\
+\lpr {Umathconnectoroverlapmin}& 可伸缩配方中各部分之间的最小重叠 \\
+\bottomrule
+\end{longtable}
+
+本节中的每个参数都可以通过如下命令设置：
+
+\begin{typing}
+\Umathquad\displaystyle=1em
+\end{typing}
+
+它们遵循分组规则，需要时可以使用 \type {\the\Umathquad\displaystyle}。
+
+\subsection{基于字体的数学参数}
+
+\topicindex {math+parameters}
+
+虽然有这些数学参数可供调整很好，但手动设置每一个会很繁琐。因此，每当你将字体标识符赋给某个数学字族时，\LUATEX\ 会初始化一批参数——依据是字体中传统的数学字体尺寸（对于使用基于 \TFM\ 的字体如 \type {cmsy} 和 \type {cmex} 赋值给数学字族 2 和 3 的情况），或者在通过 Lua 加载字体时依据潜在的 \type {MathConstants} 表中的命名值。如果存在 \type {MathConstants} 表，它优先于字体尺寸，此时不关心正在赋值给哪个字族：最后赋值字族中的 \type {MathConstants} 表会设置所有参数。
+
+下表中的单字母样式缩写和符号化 tfm 字体尺寸名称与 \TeX book 中使用的一致。对 \prm {textfont} 的赋值设置压缩和非压缩展示及文本样式的值，\prm {scriptfont} 设置脚本样式，\prm {scriptscriptfont} 设置脚本脚本样式，因此三种字号共有八个参数。在 \TFM\ 情况下，赋值仅发生在字族 2 和字族 3 中（当然也仅针对有字体尺寸的参数）。
+
+除以下参数外，\LUATEX\ 还会查看 ``space 字体尺寸参数。对于数学字体，此项应设为零。
+
+\def\MathLine#1#2#3#4#5%
+  {\midrule
+   \ifx\empty#2\else\textsuperscript{#2}\fi\ \texttt{\detokenize{#1}} & \texttt{\detokenize{#5}} \\
+   #3 & \texttt{\detokenize{#4}} \\}
+
+\begin{longtable}{l l}
+\toprule variable / style & tfm / opentype \\
+\MathLine{\Umathaxis}               {}   {}                     {AxisHeight}                              {axis_height}
+\MathLine{\Umathoperatorsize}       {6}  {D, D'}                {DisplayOperatorMinHeight}                {\emdash}
+\MathLine{\Umathfractiondelsize}    {9}  {D, D'}                {FractionDelimiterDisplayStyleSize}       {delim1}
+\MathLine{\Umathfractiondelsize}    {9}  {T, T', S, S', SS, SS'}{FractionDelimiterSize}                   {delim2}
+\MathLine{\Umathfractiondenomdown}  {}   {D, D'}                {FractionDenominatorDisplayStyleShiftDown}{denom1}
+\MathLine{\Umathfractiondenomdown}  {}   {T, T', S, S', SS, SS'}{FractionDenominatorShiftDown}            {denom2}
+\MathLine{\Umathfractiondenomvgap}  {}   {D, D'}                {FractionDenominatorDisplayStyleGapMin}   {3*default_rule_thickness}
+\MathLine{\Umathfractiondenomvgap}  {}   {T, T', S, S', SS, SS'}{FractionDenominatorGapMin}               {default_rule_thickness}
+\MathLine{\Umathfractionnumup}      {}   {D, D'}                {FractionNumeratorDisplayStyleShiftUp}    {num1}
+\MathLine{\Umathfractionnumup}      {}   {T, T', S, S', SS, SS'}{FractionNumeratorShiftUp}                {num2}
+\MathLine{\Umathfractionnumvgap}    {}   {D, D'}                {FractionNumeratorDisplayStyleGapMin}     {3*default_rule_thickness}
+\MathLine{\Umathfractionnumvgap}    {}   {T, T', S, S', SS, SS'}{FractionNumeratorGapMin}                 {default_rule_thickness}
+\MathLine{\Umathfractionrule}       {}   {}                     {FractionRuleThickness}                   {default_rule_thickness}
+\MathLine{\Umathskewedfractionhgap} {}   {}                     {SkewedFractionHorizontalGap}             {math_quad/2}
+\MathLine{\Umathskewedfractionvgap} {}   {}                     {SkewedFractionVerticalGap}               {math_x_height}
+\MathLine{\Umathlimitabovebgap}     {}   {}                     {UpperLimitBaselineRiseMin}               {big_op_spacing3}
+\MathLine{\Umathlimitabovekern}     {1}  {}                     {0}                                       {big_op_spacing5}
+\MathLine{\Umathlimitabovevgap}     {}   {}                     {UpperLimitGapMin}                        {big_op_spacing1}
+\MathLine{\Umathlimitbelowbgap}     {}   {}                     {LowerLimitBaselineDropMin}               {big_op_spacing4}
+\MathLine{\Umathlimitbelowkern}     {1}  {}                     {0}                                       {big_op_spacing5}
+\MathLine{\Umathlimitbelowvgap}     {}   {}                     {LowerLimitGapMin}                        {big_op_spacing2}
+\MathLine{\Umathoverdelimitervgap}  {}   {}                     {StretchStackGapBelowMin}                 {big_op_spacing1}
+\MathLine{\Umathoverdelimiterbgap}  {}   {}                     {StretchStackTopShiftUp}                  {big_op_spacing3}
+\MathLine{\Umathunderdelimitervgap} {}   {}                     {StretchStackGapAboveMin}                 {big_op_spacing2}
+\MathLine{\Umathunderdelimiterbgap} {}   {}                     {StretchStackBottomShiftDown}             {big_op_spacing4}
+\MathLine{\Umathoverbarkern}        {}   {}                     {OverbarExtraAscender}                    {default_rule_thickness}
+\MathLine{\Umathoverbarrule}        {}   {}                     {OverbarRuleThickness}                    {default_rule_thickness}
+\MathLine{\Umathoverbarvgap}        {}   {}                     {OverbarVerticalGap}                      {3*default_rule_thickness}
+\MathLine{\Umathquad}               {1}  {}                     {<font_size(f)>}                          {math_quad}
+\MathLine{\Umathradicalkern}        {}   {}                     {RadicalExtraAscender}                    {default_rule_thickness}
+\MathLine{\Umathradicalrule}        {2}  {}                     {RadicalRuleThickness}                    {<not set>}
+\MathLine{\Umathradicalvgap}        {3}  {D, D'}                {RadicalDisplayStyleVerticalGap}          {default_rule_thickness+abs(math_x_height)/4}
+\MathLine{\Umathradicalvgap}        {3}  {T, T', S, S', SS, SS'}{RadicalVerticalGap}                      {default_rule_thickness+abs(default_rule_thickness)/4}
+\MathLine{\Umathradicaldegreebefore}{2}  {}                     {RadicalKernBeforeDegree}                 {<not set>}
+\MathLine{\Umathradicaldegreeafter} {2}  {}                     {RadicalKernAfterDegree}                  {<not set>}
+\MathLine{\Umathradicaldegreeraise} {2,7}{}                     {RadicalDegreeBottomRaisePercent}         {<not set>}
+\MathLine{\Umathspaceafterscript}   {4}  {}                     {SpaceAfterScript}                        {script_space}
+\MathLine{\Umathstackdenomdown}     {}   {D, D'}                {StackBottomDisplayStyleShiftDown}        {denom1}
+\MathLine{\Umathstackdenomdown}     {}   {T, T', S, S', SS, SS'}{StackBottomShiftDown}                    {denom2}
+\MathLine{\Umathstacknumup}         {}   {D, D'}                {StackTopDisplayStyleShiftUp}             {num1}
+\MathLine{\Umathstacknumup}         {}   {T, T', S, S', SS, SS'}{StackTopShiftUp}                         {num3}
+\MathLine{\Umathstackvgap}          {}   {D, D'}                {StackDisplayStyleGapMin}                 {7*default_rule_thickness}
+\MathLine{\Umathstackvgap}          {}   {T, T', S, S', SS, SS'}{StackGapMin}                             {3*default_rule_thickness}
+\MathLine{\Umathsubshiftdown}       {}   {}                     {SubscriptShiftDown}                      {sub1}
+\MathLine{\Umathsubshiftdrop}       {}   {}                     {SubscriptBaselineDropMin}                {sub_drop}
+\MathLine{\Umathsubsupshiftdown}    {8}  {}                     {SubscriptShiftDownWithSuperscript}       {\emdash}
+\MathLine{\Umathsubtopmax}          {}   {}                     {SubscriptTopMax}                         {abs(math_x_height*4)/5}
+\MathLine{\Umathsubsupvgap}         {}   {}                     {SubSuperscriptGapMin}                    {4*default_rule_thickness}
+\MathLine{\Umathsupbottommin}       {}   {}                     {SuperscriptBottomMin}                    {abs(math_x_height/4)}
+\MathLine{\Umathsupshiftdrop}       {}   {}                     {SuperscriptBaselineDropMax}              {sup_drop}
+\MathLine{\Umathsupshiftup}         {}   {D}                    {SuperscriptShiftUp}                      {sup1}
+\MathLine{\Umathsupshiftup}         {}   {T, S, SS,}            {SuperscriptShiftUp}                      {sup2}
+\MathLine{\Umathsupshiftup}         {}   {D', T', S', SS'}      {SuperscriptShiftUpCramped}               {sup3}
+\MathLine{\Umathsupsubbottommax}    {}   {}                     {SuperscriptBottomMaxWithSubscript}       {abs(math_x_height*4)/5}
+\MathLine{\Umathunderbarkern}       {}   {}                     {UnderbarExtraDescender}                  {default_rule_thickness}
+\MathLine{\Umathunderbarrule}       {}   {}                     {UnderbarRuleThickness}                   {default_rule_thickness}
+\MathLine{\Umathunderbarvgap}       {}   {}                     {UnderbarVerticalGap}                     {3*default_rule_thickness}
+\MathLine{\Umathconnectoroverlapmin}{5}  {}                     {MinConnectorOverlap}                     {0}
+\bottomrule
+\end{longtable}
+
+注 1：\OPENTYPE\ 字体将 \lpr {Umathlimitabovekern} 和 \lpr {Umathlimitbelowkern} 设为零，并将 \lpr {Umathquad} 设为所用字体的字号，因为这些在 \type {MATH} 表中不受支持。
+
+注 2：传统 \TFM\ 字体不设置 \lpr {Umathradicalrule}，因为 \TEX82\ 改用根号的高度。当 \LUATEX\ 必须排版根式而此参数确实未设置时，会启用向后兼容模式，假设使用的是旧风格 \TEX\ 字体。此外，它们也不设置 \lpr {Umathradicaldegreebefore}、\lpr {Umathradicaldegreeafter} 和 \lpr {Umathradicaldegreeraise}。这些参数会自动初始化为 $5/18$ quad、$-10/18$ quad 和 60。
+
+注 3：如果使用 \TFM\ 字体，\lpr {Umathradicalvgap} 在 \LUATEX\ 首次必须排版公式之前不会被设置，因为这需要字族 2 和字族 3 的参数。这提供了与 \TEX82\ 的部分向后兼容性，但只是部分兼容：一旦 \lpr {Umathradicalvgap} 被设置，就不再重新计算。
+
+注 4：使用 \TFM\ 字体时，\lpr {Umathspaceafterscript} 也有类似情况：在 \LUATEX\ 首次必须排版公式之前不会被设置。这提供了一定的与 \TEX82\ 的向后兼容性。但一旦 \lpr {Umathspaceafterscript} 被设置，就不再查看 \prm {scriptspace}。
+
+注 5：传统 \TFM\ 字体将 \lpr {Umathconnectoroverlapmin} 设为零，因为 \TEX82\ 堆叠可伸缩符号时始终不重叠。
+
+注 6：\lpr {Umathoperatorsize} 仅在 \prm {displaystyle} 中使用，且仅在 \OPENTYPE\ 字体中设置。在 \TFM\ 字体模式下，它被人为地设置为比初始尝试尺寸大一个缩放点，以便始终尝试 ``下一个更大的 变体，就像在 \TEX82\ 中一样。
+
+注 7：\lpr {Umathradicaldegreeraise} 是特例，因为它是唯一一个以百分比而非缩放点数表示的参数。
+
+注 8：\type {SubscriptShiftDownWithSuperscript} 在 ``标准 \OPENTYPE\ 数学字体 Cambria 中实际并不存在，但它足够有用，所以被加入了。
+
+注 9：\type {FractionDelimiterDisplayStyleSize} 和 \type {FractionDelimiterSize} 在 ``标准 \OPENTYPE\ 数学字体 Cambria 中实际并不存在，但足够有用，所以被加入了。
+
+\section{数学间距}
+
+\subsection{行间环绕间距}
+
+\topicindex {math+spacing}
+
+行间数学由（可选的）\prm {mathsurround} 间距环绕，但那是固定尺寸。现在新增了一个参数 \lpr {mathsurroundskip}。当设为非零值（或带有伸缩的零值）时，此参数将取代 \prm {mathsurround}。通过使用附加参数而非改变 \prm {mathsurround} 的性质，我们可以保持兼容。同时，通过 \lpr {mathsurroundmode} 增加了更多控制。此指令可取 6 个值，零为默认行为。
+
+% ConTeXt \OneLiner 演示宏（使用 \inframed），已省略。
+
+\begin{typing}
+\mathsurround    10pt
+\mathsurroundskip20pt
+\end{typing}
+%     $T_{\rmfamily fluff}$
+% % [buffer end]
+%
+% % [buffer start][2]
+%     $T_{\text{fluff}}$
+% % [buffer end]
+%
+% % [buffer start][3]
+%     $T_{\text{\boundary1 fluff}}$
+% % [buffer end]
+%
+% \def\Show#1#2#3%
+%   {\doifelsenothing{#3}
+%      {\small\tx\typeinlinebuffer[#1]}
+%      {\doifelse{#3}{-}
+%         {\small\bf\tt 模式 #2}
+%         {\showfontkerns\showglyphs\mathscriptboxmode#2\relax\inlinebuffer[#1]}}}
+%
+% \begin{longtable}{lBT c c c c c}
+%     &          & \Show{1}{0}{}         &\Show{1}{1}{}         & \Show{2}{1}{}         & \Show{2}{2}{}         & \Show{3}{3}{}         \\
+%     &          & \Show{1}{0}{-}        &\Show{1}{1}{-}        & \Show{2}{1}{-}        & \Show{2}{2}{-}        & \Show{3}{3}{-}        \\
+%     & modern   & \Show{1}{0}{modern}   &\Show{1}{1}{modern}   & \Show{2}{1}{modern}   & \Show{2}{2}{modern}   & \Show{3}{3}{modern}   \\
+%     & lucidaot & \Show{1}{0}{lucidaot} &\Show{1}{1}{lucidaot} & \Show{2}{1}{lucidaot} & \Show{2}{2}{lucidaot} & \Show{3}{3}{lucidaot} \\
+%     & pagella  & \Show{1}{0}{pagella}  &\Show{1}{1}{pagella}  & \Show{2}{1}{pagella}  & \Show{2}{2}{pagella}  & \Show{3}{3}{pagella}  \\
+%     & cambria  & \Show{1}{0}{cambria}  &\Show{1}{1}{cambria}  & \Show{2}{1}{cambria}  & \Show{2}{2}{cambria}  & \Show{3}{3}{cambria}  \\
+%     & dejavu   & \Show{1}{0}{dejavu}   &\Show{1}{1}{dejavu}   & \Show{2}{1}{dejavu}   & \Show{2}{2}{dejavu}   & \Show{3}{3}{dejavu}   \\
+% \end{longtable}
+%
+% % 字符下标的字距由 \lpr {mathscriptcharmode} 控制，该参数也默认为~1。
+%
+% 这是另一个示例。在内部，我们将字距标记为斜体字距或字体字距，其中字体字距来自阶梯字距表。在 2018 年，Latin Modern 和 Pagella 等字体依赖包围盒的技巧，Cambria 使用阶梯字距，Lucida 则混合使用。根据字体的演进方式，我们可能会增加更多关于可以打开和关闭什么的控制。
+%
+% \def\MathSample#1#2#3%
+%   {&
+%    #1 &
+%    #2 &
+%    \showglyphdata $#3T_{f}$         &
+%    \showglyphdata $#3\gamma_{e}$    &
+%    \showglyphdata $#3\gamma_{ee}$   &
+%    \showglyphdata $#3T_{\rmfamily fluff}$ &
+%    \\}
+%
+% \begin{longtable}{Tl Tl l l l l}
+%     \FL
+%     \MathSample{normal}{modern}  {\mr}
+%     \MathSample{}      {pagella} {\mr}
+%     \MathSample{}      {cambria} {\mr}
+%     \MathSample{}      {lucidaot}{\mr}
+%     \ML
+%     \MathSample{bold}  {modern}  {\mb}
+%     \MathSample{}      {pagella} {\mb}
+%     \MathSample{}      {cambria} {\mb}
+%     \MathSample{}      {lucidaot}{\mb}
+%     \bottomrule
+% \end{longtable}
+
+\subsection{固定上下标}
+
+我们有三个参数用于这种固定锚定：
+
+\begin{longtable}{c l}
+\toprule parameter & register \\
+$d$ & \lpr {Umathsubshiftdown}    \\
+$u$ & \lpr {Umathsupshiftup}      \\
+$s$ & \lpr {Umathsubsupshiftdown} \\
+\bottomrule
+\end{longtable}
+
+当我们将 \lpr {mathscriptsmode} 设为非零值时，这些参数会用于计算固定位置。这在例如化学排版中是需要的。你可以操作上述变量来获得不同效果。
+
+\def\SampleMath#1%
+  {$CH_2 + CH^+_2 + CH^2_2$}
+
+\begin{longtable}{c c c p{5cm}}
+\toprule mode & down          & up            & example        \\
+\midrule
+0    & dynamic       & dynamic       & \SampleMath{0} \\
+1    & $d$           & $u$           & \SampleMath{1} \\
+2    & $s$           & $u$           & \SampleMath{2} \\
+3    & $s$           & $u + s - d$   & \SampleMath{3} \\
+4    & $d + (s-d)/2$ & $u + (s-d)/2$ & \SampleMath{4} \\
+5    & $d$           & $u + s - d$   & \SampleMath{5} \\
+\bottomrule
+\end{longtable}
+
+此参数的值遵循分组规则，但作用于整个当前公式。
+
+% 如果需要，我们可以将值放在 stylenodes 中，但也许应该放更多东西在那里
+
+\subsection{Penalty：\lpr {mathpenaltiesmode}}
+
+\topicindex {math+penalties}
+
+仅在行间数学中，数学表中才会添加 penalty。你可以通过以下设置强制添加 penalty（即使在展示式数学中）：
+
+\begin{typing}
+\mathpenaltiesmode = 1
+\end{typing}
+
+这个原语在 \LUATEX\ 中并非真正必要，因为你可以使用回调 \cbk {mlist_to_hlist}，通过以强制 penalty 调用常规例程来强制添加 penalty。然而，作为开放和控制的一部分，这个原语是有意义的。作为额外补充，我们还提供了两个附加 penalty：
+
+\begin{typing}
+\prebinoppenalty = -100 % example value
+\prerelpenalty   =  900 % example value
+\end{typing}
+
+它们默认为无穷大，表示不需要插入。设置后，它们会在 binop 或 rel noad 之前注入。这是一个实验性特性。
+
+\subsection{公式间距：\lpr {matheqnogapstep}}
+
+默认情况下，\TEX\ 会在公式和编号之间添加一个 quad 间距。这是硬编码的。一个新原语可以控制这一点：
+
+\begin{typing}
+\matheqnogapstep = 1000
+\end{typing}
+
+由于使用的是数学文本字体的 math quad 而非一个尺寸，我们使用步长来控制大小。值为零将抑制间隙。该步长除以 1000，这是 \TEX\ 中模拟浮点因子的常用方式。
+
+\section{数学构造}
+
+% \subsection {非伸缩栅栏}
+%
+% \topicindex {math+fences}
+%
+% \lpr {mathdelimitersmode} 原语是实验性的，处理以下（潜在）问题。可设置三个位。第一位防止栅栏符号未伸缩时的不必要位移（cambria 的副作用）。第二位在前面的字符 ord 与加栅栏子公式之间强制斜体修正，而第三位将该子公式转换为 ordinary，使其与未加栅栏的变体使用相同间距。这里展示 Cambria（启用了 \lpr {mathitalicsmode}）。
+%
+% \starttexdefinition Whatever #1
+%     & \type{\mathdelimitersmode = #1}
+%     & \mathitalicsmode1\mathdelimitersmode#1\ruledhbox{\showglyphs\showfontkerns\showfontitalics$f(x)$}
+%     & \mathitalicsmode1\mathdelimitersmode#1\ruledhbox{\showglyphs\showfontkerns\showfontitalics$f\left(x\right)$}
+%     \\
+% \stoptexdefinition
+%
+% \start
+%     
+%     \begin{longtable}{l l l}
+%         \Whatever{0}\Whatever{1}\Whatever{2}\Whatever{3}%
+%         \Whatever{4}\Whatever{5}\Whatever{6}\Whatever{7}%
+%     \end{longtable}
+% \stop
+%
+% 因此，设为 7 时，带非伸缩定界符的加栅栏子公式与未加栅栏的结果相同。这在因内容不可预测而被迫始终使用 \prm
+% {left} 和 \prm {right} 的情况下很方便。如前所述，这是一个实验性特性（这在某种程度上与引擎中处理栅栏的特殊方式相符）。标志的完整列表见下表：
+%
+% \begin{longtable}{c l}
+% \toprule 值  & 含义 \\
+% \midrule
+% & \type{"01} & 不应用通常的位移 \\
+% & \type{"02} & 可能时应用斜体修正 \\
+% & \type{"04} & 强制为 ordinary 子公式 \\
+% & \type{"08} & 基字符时不位移 \\
+% & \type{"10} & 仅在可伸缩时位移 \\
+% \bottomrule
+% \end{longtable}
+%
+% 效果可能取决于字体（对于 Cambria，例如可以使用 \type {"16}）。
+
+\subsection{重音符号处理}\label{mathacc}
+
+\topicindex {math+accents}
+
+\LUATEX\ 在数学模式下同时支持顶部重音符号和底部重音符号，且数学重音符号会自动伸缩（当然，前提是重音符号所在字体支持此功能）。底部和组合重音符号以及固定宽度数学重音符号由 \lpr {Umathaccent} 后面的可选关键字控制。
+
+\lpr {Umathaccent} 之后的关键字 \type {bottom} 表示需要底部重音符号，关键字 \type {both} 表示同时需要顶部和底部重音符号（在这种情况下当然需要指定两个重音符号）。
+
+然后读取定义重音符号的三个整数。这组整数可以由 \type {fixed} 关键字前缀，以指示请求非伸缩变体（如果是两个重音符号，则此步骤重复）。
+
+一个简单示例：
+
+\begin{typing}
+\Umathaccent both fixed 0 0 "20D7 fixed 0 0 "20D7 {example}
+\end{typing}
+
+如果需要放置数学顶部重音符号，且被加着重号者是字符并具有非零 \type {top_accent} 值，则使用此值放置重音符号，而非 \TEX82\ 使用的 \prm {skewchar} 字距。
+
+\type {top_accent} 值表示被加着重号者中的一条垂直线。重音符号将水平移动，使其自身的 \type {top_accent} 线与被加着重号者的线对齐。如果重音符号的 \type {top_accent} 值为零，则改用重音符号宽度的一半加上其斜体修正。
+
+顶部重音符号的垂直位置取决于被加着重号者字体的 \type {x_height}（如 \TEX book 所述），但如果值为零且字体有 \type {MathConstants} 表，则改用 \type {AccentBaseHeight}。
+
+底部重音符号的垂直位置正好在被加着重号者正下方，不进行任何修正。
+
+可能的位置有 \type {top}、\type {bottom}、\type {both} 和 \type {center}。未给出位置时默认为 \type {top}。可以指定附加参数 \nod {fraction}，后跟一个数字；例如值 1200 表示判据为核宽度的 1.2 倍。fraction 仅适用于逐步选择的形状，主要用于 \type {overlay} 位置。它也适用于其他位置，但那时涉及的是宽度。
+
+\subsection{根式扩展}
+
+\topicindex {math+radicals}
+
+新原语 \lpr {Uroot} 允许构造包含次数字段的根式 noad。其语法是 \lpr {Uradical} 的扩展：
+
+\begin{typing}
+\Uradical <fam integer> <char integer> <radicand>
+\Uroot    <fam integer> <char integer> <degree> <radicand>
+\end{typing}
+
+次数的位置由数学参数 \lpr {Umathradicaldegreebefore}、\lpr {Umathradicaldegreeafter} 和 \lpr {Umathradicaldegreeraise} 控制。次数以 \prm {scriptscriptstyle} 排版。
+
+\subsection{上标与下标}
+
+通过 \LUA\ 加载的 \OPENTYPE\ 数学字体中的字符字段可以有一个 ``mathkern 表。此表的格式与 \type {fontloader} 库返回的 ``mathkern 表相同，不同之处在于所有高度和字距值必须以实际缩放点指定。
+
+当需要在数学项旁放置上标或下标时，\LUATEX\ 会检查上标或下标与核是否都是简单字符项。如果是，且两个字符项的字体都是 \OPENTYPE\ 字体（而非传统 \TEX\ 字体），则 \LUATEX\ 将使用 \OPENTYPE\ 数学算法来决定上标或下标的水平位置。
+
+工作方式如下：
+
+\begin{itemize}\item 计算上下标的垂直位置。
+    
+    \item 默认水平位置紧贴基字符旁边。
+    
+    \item 对于上标，加上基字符的斜体修正。
+    
+    \item 对于上标，计算两个垂直值：上标（上移后）的底部和基字符的顶部。对于下标，两个值是（下移后）下标的顶部和基字符的底部。
+    
+    \item 对于这两个位置中的每一个：
+        \begin{itemize}\item 查找基字符在此高度的 math kern 值（对于下标位置，是 \texttt{bottom\_right} 角；对于上标位置，是 \texttt{top\_right} 角）
+
+            \item 查找上下标在此高度的 math kern 值（对于下标位置，是 \texttt{top\_left} 角；对于上标位置，是 \texttt{bottom\_left} 角）
+            
+            \item 将找到的值相加得到初步结果。
+            
+        \end{itemize}
+    
+    \item 要应用的水平字距是上一步两个结果中的较小者。
+    
+\end{itemize}
+
+特定高度处的 math kern 值是由下一个更高高度和字距对指定的字距值，或者是字符中最高的那个（如果字符中没有足够高的值），或者就是零（如果字符完全没有 math kern 对）。
+
+\subsection{可伸缩符号上的上下标}
+
+\topicindex {math+scripts}
+\topicindex {math+delimiters}
+\topicindex {math+extensibles}
+
+原语 \lpr {Uunderdelimiter} 和 \lpr {Uoverdelimiter} 允许在自动可伸缩项上放置下标或上标，而 \lpr {Udelimiterunder} 和 \lpr {Udelimiterover} 允许将自动可伸缩项作为下标或上标放置在核上。输入：
+
+% these produce radical noads .. in fact the code base has the numbers wrong for
+% quite a while, so no one seems to use this
+
+\begin{typing}
+$\Uoverdelimiter  0 "2194 {\hbox{\strut  overdelimiter}}$
+$\Uunderdelimiter 0 "2194 {\hbox{\strut underdelimiter}}$
+$\Udelimiterover  0 "2194 {\hbox{\strut  delimiterover}}$
+$\Udelimiterunder 0 "2194 {\hbox{\strut delimiterunder}}$
+\end{typing}
+
+渲染结果如下（演示输出已省略）。
+
+将返回：
+
+\begin{typing}
+[2] [3] [4]
+\end{typing}
+
+这些命令是为方便而提供的。在它们可用之前，你可以这样做：
+
+\begin{typing}
+\def\Umathcharclass{\directlua{tex.print(tex.getmathcode(token.scan_int())[1])}}
+\def\Umathcharfam  {\directlua{tex.print(tex.getmathcode(token.scan_int())[2])}}
+\def\Umathcharslot {\directlua{tex.print(tex.getmathcode(token.scan_int())[3])}}
+\end{typing}
+
+\subsection {末行}
+
+\topicindex {math+last line}
+
+有一个新原语用于控制段落中间展示式数学中上一行计算中的超调。默认值为当前字体 em 宽度的 2 倍：
+
+\begin{typing}
+\predisplaygapfactor=2000
+\end{typing}
+
+如果你希望末行长度独立于数学，即不想回到插入伪展示式数学公式以获取末行长度的 hack，以下方法通常也可行：
+
+\begin{typing}
+\def\lastlinelength{\dimexpr
+    \directlua {tex.sprint (
+        (nodes.dimensions(node.tail(tex.lists.page_head).list))
+    )}sp
+\relax}
+\end{typing}
+
+\section{数学模式}
+
+\subsection {单字符数学命令的详细版本}
+
+\topicindex {math+styles}
+
+\LUATEX\ 定义了六个新原语，它们与 \type {^}、\type {_}、\type {$} 和 \type {$$} 功能相同：
+
+\begin{longtable}{l l}
+\toprule primitive                  & explanation \\
+\midrule
+\lpr{Usuperscript}      & 复制 \type {^} 的功能 \\
+\lpr{Usubscript}        & 复制 \type {_} 的功能 \\
+\lpr{Ustartmath}        & 在非数学模式下使用时复制 \type {$} 的功能 \\
+\lpr{Ustopmath}         & 在行间数学模式下使用时复制 \type {$} 的功能 \\
+\lpr{Ustartdisplaymath} & 在非数学模式下使用时复制 \type {$$} 的功能 \\
+\lpr{Ustopdisplaymath}   & 在展示式数学模式下使用时复制 \type {$$} 的功能 \\
+\bottomrule
+\end{longtable}
+
+\lpr {Ustopmath} 和 \lpr {Ustopdisplaymath} 原语会检查当前数学模式是否正确（行间 vs.\ 展示），但你可以自由地将四个 mathon/mathoff 命令与显式美元符号混用。
+
+\subsection{脚本命令 \lpr {Unosuperscript} 和 \lpr {Unosubscript}}
+
+\topicindex {math+styles}
+\topicindex {math+scripts}
+
+这两个命令产生上标和下标，但使用当前样式（渲染时的样式）。因此，
+
+\begin{typing}
+$
+    x\Usuperscript  {1}\Usubscript  {2} =
+    x\Unosuperscript{1}\Unosubscript{2} =
+    x\Usuperscript  {1}\Unosubscript{2} =
+    x\Unosuperscript{1}\Usubscript  {2}
+$
+\end{typing}
+
+
+
+结果为 \inlinebuffer[script]。
+
+\subsection{非数学模式中允许的数学命令}
+
+\topicindex {math+text}
+\topicindex {text+math}
+
+命令 \prm {mathchar}、\lpr {Umathchar} 以及由 \prm {mathchardef} 或 \lpr {Umathchardef} 产生的控制序列在水平和垂直模式下也可接受。在这些情况下，使用所请求数学字族的 \prm {textfont}。
+
+% \section{数学待办}
+%
+% 以下项目仍待完成。
+%
+% \begin{itemize}% \item %     前上下标。
+% 
+% \item %     多层堆叠。
+% 
+% \item %     高字符的扁平化重音符号（可能）。
+% 
+% \item %     更好地控制展示式周围间距和公式编号的处理。
+% 
+% \item %     支持使用 \MATHML\ 样式对齐点的多行展示式。
+% 
+% \end{itemize}
+%
+% 
+
+\section{附加特性}
+
+\subsection {已废弃}
+
+自 TL 2026 起，以下原语被 ``忽略。二十年来它们未被使用，除了 \CONTEXT\ 用于探索变体之外，但我们现在可以用不同方式做这件事。触发警告的废弃命令：\typ {\mathoption}、\typ {\mathitalicssmode}、\typ {\mathnolimitsmode}、\typ {\mathscriptboxmode}、\typ {\mathscriptcharmode}、%\typ {\mathflattenmode}、
+\typ {\mathdefaultsmode}、
+\typ {\mathrulethicknessmode}、\typ {\mathdelimitersmode}。也不再使用的参数有 \typ {\Umathnolimitsupfactor} 和 \typ
+{\Umathnolimitsubfactor}。
+
+\subsection {扁平化：\lpr {mathflattenmode}}
+
+\topicindex {math+flattening}
+
+\TEX\ 数学引擎会折叠没有上下标且核为字符的 \type {ord} noad，这在 \OPENTYPE\ 模式下有一个副作用：会应用斜体修正（前提是它们已被启用）。
+
+\begin{typing}
+
+$V \mathbin{\mathbin{v}} V$\par
+$V \mathord{\mathord{v}} V$\par
+\end{typing}
+
+
+
+渲染结果为：
+
+（演示输出已省略。）当我们将 \lpr {mathflattenmode} 设为 31 时得到：
+
+（演示输出已省略。）如果你看不出区别，那么字体可能具有正确的字符尺寸，不需要斜体修正。对于 Latin Modern（至少到 2018 年），存在视觉差异。在这方面，此参数并不总是需要的，除非你无论如何都想要高效的数学表。
+
+你可以通过将适当的数字加到模式参数值来影响扁平化。默认值为~1。
+
+\begin{longtable}{c c}
+\toprule mode & class \\
+\midrule
+1   & ord   \\
+2   & bin   \\
+4   & rel   \\
+8   & punct \\
+16   & inner \\
+\bottomrule
+\end{longtable}
+
+\subsection {减少追踪}
+
+\topicindex {math+tracing}
+
+由于有相当多的数学相关参数和值，可以限制追踪。仅当 \type {tracingassigns} 和/或 \type {tracingrestores} 设为 2 或更高时才会追踪它们。
+
+% \subsection {使用 \lpr {mathdefaultsmode} 的数学选项}
+%
+% 引入此选项是因为 \LATEX\ 开发者希望某些默认值不同于我们冻结 \LUATEX 时所定下的值。默认值为：
+%
+% \begin{longtable}{l c c}
+% \toprule                 & 扫描 & 渲染 \\
+% \midrule
+% & radical/root    & 压缩  & 压缩   \\
+% & under delimiter & 压缩  & supstyle  \\
+% & over delimiter  & 压缩  & substyle  \\
+% & delimiter under & 压缩  & current   \\
+% & delimiter over  & 压缩  & current   \\
+% \bottomrule
+% \end{longtable}
+%
+% 当 \type {\mathdefaultsmode} 大于零时，我们有：
+%
+% \begin{longtable}{l c c}
+% \toprule                 & 扫描 & 渲染 \\
+% \midrule
+% & radical/root    & 压缩  & 压缩   \\
+% & under delimiter & substyle & substyle  \\
+% & over delimiter  & supstyle & supstyle  \\
+% & delimiter under & current  & current   \\
+% & delimiter over  & 压缩  & 压缩   \\
+% \bottomrule
+% \end{longtable}
+%
+% 讨论这些默认值背后的理由超出了本手册的范围。零值可以追溯到早期。如果需要，你可以在内容参数中显式设置样式。
+
+% \subsection {使用 \lpr {mathoption} 的数学选项}
+%
+% 此命令现已废弃并触发错误消息。它仅用于实验。
+
+% % 更加废弃：
+
+% 数学引擎中的逻辑相当复杂，通常没有通用解决方案（即：对一种字体有效的方法，对另一种字体可能失败）。因此，实现中的一些变体由参数（模式）驱动。此外还有一个新原语 \lpr {mathoption}，将用于测试。不要依赖任何选项在生产版本中存在，因为它们是为开发而设的。
+%
+% 此选项是在数学引擎拆分代码路径时为测试目的而引入的，它强制引擎在斜体修正等方面将新字体视为旧字体。不保证最终结果，意外副作用不视为 bug，因为它们与字体属性相关。当前只有一个选项：
+%
+% % [buffer start]
+% \mathoption old 1
+% % [buffer end]
+%
+% \LUA\ 字体表中的 \type {oldmath} 布尔标志是强制旧式处理的官方方式，因为它绑定到字体。与我们可能通过此命令临时引入的所有选项一样，此特性不用于生产。
+
+% % 已废弃：
+%
+% \subsubsection {\type {\mathoption noitaliccompensation}}
+%
+% 此选项对具有内建斜体修正的字符补偿位置。
+%
+% % [buffer start]
+% {\showboxes\int}\quad
+% {\showboxes\int_{|}^{|}}\quad
+% {\showboxes\int\limits_{|}^{|}}
+% % [buffer end]
+%
+% % [buffer type]
+%
+% 结果如下（使用具有此类斜体的 computer modern）：
+%
+% \startlinecorrection[blank]
+%     
+%     % [start combination][nx=2,ny=2,distance=5em]
+%         {\mathoption noitaliccompensation 0\relax \mathematics{
+% \stoplinecorrection
+
+% % 已废弃：
+%
+% \subsubsection {\type {\mathoption nocharitalic}}
+%
+% 当两个字符相邻时，斜体修正可能相互干扰。以下示例展示此选项的作用：
+%
+% % [buffer start]
+% 
+% 
+% 
+% P( PP PQR
+% % [buffer end]
+%
+% % [buffer type]
+%
+% 结果如下（使用具有此类斜体的 computer modern）：
+%
+% \startlinecorrection[blank]
+%     
+%     % [start combination][nx=2,ny=2,distance=5em]
+%         {\mathoption nocharitalic 0\relax \mathematics{
+% \stoplinecorrection
+
+% % 已废弃：
+%
+% \subsubsection {\type {\mathoption useoldfractionscaling}}
+%
+% 引入此选项是为了解决跟踪项 604 中关于新字体是否存在分式相关设置的模糊情况。

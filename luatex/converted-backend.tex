@@ -1,0 +1,959 @@
+\chapter{后端库}\label{backend}
+
+\section{\type {pdf}}
+
+\topicindex{backend}
+\topicindex{\PDF}
+
+此库包含与 \PDF\ 后端相关的变量和函数。有关设置器的预期值的更多详细信息，
+请参见 \ref{backendprimitives}。
+
+\subsection{\type {mapfile}}
+
+\topicindex{map files}
+\topicindex{files+map}
+
+\begin{typing}
+pdf.mapfile(<string> map file)
+pdf.mapline(<string> map line)
+\end{typing}
+
+这两个函数可用于替换从 \PDFTEX 继承的原语 \orm {pdfmapfile} 和 \orm {pdfmapline}。
+它们接受一个字符串作为唯一参数，没有返回值。映射行中的第一个字符可以是
+\type {-}、\type {+} 或 \type {=}，分别表示删除、添加或替换该行。
+它们不是状态设置器，而是立即生效。
+
+\subsection{{\type {[set|get}}}]
+
+\topicindex{\PDF+trailer}
+\topicindex{\PDF+catalog}
+\topicindex{\PDF+info}
+
+\libindex{setcatalog} \libindex{getcatalog}
+\libindex{setinfo}    \libindex{getinfo}
+\libindex{setnames}   \libindex{getnames}
+\libindex{settrailer} \libindex{gettrailer}
+
+这些函数补充了处理元数据的相应 \PDF\ 后端令牌列表。值类型为字符串，
+它们在 \TEX\ 端设置的令牌寄存器写入之后直接写入 \PDF\ 文件。
+
+\subsection{{\type {[set|get}}}]
+
+\libindex{setpageattributes}  \libindex{getpageattributes}
+\libindex{setpageresources}   \libindex{getpageresources}
+\libindex{setpagesattributes} \libindex{getpagesattributes}
+
+\topicindex{\PDF+page attributes}
+\topicindex{\PDF+page resources}
+
+这些函数补充了处理页面资源的相应 \PDF\ 后端令牌列表。这些变量与相应的
+\PDF\ 后端令牌寄存器没有交互。它们在 \TEX\ 端设置的令牌寄存器写入之后
+直接写入 \PDF\ 文件。
+
+\subsection{{\type {[set|get}}}]
+
+\libindex{setxformattributes} \libindex{getxformattributes}
+\libindex{setxformresources}  \libindex{getxformresources}
+
+\topicindex{\PDF+xform attributes}
+\topicindex{\PDF+xform resources}
+
+这些函数补充了处理可复用盒子和图像的相应 \PDF\ 后端令牌列表。这些变量
+与相应的 \PDF\ 后端令牌寄存器没有交互。它们在 \TEX\ 端设置的令牌寄存器
+写入之后直接写入 \PDF\ 文件。
+
+\subsection{{\type {[set|get}version}}]
+
+\topicindex{\PDF+version}
+
+\libindex{getmajorversion} \libindex{setmajorversion}
+\libindex{getminorversion} \libindex{setminorversion}
+
+你可以设置输出的主版本号和次版本号。主版本号通常为~1，但当设置为~2时，
+为了符合标准，某些数据将不会写入文件。你设置哪个次版本号取决于你使用的
+\PDF\ 功能。这不在 \LUATEX\ 的控制范围内。
+
+可以将主版本号设置为~2，但我们无法保证引擎能正确适配，因为据我们所知
+没有公开免费的规范。此外，用户构造的注释不会被检查，而是直接传递给文件。
+另一方面，引擎生成的 \PDF\ 相当简单，对版本的依赖不大。
+
+\subsection{\type {getcreationdate}}
+
+\topicindex{\PDF+date}
+
+\libindex{getcreationdate}
+
+此函数返回一个字符串，其中包含最终出现在 \PDF\ 文件中的日期格式，
+本例中为：{\tttf [版本号]}。
+
+\subsection{{\type {[set|get}inclusionerrorlevel} 和 \type {[set|get]ignoreunknownimages}}]
+
+\topicindex{\PDF+options}
+
+\libindex{getinclusionerrorlevel} \libindex{setinclusionerrorlevel}
+\libindex{getignoreunknownimages} \libindex{setignoreunknownimages}
+
+这些变量控制如何处理嵌入图像中的错误。它们是仿照 \PDFTEX\ 中的对应项
+建模的。
+
+\subsection{\type{[set|get]suppressoptionalinfo}, \type{[set|get]trailerid}, \type{[set|get]omitcidset}, \type{[set|get]omitinfo}, \type{[set|get]omitmediabox}, \type{[set|get]omitprocset}, \type{[set|get]ptexprefix}}
+
+\topicindex{\PDF+options}
+\topicindex{\PDF+trailer}
+
+\libindex{getsuppressoptionalinfo} \libindex{setsuppressoptionalinfo}
+\libindex{gettrailerid}            \libindex{settrailerid}
+\libindex{getomitcidset}           \libindex{setomitcidset}
+\libindex{getomitcharset}          \libindex{setomitcharset}
+\libindex{getomitinfo}             \libindex{setomitinfo}
+\libindex{getomitmediabox}         \libindex{setomitmediabox}
+\libindex{getomitprocset}          \libindex{setomitprocset}
+\libindex{getptexprefix}           \libindex{setptexprefix}
+
+可选信息位集（一个数字）确定要刷新哪些类型的信息。默认情况下我们刷新所有。
+更多详细信息请参见 \ref{sec:pdfextensions}。
+
+你可以设置自己的 trailer id。这必须是一个包含有效 \PDF\ 数组内容和
+校验和的字符串。
+
+cidset、charset 和 info 标志（数字）会禁用所谓的 \type {CIDSet} 和
+\type {CharSet} 条目的包含，这在针对众多 \PDF\ 子标准中的某些时可能很方便。
+\type {ProcSet} 和 \type {PTEX} 前缀也是如此，设置此标志将强制使用
+\type {_} 而不是 \type {.}。\footnote {在 info 字典中，句点在 2 版之前
+是有效的，但在其他地方必须使用下划线。此前缀始于 \PDFTEX\ 的早期，
+当时使用句点被认为是可以接受的。后来的规范对此进行了澄清。}
+
+当省略它时，应通过页面属性选项提供 \type {MediaBox}，因为这是一个
+必需字段。不进行任何检查。
+
+\subsection{{\type {[set|get}compresslevel} 和 \type {[set|get]recompress}}]
+
+\topicindex{\PDF+compression}
+
+\libindex{getcompresslevel}    \libindex{setcompresslevel}
+\libindex{getobjcompresslevel} \libindex{setobjcompresslevel}
+\libindex{getrecompress}       \libindex{setrecompress}
+
+这些函数设置流压缩级别。启用对象压缩时，多个对象将被打包到一个压缩流中，
+从而节省空间。最小值为~0，最大值为~9。
+
+当 recompression 设为~1时，压缩对象将被解压；当 compresslevel 大于零时，
+它们将被重新压缩。这主要是一个调试功能，不应依赖。
+
+\subsection{{\type {[set|get}gentounicode}}]
+
+\topicindex{\PDF+unicode}
+
+\libindex{getgentounicode} \libindex{setgentounicode}
+
+此标志启用 tounicode 生成（如 \PDFTEX\ 中那样）。通常这些值由字体加载器提供。
+
+\subsection{{\type {[set|get}decimaldigits}}]
+
+\topicindex{\PDF+precision}
+
+\libindex{getdecimaldigits} \libindex{setdecimaldigits}
+
+这两个函数设置写入 \PDF 文件的浮点数精度。你可以设置任何值，但后端
+不会低于~3或高于~6。
+
+\subsection{{\type {[set|get}pkresolution}}]
+
+\topicindex{\PDF+resolution}
+
+\libindex{getpkresolution} \libindex{setpkresolution}
+
+此设置器接受两个参数：分辨率和一个可选的零或一，指示这是否是固定的。
+获取器返回这两个值。
+
+\subsection{{\type {getlast[obj|link|annot}} 和 \type {getretval}}]
+
+\topicindex{\PDF+objects}
+\topicindex{\PDF+annotations}
+
+\libindex{getlastobj}   \libindex{setlastobj}
+\libindex{getlastlink}  \libindex{setlastlink}
+\libindex{getlastannot} \libindex{setlastannot}
+\libindex{getretval}
+
+这些状态变量类似于传统上在 \TEX\ 端后端接口中使用的变量。
+
+\subsection{\type {getmaxobjnum}}
+
+\libindex{getmaxobjnum}
+\libindex{getobjtype}
+\libindex{getfontname}
+\libindex{getfontobjnum}
+\libindex{getfontsize}
+\libindex{getxformname}
+
+这些内省辅助函数主要在你自己构造 \PDF\ 对象时使用，例如需要有关
+（将要）嵌入的字体的信息时。
+
+\subsection{{\type {[set|get}origin}}]
+
+\topicindex{\PDF+positioning}
+
+\libindex{setorigin} \libindex{getorigin}
+
+此函数用于设置水平和|/|或垂直偏移，这是一个传统的后端属性。
+
+\begin{typing}
+pdf.setorigin() -- sets both to 0pt
+pdf.setorigin(tex.sp("1in")) -- sets both to 1in
+pdf.setorigin(tex.sp("1in"),tex.sp("1in"))
+\end{typing}
+
+此函数的对应获取器返回两个值。
+
+\subsection{{\type {[set|get}imageresolution}}]
+
+\topicindex{\PDF+resolution}
+
+\libindex{setimageresolution} \libindex{getimageresolution}
+
+这两个函数与 imageresolution 相关，当图像本身未提供非零 x 或 y 分辨率时使用。
+
+\subsection{{\type {[set|get}margin}}]
+
+\topicindex{\PDF+margins}
+
+\libindex{getlinkmargin}   \libindex{setlinkmargin}
+\libindex{getdestmargin}   \libindex{setdestmargin}
+\libindex{getthreadmargin} \libindex{setthreadmargin}
+\libindex{getxformmargin}  \libindex{setxformmargin}
+\libindex{getmarginmargin} \libindex{setmarginmargin}
+
+这些函数可用于设置和检索添加到相应对象自然边界框的边距。
+
+\subsection{{\type {get[pos|hpos|vpos}}}]
+
+\topicindex{\PDF+positions}
+
+\libindex{getpos}
+\libindex{gethpos}
+\libindex{getvpos}
+
+这些函数获取输出页面上的当前位置，从其左下角开始测量。
+返回值以缩放点为单位。
+
+\begin{typing}
+local h, v = pdf.getpos()
+\end{typing}
+
+\subsection{{\type {[has|get}matrix}}]
+
+\topicindex{\PDF+matrix}
+
+\libindex{getmatrix} \libindex{hasmatrix}
+
+当前矩阵变换可通过 \type {getmatrix} 命令获得，该命令返回 6 个值：
+\type {sx}、\type {rx}、\type {ry}、\type {sy}、\type {tx} 和 \type {ty}。
+当应用了矩阵时，\type {hasmatrix} 函数返回 \type {true}。
+
+\begin{typing}
+if pdf.hasmatrix() then
+    local sx, rx, ry, sy, tx, ty = pdf.getmatrix()
+    -- do something useful or not
+end
+\end{typing}
+
+\subsection{\type {print}}
+
+\topicindex{\PDF+print to}
+
+\libindex{print}
+
+你可以从 \lpr {latelua} 调用内向 \PDF\ 文档打印一个字符串。
+此函数不应在 \prm {directlua} 内部使用，除非你 {\it 确切地}知道自己在做什么。
+
+\begin{typing}
+pdf.print(<string> s)
+pdf.print(<string> type, <string> s)
+\end{typing}
+
+可选参数可用于模拟 \PDF\ 字面量的行为：\type {type} 为 \type {direct}
+或 \type {page}。
+
+\subsection{\type {immediateobj}}
+
+\topicindex{\PDF+objects}
+
+\libindex{immediateobj}
+
+此函数创建一个 \PDF\ 对象并立即将其写入 \PDF\ 文件。它是仿照
+\PDFTEX 的 \prm {immediate} \orm {pdfobj} 原语建模的。所有函数变体都返回
+新生成对象的对象编号。
+
+\begin{typing}
+<number> n =
+    pdf.immediateobj(<string> objtext)
+<number> n =
+    pdf.immediateobj("file", <string> filename)
+<number> n =
+    pdf.immediateobj("stream", <string> streamtext, <string> attrtext)
+<number> n =
+    pdf.immediateobj("streamfile", <string> filename, <string> attrtext)
+\end{typing}
+
+第一个版本将 \type {objtext} 原样放入一个对象中。只有对象包装器是自动
+生成的，但任何内部结构（如 \type{<< >>} 字典标记）都需要由用户提供。
+第二个版本以关键字 \type {file} 作为第一个参数，将名为 \type {filename}
+的文件内容原样放入对象中。第三个版本以关键字 \type {stream} 创建一个流
+对象，并将 \type {streamtext} 原样放入流中。流长度自动计算。可选的
+\type {attrtext} 放入该对象的字典中。第四个版本以关键字 \type {streamfile}
+与第三个版本作用相同，只是从文件中原样读取流数据。
+
+可以给出一个可选的第一个参数，使函数使用先前保留的 \PDF\ 对象。
+
+\begin{typing}
+<number> n =
+    pdf.immediateobj(<integer> n, <string> objtext)
+<number> n =
+    pdf.immediateobj(<integer> n, "file", <string> filename)
+<number> n =
+    pdf.immediateobj(<integer> n, "stream", <string> streamtext, <string> attrtext)
+<number> n =
+    pdf.immediateobj(<integer> n, "streamfile", <string> filename, <string> attrtext)
+\end{typing}
+
+\subsection{\type{obj}}
+
+\topicindex{\PDF+objects}
+
+\libindex{obj}
+
+此函数创建一个 \PDF\ 对象，该对象仅在被引用时（例如通过 \type {refobj()}）
+才写入 \PDF\ 文件。
+
+所有函数变体都返回新生成对象的对象编号，并且有两种独立的调用模式。
+第一种模式是仿照 \PDFTEX 的 \orm {pdfobj} 原语建模的。
+
+\begin{typing}
+<number> n =
+    pdf.obj(<string> objtext)
+<number> n =
+    pdf.obj("file", <string> filename)
+<number> n =
+    pdf.obj("stream", <string> streamtext, <string> attrtext)
+<number> n =
+    pdf.obj("streamfile", <string> filename, <string> attrtext)
+\end{typing}
+
+可以给出一个可选的第一个参数，使函数使用先前保留的 \PDF\ 对象。
+
+\begin{typing}
+<number> n =
+    pdf.obj(<integer> n, <string> objtext)
+<number> n =
+    pdf.obj(<integer> n, "file", <string> filename)
+<number> n =
+    pdf.obj(<integer> n, "stream", <string> streamtext, <string> attrtext)
+<number> n =
+    pdf.obj(<integer> n, "streamfile", <string> filename, <string> attrtext)
+\end{typing}
+
+第二种模式接受一个带有键值对的参数表。
+
+\begin{typing}
+<number> n = pdf.obj {
+    type           = <string>,
+    immediate      = <boolean>,
+    objnum         = <number>,
+    attr           = <string>,
+    compresslevel  = <number>,
+    objcompression = <boolean>,
+    file           = <string>,
+    string         = <string>,
+    nolength       = <boolean>,
+}
+\end{typing}
+
+\type {type} 字段可以取 \type {raw} 和 \type {stream} 值，此字段为必填，
+其他字段为可选（在约束范围内）。设置 \type {nolength} 时，不会向字典中
+添加 \type {/Length} 条目。
+
+注意：这种模式使 \type{obj} 看起来比实际更灵活：独立参数版本的约束仍然
+适用，例如你不能同时使用 \type {string} 和 \type {file}。
+
+\subsection{\type {refobj}}
+
+\topicindex{\PDF+objects}
+
+\libindex{refobj}
+
+此函数是 \orm {pdfrefobj} 原语的 \LUA\ 版本，通过对象编号引用一个对象，
+以便将该对象写入 \PDF\ 文件。
+
+\begin{typing}
+pdf.refobj(<integer> n)
+\end{typing}
+
+此函数在 \prm {directlua} 和 \lpr {latelua} 环境中都有效。
+在 \prm {directlua} 内部，会创建一个新的 whatsit 节点 ``pdf_refobj，
+该节点将在页面输出期间被标记为待刷新，然后该对象将在页面之后直接写入，
+此时资源对象也会被写入 \PDF\ 文件。在 \lpr {latelua} 内部，该对象将被
+标记为待刷新。
+
+此函数没有返回值。
+
+\subsection{\type {reserveobj}}
+
+\topicindex{\PDF+objects}
+
+\libindex{reserveobj}
+
+此函数创建一个空的 \PDF\ 对象并返回其编号。
+
+\begin{typing}
+<number> n = pdf.reserveobj()
+<number> n = pdf.reserveobj("annot")
+\end{typing}
+
+\subsection{\type {getpageref}}
+
+\topicindex{\PDF+pages}
+
+\libindex{getpageref}
+
+可以通过此函数获取页面的对象编号。这可能是一个前向引用，因此当你请求
+未来的页面时，确实会得到一个编号。
+
+\begin{typing}
+<number> n = pdf.getpageref(123)
+\end{typing}
+
+\subsection{\type {registerannot}}
+
+\topicindex{\PDF+annotations}
+
+\libindex{registerannot}
+
+此函数将一个对象编号添加到当前页面的 \type {/Annots} 数组中，不做其他
+任何事情。此函数只能在 \lpr {latelua} 内部使用。
+
+\begin{typing}
+pdf.registerannot(<number> objnum)
+\end{typing}
+
+\subsection{\type {newcolorstack}}
+
+\topicindex{\PDF+color stack}
+
+\libindex{newcolorstack}
+
+此函数分配一个新的颜色堆栈并返回其 id。参数与类似的后端扩展原语相同。
+
+\begin{typing}
+pdf.newcolorstack("0 g","page",true) -- page|direct|origin
+\end{typing}
+
+\subsection{\type {setfontattributes}}
+
+\topicindex{\PDF+fonts}
+
+\libindex{setfontattributes}
+
+此函数将强制向字体资源中添加一些额外代码。例如，它可用于向位图文件
+添加自定义 \type {ToUnicode} 向量。
+
+\begin{typing}
+pdf.setfontattributes(<number> font id, <string> pdf code)
+\end{typing}
+
+\section{\type {pdfe}}
+
+\subsection{简介}
+
+\topicindex{\PDF+objects}
+
+\topicindex{\PDF+analyze}
+\topicindex{\PDF+\type{pdfe}}
+
+\type {pdfe} 库取代了 \type {epdf} 库，提供了对 \PDF\ 文件的接口。
+它使用与 \PDF\ 图像嵌入相同的代码。由 Paweł Jackowski 编写的
+\type {pplib} 库取代了 \type {poppler}（派生自 \type {xpdf}）库。
+
+\PDF\ 文件基本上是一棵对象树，通过字典（键/值）和数组（索引/值）
+进入树中。有几个从根开始的最顶层字典可以更直接地访问。
+
+尽管 \PDF\ 中的一切基本上都是对象，但我们只将其中一些封装为所谓的
+userdata \LUA\ 对象。
+
+\begin{longtable}{ll}
+\toprule
+\PDF          & \LUA \\
+\midrule
+null          & nil \\
+boolean       & boolean \\
+integer       & integer \\
+float         & number \\
+name          & string \\
+string        & string \\
+array         & array userdatum \\
+dictionary    & dictionary userdatum \\
+stream        & stream userdatum（带有相关字典） \\
+reference     & reference userdatum \\
+\bottomrule
+\end{longtable}
+
+常规获取器返回这些 \LUA\ 数据类型，但也可以获得更详细的信息。
+
+\subsection{\type {open}}
+
+\libindex {open}
+\libindex {new}
+\libindex {new}
+\libindex {getstatus}
+\libindex {close}
+\libindex {unencrypt}
+
+文档从文件或字符串加载
+
+\begin{typing}
+<pdfe document> = pdfe.open(filename)
+<pdfe document> = pdfe.new(somestring,somelength)
+\end{typing}
+
+这样的文档用以下方式关闭：
+
+\begin{typing}
+pdfe.close(<pdfe document>)
+\end{typing}
+
+你可以通过以下方式检查文档是否成功打开：
+
+\begin{typing}
+pdfe.getstatus(<pdfe document>)
+\end{typing}
+
+返回的代码为：
+
+\begin{longtable}{c l}
+\toprule 值      & 说明 \\
+\midrule
+\type {-2} & 文档（仍然）受保护 \\
+\type {-1} & 文档打开失败 \\
+\type  {0} & 文档未加密 \\
+\type  {1} & 文档已被解密 \\
+\bottomrule
+\end{longtable}
+
+加密文档可以通过以下命令解密，其中两个密码参数都可以给出 \type {nil}：
+
+\begin{typing}
+pdfe.unencrypt(<pdfe document>,userpassword,ownerpassword)
+\end{typing}
+
+\subsection{\type {getsize}}
+
+\libindex {getsize}
+\libindex {getversion}
+\libindex {getnofobjects}
+\libindex {getnofpages}
+\libindex {getmemoryusage}
+
+成功打开的文档可以提供一些信息：
+
+\begin{typing}
+bytes = getsize(<pdfe document>
+major, minor = getversion(<pdfe document>
+n = getnofobjects(<pdfe document>
+n = getnofpages(<pdfe document>
+bytes, waste = getmemoryusage(<pdfe document>
+\end{typing}
+
+\subsection{{\type {get[catalog|trailer|info}}}]
+
+\libindex {getcatalog}
+\libindex {gettrailer}
+\libindex {getinfo}
+
+要访问文档结构，你从所谓的 catalog（目录）开始，它是一个字典：
+
+\begin{typing}
+<pdfe dictionary> = pdfe.getcatalog(<pdfe document>)
+\end{typing}
+
+另外两个根字典通过以下方式访问：
+
+\begin{typing}
+<pdfe dictionary> = pdfe.gettrailer(<pdfe document>)
+<pdfe dictionary> = pdfe.getinfo(<pdfe document>)
+\end{typing}
+
+\subsection{\type {getpage}}
+
+\libindex {getpage}
+\libindex {getbox}
+
+可以通过以下命令方便地访问特定页面，该命令返回一个字典。
+第一个参数应是一个页面字典。
+
+\begin{typing}
+<pdfe dictionary> = pdfe.getpage(<pdfe document>,pagenumber)
+\end{typing}
+
+另一个便捷命令为你提供（通常是页面的）（边界）框，该框可以从文档本身
+继承。有效框名的一个例子是 \type {MediaBox}。
+
+\begin{typing}
+box_dimens <array> = pdfe.getbox(<pdfe dictionary>,boxname)
+\end{typing}
+
+\subsection{{\type {get[string|integer|number|boolean|name}}, \type{type}}]
+
+\libindex {getstring}
+\libindex {getinteger}
+\libindex {getnumber}
+\libindex {getboolean}
+\libindex {getname}
+\libindex {type}
+
+字典和数组中的常见值是字符串、整数、浮点数、布尔值和名称（它们也是
+字符串），这些也是普通的 \LUA\ 对象：
+
+\begin{typing}
+s = getstring <pdfe array|dictionary>,index|key)
+i = getinteger(<pdfe array|dictionary>,index|key)
+n = getnumber <pdfe array|dictionary>,index|key)
+b = getboolean(<pdfe array|dictionary>,index|key)
+n = getname   <pdfe array|dictionary>,index|key)
+s = type      <pdfe array|dictionary|document|reference|stream>
+\end{typing}
+
+\type {type} 返回一个描述对象类型的字符串，例如 "pdfe.array"、
+"pdfe.dictionary"、"pdfe"、"pdfe.reference"、"pdfe.stream"。
+
+\type {getstring} 函数有两个额外的变体：
+
+\begin{typing}
+s, h = getstring <pdfe array|dictionary>,index|key,false)
+s    = getstring <pdfe array|dictionary>,index|key,true)
+\end{typing}
+
+第一次调用返回原始字符串加上一个布尔值，指示该字符串是否为十六进制编码。
+第二次调用返回未编码的字符串。
+
+\subsection{{\type {get[from}}}]
+
+\libindex {getdictionary} \libindex {getfromdictionary}
+\libindex {getarray}      \libindex {getfromarray}
+\libindex {getstream}     \libindex {getfromstream}
+
+通常你会在数组中使用索引，在字典中使用键，但字典也接受索引。
+数组或字典的大小可以用通常的 \type {#} 运算符获得。
+
+\begin{typing}
+<pdfe dictionary>   = getdictionary(<pdfe array|dictionary>,index|key)
+<pdfe array>        = getarray     <pdfe array|dictionary>,index|key)
+<pdfe stream>,
+<pdfe dictionary>   = getstream    <pdfe array|dictionary>,index|key)
+\end{typing}
+
+这些命令返回字典、数组和流，流是附加了一块数据的字典。
+
+在介绍另一种访问模式之前，我们提到这些对象也以不同的方式提供访问，
+例如以下是有效的：
+
+\begin{typing}
+print(pdfe.open("foo.pdf").Catalog.Type)
+\end{typing}
+
+在最顶层有 \type {Catalog}、\type {Info}、\type {Trailer} 和 \type {Pages}，
+所以以下也是可以的：
+
+\begin{typing}
+print(pdfe.open("foo.pdf").Pages[1])
+\end{typing}
+
+\subsection{{\type {[open|close|readfrom|whole|}stream}}]
+
+\libindex {openstream}
+\libindex {closestream}
+\libindex {readfromstream}
+\libindex {readfromwholestream}
+
+流有些特殊。当你的索引或键命中一个流时，你会得到一个流对象和字典对象。
+字典你可以用通常的方式访问，而流有以下方法：
+
+\begin{typing}
+okay   = openstream(<pdfe stream>,[decode])
+         closestream(<pdfe stream>
+str, n = readfromstream(<pdfe stream>
+str, n = readwholestream(<pdfe stream>,[decode])
+\end{typing}
+
+你可以分块读取，也可以一次性读取全部。分块读取时，你需要自己打开和关闭流。
+\type {n} 值指示读取的长度。\type {decode} 参数控制是否对流数据进行解压。
+
+与字典一样，你也可以用通常的 \LUA\ 方式访问流字典中的字段。当你
+``调用 流时，你会得到内容。你可以传递一个布尔值，指示是否需要
+解压流。
+
+% pdfe.objectcodes      = objectcodes
+% pdfe.stringcodes      = stringcodes
+% pdfe.encryptioncodes  = encryptioncodes
+
+\subsection{{\type {getfrom[dictionary|array}}}]
+
+\libindex {getfromdictionary}
+\libindex {getfromarray}
+
+除了前面描述的接口之外，还有一个更低级别的接口可用。
+
+\begin{typing}
+key, type, value, detail = getfromdictionary(<pdfe dictionary>,index)
+type, value, detail = getfromarray(<pdfe array>,index)
+\end{typing}
+
+\begin{longtable}{c l l l}
+\toprule 类型       & 含义    & 值            & 详情 \\
+\type {0}  & 无       & nil              & \\
+\type {1}  & 空值     & nil              & \\
+\type {2}  & 布尔值   & 布尔值           & \\
+\type {3}  & 整数     & 整数             & \\
+\type {4}  & 数字     & 浮点数           & \\
+\type {5}  & 名称     & 字符串           & \\
+\type {6}  & 字符串   & 字符串           & 十六进制 \\
+\type {7}  & 数组     & 数组对象         & 大小 \\
+\type {8}  & 字典     & 字典对象         & 大小 \\
+\type {9}  & 流       & 流对象           & 字典大小 \\
+\type {10} & 引用     & 整数             & \\
+\bottomrule
+\end{longtable}
+
+\type {hex} 字符串（在 \PDF\ 文件中）由 \type {<>} 包围，
+而普通字符串由括号界定。
+
+\subsection{{\type {[dictionary|array}totable}}]
+
+\libindex {dictionarytotable}
+\libindex {arraytotable}
+
+字典或表中的所有条目都可以通过以下命令获取，返回值是一个哈希表或索引表。
+
+\begin{typing}
+hash = dictionarytotable(<pdfe dictionary>
+list = arraytotable(<pdfe array>
+\end{typing}
+
+你可以通过以下方式获取页面列表：
+
+\begin{typing}
+{ { <pdfe dictionary>, size, objnum }, ... } = pagestotable(<pdfe document>
+\end{typing}
+
+\subsection{\type {getfromreference}}
+
+\libindex {getfromreference}
+
+因为可能存在未解析的引用，可以通过以下方式解析引用对象：
+
+\begin{typing}
+type, <pdfe dictionary|array|stream>, detail = getfromreference(<pdfe reference>
+\end{typing}
+
+因此，作为第二个值，你会得到一个新的 \type {pdfe} userdata 对象，
+你可以查询它。
+
+\section{内存流}
+
+\topicindex{\PDF+memory streams}
+
+\libindex {new}
+
+\type {pdfe.new} 接受三个参数：
+
+\begin{longtable}{lp{8cm}}
+\toprule 值           & 说明      \\
+\midrule
+\type {stream}  & 这是一个（用低级 \LUA\ 术语来说）轻量级 userdata
+                        对象，即指向字节序列的指针 \\
+\type {length}  & 这是流的长度，以字节为单位（流可以包含嵌入的
+                        零字节） \\
+\type {name}    & 可选，这是一个唯一标识符，用于对流进行哈希处理，
+                        以便多个流不会占用更多内存 \\
+\bottomrule
+\end{longtable}
+
+第三个参数是可选的。如果未给出，函数将像处理普通文件一样返回一个
+\type {pdfe} 文档对象；否则它将返回一个文件名，可在其他地方（例如在
+图像库中）用作伪文件来引用该流。
+
+你也可以传递一个 \LUA\ 字符串，而不是轻量级 userdata 流（这实际上
+不太稳定，但当你来自一个库时很方便），在这种情况下，给定的长度
+（至多）是字符串长度。
+
+该函数返回一个 \type {pdfe} 对象和一个字符串。该字符串可以在
+\type {img} 库中代替文件名使用。当你将该对象用作图像时，需要防止它被
+垃圾回收（例如通过将其存储在某处）。
+
+内存流及其在图像库中的使用都是实验性的，可能会发生变化。如果你想知道
+这在哪里可以使用：当你使用 \type {graphicmagick} 的 swiglib 库时，它可以
+返回这样一个 userdata 对象。这允许在内存中进行转换并将结果直接传递给后端。
+这在一遍式工作流中可能会节省一些运行时间。此功能目前不用于生产环境，
+我们可能会提供更好的实现。
+
+\section{\type {pdfscanner}}
+
+\topicindex{\PDF+scanner}
+
+\libindex {scan}
+
+\type {pdfscanner} 库允许解释 \PDF\ 内容流和 \type {/ToUnicode}（cmap）流。
+你可以从 \type {pdfe} 库获取这些流，如前面的章节所述。此库中只有一个
+顶层函数：
+
+\begin{typing}
+pdfscanner.scan <pdfe stream>, <table> operatortable, <table> info)
+pdfscanner.scan <pdfe array>, <table> operatortable, <table> info)
+pdfscanner.scan <string>, <table> operatortable, <table> info)
+\end{typing}
+
+第一个参数应该是一个 \LUA\ 字符串，或者来自 \type {pdfe} 库的流或数组对象。
+第二个参数 \type {operatortable} 应该是一个 \LUA\ 表，其中键是 \PDF\ 运算符
+名称字符串，值是（由你定义的）用于处理这些运算符的 \LUA\ 函数。每当扫描器
+在内容流中找到这些 \PDF\ 运算符之一时，就会调用这些函数。这些函数以两个
+参数被调用：\type {scanner} 对象本身，以及作为 \type {pdfscanner.scan}
+第三个参数传递的 \type {info} 表。
+
+在内部，\type {pdfscanner.scan} 遍历流中的 \PDF\ 运算符，在内部栈上收集
+操作数，直到找到一个 \PDF\ 运算符。如果该 \PDF\ 运算符的名称存在于
+\type {operatortable} 中，则执行关联的函数。函数运行后（或没有函数可执行时），
+内部操作数栈会被清空，为下一个运算符做准备，然后继续处理。
+
+处理函数的 \type {scanner} 参数是必需的，因为它提供了各种方法来从内部
+操作数栈中获取实际操作数。
+操作数栈中获取实际操作数。
+
+处理 \PDF\ 文档流的一个简单示例如下：
+
+\begin{typing}
+local operatortable = { }
+
+operatortable.Do = function(scanner,info)
+    local resources = info.resources
+    if resources then
+        local val     = scanner:pop()
+        local name    = val[2]
+        local xobject = resources.XObject
+        print(info.space .. "Uses XObject " .. name)
+        local resources = xobject.Resources
+        if resources then
+            local newinfo =  {
+                space     = info.space .. "  ",
+                resources = resources,
+            }
+            pdfscanner.scan(entry, operatortable, newinfo)
+        end
+    end
+end
+
+local function Analyze(filename)
+    local doc = pdfe.open(filename)
+    if doc then
+        local pages = doc.Pages
+        for i=1,#pages do
+            local page = pages[i]
+            local info = {
+              space     = "  " ,
+              resources = page.Resources,
+            }
+            print("Page " .. i)
+         -- pdfscanner.scan(page.Contents,operatortable,info)
+            pdfscanner.scan(page.Contents(),operatortable,info)
+        end
+    end
+end
+
+Analyze("foo.pdf")
+\end{typing}
+
+此示例遍历 \PDF 中的所有实际内容，并打印找到的 \type {XObject} 名称。
+虽然这段代码演示了不少 \type {pdfe} 函数，但我们还是关注
+\type {pdfscanner} 类型特有的代码。
+
+自底向上看，以下行运行扫描器，第一个参数给出了 \PDF\ 页面的顶层内容。
+
+第三个参数 \type {info} 包含两个条目：\type {space} 用于缩进打印输出，
+\type {resources} 是必需的，以便嵌入的 \type {XForms} 能够找到自己的内容。
+
+第二个参数 \type {operatortable} 为单个 \PDF\ 运算符 \type {Do} 定义了
+一个处理函数。
+函数 \type {Do} 打印当前 \type {XObject} 的名称，然后在该 \type {XObject}
+实际上是一个 \type {/Form} 的条件下，为该对象的内容流启动一个新的扫描器。
+那个嵌套扫描器使用新的 \type {info} 参数调用，其中 \type {space} 值已更新，
+以便输出的缩进良好地嵌套；还带有一个新的 \type {resources} 字段，以帮助
+下一次迭代正确处理任何其他嵌入的 \type {XObject}。
+
+当然，这在实践中不是一个非常有用的示例，但对于演示 \type {pdfscanner}
+来说，它的长度刚好。它只使用了一个 \type {scanner} 方法：
+\type {scanner:pop()}。该函数弹出内部栈的顶部操作数，并返回一个 \LUA\ 表，
+其中索引 1 处的对象是一个表示操作数类型的字符串，索引 2 处的对象是其值。
+
+可能的操作数类型及关联的 \LUA\ 值类型列表如下：
+
+\begin{longtable}{l l}
+\toprule 类型           & \LUA 类型      \\
+\midrule
+\type{integer}  & <number>  \\
+\type{real}     & <number>  \\
+\type{boolean}  & <boolean> \\
+\type{name}     & <string>  \\
+\type{operator} & <string>  \\
+\type{string}   & <string>  \\
+\type{array}    & <table>   \\
+\type{dict}     & <table>   \\
+\bottomrule
+\end{longtable}
+
+对于 \type {integer} 或 \type {real}，值始终是一个 \LUA{}（浮点）数字。
+对于 \type {name}，前导斜杠总是被去掉。
+
+对于 \type {string}，请注意 \PDF\ 实际上在 \PDF\ 文档的不同部分支持
+不同类型的字符串（具有不同的编码），因此你可能需要对某些结果重新编码；
+\type {pdfscanner} 始终输出字节流而不进行任何重新编码。
+\type {pdfscanner} 不区分字面字符串和十六进制字符串（十六进制值会被解码），
+并且它将内嵌图像的流数据视为一个字符串，即 \type {EI} 的唯一操作数。
+
+对于 \type {array}，表内容是 \type {pop} 返回值的列表；对于 \type {dict}，
+表键是 \PDF\ 名称字符串，值是 \type {pop} 返回值。
+
+\libindex{pop}
+\libindex{popnumber}
+\libindex{popname}
+\libindex{popstring}
+\libindex{poparray}
+\libindex{popdictionary}
+\libindex{popboolean}
+\libindex{done}
+
+还有一些其他方法可以供你向 \type {scanner} 调用：
+
+\begin{longtable}{l p{5cm}}
+\toprule 方法               & 说明 \\
+\midrule
+\type{pop}           & 见上文 \\
+\type{popnumber}     & 仅返回 \type {real} 或 \type {integer} 的值 \\
+\type{popname}       & 仅返回 \type {name} 的值 \\
+\type{popstring}     & 仅返回 \type {string} 的值 \\
+\type{poparray}      & 仅返回 \type {array} 的值 \\
+\type{popdictionary} & 仅返回 \type {dict} 的值 \\
+\type{popboolean}    & 仅返回 \type {boolean} 的值 \\
+\type{done}          & 中止此 \type {scan()} 调用的进一步处理 \\
+\bottomrule
+\end{longtable}
+
+\type {pop*} 是便捷函数，当你事先知道操作数的类型时（在 \PDF 中你通常
+确实知道）会很方便。例如，\type {Do} 函数本可以使用
+\type {local name = scanner:popname()}，因为 \type {Do} 运算符的唯一
+操作数始终是一个 \PDF\ 名称对象。
+
+\type {done} 函数允许你在已经了解了所有想了解的内容后中止流的处理。
+这在解析 \type {/ToUnicode} 时很方便，因为通常有一些你不感兴趣的尾部
+垃圾数据。如果没有 \type {done}，处理只会在流的末尾结束，可能会浪费
+\CPU\ 周期。
+
+{\em 我们保留了旧的名称 \type {popNumber}、\type {popName}、
+\type {popString}、\type {popArray}、\type {popDict} 和 \type {popBool}。}

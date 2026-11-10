@@ -1,0 +1,626 @@
+\chapter{使用 \LUATEX}\label{lua}
+
+\section{初始化}\label{init}
+
+\subsection{作为 \LUA\ 解释器的 \LUATEX}
+
+\topicindex {initialization}
+\topicindex {\LUA+interpreter}
+
+在某些情形下，\LUATEX\ 的行为就像一个独立的 \LUA\ 解释器：
+
+\begin{itemize}
+\item 命令行上给出了 \type {--luaonly} 选项，或者
+
+\item 可执行文件被命名为 \type {texlua} 或 \type {luatexlua}，或者
+
+\item 命令行上唯一一个非|-|选项参数（文件）的扩展名为 \type {lua} 或 \type {luc}。
+
+\end{itemize}
+
+在这种模式下，它会像 \LUA\ 解释器一样，把 \LUA\ 的 \type {arg[0]} 设为找到的脚本名，
+并把前面的选项依次压入负值、把命令行其余部分放入正值。
+
+\LUATEX\ 在执行完指定的 \LUA\ 脚本后立即退出；实际上，它就是一个体积稍大、
+附带一批额外预加载库的独立 \LUA\ 解释器。
+
+\subsection{作为 \LUA\ 字节编译器的 \LUATEX}
+
+\topicindex {\LUA+byte code}
+
+有两种情形会使 \LUATEX\ 的行为类似于 \LUA\ 字节编译器：
+
+\begin{itemize}
+\item 命令行上给出了 \type {--luaconly} 选项，或者 
+\item 可执行文件被命名为 \type {texluac} 
+\end{itemize}
+
+在这种模式下，\LUATEX\ 的行为与独立 \LUA\ 发行版中的 \type {luac} 完全相同，
+区别仅在于它没有 \type {-l} 开关，并且会接受（但忽略）\type {--luaconly} 开关。
+当前版本的 \LUA\ 可以用 \type {string.dump} 转储字节码，因此我们将来可能会
+放弃这个版本的 \LUATEX。
+
+\subsection{其他命令行处理}
+
+\topicindex {command line}
+
+\LUATEX\ 可执行文件启动时，会先查找 \type {--lua} 命令行选项。如果没有该选项，
+则命令行的解释方式与其他 \TEX\ 引擎大致相同。有些选项会被接受但不起作用。
+可识别的命令|-|行选项如下：
+
+\begin{longtable}{l p{5cm}}
+\toprule 命令行参数                & 说明 \\
+\midrule
+\type{--credits}                    & 显示版权信息后退出 \\
+\type{--debug-format}               & 启用格式文件调试 \\
+\type{--draftmode}                  & 开启草稿模式，即在 \PDF\ 模式下不生成输出文件 \\
+\type{--[no-]check-dvi-total-pages} & 当 DVI 页数超过 65535 时退出（默认：检查） \\
+\type{--[no-]file-line-error}       & 禁用/启用 \type {file:line:error} 风格的消息 \\
+\type{--[no-]file-line-error-style} & \type {--[no-]file-line-error} 的别名 \\
+\type{--fmt=FORMAT}                 & 加载格式文件 \type {FORMAT} \\
+\type{--halt-on-error}              & 遇到第一个错误即停止处理\\
+\type{--help}                       & 显示帮助信息后退出 \\
+\type{--ini}                        & 作为 \type {iniluatex} 运行，用于转储格式文件 \\
+\type{--interaction=STRING}         & 设置交互模式：\type {batchmode}、\type {nonstopmode}、
+                                            \type {scrollmode} 或 \type {errorstopmode} \\
+\type{--jobname=STRING}             & 将作业名设置为 \type {STRING} \\
+\type{--kpathsea-debug=NUMBER}      & 按 \type {NUMBER} 的各位设置路径搜索调试标志 \\
+\type{--lua=FILE}                   & 加载并执行 \LUA\ 初始化脚本 \\
+\type{--luadebug}                   & 启用 \type{debug} 库\\
+\type{--[no-]mktex=FMT}             & 当 \type {FMT} 为 \type {tex}、\type {tfm} 或 \type{fmt} 时，
+                                            禁用/启用 \type {mktexFMT} 的生成\\
+\type{--nosocket}                   & 禁用 \LUA\ socket 库 \\
+\type{--no-socket}                  & 禁用 \LUA\ socket 库 \\
+\type{--socket}                     & 启用 \LUA\ socket 库 \\
+\type{--output-comment=STRING}      & 用 \type {STRING} 作为 \DVI\ 文件注释以代替日期
+                                            （对 \PDF\ 无效） \\
+\type{--output-directory=DIR}       & 将 \type {DIR} 用作输出文件目录 \\
+\type{--output-format=FORMAT}       & 用 \type {FORMAT} 作为作业输出格式；
+                                            \type {FORMAT} 可取 \type {dvi} 或 \type {pdf} \\
+\type{--progname=STRING}            & 将程序名设置为 \type {STRING} \\
+\type{--recorder}                   & 启用文件名记录器 \\
+\type{--safer}                      & 禁用易被滥用的 \LUA\ 命令 \\
+\type{--[no-]shell-escape}          & 禁用/启用系统调用 \\
+\type{--shell-restricted}           & 将系统调用限制为 \type {texmf.cnf}
+                                            中给出的命令列表 \\
+\type{--synctex=NUMBER}             & 启用 \type {synctex} \\
+\type{--utc}                        & 适当时使用 UTC 时间 \\
+\type{--version}                    & 显示版本号后退出 \\
+\bottomrule
+\end{longtable}
+
+我们不支持 \prm {write} 18，因为 \type {os.execute} 可以完成同样的工作。
+这样既简化了代码，又允许使用更多的写入目标。
+
+\prm {jobname} 的取值按如下方式确定：
+
+\begin{itemize}\item 如果命令行上给出了 \type {--jobname}，则其参数将直接作为 \prm {jobname} 的值，
+    不作任何改动。该参数不会被用于实际读入，因此它所指的文件无需存在。
+    \type {--jobname} 开关只控制 \prm {jobname} 的设置。
+
+\item 否则，\prm {jobname} 将是第一个从文件系统读入的文件名，并去掉其中的路径分量
+    和最后一个扩展名（即最后一个 \type {.} 之后的部分）。
+
+\item 上一条有一个例外：如果命令行进入交互模式（以一条命令开头），并且也没有通过
+    \prm {everyjob} 读入任何文件，那么最后会把 \prm {jobname} 设为 \type
+    {texput} 作为兜底。
+
+\end{itemize}
+
+自动生成的输出文件名，是在求得的 \prm {jobname} 后接上相应的扩展名
+（\type {log}、\type {pdf} 等）得到的。这些文件创建在 \type
+{--output-directory} 所指向的目录中；若没有该开关，则创建在当前目录下。
+如果 \type{--output-directory} 非空，其值会被复制到环境变量
+\type{TEXMF_OUTPUT_DIRECTORY} 中；若该开关为空，则输出目录取
+\type{TEXMF_OUTPUT_DIRECTORY} 环境变量的值。
+
+在没有 \type {--lua} 选项时，命令行处理方式与其他任何基于 \WEBC\ 的排版引擎相同，
+只是 \LUATEX\ 多了几个开关、又少了另外几个。而如果存在 \type {--lua} 选项，
+\LUATEX\ 会进入一种与标准 \WEBC\ 程序不同的命令行处理模式。在这种模式下，
+会按以下顺序执行一小系列动作：
+
+\begin{itemize}
+
+\item 首先，它会像往常一样解析命令行，但只立即解释其中一小部分选项：
+    \type {--safer}、\type {--nosocket}、\type {--no-socket}、
+    \type {--socket}、\type {--[no-]shell-escape}、\type {--enable-write18}、
+    \type {--disable-write18}、\type {--shell-restricted}、\type {--help}、
+    \type {--version} 和 \type {--credits}。
+
+\item 接下来，\LUATEX\ 查找所请求的 \LUA\ 初始化脚本。如果用命令行上给出的实际
+    文件名找不到，就会进行第二次尝试：在文件名前拼上环境变量 \type
+    {LUATEXDIR} 的值（前提是该环境变量已在环境中定义）。
+
+\item 然后检查各种安全开关。你可以用它们禁用某些容易被恶意文档滥用的 \LUA\ 命令。
+    目前 \type {--safer} 会把以下函数置为 \type {nil}：
+
+    \medskip
+
+    \begin{longtable}{c l}
+        \toprule 库     & 函数 \\
+        \midrule
+        \type{os}  & \type {execute} \type {exec} \type{kpsepopen}
+                            \type {spawn} \type {setenv}
+                            \type {rename} \type {remove} \type {tmpdir} \\
+\type {io}  & \type {popen} \type {output} \type {tmpfile} \\
+        \type{lfs} & \type {rmdir} \type {mkdir} \type {mkdirp} \type {chdir}
+                            \type {lock}  \type {touch} \\
+        \bottomrule
+    \end{longtable}
+
+    \medskip
+此外，它还会禁用已编译 \LUA\ 库的加载，并使 \type {io.open()} 在以
+    只读以外的方式打开文件时失败。
+
+    最后，它会无条件禁用 \type {socket} 库（但不禁用 \type {mime} 库，
+    后者始终可用）。
+
+    从 1.18.0 版起，若使用了 \KPATHSEA，则除 \type{debug.traceback} 外，
+    \type{debug} 库默认不启用；可以用 \type{--luadebug} 开关启用它。
+    在 shell-escape 模式下，\type{debug} 库总是启用的。
+
+    同样从 1.18.0 版起，若使用了 \KPATHSEA，则当 \type{kpse.in_name_ok_silent_extended}
+    和 \type{kpse.out_name_ok_silent_extended} 都校验通过某个路径名时，
+    函数 \type{os.rename}、\type{os.remove}、\type{lfs.attributes}、
+    \type{lfs.chdir}、\type{lfs.lock_dir}、\type{lfs.dir}、\type{lfs.link}、
+    \type{lfs.mkdir}、\type{lfs.mkdirp}、\type{lfs.rmdir}、
+    \type{lfs.symlinkattributes}、\type{lfs.touch} 返回 \type{true}；
+    其中 \type{lfs.attributes}、\type{lfs.dir} 和 \type{lfs.symlinkattributes}
+    只通过 \type{kpse.in_name_ok_silent_extended} 校验。
+
+\item \LUATEX\ 启动时会把 \type {locale} 设为一个中性值。如果你因某种原因使用了
+    \type {os.setlocale}，之后务必再把它 \type {nil} 掉，否则它可能干扰诸如
+    生成日期之类的代码。你可以这样忽略 \type {locale}：
+
+    \begin{typing}
+    os.setlocale(nil,nil)
+    \end{typing}
+
+    \type {--nosocket} 或 \type {--no-socket} 选项会使 socket 库不可用，
+    从而 \LUA\ 无法使用网络；\type {--socket} 选项则使 socket 库可用。
+
+    开关 \type {--[no-]shell-escape}、\type {--[enable|disable]-write18} 和
+    \type {--shell-restricted} 的作用与 \PDFTEX\ 中相同，此外还会使
+    \type {io.popen()}、\type {os.execute}、\type {os.exec}、\type {os.kpsepopen}
+    和 \type {os.spawn} 遵守所请求的选项。
+
+    默认情况下 socket 库不启用：可以用 \type {--socket} 或 \type {--shell-escape}
+    （但不带 \type {--shell-restricted}）启用它，用 \type {--nosocket}
+    （或 \type {--no-socket}）禁用它，或者用 \type {--safer} 无条件禁用它。
+
+    当选项相互冲突时，限制最严格者生效。
+
+    \type{mime} 库始终可用。
+
+\item 接下来加载并执行初始化脚本。在脚本内部，整个命令行都可通过 \LUA\ 表
+    \type {arg} 访问，从 \type {arg[0]} 开始，其中包含可执行文件名。
+    由此带来的结果是，关于无法识别选项的警告会被抑制。
+
+\end{itemize}
+
+命令行处理发生得非常早。事实上早到 \TEX\ 的任何初始化都还没有进行。因此，
+与排版相关的表（如 \type {tex}、\type {token}、\type {node} 和 \type {pdf}）
+在启动文件执行期间是禁止使用的（它们被置为 \type {nil}）。系统会特别保证
+\type {texio.write} 和 \type {texio.write_nl} 正常工作，这样至少可以在
+日志文件最终被打开时（并且如果被打开的话）向它报告你的动作
+（注意此时 \TEX\ 甚至还不知道自己的 \prm {jobname}）。
+
+你在 \LUA\ 初始化脚本中做的一切，在后续运行期间都保持可见，
+但 \TEX\ 专用的库（如 \type {tex}、\type {token}、\type {node} 和 \type {pdf}
+这几个表）除外。脚本执行完毕后，这些表会被初始化到文档中所描述的状态。
+你不应该用这四个全局名字在变量或表中存放任何东西，因为它们会被完全覆盖。
+
+我们建议你只把启动文件用于与 \TEX\ 无关的自身初始化（如果你确实需要的话），
+用于解析命令行、在 \type {texconfig} 表中设置值，以及注册你所需的回调。
+
+\LUATEX\ 允许在脚本执行结束时，从 \type {texconfig} 表读取值来覆盖部分命令行选项
+（究竟哪些选项可以被覆盖，见本文稍后对 \type {texconfig} 表的说明）。
+
+除非 \type {texconfig} 表告诉 \LUATEX\ 完全不要初始化 \KPATHSEA
+（为此把 \type {texconfig.kpse_init} 设为 \type {false}），否则在初始化脚本结束后，
+\LUATEX\ 还会继续处理另外一些命令行选项：为了正确初始化内建的 \KPATHSEA\ 库，
+\LUATEX\ 需要知道应当使用哪个正确的程序名；为此它会检查 \type {--progname}，
+若缺少 \type {--progname}，则检查 \type {--ini} 和 \type {--fmt}。
+
+从 1.17.1 版起，在 \DVI\ 模式下，默认启用的新命令行开关
+\type {--check-dvi-total-pages} 会检查总页数是否超过 65535，
+若超过则中止本次运行。这破坏了与 \PDFTEX\ 的兼容性：在 \PDFTEX\ 中，
+正如在 \TEX\ 中一样，当总页数大于 65535 时文件会照常写出。
+可以用 \type {--[no-]check-dvi-total-pages} 恢复以前的行为。
+
+\section{\LUA\ 行为}
+
+\subsection{\LUA\ 版本}
+
+\topicindex {\LUA+libraries}
+\topicindex {\LUA+extensions}
+
+我们目前使用 \LUA\ 5.3，并会跟进该语言的发展，但通常会滞后一段时间。
+因此用户需要留意该语言相继版本之间（细微）的差异。此外，\LUAJITTEX\ 也存在滞后，
+因为 \LUAJIT\ 与常规 \LUA\ 的开发并不同步。下面是一个这方面的例子。
+
+\LUA\ 的 \type {tostring} 函数（以及 \type {string.format}）可能以科学计数法返回值，
+当它被用作对 \prm {dimen} 或 \prm {count} 赋值的右操作数时，会令 \TEX\ 这一端感到困惑。
+这些序列化函数的输出还依赖于 \LUA\ 版本，因此在 \LUA\ 5.3 中得到的输出
+可能与 5.2 不同。
+
+\subsection{融入 \TDS\ 生态系统}
+
+主流 \TEX\ 发行版都遵循 \TEX\ 目录结构（\TDS）。\LUATEX\ 能够借助 kpathsea 库
+查找被 \type {require()} 的模块。为此，\type {package.searchers[2]} 被替换为
+另一个加载器函数，它在运行时决定是使用 kpathsea 还是内建的 \LUA\ 核心函数。
+如果届时 \KPATHSEA\ 已经初始化，它就使用 \KPATHSEA；否则回退为使用常规的
+\type {package.path} 加载器。
+
+\KPATHSEA\ 的初始化可以隐式发生（当 \LUATEX\ 启动且启动脚本未把
+\type {texconfig.kpse_init} 设为 false 时），也可以显式调用 \LUA\ 函数
+\type {kpse.set_program_name()} 来发生。
+
+\subsection{加载库}
+
+\LUATEX\ 能够使用动态可加载的 \LUA\ 库，除非在命令行上给出了 \type {--safer} 选项。
+为此，\type {package.searchers[3]} 被替换为另一个加载器函数，它在运行时决定
+是使用 \KPATHSEA\ 还是内建的 \LUA\ 核心函数。如果届时 \KPATHSEA\ 已经初始化，
+它就使用 \KPATHSEA；否则回退为使用常规的 \type {package.cpath} 加载器。
+
+这项功能需要对 kpathsea 进行扩展。新增了一种 kpathsea 文件格式：
+\type {kpse_clua_format}，它搜索扩展名为 \type {.dll} 和 \type {.so} 的文件。
+该变量在 \type {texmf.cnf} 中的设置名为 \type {CLUAINPUTS}，默认值为：
+
+\begin{typing}
+CLUAINPUTS=.:$SELFAUTOLOC/lib/{$progname,$engine,}/lua//
+\end{typing}
+
+这条路径并不完美（它要求在二进制目录之下有一个 \TDS\ 子树），但体系结构信息
+必须出现在路径中的某处，而目前最简单的做法就是只在二进制目录之下搜索。
+当然，编写一个替代加载器并在宏包中使用它也并非难事。往上一级
+（与 \type {bin} 平行的 \type {lib} 目录）本会更理想，但由于 \TEXLIVE\ 采用
+\type {bin/<arch>} 结构，那样做行不通。
+
+如果同时加载了两个 \LUA\ 库，动态 \LUA\ 库的加载会失败
+（在 \type {win32} 上通常会发生这种情况：\LUATEX\ 内部自带一个 \LUA\ 5.3，
+而模块自身的 \DLL\ 文件又可能链接了另一个）。
+
+\subsection{执行外部程序}
+
+与 \TEXLIVE\ 中其他 \TEX\ 类程序保持一致，\LUA\ 函数 \type {os.execute}、
+\type{os.kpsepopen} 和 \type {io.popen}，以及下面将要说明的两个新函数
+\type {os.exec} 和 \type {os.spawn}，都会考虑 \type {shell_escape} 和/或
+\type {shell_escape_commands} 的取值。每当 \LUATEX\ 是以排版文档为预期意图运行时
+（我们指的是它以 \type {luatex} 名义被调用，而不是 \type {texlua}，
+并且命令行上没有给出 \type {--luaonly} 选项），只有当对应的 \type {texmf.cnf}
+变量或其 \type {texconfig} 对应项（见 \ref{texconfig}）允许执行所请求的
+系统命令时，它才会运行上述四个函数之一。在 \LUATEX\ 的“脚本解释器”运行方式下，
+这些设置不起作用，四个函数都保持其原始含义。
+
+有些库还额外提供了若干函数，或是用 \CCODE\ 编写，或是用 \LUA\ 编写。
+例如，在 \LUATEX\ 起步时，我们向 \type {luafilesystem} 命名空间 \type {lfs}
+添加了一些辅助函数。两个布尔函数 \type {lfs.isdir} 和 \type {lfs.isfile}
+是用 \type {lfs.attributes} 所能做到之事的更快速、更好的变体。
+额外函数 \type {lfs.shortname} 接受一个文件名，在 \type {win32} 平台上返回其短文件名；
+\type{lfs.mkdirp} 类似于 \type{lfs.mkdir}，但会按需创建父目录。
+最后，我们仅针对非|-|\type {win32} 平台提供了 \type {lfs.readlink}，
+它接受一个已存在的符号链接作为参数并返回其名字。不过，\type {lfs} 库后来自行发展，
+我们已经放弃了这些函数，转而使用纯 \LUA\ 变体。\type {shortname} 辅助函数已过时，
+现在只是原样返回名字。
+
+\subsection{多字节 \type {string}}
+
+\type {string} 库还额外提供了几个函数，例如 \libidx
+{string} {explode}。该函数最多接受两个参数：\type
+{string.explode(s[,m])}，返回一个数组，其中包含按字符串参数 \type {m} 的值
+切分字符串参数 \type {s} 后得到的子串。第二个参数是一个字符串，它可以为空串
+（此时把字符串按字符切分）、单个字符（此时在该字符每次出现处切分，
+可能产生空字符串），或者单个字符后跟加号 \type {+}（这种特殊形式不产生空子串）。
+\type {m} 的默认值是 ``\type { +}（多个空格）。注意：\type {m} 不像
+用 \TEX\ 宏编写的函数那样被包裹在花括号里隐藏起来。
+
+\type {string} 库还额外提供了六个迭代器，它们逐个返回字符串片段：
+\libidx {string} {utfvalues}、\libidx {string} {utfcharacters}、
+\libidx {string} {characters}、\libidx {string} {characterpairs}、
+\libidx {string} {bytes} 和 \libidx {string} {bytepairs}。
+
+\begin{itemize}\item \type {string.utfvalues(s)}：返回 \UNICODE\ 范围内的一个整数值
+
+\item \type {string.utfcharacters(s)}：返回一个字符串，其中含单个 \UTF-8\ 码元
+
+\item \type {string.characters(s)}：返回一个含单个字节的字符串
+
+\item \type {string.characterpairs(s)}：返回两个字符串，各含一个字节；
+    若原字符串长度为奇数，则第二个字符串为空
+
+\item \type {string.bytes(s)}：返回单个字节值
+
+\item \type {string.bytepairs(s)}：返回两个字节值；若原字符串长度为奇数，
+    则第二个返回值为 \type {nil} 而不是数字
+
+\end{itemize}
+
+\type {string.characterpairs()} 和 \type {string.bytepairs()} 迭代器
+在把 \UTF16 编码数据转换为 \UTF8 时尤其有用。
+
+\type {string.dump()} 还有一种带两个参数的形式。第二个参数是布尔值，
+若为真，则从转储数据中剥离符号。这与 \type {luajit} 中所做的扩展一致。
+这类函数通常会随 \LUA\ 自身的演进而调整。
+
+\type {string} 库的 \type {len}、\type {lower}、\type {sub} 等函数
+并不具备 \UNICODE\ 感知能力。对于 \UTF8 编码的字符串（即包含码点大于 127 字符的字符串），
+可以使用 \type {slnunicode} 库中对应的函数，例如 \type {unicode.utf8.len}、
+\type {unicode.utf8.lower} 等。例外是 \type {unicode.utf8.find}，它总是返回
+字符串中的字节位置；以及 \type {unicode.utf8.match} 和 \type {unicode.utf8.gmatch}。
+后两个函数一般而言 {\it 是} 具备 \UNICODE\ 感知能力的，但当使用空捕获
+\type {()} 时会退回到不感知 \UNICODE\ 的行为；而其他捕获仍按预期工作。
+关于 \type {unicode.utf8} 函数中字符类的解释，请参阅库源码，地址为
+\url{http://luaforge.net/projects/sln}。
+
+\LUA\ 5.3 提供了一些原生的 \UTF8 支持，但我们也额外添加了几个类似的辅助函数：
+\libidx {string} {utfvalue}、\libidx {string} {utfcharacter}
+和 \libidx {string} {utflength}。
+
+\begin{itemize}\item \type {string.utfvalue(s)}：返回给定字符串中各字符的码点
+
+\item \type {string.utfcharacter(c,...)}：返回一个字符串，
+    其中包含给定码点所对应的字符
+
+\item \type {string.utflength(s)}：返回给定字符串的长度
+
+\end{itemize}
+
+这三个函数相对快速，且不做太多检查。它们可以作为其他辅助函数的构建块。
+
+\subsection{\type {os}}
+
+\type {os} 库还额外提供了几个函数和变量：\libidx {os} {selfdir}、
+\libidx {os} {exec}、\libidx {os} {kpsepopen}、
+\libidx {os} {socketgettime}、\libidx {os} {socketsleep}、
+\libidx {os} {spawn}、\libidx {os} {setenv}、
+\libidx {os} {env}、\libidx {os} {gettimeofday}、\libidx {os} {times}、
+\libidx {os} {sleep}、\libidx {os} {tmpdir}、\libidx {os} {type}、
+\libidx {os} {name} 和 \libidx {os} {uname}，我们在此逐一讨论。
+
+\begin{itemize}\item \type {os.selfdir} 是一个变量，保存实际可执行文件所在的目录路径。
+    例如：\type {\directlua {tex.sprint(os.selfdir)}}。
+
+\item \type {os.exec(commandline)} 是 \type {os.execute} 的一个变体。
+    这里的 \type {commandline} 既可以是单个字符串，也可以是单个表。
+
+    \begin{itemize}\item 如果参数是表，\LUATEX\ 首先检查整数索引 0 处是否有值。若有，
+        该值就是要执行的命令；否则使用整数索引 1 处的值。若两者都不存在，
+        则什么也不做。
+    
+
+    \item 表中从整数索引~1 开始的连续一组值，是传给命令的参数
+        （索引~1 处的值成为 \type {arg[0]}）。命令会在执行路径中查找，
+        因此通常无需传入完整的限定路径名。
+    
+
+    \item 如果参数是字符串，则会按空白字符切分，自动转换成一个表。
+        在这种情况下，命令与第一个参数不可能彼此不同。
+    
+
+    \item 在字符串参数形式中，可以用单引号或双引号把（部分）参数括起来以保护其中的
+        空白字符。\LUATEX\ 会解释一层引号，并且把引号文本内出现的
+        \type {\"}、\type {\'} 或 \type {\\} 全部反转义。在表形式下，
+        不进行任何字符串处理。
+    
+
+    \end{itemize}
+
+    该函数通常不会把控制权返回给 \LUA\ 脚本：命令会替换当前进程。
+    但如果尝试执行命令时出现问题，它会返回两个值 \type {nil} 和 \type {error}。
+
+    在 \MSWINDOWS\ 上，当前进程实际上会一直保留在内存中，直到命令执行完毕。
+    这避免了在集成 \TEX\ 环境中运行 \TEXLUA\ 脚本时发生崩溃。
+
+    引入这条命令的初衷，是让当前进程在启动新进程之前先清理干净，
+    因此它特别适合在 \TEXLUA\ 中使用。
+
+\item \type {os.kpsepopen(commandline,[opt])} 类似于 \type {io.popen}，
+    但会先对命令行进行一次检查；若检查通过，则返回值与 \type{io.popen} 相同；
+    否则返回两个值 \type {nil} 和 \type {error}。
+
+\item \type {os.socketgettime} 和 \type {os.socketsleep} 分别与
+    \type{socket.gettime} 和 \type{socket.sleep} 相同，但它们始终可用。
+
+\item \type {os.spawn(commandline)} 是 \type {os.exec} 的带返回值版本，
+    其余调用约定完全相同。
+
+    如果命令正常运行，则返回值为命令的退出状态。否则返回两个值
+    \type {nil} 和 \type {error}。
+
+    \type {os.spawn()} 还接受一个可选的第二个参数：一个键值对表，
+    用于指定被派生进程的环境。注意：如果你确实传入了这个表，
+    它将被用作被派生进程的 \notabene{完整} 环境，因此你很可能希望从
+    \type {os.env} 出发，按需增删键。
+
+\item \type {os.setenv(key,value)} 在环境中设置一个变量。
+    传入 \type {nil} 代替值字符串会删除该变量。
+
+\item \type {os.env} 是一个哈希表，其中保存着本次运行开始时进程环境中
+    各变量及其值的快照。它是可写的，但实际环境 \notabene{不会} 自动随之更新。
+
+\item \type {os.gettimeofday()} 返回当前 ``\UNIX\ 时间，但以浮点数形式返回。
+    该函数在 \SUNOS\ 平台上不可用，因此不要为可移植文档使用此函数。
+
+\item \type {os.times()} 按照 \UNIX\ C 库函数 ``times 返回当前进程的用时。
+    该函数在 \MSWINDOWS\ 和 \SUNOS\ 平台上不可用，因此不要为可移植文档使用此函数。
+
+\item \type {os.sleep(interval[, unit])} 让当前运行暂停给定的秒数。
+    若给出了可选参数 \type {unit}，则函数等待 \type {interval / unit} 秒。
+    例如 \type {os.sleep(1, 1000)} 让程序暂停一毫秒。
+
+\item \type {os.tmpdir([template])} 在 ``当前目录 下创建一个名为
+    \type {luatex.XXXXXX} 的目录，其中的 \type {X} 会被替换为一个唯一字符串。
+    该函数同时返回这个字符串，因此你可以 \type {lfs.chdir()} 进入它；
+    若创建目录失败则返回 \type {nil}。用户有责任在运行结束时自行清理，
+    系统不会自动清理。你也可以为临时文件夹名字使用自己的 \type {template}。
+    但传入的字符串必须以六个大写 \type {X} 结尾。例如模板 \type {tmp.XXXXXX}
+    可能得到文件夹名 \type {tmp.vX3gPo}。
+
+\item \type {os.type} 是一个字符串，给出操作系统大类的总体指示。
+    目前可能的取值为 \type {windows}、\type {unix} 和 \type {msdos}
+    （你不太可能“在野外”遇到这个值）。
+
+\item \type {os.name} 是一个字符串，给出更精确的操作系统指示。
+    这些可能取值尚未完全固定；对于 \type {os.type} 的 \type {windows} 和
+    \type {msdos} 取值，\type {os.name} 的值就分别是 \type {windows} 和
+    \type {msdos}。
+
+    对于类型 \type {unix}，列表更精确：\type {linux}、\type
+    {freebsd}、\type {kfreebsd}、\type {cygwin}、\type {openbsd}、
+    \type {solaris}、\type {sunos}（solaris 之前的版本）、\type {hpux}、
+    \type {irix}、\type {macosx}、\type {gnu}（hurd）、\type {bsd}
+    （未知，但类似 \BSD）、\type {sysv}（未知，但类似 \SYSV）、
+    \type {generic}（未知）。
+
+\item \type {os.uname} 返回一个表，其中包含运行时获取的特定操作系统信息。
+    返回表中的键都是字符串值，名字为：\type {sysname}、\type {machine}、
+    \type {release}、\type {version} 和 \type {nodename}。
+
+\end{itemize}
+
+\subsection{用 \type {fio}}
+
+有一整套辅助函数用于从文件读取数字和字符串：
+\libidx {fio} {readcardinal1}、\libidx {fio} {readcardinal2}、\libidx {fio}
+{readcardinal3}、\libidx {fio} {readcardinal4}、\libidx {fio}
+{readcardinaltable}、\libidx {fio} {readinteger1}、\libidx {fio} {readinteger2}、
+\libidx {fio} {readinteger3}、\libidx {fio} {readinteger4}、\libidx {fio}
+{readintegertable}、\libidx {fio} {readfixed2}、\libidx {fio} {readfixed4}、
+\libidx {fio} {read2dot14}、\libidx {fio} {setposition}、\libidx {fio}
+{getposition}、\libidx {fio} {skipposition}、\libidx {fio} {readbytes}、\libidx
+{fio} {readbytetable}。它们作用于普通的 \LUA\ 文件句柄。
+
+%libidx{fio}{readline}
+%libidx{fio}{recordfilename}
+%libidx{fio}{checkpermission}
+
+除了常规 \type {io} 库函数之外，本库还提供了一组从文件读取数字的函数。
+
+\begin{longtable}{l l}
+\toprule
+\type{readcardinal1(f)}         & 1 字节无符号整数 \\
+\type{readcardinal2(f)}         & 2 字节无符号整数 \\
+\type{readcardinal3(f)}         & 3 字节无符号整数 \\
+\type{readcardinal4(f)}         & 4 字节无符号整数 \\
+\type{readcardinaltable(f,n,b)} & \type{n} 个 \type{b} 字节的无符号数 \\
+\type{readinteger1(f)}          & 1 字节有符号整数 \\
+\type{readinteger2(f)}          & 2 字节有符号整数 \\
+\type{readinteger3(f)}          & 3 字节有符号整数 \\
+\type{readinteger4(f)}          & 4 字节有符号整数 \\
+\type{readintegertable(f,n,b)}  & \type{n} 个 \type{b} 字节的整数 \\
+\type{readfixed2(f)}            & 2 字节浮点数（用于字体文件） \\
+\type{readfixed4(f)}            & 4 字节浮点数（用于字体文件） \\
+\type{read2dot14(f)}            & 2 字节浮点数（用于字体文件） \\
+\type{setposition(f,p)}         & 跳到位置 \type{p} \\
+\type{getposition(f)}           & 获取当前位置 \\
+\type{skipposition(f,n)}        & 跳过 \type{n} 个位置 \\
+\type{readbytes(f,n)}           & \type{n} 个字节 \\
+\type{readbytetable(f,n)}       & \type{n} 个字节 \\
+\bottomrule
+\end{longtable}
+
+针对 \type {cardinal[1-4]} 和 \type {integer[1-4]} 读取器，还有另外八个
+小端变体：\type {cardinal[1-4]le} 和 \type {integer[1-4]le}。
+
+\subsection{用 \type {sio}}
+
+\type {sio} 库中提供了与 \type {fio} 库类似的一组函数：
+\libidx {sio} {readcardinal1}、\libidx {sio} {readcardinal2}、
+\libidx {sio} {readcardinal3}、\libidx {sio} {readcardinal4}、\libidx {sio}
+{readcardinaltable}、\libidx {sio} {readinteger1}、\libidx {sio} {readinteger2}、
+\libidx {sio} {readinteger3}、\libidx {sio} {readinteger4}、\libidx {sio}
+{readintegertable}、\libidx {sio} {readfixed2}、\libidx {sio} {readfixed4}、
+\libidx {sio} {read2dot14}、\libidx {sio} {setposition}、\libidx {sio}
+{getposition}、\libidx {sio} {skipposition}、\libidx {sio} {readbytes} 和
+\libidx {sio} {readbytetable}。这里第一个参数是字符串而不是文件句柄。
+更多细节见上一节。
+
+\subsection{符合 \type {sha2}}
+
+本库是 \type {pdfe} 库的副产品，后者需要这类辅助函数。
+\libidx{sha2}{digest256}、\libidx{sha2}{digest384} 和
+\libidx{sha2}{digest512} 函数接受一个字符串，返回含散列值的字符串。
+
+\subsection{区域设置}
+
+\index {locales}
+
+在标准版 \LUA\ 中，许多行为都依赖于当前区域设置。在 \LUATEX\ 中我们不能这样做，
+因为这会使文档不可移植。\LUATEX\ 运行期间会强制设置以下区域：
+
+\begin{typing}
+LC_CTYPE=C
+LC_COLLATE=C
+LC_NUMERIC=C
+\end{typing}
+
+\section{\LUA\ 模块}
+
+\topicindex {\LUA+libraries}
+\topicindex {\LUA+modules}
+
+有些通常属于 \LUA\ 外部的模块被静态链接进了 \LUATEX，因为它们提供了有用的功能：
+
+\begin{itemize}\item \type {lpeg}，作者 Roberto Ierusalimschy，网址
+    \url{http://www.inf.puc-rio.br/~roberto/lpeg/lpeg.html}。
+    该库不具备 \UNICODE\ 感知能力，而是按逐字节方式解释字符串。这主要意味着
+    \type {lpeg.S} 不能与以超过两字节编码的 \UTF8 字符一起使用，因此
+    \type {lpeg.S} 在匹配时只会去查找这两个字节之一，而不是这两个字节的组合。
+    \type {lpeg.R} 也是如此，不过后者在与多字节字符一起使用时会显示错误信息。
+    因此 \type {lpeg.R('aä')} 会产生消息
+    \type {bad argument #1 to 'R' (range must have two characters)}，
+    因为对 \type {lpeg} 而言，\type {ä} 是两个“字符”（字节），所以 \type {aä}
+    一共是三个。在实践中这并不是真正的问题，稍加留意就能很好地处理 \UNICODE。
+
+\item \type {slnunicode}，来自 \type {selene} 库，网址
+    \url{http://luaforge.net/projects/sln}。该库经过了轻微扩展，
+    使 \type {unicode.utf8.*} 函数也接受第 18 平面的前 256 个值。
+    正如前面所解释的，这正是 \LUATEX\ 用于原始二进制输出的范围。
+    我们不打算再提供更多这类扩展，因为基本上你想做的一切都可以在 \LUA\ 中完成。
+
+\item \type {luazip}，来自 kepler 项目，网址
+    \url{http://www.keplerproject.org/luazip/}。
+
+\item \type {luafilesystem}，同样来自 kepler 项目，网址
+    \url{http://www.keplerproject.org/luafilesystem/}。
+
+\item \type {lzlib}，作者 Tiago Dionizio，网址
+    \url{http://luaforge.net/projects/lzlib/}。
+
+\item \type {md5}，作者 Roberto Ierusalimschy，网址
+    \url{http://www.inf.puc-rio.br/~roberto/md5/md5-5/md5.html}。
+
+\item \type {luasocket}，作者 Diego Nehab，网址
+    \url{http://w3.impa.br/~diego/software/luasocket/}。
+    \type {luasocket} 的 \type {.lua} 支持模块也被预加载到可执行文件内部，
+    不存在外部文件依赖。
+
+\end{itemize}
+
+\section{测试}
+
+\topicindex {testing}
+\topicindex {\PDF+date}
+
+出于开发需要，你可以影响所使用的启动日期和时间。有两种方式可以做到这一点。
+
+\begin{itemize}
+
+\item 设置环境变量 \type {SOURCE_DATE_EPOCH}。这会影响 \TEX\ 参数 \type {time} 和
+    \type {date}、随机种子、\PDF\ 时间戳，以及同样由时间导出的 \PDF\ id。
+    该变量在 \KPSE\ 库启用时被查阅；解析工作委托给该库完成。
+
+\item 在 \type {texconfig} 表中设置 \type {start_time} 变量；与其他变量一样，
+    我们在那里使用内部名字。出于兼容性考虑，我们也认下 \type {SOURCE_DATE_EPOCH}
+    这一项。应当注意的是，其他引擎中没有这样的变量，而且这种方法只在整个设置
+    是在 \LUA\ 中完成时才有意义。
+
+\end{itemize}
+
+当需要世界标准时间时，可以向引擎传入标志 \type {utc}。这个属性在日期和时间由
+\LUATEX\ 自身设定时同样有效。它在 \type {texconfig} 表中有一个对应的项
+\type {use_utc_time}。
+
+还可以做一些控制，例如阻止把文件名写入 \PDF\ 文件。这在别处讨论。
+在 \CONTEXT\ 中，我们提供命令行参数 \type {--nodates}，它会更彻底地禁用日期。

@@ -1,0 +1,587 @@
+\chapter{\TEX\ 的基本增强}\label{enhancements}
+
+\section{引言}
+
+\subsection{原语行为}
+
+自诞生之日起，\LUATEX\ 就提供了超越 \PDFTEX（包含 \ETEX）与 \ALEPH\ 超集的额外特性。这不仅限于通过 \prm {directlua} 执行 \LUA\ 代码的能力，\LUATEX\ 还通过新增的 \TEX\ 侧原语或对现有原语的扩展来增加功能。
+
+当 \LUATEX\ 以 ``iniluatex 模式（\type {luatex -ini}）启动时，它仅定义 \TEX82 已知的原语命令以及一个额外命令 \prm {directlua}。正如其名所示，必须调用一个 \LUA\ 函数才能将额外的原语添加到用户环境中。获取所有新原语命令的最简单方法是在格式生成文件中加入这一行：
+
+\begin{typing}
+\directlua { tex.enableprimitives('',tex.extraprimitives()) }
+\end{typing}
+
+但请注意，在这么早的阶段，花大括号可能尚未被赋予正确的 \prm {catcode}（会引发 ``Missing number 错误），因此可能需要在上述行之前先进行如下赋值：
+
+\begin{typing}
+
+
+\end{typing}
+
+可以进行更细粒度的原语控制，详情请参阅 \ref{luaprimitives}。为简便起见，本手册假设你已经按上述方式执行了 \prm {directlua} 命令。
+
+上面记录的启动行为被认为是稳定的，即不会再有向后不兼容的更改。我们已将一些相当通用的 \PDFTEX\ 原语提升为 \LUATEX\ 核心原语，而从 \ALEPH{}（\OMEGA）继承的少数原语也同样被提升。这实际上意味着我们现在只剩下 \type {tex}、\type {etex} 和 \type {luatex} 三组原语。
+
+在 \ref{modifications} 中，我们讨论了若干源自 \PDFTEX\ 和 \ALEPH{}（\OMEGA）的原语。此处我们只讨论真正新增的原语。在关于字体和数学的章节中，我们还会讨论更多新增原语。
+
+\subsection{版本信息}
+
+\subsubsection{\lpr{luatexbanner}}
+
+\topicindex{version}
+\topicindex{banner}
+
+有三个新原语可用于检测 \LUATEX\ 的版本：
+
+\def\VersionHack#1% otherwise different luatex and luajittex runs
+  {[Lua输出]}
+
+\begin{longtable}{lll}
+\toprule 原语                  & 值 & 说明 \\
+\midrule
+\lpr{luatexbanner}   & \VersionHack{\luatexbanner} & 命令行上显示的横幅 \\
+\lpr{luatexversion}  & 1.10 & 主版本号与次版本号的组合 \\
+\lpr{luatexrevision} & 1 & 修订号，当前值为 \\
+\bottomrule
+\end{longtable}
+
+\LUATEX\ 的官方版本号定义如下：
+
+\begin{itemize}\item 主版本号是 \lpr {luatexversion} 除以 100 的整数结果。该原语是一个 ``内部变量，因此根据上下文，你可能需要在其使用前加上 \prm {the}。
+
+\item 次版本号是 \lpr {luatexversion} 对 100 取模后得到的两位数结果。
+
+\item 修订号由 \lpr {luatexrevision} 报告。该原语展开为一个正整数。
+
+\item 完整版本号由主版本号、次版本号和修订号组成，以点号分隔。
+
+\end{itemize}
+
+\subsubsection{\lpr{formatname}}
+
+\topicindex{format}
+
+\lpr {formatname} 的语法与 \prm {jobname} 完全相同。在 initex\ 中，其展开结果为空。否则，其展开结果就是当前加载的格式在 initex\ 转储运行期间 \prm {jobname} 所具有的值。你可以使用这个记号表来提供自己的版本信息。
+
+\section{\UNICODE\ 文本支持}
+
+\subsection{扩展范围}
+
+\topicindex{\UNICODE}
+
+文本输入和输出现在被视为 \UNICODE\ 文本，因此输入字符可以使用完整的 \UNICODE\ 范围（$2^{20}+2^{16}-1 = \hbox{0x10FFFF}$）。后续章节会讨论字符与字形。虽然两者不能互换，但密切相关。在排版时，字符总是被转换为特定字体中该字符的合适图形表示。然而，在处理待排版节点列表时，其内容仍可被视为字符。在 \LUATEX\ 内部，这两个概念之间没有明确的界限。由于字形节点的子类型可以在 \LUA\ 中更改，这取决于用户自己。子类型大于 255 表示已经进行过字体处理。
+
+少数几个原语受到此影响，且影响方式类似：它们都必须接受更大范围的数值。例如，\prm {char} 现在接受 0 到 $1{,}114{,}111$ 之间的值。对于规范的输入文件，这应该不成问题，但对于那些在旧的基于 \TEX\ 的引擎处理时本应产生错误的输入，这可能造成不兼容。受影响且初始值（等号左侧）或次要值（等号右侧）发生改变的命令有：\prm {char}、\prm {lccode}、\prm {uccode}、\lpr {hjcode}、\prm {catcode}、\prm {sfcode}、\lpr {efcode}、\lpr {lpcode}、\lpr {rpcode}、\prm {chardef}。
+
+就核心引擎而言，所有与文本文件的输入输出均采用 \UTF-8 编码。输入文件可以通过 \type {reader} 回调进行预处理，这将在 \ref{iocallback} 中说明。\UNICODE\ 输入的规范化有意不内建，可由宏包在回调处理期间完成。我们已做出一些务实的选择，用户需要接受这些选择。
+
+要按字节大小输出，可以使用刚好超出有效 \UNICODE\ 范围的字符，从值 $1{,}114{,}112$（0x110000）开始。当需要打印字符 $c>=1{,}114{,}112$ 时，\LUATEX\ 实际打印的是 $c$ 减去 $1{,}114{,}112$ 后对应的单个字节。
+
+输出到终端时，较低控制范围（$c<32$）的字符使用 \type {\textasciicircum\textasciicircum{}} 记法，\type {\textasciicircum\textasciicircum{}I}、\type {\textasciicircum\textasciicircum{}J} 和 \type {\textasciicircum\textasciicircum{}M} 除外。这些被视为 ``安全字符，因此按原样打印。你可以通过 \type {texio.setescape(false)} 禁用转义，这样控制台上就会显示正常字符。
+
+\subsection{\lpr{Uchar}}
+
+\topicindex{\UNICODE}
+
+可展开命令 \lpr {Uchar} 读取一个 0 到 $1{,}114{,}111$ 之间的数字，并展开为对应的 \UNICODE\ 字符。
+
+\subsection{扩展的表}
+
+所有传统 \TEX\ 和 \ETEX\ 寄存器都可以使用 16 位数字。受影响的命令有：
+
+\begin{flushleft}
+\prm{count}
+\prm{dimen}
+\prm{skip}
+\prm{muskip}
+\prm{marks}
+\prm{toks}
+\prm{countdef}
+\prm{dimendef}
+\prm{skipdef}
+\prm{muskipdef}
+\prm{toksdef}
+\prm{insert}
+\prm{box}
+\prm{unhbox}
+\prm{unvbox}
+\prm{copy}
+\prm{unhcopy}
+\prm{unvcopy}
+\prm{wd}
+\prm{ht}
+\prm{dp}
+\prm{setbox}
+\prm{vsplit}
+\end{flushleft}
+
+由于字体内存管理已被重写，源自同一度量文件的不同字体实例之间不再共享字体中的字符属性。当然，我们在后端会尽可能共享字体，以使生成的 \PDF\ 文件尽可能高效，但例如扩展和突出也不再像 \PDFTEX\ 那样使用副本。
+
+\section{属性}
+
+\subsection{节点}
+
+\topicindex {nodes}
+
+当 \TEX\ 读取输入时，它会根据字符的属性来解释输入流。有些字符表示宏名并触发展开，另一些则开启和关闭分组、触发数学模式等。剩下的内容就成为排版文本。在内部，我们得到的是节点的链表。字符变为 \nod {glyph} 节点，这类节点具有例如 \type {font} 和 \type {char} 属性，而 \type{\kern 10pt} 则变为带有 \type {width} 属性的 \nod {kern} 节点。空格对 \TEX\ 来说是异类，因为它们被转换为 \nod {glue} 节点。因此，一个简单的段落主要是 \nod {glyph} 节点序列（单词）和 \nod {glue} 节点（空格）的混合。
+
+字符序列在某处会被与断字相关的 \nod {disc} 节点扩展。之后可以应用字体逻辑，得到一个列表，其中某些字符可以被替换——例如多个字符可以变成一个连字，字体字距可以被注入。这一切由字体属性驱动。
+
+盒子（如 \prm {hbox} 和 \prm {vbox}）变为 \nod {hlist} 或 \nod {vlist} 节点，带有 \type {width}、\type {height}、\type {depth} 和 \type {shift} 属性以及指向其实际内容的 \type {list} 指针。盒子可以显式构造，也可以是子进程的结果。例如，当行被断成段落时，各行就是 \nod {hlist} 节点的链表。
+
+总而言之：你输入的所有内容最终都会变成一个节点，通常作为（嵌套）列表结构的一部分。它们占用相对较少的内存，只携带所需的最少量信息。在传统 \TEX\ 中，字符节点只保存字体和槽位编号；在 \LUATEX\ 中，我们还存储一些语言相关信息、扩展因子等。既然我们可以从 \LUA\ 访问这些节点，让节点携带更多信息就有意义了，这正是属性发挥作用的地方。
+
+\subsection{属性寄存器}
+
+\topicindex {attributes}
+
+属性是 \LUATEX\ 中一个全新的概念。从语法上看，它们很像计数器：属性遵循 \TEX\ 的嵌套栈，可以像普通 \prm {count} 寄存器一样在 \prm {the} 等之后使用。
+
+\begin{typing}
+\attribute <16-bit number> <optional equals> <32-bit number>!crlf
+\attributedef <csname> <optional equals> <16-bit number>
+\end{typing}
+
+从概念上讲，属性要么是 ``已设置，要么是 ``未设置。未设置的属性具有一个特殊的负值来表示它们未设置，该值是最低合法值：十六进制的 \type {-"7FFFFFFF}，即十进制的 $-2147483647$。因此，值 \type {-"7FFFFFFF} 不能用作合法的属性值，但你{\it 可以\/}将 \type {-"7FFFFFFF} 赋值给某个属性以``取消设置它。在 initex\ 中，所有属性都初始处于这种 ``未设置状态。
+
+属性可以用作额外的计数值，但其用处主要在于：所有 ``已设置属性的编号和值都会附加到其作用域内创建的所有节点上。然后，任何处理节点的 \LUA\ 代码都可以查询这些属性。关于如何在 \LUA\ 中使用属性进行节点列表处理，详见 \ref{nodes}。
+
+属性存储在一个排序的（稀疏）链表中，并在可能时共享。这允许高效的测试和更新。你可以定义成千上万个属性，但通常这么大的数量没有意义，效率也不高，因为每个节点都携带一个（可能共享的）指向当前已设置属性列表的链接。不过它们是一个方便的扩展，也是我们在 \LUATEX\ 中最早实现的扩展之一。
+
+\subsection{盒子属性}
+
+\topicindex {attributes}
+\topicindex {boxes}
+
+节点通常会获得创建时生效的属性列表。这个时刻可能相当异步。例如：在段落构建中，各个行盒子是在 \prm {par} 命令处理之后才创建的，因此它们获得的是当时生效的属性列表，而不是段落中例如第一行或第三行当时生效的属性。
+
+类似情况在 \LUATEX\ 中经常发生。几个比较明显的问题情况已被处理：在断字、字距调整和连字期间创建的节点，其属性借用周围字形的属性；而且可以直接影响盒子属性。
+
+当你在寄存器中组装一个盒子时，将这样的盒子放置、解包或复制时，其中包含的节点的属性保持不变。在这方面，属性的行为与已转换为字体中字形引用的字符相同。例如，当你使用属性来实现颜色支持时，每个节点都携带关于其最终颜色的信息。在这种情况下，除非你实现相应的处理机制，否则对已装箱的内容应用颜色将无效。请记住，这种不兼容主要是因为使用独立的 specials 和 literal 来表示颜色比使用属性更不自然。
+
+可以通过使用关键字 \type {attr} 来微调应用于 \type {hbox}、\type {vbox} 或 \type {vtop} 的属性列表。\type {attr} 关键字应出现在 \type {to} 或 \type {spread} 之前（如果也指定了这两者的话）。示例如下：
+
+\begin{typing}
+\attribute997=123
+\attribute998=456
+\setbox0=\hbox {Hello}
+\setbox2=\hbox attr 999 = 789 attr 998 = -"7FFFFFFF{Hello}
+\end{typing}
+
+\begin{typing}
+  for b=0,2,2 do
+    for a=997, 999 do
+      tex.sprint("box ", b, " : attr ",a," : ",tostring(tex.box[b]     [a]))
+      tex.sprint("\\quad\\quad")
+      tex.sprint("list ",b, " : attr ",a," : ",tostring(tex.box[b].list[a]))
+      tex.sprint("\\par")
+    end
+  end
+\end{typing}
+
+
+
+盒子 0 现在设置了属性 997 和 998，而盒子 2 设置了属性 997 和 999，但该盒子内部的节点都将设置属性 997 和 998。赋最大负值会导致某个属性被忽略。
+
+为了让你了解这在 \LUA\ 端意味着什么，请看以下代码：
+
+
+
+后面我们会看到如何访问节点的属性。这里的盒子是所谓的 \nod {hlist} 节点，它们有一个 \type {list} 字段指向内容。因为属性本身也是一个列表，你可以通过对节点进行索引来访问它们（这里我们用 \type {[a]} 来做）。运行这段代码片段会输出类似：
+
+\begin{typing}
+box 0 : attr 997 : 123    list 0 : attr 997 : 123
+box 0 : attr 998 : 456    list 0 : attr 998 : 456
+box 0 : attr 999 : nil    list 0 : attr 999 : nil
+box 2 : attr 997 : 123    list 2 : attr 997 : 123
+box 2 : attr 998 : nil    list 2 : attr 998 : nil
+box 2 : attr 999 : 789    list 2 : attr 999 : nil
+\end{typing}
+
+因为有些值未设置，我们需要在这里使用 \type {tostring} 函数，以便得到 \type {nil} 这个词。
+
+\section{与 \LUA\ 相关的原语}
+
+\subsection{\prm {directlua}}
+
+为了将 \LUA\ 代码与 \TEX\ 输入融合，需要几个新的原语。原语 \prm {directlua} 用于立即执行 \LUA\ 代码。语法为
+
+\begin{typing}
+\directlua <general text>!crlf
+\directlua <16-bit number> <general text>
+\end{typing}
+
+\texttt{<general text>} 会被完全展开，然后送入 \LUA\ 解释器。在对 \texttt{<general text>} 进行读取和展开之后，得到的记号列表会被转换为字符串，就像使用 \type {\the\toks} 显示的那样。在 \LUA\ 端，每个 \prm {directlua} 块都被视为一个独立的 chunk。在这样的 chunk 中，你可以使用 \type {local} 指令来避免你的变量与宏包使用的变量冲突。
+
+与记号列表之间的转换意味着你通常不能在参数内使用 \LUA\ 行注释（以 \type {--} 开头）。因为通常只有一个 ``行，第一行注释会一直延续到输入末尾。你需要使用 \TEX\ 风格的行注释（以 \% 开头），或者在局部改变 \TEX\ 的类别码。另一种可能的写法是：
+
+\begin{typing}
+\begingroup
+
+\directlua ...
+\endgroup
+\end{typing}
+
+这样就可以使用 \LUA\ 行注释了，因为 \TEX\ 不会用空格替换行尾。当然，这种方法取决于你使用的宏包。
+
+\texttt{<16-bit number>} 指定一个 \LUA\ chunk 的名称，取自 \type {lua.name} 数组（参见本手册后面关于 \type {lua} 表的文档）。当 chunk 名称以 \type {@} 开头时，它将显示为文件名。这是 \LUA\ 实现错误处理方式的一个副作用。
+
+\prm {directlua} 命令是可展开的。由于它将 \LUA\ 代码传递给 \LUA\ 解释器，从 \TEX\ 的角度来看，其展开通常为空。但是，有些 \LUA\ 函数会产生供 \TEX\ 读取的内容，即所谓的 print 函数。最简单的用法是 \type {tex.print(<string> s)}。字符串 \type {s} 的字符会被放置到 \TEX\ 的输入缓冲区中，也就是 ``在 \TEX\ 眼前，供 \TEX\ 立即读取。例如：
+
+\begin{typing}
+\count10=20
+a\directlua{tex.print(tex.count[10]+5)}b
+\end{typing}
+
+展开为
+
+\begin{typing}
+ = function() tex.print("!") end
+    t[2] = function() tex.print("?") end
+}
+
+\luafunction1
+\luafunction2
+\end{typing}
+
+当然，函数也可以在单独的文件中定义。除了正常的 \LUA\ 限制外，函数数量没有限制。当然，有限制是不接受参数，但那将涉及解析，从而不会带来任何收益。该函数在实际被调用时会获得一个参数，即索引，因此在下面的例子中会排印数字 \type {8}。
+
+\begin{typing}
+\directlua {
+    local t = lua.get_functions_table()
+    t[8] = function(slot) tex.print(slot) end
+}
+\end{typing}
+
+\lpr {luafunctioncall} 原语做同样的事情，但不可展开，例如在 \prm {edef} 中使用。此外，\LUATEX\ 还提供了一个定义器：
+
+\begin{typing}
+                 \luadef\MyFunctionA 1
+          \global\luadef\MyFunctionB 2
+\global\luadef\MyFunctionC 3
+\end{typing}
+
+你确实应该谨慎使用这些命令。某些引用被存储在记号中，并假设当该记号展开时函数可用。另一方面，由于我们已在相对复杂的情况下测试过此功能，正常使用应该不会有问题。
+
+\subsection{\lpr {luabytecode}}
+
+与上一节讨论的函数调用器类似，我们有字节码调用器。同样，call 变体是不可展开的。
+
+\begin{typing}
+\directlua {
+    lua.bytecode[9998] = function(s)
+        tex.sprint(s*token.scan_int())
+    end
+    lua.bytecode[5555] = function(s)
+        tex.sprint(s*token.scan_dimen())
+    end
+}
+\end{typing}
+
+这与以下命令配合使用：
+
+\begin{typing}
+\luabytecode    9998 5  \luabytecode    5555 5sp
+\luabytecodecall9998 5  \luabytecodecall5555 5sp
+\end{typing}
+
+代码中的变量 \type {s} 是字节码寄存器的编号，可用于诊断目的。字节码寄存器相比函数调用的优势在于它们被存储在格式中（但不带 upvalue）。
+
+\section{类别码表}
+
+\subsection{类别码}
+
+\topicindex {catcodes}
+
+类别码表是一项新特性，允许你用一条语句切换到预定义的类别码规则。你可以拥有实际上无限数量的不同表。此子系统向后兼容：如果你从不使用以下命令，你的文档在行为上与传统 \TEX\ 相比不会有任何差别。每个类别码表的内容独立于任何其他类别码表，其内容会被存储并从格式文件中取回。
+
+\subsection{\lpr {catcodetable}}
+
+\begin{typing}
+\catcodetable <15-bit number>
+\end{typing}
+
+原语 \lpr {catcodetable} 切换到不同的类别码表。这样的表必须事先使用以下两个原语之一创建，或者必须为零。表零由 initex\ 初始化。
+
+\subsection{\lpr {initcatcodetable}}
+
+\begin{typing}
+\initcatcodetable <15-bit number>
+\end{typing}
+
+原语 \lpr {initcatcodetable} 创建一个新表，其类别码与 initex\ 定义的相同。新类别码表是全局分配的：在当前组结束后不会消失。如果提供的数字与当前活动表相同，则会引发错误。初始值为：
+
+\begin{longtable}{c c l l}
+\toprule 类别码 & 字符                    & 等价字符 & 类别        \\
+\midrule
+0 & \texttt{\textbackslash}       &         & \type{escape}       \\
+5 & \texttt{\textasciitilde\textasciitilde M}                 & return  & \type{car_ret}      \\
+9 & \texttt{\textasciitilde\textasciitilde @}                  & null    & \type{ignore}       \\
+10 & \texttt{<space>}             & space   & \type{spacer}       \\
+11 & \texttt{a}--\texttt{z}       &         & \type{letter}       \\
+11 & \texttt{A}--\texttt{Z}       &         & \type{letter}       \\
+12 & 其他所有字符                  &         & \type{other}        \\
+14 & \texttt{\%}                  &         & \type{comment}      \\
+15 & \texttt{\textasciitilde\textasciitilde ?}                 & delete  & \type{invalid_char} \\
+\bottomrule
+\end{longtable}
+
+\subsection{\lpr {savecatcodetable}}
+
+\begin{typing}
+\savecatcodetable <15-bit number>
+\end{typing}
+
+\lpr {savecatcodetable} 将当前的类别码集合复制到一个具有指定编号的新表中。这个新表中的定义都被视为在最外层层级做出的。
+
+新表是全局分配的：在当前组结束后不会消失。如果提供的编号就是当前活动表，则会引发错误。
+
+\section{抑制错误}
+
+\subsection{\lpr {suppressfontnotfounderror}}
+
+\topicindex {errors}
+
+如果此整数参数非零，则 \LUATEX\ 不会抱怨找不到字体度量文件。相反，它会静默跳过字体赋值，使请求的字体 csname 通过 \prm {ifx} 比较等于 \prm {nullfont}，从而可以在不打扰用户的情况下对其进行测试。
+
+\begin{typing}
+\suppressfontnotfounderror = 1
+\end{typing}
+
+\subsection{\lpr {suppresslongerror}}
+
+\topicindex {errors}
+
+如果此整数参数非零，则 \LUATEX\ 不会抱怨在通常禁止的上下文中遇到 \prm {par} 命令（最突出的是在未定义为 \prm {long} 的宏的参数中）。
+
+\begin{typing}
+\suppresslongerror = 1
+\end{typing}
+
+\subsection{\lpr {suppressifcsnameerror}}
+
+\topicindex {errors}
+
+如果此整数参数非零，则 \LUATEX\ 不会抱怨在 \prm {ifcsname} 展开中间出现不可展开的命令。相反，它会继续从输入中获取展开的记号，直到遇到 \prm {endcsname} 命令。如果输入展开在 \prm {csname} \ldots \prm {endcsname} 配对方面不平衡，\LUATEX\ 进程可能会无限期挂起。
+
+\begin{typing}
+\suppressifcsnameerror = 1
+\end{typing}
+
+\subsection{\lpr {suppressoutererror}}
+
+\topicindex {errors}
+
+如果此新整数参数非零，则 \LUATEX\ 不会抱怨在通常禁止的上下文中遇到 \prm {outer} 命令。
+
+\begin{typing}
+\suppressoutererror = 1
+\end{typing}
+
+\subsection{\lpr {suppressmathparerror}}
+
+\topicindex {errors}
+\topicindex {math}
+
+以下设置将允许在数学公式中使用 \prm {par} 记号：
+
+\begin{typing}
+\suppressmathparerror = 1
+\end{typing}
+
+这样，下面的代码就是合法的了：
+
+\begin{typing}
+$ x + 1 =
+
+a $
+\end{typing}
+
+\subsection{\lpr {suppressprimitiveerror}}
+
+\topicindex {errors}
+\topicindex {primitives}
+
+当设置为非零值时，以下命令不会发出错误：
+
+\begin{typing}
+\suppressprimitiveerror = 1
+
+\primitive\notaprimitive
+\end{typing}
+
+\section{字体}
+
+\subsection{字体语法}
+
+\topicindex {fonts}
+
+\LUATEX\ 接受用花括号括起来的参数作为字体名：
+
+\begin{typing}
+\font\myfont = {cmr10}
+\end{typing}
+
+这允许嵌入空格，而无需使用双引号。参数内部会进行宏展开。
+
+\subsection{\lpr {fontid}}
+
+\begin{typing}
+\fontid\font
+\end{typing}
+
+此原语展开为一个数字。它不是寄存器，因此不需要在前面加 \prm {number}（而且使用 \prm {the} 会报错）。当前使用的字体 id 是 \texttt{<当前字体id>}。下面是更多示例：
+
+\begin{longtable}{l c c}
+\toprule 样式 & 命令 & 字体 id \\
+\midrule
+常规      & \type {\rmfamily} & 0 \\
+粗体      & \type {\bf} & 1 \\
+斜体      & \type {\it} & 2 \\
+粗斜体    & \type{\bfseries\itshape} & 3 \\
+\bottomrule
+\end{longtable}
+
+这些数字取决于所使用的宏包，因为每个宏包都有自己处理字体的方式。它们也可能因运行而异，因为取决于字体加载的顺序。例如，在 \CONTEXT\ 中使用虚拟数学 \UNICODE\ 字体时，我们很容易就有上百个 id 在使用中。并非所有 id 都必须绑定到真实字体，毕竟它只是一个数字。
+
+原语 \lpr {setfontid} 可用于启用具有给定 id 的字体，当然该 id 必须是有效的。
+
+\subsection{\lpr {noligs}}
+
+\topicindex {ligatures+suppress}
+\topicindex {kerns+suppress}
+
+这些原语禁止在 \LUATEX\ 主控制循环构建初始节点列表时插入连字和字距。当你想对 ``字符进行节点列表处理，而 \TEX\ 的正常处理会造成干扰时，可以启用这些原语。
+
+\begin{typing}
+\noligs <integer>!crlf
+\nokerns <integer>
+\end{typing}
+
+这些原语也可以通过重载连字构建和字距函数来实现，即为其关联的回调分配哑函数。请记住，当你（使用 \LUA）定义字体时，也可以省略字距和连字表，效果与上述相同。
+
+\subsection{\type{\nospaces}}
+
+\topicindex {spaces+suppress}
+
+这个新原语可用于在文本流中遇到空格字符时，覆盖通常的 \prm {spaceskip} 相关启发式规则。值 \type{1} 表示不注入任何内容，而 \type{2} 则注入一个零 skip。在 \ref{fig:nospaces} 中，我们看到了四个以空格分隔的字符在不同设置下的结果。
+
+\begin{figure}[htbp]
+\centering
+\fbox{\parbox{3.5cm}{\centering\texttt{nospaces=0} x x x x\\[3pt]\small nospaces=0\\hsize=10mm}}
+\quad
+\fbox{\parbox{3.5cm}{\centering\texttt{nospaces=1} x x x x\\[3pt]\small nospaces=1\\hsize=10mm}}
+\quad
+\fbox{\parbox{3.5cm}{\centering\texttt{nospaces=2} x x x x\\[3pt]\small nospaces=2\\hsize=10mm}}
+\caption{\lpr{nospaces} 选项的效果。}\label{fig:nospaces}
+\end{figure}
+
+\section{记号、命令与字符串}
+
+\subsection{\lpr {scantextokens}}
+
+\topicindex {tokens+scanning}
+
+\lpr {scantextokens} 的语法与 \prm {scantokens} 完全相同。该原语是 \ETEX\ 的 \prm {scantokens} 的一个略微修改版本。区别在于：
+
+\begin{itemize}\item 最后一行（通常也是唯一一行）不会追加 \prm {endlinechar}。
+
+\item \lpr {scantextokens} 从不引发 EOF 错误，也不执行 \prm {everyeof} 记号。
+
+\item 不执行 ``\type{\unknown}\ while end of file \type{\unknown} 错误检查。这允许展开在不同的分组层级结束，或者在条件尚不完整时结束。
+
+\end{itemize}
+
+\subsection{\lpr {toksapp}}
+
+与其使用：
+
+\begin{typing}
+\toks0\expandafter{\the\toks0 foo}
+\end{typing}
+
+你可以使用：
+
+\begin{typing}
+\etoksapp0{foo}
+\end{typing}
+
+\type {pre} 变体是前置而不是追加，\type {e} 变体会展开传入的 general text。\type {g} 和 \type {x} 变体是全局的。
+
+\subsection{\prm {csstring}}
+
+这些有些特殊。\prm {csstring} 原语类似于 \prm {string}，但它省略了前导的转义字符。这比之后再剥离它效率稍高一些。
+
+\lpr {begincsname} 原语类似于 \prm {csname}，但在不存在该名称时不会创建一个 relaxed 等价物。它等价于
+
+\begin{typing}
+\ifcsname foo\endcsname
+  \csname foo\endcsname
+\fi
+\end{typing}
+
+其优势在于省去了一次查找（不要期望有太多速度提升），但更重要的是它避免了使用 \prm {if} 测试。\lpr {lastnamedcs} 则需要谨慎使用。上面的例子可以写成：
+
+\begin{typing}
+\ifcsname foo\endcsname
+  \lastnamedcs
+\fi
+\end{typing}
+
+这比构造两次字符串稍微高效一些（在 \LUATEX\ 深处这还涉及一些 \UTF8\ 处理），但可能更重要的是它节省了几个记号，并使代码更易读。
+
+\subsection{\lpr {clearmarks}}
+
+\topicindex {marks}
+
+该原语补充了 \ETEX\ 的 mark 原语，完全清除一个 mark 类，将三个关联的 mark 文本全部重置为空。它是一个立即命令。
+
+\begin{typing}
+\clearmarks <16-bit number>
+\end{typing}
+
+\subsection{\lpr {alignmark}}
+
+原语 \lpr {alignmark} 复制了对齐前言中 \type {#} 的功能，而 \lpr {aligntab} 复制了 \type {&} 的功能。
+
+\subsection{\lpr {letcharcode}}
+
+此原语可用于为活动字符赋值，例如：
+
+\begin{typing}
+\def\foo{bar} \letcharcode123=\foo
+\end{typing}
+
+这比使用大写技巧（利用 \prm {uppercase} 对活动字符特殊处理的属性）要优雅一些。
+
+\subsection{\lpr {glet}}
+
+此原语类似于：
+
+\begin{typing}
+\def\glet{\global\let}
+\end{typing}
+
+但更快（只有在数百万次调用时才可测量），而且可能更方便（毕竟我们还有 \type {\gdef}）。
+
+\subsection{\lpr {expanded}}
+
+\topicindex {expansion}
+
+\lpr {expanded} 原语接受一个记号列表并展开其内容，这很方便：它避免了 \prm {expandafter} 和 \prm {noexpand} 的复杂组合。你可以将其与 \prm {edef} 体内部发生的情况进行比较。但这种展开仍然不会展开某些原语操作。
+
+\begin{typing}
+\newcount\NumberOfCalls
+
+\def\TestMe{\advance\NumberOfCalls1 }
+
+\edef\Tested{\TestMe foo:\the\NumberOfCalls}
+\edef\Tested{\TestMe foo:\the\NumberOfCalls}
+\edef\Tested{\TestMe foo:\the\NumberOfCalls}
+
+\meaning\Tested
+\end{typing}
+
+结果是一个宏，其体内包含未展开的代码：
+

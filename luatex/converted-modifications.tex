@@ -1,0 +1,846 @@
+\chapter{修改}\label{modifications}
+
+\section{合并后的引擎}
+
+\subsection{变革的必要性}
+
+\topicindex {engines}
+\topicindex {history}
+
+\LUATEX\ 的第一个版本仅增加了少量原语，在很大程度上与 \PDFTEX\ 相同。随后我们将 \ALEPH\ 的大量代码合并进来，得到了更多原语。当代码趋于稳定后，我们决定清理该程序相当混杂的本质。这意味着一些原语被提升为核心原语（通常使用不同的名称），另一些则被移除。这使得我们能够开始清理代码库。在 \ref{enhancements} 中我们讨论了一些新原语，这里将介绍大多数经过调整的原语。
+
+除了由新功能引起的预期变化外，还有一些不太预期的变化。这些有时是新（冲突）特性的副作用，或者更常见的是清理内部接口所必需的变更。这些也会一并提及。
+
+\subsection{与 \TEX\ 3.1415926 相比的变化}
+
+\topicindex {\TEX}
+
+当然，一切都始于传统的 \TEX。即使我们从 \PDFTEX\ 起步，大部分仍源自原始版本。但我们有所偏离。
+
+\begin{itemize}\item 当前代码库使用 \CCODE\ 而非 \PASCAL\ 编写。我们尽可能使用 \CWEB。因此，不再是一个大文件加上变更文件，而是按类别组织的多个文件，如 \type {tex}、\type {pdf}、\type {lang}、\type {font}、\type {lua} 等。转换为 \CCODE\ 过程中留下了一些痕迹，但我们会在适当的时候清理源代码并确保文档完善。许多文件采用 \CWEB\ 格式，但其他文件（如与 \LUA\ 接口的文件）则是 \CCODE\ 文件。当然，我们希望尽可能贴近原始版本，以便 Don Knuth 所著的 \TEX\ 基础原理文档仍然适用。
+
+\item 有关段落构建、语言处理和断词方面的许多小变化，请参见 \ref{languages}。最重要的变化是：在单词中间插入花括号组（如 \type {of{}fice}）不再阻止连字的创建。
+
+\item 不再有池文件，所有字符串都在编译期间嵌入。
+
+\item 说明符 \type {plus 1 fillll} 不会产生错误。多余的 ``l 只会被简单排版出来。
+
+\item \prm {endlinechar} 和 \prm {newlinechar} 的上限为 127。
+
+\item 缩放（\prm {mag}）仅在 \DVI\ 输出模式下受支持。你可以设置此参数，它甚至能与 \type {true} 单位一起工作，直到切换到 \PDF\ 输出模式。使用 \PDF\ 输出时，最好不要改动 \prm {mag} 变量。这种模糊行为与最终需要 \DVI\ 输出时却使用 \PDF\ 后端相关功能的情况并无太大区别。
+
+    输出模式被冻结后（通常在第一页 shipped out 时发生）或启用 \PDF\ 输出后，\type {true} 说明将被忽略。当预加载适配 \LUATEX\ 的 plain 格式时，\prm {mag} 参数可能已经被设置。
+
+\item 当 \type {\globaldefs} 为正值而请求局部赋值时，如果 \type {\tracingcommands} 大于 1，日志中会显示 \type {{\global enforced}}。当 \type {\globaldefs} 为负值而通过 \type {\global}、\type {\gdef} 等请求全局赋值时，日志会记录 \type {{\global canceled}}。
+
+\end{itemize}
+
+\subsection{与 \ETEX\ 2.2 相比的变化}
+
+\topicindex {\ETEX}
+
+作为事实上的标准扩展，我们当然提供 \ETEX\ 功能，但做了一些小的调整。
+
+\begin{itemize}\item \ETEX\ 功能始终存在并启用，因此不再需要为 initex\ 添加前置星号或 \type {-etex} 开关。
+
+\item 不包含 \TEXXET\ 扩展，因此原语 \type {\TeXXeTstate}、\type {\beginR}、\type {\beginL}、\type {\endR} 和 \type {\endL} 均不存在。相反，我们以 \OMEGA/\ALEPH\ 的方向性处理方法为起点。
+
+\item \ETEX\ 的 \prm {tracingassigns} 和 \prm {tracingrestores} 输出的部分跟踪信息不存在。
+
+\item \LUATEX\ 中的寄存器管理采用 \OMEGA/\ALEPH\ 模型，因此最大值为 65535，实现使用扁平数组，而非 \ETEX\ 的扁平与稀疏混合模型。
+
+\item 当使用 kpathsea 查找文件时，\LUATEX\ 使用 \type {ofm} 文件格式搜索字体度量。这意味着 \LUATEX\ 查找 \type {OFMFONTS} 配置变量（如 \OMEGA\ 和 \ALEPH），而非 \type {TFMFONTS}（如 \TEX\ 和 \PDFTEX）。虚拟字体同理（\LUATEX\ 使用变量 \type {OVFFONTS} 而非 \type {VFFONTS}）。
+
+\item 报告伸展或收缩次序的原语报告的值在 0 到 4 的便利范围内。由于某些宏包可能因此出错，我们还提供 \type {\eTeXgluestretchorder} 和 \type {\eTeXglueshrinkorder}，它们报告与 \ETEX\ 兼容的值。（新的）\texttt{fi} 值报告为 \type {-1}（因此在 \texttt{ifcase} 测试中使用时，该值会使程序进入 \texttt{else} 分支）。
+
+\end{itemize}
+
+\subsection{与 \PDFTEX\ 1.40 相比的变化}
+
+\topicindex {\PDFTEX}
+
+因为我们要生成 \PDF，最自然的起点就是广受欢迎的 \PDFTEX\ 程序。我们继承了稳定特性，丢弃了大部分实验性代码，并将一些功能提升为 \LUATEX\ 核心功能，这进而触发了原语的重命名。
+
+出于兼容性原因，我们仍提及 \type {\pdf...} 命令，但 \LUATEX\ 有不同的后端接口。取代这些原语的是三个接口原语：\lpr {pdfextension}、\lpr {pdfvariable} 和 \lpr {pdffeedback}，它们接受关键字和可选的后续参数（下文我们仍使用 \tex {pdf} 前缀名称作为参考）。这样我们可以在需要时扩展功能，而无需改动核心引擎。前端与后端尽可能解耦。
+
+\begin{itemize}\item （实验性的）snap 节点支持已被移除，因为在节点处理和属性之上构建此功能更为自然。随之消失的相关原语有：\orm {pdfsnaprefpoint}、\orm {pdfsnapy} 和 \orm {pdfsnapycomp}。
+
+\item （实验性的）节点周围特殊间距支持也已被移除。随之消失的相关原语有：\orm {pdfadjustinterwordglue}、\orm {pdfprependkern} 和 \orm {pdfappendkern}，以及五个辅助原语 \orm {knbscode}、\orm {stbscode}、\orm {shbscode}、\orm {knbccode} 和 \orm {knaccode}。
+
+\item 许多 ``\PDFTEX\ 原语已被移除，因为它们可以使用 \LUA\ 实现：\orm {pdfelapsedtime}、\orm {pdfescapehex}、\orm {pdfescapename}、\orm {pdfescapestring}、\orm {pdffiledump}、\orm {pdffilemoddate}、\orm {pdffilesize}、\orm {pdfforcepagebox}、\orm {pdflastmatch}、\orm {pdfmatch}、\orm {pdfmdfivesum}、\orm {pdfmovechars}、\orm {pdfoptionalwaysusepdfpagebox}、\orm {pdfoptionpdfinclusionerrorlevel}、\orm {pdfresettimer}、\orm {pdfshellescape}、\orm {pdfstrcmp} 和 \orm {pdfunescapehex}。
+
+\item 版本相关原语 \orm {pdftexbanner}、\orm {pdftexversion} 和 \orm {pdftexrevision} 不再存在，因为与 \PDFTEX\ 开发不再有任何关系。
+
+\item 实验性的 snapper 机制已被移除，因此原语 \orm {pdfignoreddimen}、\orm {pdffirstlineheight}、\orm {pdfeachlineheight}、\orm {pdfeachlinedepth} 和 \orm {pdflastlinedepth} 也一并消失。
+
+\item 实验性原语 \lpr {primitive}、\lpr {ifprimitive}、\lpr {ifabsnum} 和 \lpr {ifabsdim} 被提升为核心原语。带 \type {\pdf*} 前缀的原始版本不可用。
+
+\item 由于 \LUATEX\ 有不同的图像管理子系统，在此期间与祖先版本产生了更多偏离。我们不追随 \PDFTEX\ 的变化。
+
+\item 提供了两个额外的令牌列表 \orm {pdfxformresources} 和 \orm {pdfxformattr}，作为 \orm {pdfxform} 关键字的替代方案。
+
+\item 图像说明还支持 \type {visiblefilename}、\type {userpassword} 和 \type {ownerpassword}。密码选项仅与加密的 \PDF\ 文件相关。
+
+\item 当前版本的 \LUATEX\ 不再将嵌入的 \PDF\ 文件中的字体替换和/或合并到外层 \PDF\ 文档的字体中。这种功能回退可能是暂时的，取决于重写后的字体后端的形态。
+
+\item 原语 \orm {pdfpagewidth} 和 \orm {pdfpageheight} 已被移除，因为 \lpr {pagewidth} 和 \lpr {pageheight} 承担了该用途。
+
+\item 原语 \orm {pdfnormaldeviate}、\orm {pdfuniformdeviate}、\orm {pdfsetrandomseed} 和 \orm {pdfrandomseed} 已被提升为不带 \type {pdf} 前缀的核心原语，因此原始命令不再被识别。
+
+\item 原语 \lpr {ifincsname}、\lpr {expanded} 和 \lpr {quitvmode} 现在是核心原语。
+
+\item 由于 hz 与突出机制已成为核心的一部分，相关原语 \lpr {lpcode}、\lpr {rpcode}、\lpr {efcode}、\lpr {leftmarginkern}、\lpr {rightmarginkern} 被提升为核心原语。两个命令 \lpr {protrudechars} 和 \lpr {adjustspacing} 取代了带 \type {\pdf} 前缀的原始版本。
+
+\item hz 优化代码已部分重写，因此我们不再需要创建额外的字体实例。前端与后端已解耦，并生成更高效的（\PDF）代码。
+
+\item 当 \lpr {adjustspacing} 的值为 2 时，hz 优化将应用于字形和字距。当值为 3 时，仅处理字形。小于 2 的值禁用此功能。值为 1 时，字体扩展在 \TEX\ 常规段落断行例程将段落拆分为行之后应用。在这种情况下，断行与标准 \TEX\ 行为一致（与 \PDFTEX\ 相同）。
+
+\item \lpr {tagcode} 原语被提升为核心原语。
+
+\item \lpr {letterspacefont} 功能现在是核心的一部分，但不会被修改（改进）。我们仅为遗留用途提供它。
+
+\item \orm {pdfnoligatures} 原语现在是 \lpr {ignoreligaturesinfont}。
+
+\item \orm {pdfcopyfont} 原语现在是 \lpr {copyfont}。
+
+\item \orm {pdffontexpand} 原语现在是 \lpr {expandglyphsinfont}。
+
+\item 由于位置跟踪在 \DVI\ 模式下也可用，\lpr {savepos}、\lpr {lastxpos} 和 \lpr {lastypos} 命令现在取代了带 \type {pdf} 前缀的原始版本。
+
+\item 内省原语 \type {\pdflastximagecolordepth} 和 \type {\pdfximagebbox} 已被移除。可以使用外部应用程序确定这些属性，或使用内置的 \type {img} 库。
+
+\item 初始化器 \orm {pdfoutput} 已被 \lpr {outputmode} 取代，\orm {pdfdraftmode} 现在是 \lpr {draftmode}。
+
+\item 像素乘数尺寸 \orm {pdfpxdimen} 去掉了前缀，现在称为 \lpr {pxdimen}。
+
+\item 增加了一个额外的 \orm {pdfimageaddfilename} 选项，可用于阻止将文件名写入 \PDF\ 文件。
+
+\item 原语 \orm {pdftracingfonts} 现在是 \lpr {tracingfonts}，因为它与后端无关。
+
+\item 实验性原语 \orm {pdfinsertht} 保留为 \lpr {insertht}。
+
+\item 对于哪些元数据写入 \PDF\ 文件，有了更多控制。
+
+\item 原语提升为核心原语以及字体与后端的分离意味着初始化命名空间 \type {pdftex} 已不复存在。
+
+\end{itemize}
+
+一项变更涉及所谓的 xforms 和 ximages。在 \PDFTEX\ 中它们以所谓的 whatsits 实现。但与其他 whatsit 不同，它们具有尺寸，在例如计算最优断行时需要考虑。在 \LUATEX\ 中，它们现在被提升为一种特殊类型的规则节点，这简化了需要这些尺寸的代码。
+
+提升的另一个原因是这些概念很有用。后端可以提供在多处使用已渲染内容的能力，图像也很常见。如前文相关章节中已提及，我们现在有：
+
+\begin{longtable}{l l}
+\toprule \LUATEX & \PDFTEX \\
+\midrule
+\lpr {saveboxresource}             & \orm {pdfxform}           \\
+\lpr {saveimageresource}           & \orm {pdfximage}          \\
+\lpr {useboxresource}              & \orm {pdfrefxform}        \\
+\lpr {useimageresource}            & \orm {pdfrefximage}       \\
+\lpr {lastsavedboxresourceindex}   & \orm {pdflastxform}       \\
+\lpr {lastsavedimageresourceindex} & \orm {pdflastximage}      \\
+\lpr {lastsavedimageresourcepages} & \orm {pdflastximagepages} \\
+\bottomrule
+\end{longtable}
+
+有一些 \lpr {pdffeedback} 功能与此相关，但这些是典型的后端特定功能。返回的索引应被视为 ``只是一个数字，虽然它仍具有与之前相同的含义（与对象相关），但你不应依赖这一点。
+
+突出检测机制略有增强，以支持稍复杂的情况。当识别出突出字符时，会跳过一些节点：
+
+\begin{itemize}
+\item 零 glue 
+\item 惩罚值 
+\item 空 discretionary 
+\item 常规零 kern 
+\item 零尺寸规则 
+\item 周围为零的数学节点 
+\item dir 节点 
+\item 空水平列表 
+\item 局部 par 节点 
+\item insert、mark 与 adjust 
+\item 边界 
+\item whatsit 
+\end{itemize}
+
+由于这可能还不够，你还可以使用突出边界节点来使下一个节点被忽略。当值为 1 或 3 时，在定位左边界条件的测试中会忽略下一个节点。当值为 2 或 3 时，在定位右边界条件时会忽略前一个节点（搜索从右向左进行）。这允许突出与例如移入页边距的内容结合使用：
+
+\begin{typing}
+\protrusionboundary1!\quad«Who needs protrusion?»
+\end{typing}
+
+\subsection{与 \ALEPH\ RC4 相比的变化}
+
+\topicindex {\ALEPH}
+
+因为我们需要正确的方向性排版，\ALEPH\ 的机制看起来最具吸引力。它们与 \OMEGA\ 提供的机制相当接近，因此接下来所述适用于这两个程序。
+
+\begin{itemize}\item 扩展的 16 位数学原语（\orm {omathcode} 等）已被移除。
+
+\item \OCP\ 处理已被完全移除，因此以下原语也被移除：\orm {ocp}、\orm {externalocp}、\orm {ocplist}、\orm {pushocplist}、\orm {popocplist}、\orm {clearocplists}、\orm {addbeforeocplist}、\orm {addafterocplist}、\orm {removebeforeocplist}、\orm {removeafterocplist} 和 \orm {ocptracelevel}。
+
+\item \LUATEX\ 仅理解 \ALEPH\ 的 16 种方向说明符中的 4 种：\type {TLT}（拉丁文）、\type {TRT}（阿拉伯文）、\type {RTT}（中文/日文/韩文）、\type {LTL}（蒙古文）。所有其他方向说明符都会产生错误。除了关键字驱动模型外，我们还提供整数驱动模型。
+
+\item \ALEPH\ 的输入翻译未实现，相关原语不可用：\orm {DefaultInputMode}、\orm {noDefaultInputMode}、\orm {noInputMode}、\orm {InputMode}、\orm {DefaultOutputMode}、\orm {noDefaultOutputMode}、\orm {noOutputMode}、\orm {OutputMode}、\orm {DefaultInputTranslation}、\orm {noDefaultInputTranslation}、\orm {noInputTranslation}、\orm {InputTranslation}、\orm {DefaultOutputTranslation}、\orm {noDefaultOutputTranslation}、\orm {noOutputTranslation} 和 \orm {OutputTranslation}。
+
+\item 修复了若干错误，理清了令人困惑的实现细节。
+
+\item 方向说明的扫描器现在允许在方向完全解析后有一个可选空格。
+
+\item \type {\textasciicircum\textasciicircum{}} 记法已扩展：\type {\textasciicircum\textasciicircum{}\textasciicircum\textasciicircum{}} 后期望四个十六进制字符，\type {\textasciicircum\textasciicircum{}\textasciicircum\textasciicircum{}\textasciicircum\textasciicircum{}} 后必须给出六个十六进制字符。原始 \TEX\ 解释对 \type {\textasciicircum\textasciicircum{}} 情形仍然有效，但四个和六个变体不进行回溯，即当后面没有跟随正确数量的十六进制数字时会发出错误消息。因为 \type{\textasciicircum\textasciicircum{}^} 是正常的 \TEX\ 情形，我们也不支持奇数个的 \type {\textasciicircum\textasciicircum{}\textasciicircum\textasciicircum{}^}。
+
+\item 方向更改命令 {\it 紧接其后} 的 glue 不是合法断点。
+
+\item 若干需要从右到左感知的机制已得到改进。例如公式编号的放置。
+
+\item 页面尺寸相关原语 \lpr {pagewidth} 和 \lpr {pageheight} 已被提升为核心原语。\prm {hoffset} 和 \prm {voffset} 原语已修复。
+
+\item 原语 \type {\charwd}、\type {\charht}、\type {\chardp} 和 \type {\charit} 已被移除，因为我们有 \ETEX\ 变体 \type {\fontchar*}。
+
+\item 两个尺寸寄存器 \lpr {pagerightoffset} 和 \lpr {pagebottomoffset} 现在是核心原语。
+
+\item 方向相关原语 \lpr {pagedir}、\lpr {bodydir}、\lpr {pardir}、\lpr {textdir}、\lpr {mathdir} 和 \lpr {boxdir} 现在是核心原语。
+
+\item 原语提升为核心原语以及移除所有其他原语意味着早期 \LUATEX\ 版本提供的初始化命名空间 \type {aleph} 已不复存在。
+
+\end{itemize}
+
+以上可以总结为：我们取其 32 位方面和大部分方向机制，将其合并到 \PDFTEX\ 代码库中作为进一步开发的起点。然后我们简化了方向性、修复了它并将其开放。
+
+\subsection{来自各处的变化}
+
+\type {\partokenname} 和 \type {\partokencontext} 原语取自发布在实现者邮件列表上的 \PDFTEX\ 变更文件。它们在 \PDFTEX\ 手册中有说明，并归类为 \ETEX\ 扩展。
+
+\subsection{与标准 \WEBC 相比的变化}
+
+\topicindex {\WEBC}
+
+编译框架是 \WEBC，我们继续使用它，但去掉了 \PASCAL\ 到 \CCODE\ 的步骤。该框架还提供一些通用功能，处理从文件读取字节和在 \TDS\ 中定位文件。以下是我们的不同之处：
+
+\begin{itemize}\item 不支持 mltex。
+
+\item 不支持 enctex。
+
+\item 以下编码相关的命令行开关被静默忽略，即使在非 \LUA\ 模式下也是如此：\type {-8bit}、\type {-translate-file}、\type {-mltex}、\type {-enc} 和 \type {-etex}。
+
+\item \prm {openout} whatsit 不写入日志文件。
+
+\item 部分所谓的 \WEBC\ 扩展在非 \KPSE\ 模式下难以设置，因为不读取 \type {texmf.cnf}：\type {shell-escape} 处于关闭状态（但由于 \LUA\ 的 \type {os.execute}，这不是问题），并且对 \type {openin} 和 \type {openout} 的偏执检查不会发生。然而，\LUA\ 脚本可以通过重载 \type {io.open} 等来自行完成这些检查。
+
+\item ``E 选项不做任何有用的事。
+
+\end{itemize}
+
+\section{后端原语}\label{backendprimitives}
+
+\subsection{更少的原语}
+
+\topicindex {backend}
+\topicindex {\PDF+backend}
+
+在前一节中我们提到一些 \PDFTEX\ 原语被移除，另一些被提升为 \LUATEX\ 核心原语。这只是故事的一部分。为了在代码中分离后端特定原语，这些命令现在仅由少数几个取代。在传统 \TEX\ 中我们只有 \DVI\ 后端，但现在我们有两个：\DVI\ 和 \PDF。额外功能以 \TEX\ 术语中的 ``扩展 形式实现。通过更严格地分离，我们能够保持核心（前端）干净稳定，并隔离这些扩展。如果因某种原因需要额外的后端选项，可以在不触及核心的情况下实现。三个 \PDF\ 后端相关原语是：
+
+\begin{typing}
+\pdfextension command [specification]
+\pdfvariable  name
+\pdffeedback  name
+\end{typing}
+
+扩展会根据所给命令触发进一步解析。变量是一种寄存器，可以读写，而反馈则是报告某些信息（由于来自后端，它通常是一个令牌序列）。
+
+\subsection{\lpr{pdfextension}\label{sec:pdfextensions}}
+
+为了让 \LUATEX\ 超越单纯的 \TEX，你需要启用原语。从一开始就是如此。如果你想要传统的 \PDFTEX\ 原语（只要其功能仍然存在），现在可以这样做：
+
+\begin{typing}
+\def\pdfliteral             {\pdfextension literal}
+\def\pdflateliteral         {\pdfextension lateliteral}
+\def\pdfcolorstack          {\pdfextension colorstack}
+\def\pdfsetmatrix           {\pdfextension setmatrix}
+\def\pdfsave                {\pdfextension save\relax}
+\def\pdfrestore             {\pdfextension restore\relax}
+\def\pdfobj                 {\pdfextension obj }
+\def\pdfrefobj              {\pdfextension refobj }
+\def\pdfannot               {\pdfextension annot }
+\def\pdfstartlink           {\pdfextension startlink }
+\def\pdfendlink             {\pdfextension endlink\relax}
+\def\pdfoutline             {\pdfextension outline }
+\def\pdfdest                {\pdfextension dest }
+\def\pdfthread              {\pdfextension thread }
+\def\pdfstartthread         {\pdfextension startthread }
+\def\pdfendthread           {\pdfextension endthread\relax}
+\def\pdfinfo                {\pdfextension info }
+\def\pdfcatalog             {\pdfextension catalog }
+\def\pdfnames               {\pdfextension names }
+\def\pdfincludechars        {\pdfextension includechars }
+\def\pdffontattr            {\pdfextension fontattr }
+\def\pdfmapfile             {\pdfextension mapfile }
+\def\pdfmapline             {\pdfextension mapline }
+\def\pdftrailer             {\pdfextension trailer }
+\def\pdfglyphtounicode      {\pdfextension glyphtounicode }
+\def\pdfrunninglinkoff      {\pdfextension linkstate 1 }
+\def\pdfrunninglinkon       {\pdfextension linkstate 0 }
+\end{typing}
+
+内省原语可以定义为：
+
+\begin{typing}
+\def\pdftexversion    {\numexpr\pdffeedback version\relax}
+\defpdftex           {\pdffeedback revision}
+\def\pdflastlink      {\numexpr\pdffeedback lastlink\relax}
+\def\pdfretval        {\numexpr\pdffeedback retval\relax}
+\def\pdflastobj       {\numexpr\pdffeedback lastobj\relax}
+\def\pdflastannot     {\numexpr\pdffeedback lastannot\relax}
+\def\pdfxformname     {\numexpr\pdffeedback xformname\relax}
+\def\pdfcreationdate          {\pdffeedback creationdate}
+\def\pdffontname      {\numexpr\pdffeedback fontname\relax}
+\def\pdffontobjnum    {\numexpr\pdffeedback fontobjnum\relax}
+\def\pdffontsize      {\dimexpr\pdffeedback fontsize\relax}
+\def\pdfpageref       {\numexpr\pdffeedback pageref\relax}
+\def\pdfcolorstackinit        {\pdffeedback colorstackinit}
+\end{typing}
+
+配置相关的寄存器变为：
+
+\begin{typing}
+\edef\pdfcompresslevel            {\pdfvariable compresslevel}
+\edef\pdfobjcompresslevel         {\pdfvariable objcompresslevel}
+\edef\pdfrecompress               {\pdfvariable recompress}
+\edef\pdfdecimaldigits            {\pdfvariable decimaldigits}
+\edef\pdfgamma                    {\pdfvariable gamma}
+\edef\pdfimageresolution          {\pdfvariable imageresolution}
+\edef\pdfimageapplygamma          {\pdfvariable imageapplygamma}
+\edef\pdfimagegamma               {\pdfvariable imagegamma}
+\edef\pdfimagehicolor             {\pdfvariable imagehicolor}
+\edef\pdfimageaddfilename         {\pdfvariable imageaddfilename}
+\edef\pdfpkresolution             {\pdfvariable pkresolution}
+\edef\pdfpkfixeddpi               {\pdfvariable pkfixeddpi}
+\edef\pdfinclusioncopyfonts       {\pdfvariable inclusioncopyfonts}
+\edef\pdfinclusionerrorlevel      {\pdfvariable inclusionerrorlevel}
+\edef\pdfignoreunknownimages      {\pdfvariable ignoreunknownimages}
+\edef\pdfgentounicode             {\pdfvariable gentounicode}
+\edef\pdfomitcidset               {\pdfvariable omitcidset}
+\edef\pdfomitcharset              {\pdfvariable omitcharset}
+\edef\pdfomitinfodict             {\pdfvariable omitinfodict}
+\edef\pdfomitinfodict             {\pdfvariable omitinfodict}
+\edef\pdfomitmediabox             {\pdfvariable omitmediabox}
+\edef\pdfomitprocset              {\pdfvariable omitprocset}
+\edef\pdfptexprefix               {\pdfvariable ptexprefix}
+\edef\pdfpagebox                  {\pdfvariable pagebox}
+\edef\pdfminorversion             {\pdfvariable minorversion}
+\edef\pdfuniqueresname            {\pdfvariable uniqueresname}
+
+\edef\pdfhorigin                  {\pdfvariable horigin}
+\edef\pdfvorigin                  {\pdfvariable vorigin}
+\edef\pdflinkmargin               {\pdfvariable linkmargin}
+\edef\pdfdestmargin               {\pdfvariable destmargin}
+\edef\pdfthreadmargin             {\pdfvariable threadmargin}
+\edef\pdfxformmargin              {\pdfvariable xformmargin}
+
+\edef\pdfpagesattr                {\pdfvariable pagesattr}
+\edef\pdfpageattr                 {\pdfvariable pageattr}
+\edef\pdfpageresources            {\pdfvariable pageresources}
+\edef\pdfxformattr                {\pdfvariable xformattr}
+\edef\pdfxformresources           {\pdfvariable xformresources}
+\edef\pdfpkmode                   {\pdfvariable pkmode}
+
+\edef\pdfsuppressoptionalinfo     {\pdfvariable suppressoptionalinfo }
+\edef\pdftrailerid                {\pdfvariable trailerid }
+\end{typing}
+
+这些变量是内部变量，因此是匿名的。当你询问先前定义的几个变量的含义时：
+
+\begin{typing}
+\meaning\pdfhorigin
+\meaning\pdfcompresslevel
+\meaning\pdfpageattr
+\end{typing}
+
+你会得到：
+
+\begin{typing}
+macro:->[internal backend dimension]
+macro:->[internal backend integer]
+macro:->[internal backend tokenlist]
+\end{typing}
+
+\prm {edef} 也可以是 \prm {def}，但预先展开查找相关寄存器效率更高。
+
+后端派生自 \PDFTEX，因此适用相同的语法。不过，\type {outline} 命令接受一个 \type {objnum} 后跟一个数字。不进行检查，因此使用时最好是一个有效的（已刷新的）对象。
+
+为了（或多或少）与 \PDFTEX\ 兼容，我们也支持抑制某些信息的选项，但通过位集实现：
+
+\begin{typing}
+\pdfvariable suppressoptionalinfo \numexpr
+        0
+    +   1   % PTEX.FullBanner
+    +   2   % PTEX.FileName
+    +   4   % PTEX.PageNumber
+    +   8   % PTEX.InfoDict
+    +  16   % Creator
+    +  32   % CreationDate
+    +  64   % ModDate
+    + 128   % Producer
+    + 256   % Trapped
+    + 512   % ID
+\relax
+\end{typing}
+
+此外，你可以重载 trailer id，但我们不做任何有效性检查，因此你必须传入一个有效的数组。以下类似引擎通常生成的形式。这里你甚至需要包含括号！
+
+\begin{typing}
+\pdfvariable trailerid {[
+    <FA052949448907805BA83C1E78896398>
+    <FA052949448907805BA83C1E78896398>
+]}
+\end{typing}
+
+虽然我们从合并 \PDFTEX\ 和 \ALEPH\ 起步，但到现在为止代码库和功能已偏离了这些来源。这里我们展示可以传递给扩展的选项。\type {shipout} 选项是一个兼容性特性。相反，可以使用 \type {deferred} 前缀。
+
+\begin{typing}
+\pdfextension literal
+    [shipout] [ direct | page | raw ] { tokens }
+\end{typing}
+
+\begin{typing}
+\pdfextension dest
+    num integer | name { tokens }!crlf
+    [ fitbh | fitbv | fitb | fith| fitv | fit |
+      fitr <rule spec> | xyz [ zoom <integer> ]
+\end{typing}
+
+\begin{typing}
+\pdfextension annot
+    reserveobjnum | useobjnum <integer>
+    { tokens }
+\end{typing}
+
+\begin{typing}
+\pdfextension save
+\end{typing}
+
+\begin{typing}
+\pdfextension restore
+\end{typing}
+
+\begin{typing}
+\pdfextension setmatrix
+    { tokens }
+\end{typing}
+
+\begin{typing}
+[ \immediate ] \pdfextension obj
+    reserveobjnum
+\end{typing}
+
+\begin{typing}
+[ \immediate ] \pdfextension obj
+    [ useobjnum <integer> ]
+    [ uncompressed ]
+    [ stream  [ attr { tokens } ] ]
+    [ file ]
+    { tokens }
+\end{typing}
+
+\begin{typing}
+\pdfextension refobj
+    <integer>
+\end{typing}
+
+\begin{typing}
+\pdfextension colorstack
+    <integer>
+    set { tokens } | push { tokens } | pop | current
+\end{typing}
+
+\begin{typing}
+\pdfextension startlink
+    [ attr { tokens } ]
+    user { tokens } | goto | thread
+    [ file { tokens } ]
+    [ page <integer> { tokens } | name { tokens } | num  integer ]
+    [ newwindow  | nonewwindow ]
+\end{typing}
+
+\begin{typing}
+\pdfextension endlink
+\end{typing}
+
+\begin{typing}
+\pdfextension startthread
+    num <integer> | name { tokens }
+\end{typing}
+
+\begin{typing}
+\pdfextension endthread
+\end{typing}
+
+\begin{typing}
+\pdfextension thread
+    num <integer> | name { tokens }
+\end{typing}
+
+\begin{typing}
+\pdfextension outline
+    [ attr { tokens } ]
+    [ useobjnum <integer> ]
+    [ count <integer> ]
+    { tokens }
+\end{typing}
+
+\begin{typing}
+\pdfextension glyphtounicode
+    { tokens }
+    { tokens }
+\end{typing}
+
+\begin{typing}
+\pdfextension catalog
+    { tokens }
+    [ openaction
+      user { tokens } | goto | thread
+      [ file { tokens } ]
+      [ page <integer> { tokens } | name { tokens } | num <integer> ]
+      [ newwindow  | nonewwindow ] ]
+\end{typing}
+
+\begin{typing}
+\pdfextension fontattr
+    <integer>
+    {tokens}
+\end{typing}
+
+\begin{typing}
+\pdfextension mapfile
+    {tokens}
+\end{typing}
+
+\begin{typing}
+\pdfextension mapline
+    {tokens}
+\end{typing}
+
+\begin{typing}
+\pdfextension includechars
+    {tokens}
+\end{typing}
+
+\begin{typing}
+\pdfextension info
+    {tokens}
+\end{typing}
+
+\begin{typing}
+\pdfextension names
+    {tokens}
+\end{typing}
+
+\begin{typing}
+\pdfextension trailer
+    {tokens}
+\end{typing}
+
+\subsection{默认值}
+
+引擎设置以下默认值。
+
+\begin{typing}
+\pdfcompresslevel         9
+\pdfobjcompresslevel      1 % used: (0,9)
+\pdfrecompress            0 % mostly for debugging
+\pdfdecimaldigits         4 % used: (3,6)
+\pdfgamma              1000
+\pdfimageresolution      71
+\pdfimageapplygamma       0
+\pdfimagegamma         2200
+\pdfimagehicolor          1
+\pdfimageaddfilename      1
+\pdfpkresolution         72
+\pdfpkfixeddpi            0
+\pdfinclusioncopyfonts    0
+\pdfinclusionerrorlevel   0
+\pdfignoreunknownimages   0
+\pdfgentounicode          0
+\pdfomitcidset            0
+\pdfomitcharset           0
+\pdfomitinfodict          0
+\pdfomitmediabox          0
+\pdfomitprocset           0
+\pdfptexprefix            0
+\pdfpagebox               0
+\pdfminorversion          4
+\pdfuniqueresname         0
+
+\pdfhorigin             1in
+\pdfvorigin             1in
+\pdflinkmargin          0pt
+\pdfdestmargin          0pt
+\pdfthreadmargin        0pt
+\pdfxformmargin         0pt
+\end{typing}
+
+\subsection{向后兼容}
+
+如果你还想要一些向后兼容，可以添加：
+
+\begin{typing}
+\let\pdfpagewidth      \pagewidth
+\let\pdfpageheight     \pageheight
+
+\let\pdfadjustspacing  \adjustspacing
+\let\pdfprotrudechars  \protrudechars
+\let\pdfnoligatures    \ignoreligaturesinfont
+\let\pdffontexpand     \expandglyphsinfont
+\let\pdfcopyfont       \copyfont
+
+\let\pdfxform          \saveboxresource
+\let\pdflastxform      \lastsavedboxresourceindex
+\let\pdfrefxform       \useboxresource
+
+\let\pdfximage         \saveimageresource
+\let\pdflastximage     \lastsavedimageresourceindex
+\let\pdflastximagepages\lastsavedimageresourcepages
+\let\pdfrefximage      \useimageresource
+
+\let\pdfsavepos        \savepos
+\let\pdflastxpos       \lastxpos
+\let\pdflastypos       \lastypos
+
+\let\pdfoutput         \outputmode
+\let\pdfdraftmode      \draftmode
+
+\let\pdfpxdimen        \pxdimen
+
+\let\pdfinsertht       \insertht
+
+\let\pdfnormaldeviate  \normaldeviate
+\let\pdfuniformdeviate \uniformdeviate
+\let\pdfsetrandomseed  \setrandomseed
+\let\pdfrandomseed     \randomseed
+
+\let\pdfprimitive      \primitive
+\let\ifpdfprimitive    \ifprimitive
+
+\let\ifpdfabsnum       \ifabsnum
+\let\ifpdfabsdim       \ifabsdim
+\end{typing}
+
+甚至：
+
+\begin{typing}
+\newdimen\pdfeachlineheight
+\newdimen\pdfeachlinedepth
+\newdimen\pdflastlinedepth
+\newdimen\pdffirstlineheight
+\newdimen\pdfignoreddimen
+\end{typing}
+
+\section{方向}
+
+\topicindex {\OMEGA}
+\topicindex {\ALEPH}
+\topicindex {directions}
+
+\subsection{四种方向}
+
+\LUATEX\ 中的方向模型继承自 \OMEGA/\ALEPH，但我们尝试做了一些改进。曾有一段时间我们尝试恢复模式，但后来发现它与嵌套方向冲突而禁用了它。这本身的副作用是节点列表在方向节点方面不再平衡，当一系列 dir 更改在没有分组的情况下发生时，这可能产生副作用。
+
+在扩展 \PDF\ 后端以支持方向时发现了一些不一致之处，因此我们决定仅支持四种有意义的模型：\type {TLT}（拉丁文）、\type {TRT}（阿拉伯文）、\type {RTT}（中文/日文/韩文）和 \type {LTL}（蒙古文）。
+
+\subsection{工作原理}
+
+我们的方法是再次使列表平衡，但尽量避免一些副作用。如果忽略空格（转换为 glue），发生的情况相当直观，但即使在那里，仔细看也能理解。然而，当没有使用适当的嵌套分组时，这种逻辑使组内切换几乎毫无用处：从右到左多次嵌套切换会导致间距因嵌套镜像而一个接一个地排列。当然，一个合理的宏包会为用户管理这些，但我们这里讨论的是底层 dir 注入。
+
+情况如下：
+
+\begin{typing}
+textdir TRT nur {textdir TLT run textdir TRT NUR} nur
+\end{typing}
+
+逐步变为：
+
+\begin{typing}
+injected: [+TRT]nur {[+TLT]run [+TRT]NUR} nur
+balanced: [+TRT]nur {[+TLT]run [-TLT][+TRT]NUR[-TRT]} nur[-TRT]
+result  : run {RUNrun } run
+\end{typing}
+
+而这个：
+
+\begin{typing}
+textdir TRT nur {nur textdir TLT run textdir TRT NUR} nur
+\end{typing}
+
+变为：
+
+\begin{typing}
+injected: [+TRT]nur {nur [+TLT]run [+TRT]NUR} nur
+balanced: [+TRT]nur {nur [+TLT]run [-TLT][+TRT]NUR[-TRT]} nur[-TRT]
+result  : run {run RUNrun } run
+\end{typing}
+
+现在，在以下示例中注意我们花括号的位置：
+
+\begin{typing}
+textdir TRT nur {{textdir TLT run} {textdir TRT NUR}} nur
+\end{typing}
+
+这变为：
+
+\begin{typing}
+[def]
+\def\ltr{\linedir TLT\relax}
+\def\rtl{\linedir TRT\relax}
+\end{typing}
+
+
+
+而这一次：
+
+\begin{typing}
+run {\rtl nur {\ltr run \rtl NUR \ltr run \rtl NUR} nur}
+run {\ltr run {\rtl nur \ltr RUN \rtl nur \ltr RUN} run}
+\end{typing}
+
+
+
+输出为间距正确的：
+
+任何比这更复杂的情况，如 skip 和 penalty 的组合或 kern，都应在输入或宏包中处理，因为我们无法预测预期行为。事实上，\lpr {linedir} 只是一个便利的附加功能，也可以使用节点列表解析来实现。
+
+方向的复杂性在于它们通常需要跨组工作，因此使用了单独的分组相关堆栈。副作用是可能存在仅包含一个局部 par 节点、后跟方向同步节点的段落。这样的段落被视为空段落，因此被忽略。因为 \type {\noindent} 不注入任何内容，而 \type {\indent} 会注入一个 box，所以仅含缩进和方向的段落被视为有内容的段落处理。
+
+默认情况下，包含 dir 节点的显示公式前的段落从不被忽略。更改此行为可能会破坏现有文档，但当你将 \lpr {mathemptydisplaymode} 设为 \type {1} 时，显示公式前的空段落将被忽略。
+
+\subsection{用 \lpr {breakafterdirmode}}
+
+dir 节点后的 glue 在断行决策中被忽略，但你可以通过将 \lpr {breakafterdirmode} 设为 \type {1} 来绕过。下表对比了不同设置下文本方向切换处的断行行为：
+
+\begin{longtable}{p{5cm} p{5cm}}
+\toprule
+\textbf{breakafterdirmode=0} & \textbf{breakafterdirmode=1} \\
+\midrule
+pre \{textdir TLT xxx\} post & pre \{textdir TLT xxx\} post \\
+pre \{textdir TLT xxx \}post & pre \{textdir TLT xxx \}post \\
+pre\{ textdir TLT xxx\} post & pre\{ textdir TLT xxx\} post \\
+pre\{ textdir TLT xxx \}post & pre\{ textdir TLT xxx \}post \\
+pre \{ textdir TLT xxx \} post & pre \{ textdir TLT xxx \} post \\
+\bottomrule
+\end{longtable}
+
+\subsection{用 \lpr {shapemode}}
+
+对 \ALEPH\ 方向模型的另一项调整是对由 \prm {hangindent} 和 \prm {parshape} 驱动的形状进行控制。这由一个新参数 \lpr {shapemode} 控制：
+
+\begin{longtable}{c l l}
+\toprule 值    & \prm {hangindent} & \prm {parshape} \\
+\midrule
+\type{0} &  正常             & 正常            \\
+\type{1} &  镜像           & 正常            \\
+\type{2} &  正常             & 镜像          \\
+\type{3} &  镜像           & 镜像          \\
+\bottomrule
+\end{longtable}
+
+该值在段落结束后重置为零（如 \prm {hangindent} 和 \prm {parshape}）。你可以使用负值来防止这种情况。\ref{fig:shapemode} 中给出了几个示例。
+
+\begin{figure}[htbp]
+\centering
+\fbox{\parbox{3.5cm}{\centering TLT 方向\\hangindent=40pt\\hangafter=$-3$}}
+\quad
+\fbox{\parbox{3.5cm}{\centering TLT 方向\\parshape 4 行\\不规则缩进}}
+\quad
+\fbox{\parbox{3.5cm}{\centering TRT 方向\\hangindent=40pt\\shapemode=0}}
+\\[6pt]
+\fbox{\parbox{3.5cm}{\centering TRT 方向\\parshape 4 行\\shapemode=0}}
+\quad
+\fbox{\parbox{3.5cm}{\centering TRT 方向\\hangindent=40pt\\shapemode=3}}
+\quad
+\fbox{\parbox{3.5cm}{\centering TRT 方向\\parshape 4 行\\shapemode=3}}
+\caption{\type{shapemode} 的效果。}\label{fig:shapemode}
+\end{figure}
+
+\subsection{符号或数字}
+
+内部实现与 \ALEPH\ 不同。首先，我们不使用 whatsit 而是专用节点，而且我们只有 4 个方向映射到 4 个数字。文本方向节点可以标记节点序列的开始或结束，因此有两种状态。在 \TEX\ 端我们看不到这些状态，因为 \TEX\ 本身会在需要时添加适当的结束状态节点。
+
+符号名 \type {TLT}、\type {TRT} 等源自 \OMEGA。在 \LUATEX\ 中我们还有基于数字的模型，有时更有意义。
+
+\begin{longtable}{c l l}
+\toprule 值     & 等价 \\
+\midrule
+\type {0} & TLT \\
+\type {1} & TRT \\
+\type {2} & LTL \\
+\type {3} & RTT \\
+\bottomrule
+\end{longtable}
+
+我们支持 \OMEGA\ 原语 \orm {textdir}、\orm {pardir}、\orm {pagedir}、\orm {pardir} 和 \orm {mathdir}。它们接受三字符关键字。通过数字设置方向的原语有：\lpr {textdirection}、\lpr {pardirection}、\lpr {pagedirection}、\lpr {bodydirection} 和 \lpr {mathdirection}。为 box 指定方向时，可以使用 \type {bdir} 代替 \type {dir}。
+
+\section{实现说明}
+
+\subsection{内存分配}
+
+\topicindex {memory}
+
+传统 \TEX\ 用于令牌和节点的单一内部内存堆被拆分为两个独立数组。每个数组在需要时动态增长。
+
+与主内存相关的 \type {texmf.cnf} 设置不再使用（这些是：\type {main_memory}、\type {mem_bot}、\type {extra_mem_top} 和 \type {extra_mem_bot}）。``主内存不足 错误仍可能发生，但限制因素现在是系统中的 RAM 容量，而非预定义限制。
+
+此外，节点的内存（解）分配例程已完全重写。相关代码现在位于 C 文件 \type {texnode.c} 中，基本上使用十几个 ``avail 列表而非双链接模型。增加了一个额外的函数层，使代码可以按类型请求节点，而不是直接申请一定数量的内存字。
+
+由于拆分为两个数组以及由此产生的数据结构差异，部分宏已被复制。例如，现在有 \type {vlink} 和 \type {vinfo}，以及 \type {token_link} 和 \type {token_info}。对变量内存数组的所有访问现在都隐藏在一个名为 \type {vmem} 的宏之后。我们提到这一点是因为使用 \TEX book 作为参考仍然相当有效，但不适用于内存相关细节。另一个重要细节是我们有双链接节点列表，且大多数节点携带更多数据。
+
+输入行缓冲区和池大小现在也在需要时重新分配，\type {texmf.cnf} 设置 \type {buf_size} 和 \type {pool_size} 被静默忽略。
+
+\subsection{稀疏数组}
+
+\prm {mathcode}、\prm {delcode}、\prm {catcode}、\prm {sfcode}、\prm {lccode} 和 \prm {uccode}（以及新的 \lpr {hjcode}）表现在是用 \CCODE\ 实现的稀疏数组。它们不再是 \TEX\ ``等价表 的一部分，由于每个表有 110 万条目、每条目占几个内存字，这在内存使用上产生了重大差异。性能并未因此受到实质影响。
+
+\prm {catcode}、\prm {sfcode}、\prm {lccode}、\prm {uccode} 和 \lpr {hjcode} 赋值在使用 \ETEX\ 跟踪例程 \prm {tracingassigns} 和 \prm {tracingrestores} 时不显示，但我们不认为这是真正的限制。
+
+当前实现的一个副作用是 \prm {global} 现在在处理上比非全局赋值更昂贵，但不会有多少用户注意到。
+
+字体内的 glyph id 也通过稀疏数组管理，因为 glyph id 可高达索引 $2^{21}-1$，但从不直接访问，因此用户同样不会注意到。
+
+\subsection{简单的单字符 csname}
+
+\topicindex {csnames}
+
+单字符命令在内部不再被特殊对待，它们像多字符 csname 一样存储在哈希中。
+
+显示控制序列的代码在决定是否添加尾随空格时，会显式检查长度是否为 1。
+
+活动字符在内部实现为一种特殊类型的多字符控制序列，使用一个在其他情况下不可能获得的前缀。
+
+\subsection{压缩的格式文件}
+
+\topicindex {format}
+
+格式通过 \type {zlib} 处理，使其可缩小到未压缩时约一半的大小。这会消耗稍多的 \CPU\ 周期，但磁盘 I/O\ 少得多，因此总体应该更快。我们使用 3 级压缩，我们发现这是文件大小与解压速度之间的最佳权衡。
+
+\subsection{二进制文件读取}
+
+\topicindex {files+binary}
+
+所有内部代码都做了修改：如果 \type {read_xxx_file} 回调之一未设置，则文件由 \CCODE\ 函数读取，基本使用与回调相同的约定：一次性读入足够容纳整个文件内容的缓冲区。虽然这比以前的代码（主要使用 \type {getc} 调用）使用更多内存，但可能快不少（取决于你的 I/O\ 子系统）。
+
+\subsection{制表符与空格}
+
+\topicindex {space}
+\topicindex {newline}
+
+我们遵循其他 \TEX\ 引擎处理尾随制表符和空格的方式。几十年来，尾随制表符和空格（换行符之前）会从输入中移除，但此行为在 2017 年 9 月被修改为仅处理空格。我们知道这可能在现有工作流中引入兼容性问题，但因为我们不想与上游 \TEXLIVE\ 有太多差异，所以直接跟进了该补丁（这是功能性变更而非真正的修复）。处理可能的兼容性问题取决于宏包维护者，在 \LUATEX\ 中他们可以通过处理文件读取的回调来做到。
+
+之前的行为是已知的副作用，而且（由于这类输入通常来自生成的源），如果空格和/或制表符是有意保留的，通常通过在该行添加注释令牌来处理。我们知道这与我们的其他一些选择相矛盾，但与其他引擎保持一致以及在 \KPSE\ 模式下使用公共文件 I/O\ 层这一事实，可能会产生破坏兼容性的副作用。我们仍然坚持在日志级别上我们可以（也可能）更不兼容的观点。我们已经暴露了更多细节。
+
+\subsection{超链接}
+
+\topicindex {hyperlinks}
+
+有一个实验性功能使多行超链接表现稍好，修复了在从右到左排版中出现的一些副作用，但这些副作用也可能出现在从左到右排版中。由于此问题直到 2023 年才被注意到，且它在一定程度上取决于宏包如何处理超链接，因此该修复目前由参数控制：
+
+\begin{typing}
+\pdfvariable linking = 1
+\end{typing}
+
+这样（我们希望）遗留文档能按预期输出，无论预期是什么。处理的方面之一涉及（不寻常的）左右 skip。
