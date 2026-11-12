@@ -12,3 +12,6 @@
 - standalone 版本v1.5a ——2025/02/22
 - luatex v1.24
 - pgfornament-doc-zh v1.4 2026/10/17 装饰宏包
+- xeCJK 2022/08/05 v3.9.1 只有文档
+- 常见颜色的RGB值
+- 
