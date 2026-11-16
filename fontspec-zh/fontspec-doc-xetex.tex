@@ -1,0 +1,224 @@
+%%^^A%%  fontspec-doc-xetex.tex -- part of FONTSPEC <latex3.github.io/fontspec>
+
+\documentclass[a4paper]{l3doc}
+\usepackage{fontspec-doc-style}
+\showexamplesfalse
+\begin{document}
+
+\part{\XeTeX\ 下的字体与特性}
+\label{sec:xetex-features}
+
+\section{仅 \XeTeX\ 支持的字体特性}
+
+本节所述特性可用于 \pkg{fontspec} 选择的任意字体。
+
+\subsection{映射}
+\label{sec:mapping}
+
+\feat{Mapping} 特性启用 \XeTeX\ 文本映射方案，示例见 \exref{mapping}。
+
+\begin{Xexample}{mapping}{\XeTeX\ 的 \feat{Mapping} 特性。}
+  \fontspec{texgyrepagella-regular.otf}[Mapping=tex-text]
+  ``!`A small amount of---text!''
+\end{Xexample}
+
+同一时刻只能激活一个映射；第二次调用 \feat{Mapping} 将覆盖第一次。
+使用 |tex-text| 映射等价于书写 |Ligatures=TeX|；为更好地兼容
+\LuaTeX\ 文档，推荐使用后者写法。
+
+
+\subsection{不同的字体技术：\AAT、OpenType 与 Graphite}\label{sec:renderer-xetex}
+
+\textbf{请注意：自 2020 年起，\XeTeX\ 在 \MacOSX\ 上似乎已无法支持 \AAT\ 字体。}
+
+\XeTeX\ 支持三种排版渲染技术，通过 \feat{Renderer} 字体特性选择。
+第一种 \opt{AAT} 仅由 \MacOSX\ 提供。第二种 \opt{OpenType} 是开源 OpenType
+解释器；相比 \opt{AAT}，它对 OpenType 特性提供更强支持，尤其是上下文排版。
+第三种是 \opt{Graphite}，它是 OpenType 的一种替代方案，针对较少见语言提供
+特定特性，并具备更强大的字体选项能力。\opt{OpenType} 的特性已在
+\vref{sec:opentype-features} 中讨论；\opt{Graphite} 与 \opt{AAT} 的特性
+分别在 \vref{sec:graphite-features} 与 \vref{sec:aat-features} 中讨论。
+
+除非有特殊需要，\feat{Renderer} 特性很少需要显式指定：OpenType 字体会自动使用
+\opt{OpenType} 渲染器，\AAT\ 字体默认选择 \opt{AAT}。但有些字体包含多种渲染
+技术的字体表（例如随 \MacOSX\ 分发的日文 Hiragino 字体），此时可能更倾向选用
+其中之一。
+
+在仅能通过特定渲染器使用的其他字体特性中，\opt{OpenType} 提供 \feat{Script}
+与 \feat{Language} 特性，可针对不同字母与语言呈现不同字体行为；这些特性的
+描述见 \vref{sec:ot}。{\em 由于这些字体特性可能改变字体实例可选哪些特性，
+\pkg{fontspec} 会在所有其他特性之前先选择它们，并自动且不加提示地选用
+\opt{OpenType} 渲染器。}
+
+
+\subsection{竖排}
+
+\XeTeX\ 通过在字体排版时旋转单个字形的能力来支持竖排：
+\begin{Verbatim}
+  \def\verttext{共産主義者は}
+  \fontspec{Hiragino Mincho Pro}
+  \verttext
+
+  \fontspec{Hiragino Mincho Pro}[Renderer=AAT,Vertical=RotatedGlyphs]
+  \rotatebox{-90}{\verttext}% requires the graphicx package
+\end{Verbatim}
+
+并未提供自上而下文字的实际排版支持；有关实现方式的示例，
+见 \XeTeX\ 文档中提供的竖排中文示例。
+
+
+\section{Graphite 渲染器}
+\label{sec:graphite-features}
+
+由于 Graphite 渲染器面向较少见的文字与语言设计，这些文字通常具有特定或
+独特的需求，Graphite 特性在各字体间并不统一。
+
+目前 \pkg{fontspec} 尚未提供选择 Graphite 字体特性的便捷接口，
+所有选择都必须通过“原始”字体特性选择完成。示例如下：
+\begin{Verbatim}
+  \fontspec{Charis SIL}[
+    Renderer=Graphite,
+    RawFeature={Uppercase Eng alternates=Large eng on baseline}]
+  Ŋ
+\end{Verbatim}
+
+另一个示例：
+\begin{Verbatim}
+\fontspec{AwamiNastaliq-Regular.ttf}[Renderer=Graphite] ^^^^06b5
+\addfontfeature{RawFeature={Lam with V=V over bowl}}    ^^^^06b5
+\end{Verbatim}
+
+
+
+\section{\MacOSX\ 的 \AAT\ 字体}
+\label{sec:aat-features}
+
+\begin{quote}\itshape
+\textbf{警告！}
+\XeTeX\ 在 \MacOSX\ 上的实现目前仍处于变动之中，下文所载信息很可能自
+2013 年起就已过时。随着 \XeTeX\ 完成向纯跨平台应用的过渡，
+本节所述特性很可能不再可用。本节中的所有示例现已移除。
+\end{quote}
+
+\MacOSX\ 的字体技术诞生于 OpenType 普及之前，围绕苹果发明的“\AAT”字体格式展开。
+该格式有一些优点（也有其他缺点），但从未在字体界广泛流行。
+
+尽管如此，这是 \XeTeX\ 最早支持的字体格式（究其根源，它最初就诞生于
+\MacOSX），也是 \pkg{fontspec} 支持的第一种字体格式。随 \MacOSX\ 分发的
+一些字体仍为 \AAT\ 格式，例如“Skia”。
+
+\subsection{连字}
+
+\feat{Ligatures} 指出于功能或美学原因，用专门绘制的字形替换两个独立字符。
+对于 \AAT\ 字体，可从 \opt{Required}、\opt{Common}、\opt{Rare}（或
+\opt{Discretionary}）、\opt{Logos}、\opt{Rebus}、\opt{Diphthong}、\opt{Squared}、
+\opt{AbbrevSquared} 与 \opt{Icelandic} 的任意组合中选择。
+
+其他一些苹果 \AAT\ 字体把那些“Rare”连字包含在 \opt{Icelandic} 特性中。
+另请注意，在 \XeTeX\ 中，用空花括号对拆分连字这一旧式 \TeX\ 技巧并不奏效；
+若不希望执行连字，必须使用 0\,pt 字距或 \cs{hbox}（\eg\ \cs{null}）来拆分字符
+（常见适用情形是“shelf\null full”这类词）。
+
+\subsection{字母} \label{sec:aat-letters}
+\opt{Letters} 特性指定当前字体中字母的外观。对于 \AAT\ 字体，
+可选择 \opt{Normal}、\opt{Uppercase}、\opt{Lowercase}、\opt{SmallCaps} 与
+\opt{InitialCaps}。
+
+
+\subsection{数字}
+\feat{Numbers} 特性定义所选字体中数字的外观。对于 \AAT\ 字体，
+可为 \opt{Lining} 或 \opt{OldStyle} 与 \opt{Proportional} 或
+\opt{Monospaced} 的组合（后者适合表格材料）。同义词 \opt{Uppercase} 与
+\opt{Lowercase} 分别等价于 \opt{Lining} 与 \opt{OldStyle}。
+差异已在 \vref{sec:addfontfeatures} 中展示。
+
+\subsection{上下文相关} \label{sec:contextuals}
+此特性指随位置变化的字形替换；上下文花体等即在此实现。
+\AAT\ 字体的选项有 \opt{WordInitial}、\opt{WordFinal}、\opt{LineInitial}、
+\opt{LineFinal} 与 \opt{Inner}（有时称为“非末尾”）。与连字一样，
+它们是非排他选择器，可在名称前加 \opt{No} 前缀将其关闭。
+
+\subsection{上下位置}
+\feat{VerticalPosition} 特性用于访问下标（\opt{Inferior}）、上标
+（\opt{Superior}）数字与字母（有时还有少量标点）。\opt{Ordinal} 选项
+（理应）具备上下文敏感性，仅提升紧跟数字之后出现的字符。
+
+\pkg{realscripts} 宏包重定义了 \cmd\textsubscript\ 与 \cmd\textsuperscript\ 命令，
+使其使用上述字体特性，包括在脚注标签中使用。
+
+\subsection{分数}
+许多字体具备排版各种形式分数材料的能力。在 \pkg{fontspec} 中通过
+\feat{Fractions} 特性访问，在 \AAT\ 与 OpenType 字体中均可将其设为
+\opt{On} 或 \opt{Off}。
+
+在 \AAT\ 字体中，应使用“分数斜杠”（solidus）字符来创建分数。
+当 \feat{Fractions} 设为 \opt{On} 时，仅使用预先绘制的分数。
+
+使用 \opt{Diagonal} 选项（仅 \AAT）时，字体会尝试用上标与下标字符拼出分数。
+
+另有一些字体（主要是亚洲字体）还提供 \opt{Alternate} 特性。
+
+\subsection{变体}
+\feat{Variant} 特性接受单个数值输入，用于选择不同字母字形。
+\vref{sec:newfeatures} 介绍了为变体命名的方式，这应按字体逐一进行。
+
+\subsection{替代字形}
+\feat{Alternate} 的选择同样必须以数值进行。
+\vref{sec:newfeatures} 介绍了为替代字形命名的方式，这应按字体逐一进行。
+
+
+\subsection{风格}
+\feat{Style} 特性的选项在 \AAT\ 中定义为下列之一：\opt{Display}、
+\opt{Engraved}、\opt{IlluminatedCaps}、\opt{Italic}、
+\opt{Ruby}\footnotemark、\opt{TallCaps} 或 \opt{Titling}。
+\footnotetext{“Ruby”指小型光学字号，在日文排版中用于标注。}
+
+这些特性的典型示例见 \ref{sec:ot-feat-style}。
+
+\subsection{中日韩字形}
+关于中日韩表意文字“应当”长什么样，历来有多种标准。一些字体包含大量替代字形，
+以便在合适的任一种形式下正确显示这些字符。\AAT\ 与 OpenType 字体都支持下列
+\feat{CJKShape} 选项：\opt{Traditional}、\opt{Simplified}、\opt{JIS1978}、
+\opt{JIS1983}、\opt{JIS1990} 与 \opt{Expert}。OpenType 还支持 \opt{NLC} 选项。
+
+\subsection{字符宽度}
+相关示例见 \vref{sec:CharacterWidth}；OpenType 与 \AAT\ 字体的这些特性相同。
+\AAT\ 还允许 \feat{CharacterWidth}|=|\opt{Default} 以返回原始字体设置。
+
+\subsection{附加符号}
+附加符号是加在字母上的标记，如锐音符或波浪号；通常表示读音变化。
+在阿拉伯文字母中，附加符号用于表示元音。在 \AAT\ 字体中，
+可选择 \opt{Show}、\opt{Hide} 或 \opt{Decompose}。
+\opt{Hide} 选项用于阿拉伯文这类可带可不带元音符号的文字。\eg\
+\verb|\fontspec[Diacritics=Hide]{...}|
+
+随 \MacOSX\ 分发的一些较老字体，在 \feat{Diacritics} 特性标签下把“|O/|”
+\etc\ 作为书写“\O”的简写。若遇到这类字体，需要关闭此特性
+（试想输入 |hello/goodbye| 却得到“hell\o goodbye”！）：
+把附加符号中的两个字符分解为实际想要的字符。我建议改用规范的
+\LaTeX\ 输入约定来获取这类字符。
+
+
+\subsection{圈码}
+各种亚洲字体配备了更丰富的不同形式数字与数词。这些通过 \feat{Annotation}
+特性访问，选项如下：\opt{Off}、\opt{Box}、\opt{RoundedBox}、\opt{Circle}、
+\opt{BlackCircle}、\opt{Parenthesis}、\opt{Period}、\opt{RomanNumerals}、
+\opt{Diamond}、\opt{BlackSquare}、\opt{BlackRoundSquare} 与 \opt{DoubleCircle}。
+
+\end{document}
+
+% /©
+% ------------------------------------------------
+% The FONTSPEC package  <latex3.github.io/fontspec>
+% ------------------------------------------------
+% Copyright  2022-2026  The LaTeX project,  LPPL "maintainer"
+% Copyright  2004-2022  Will Robertson
+% Copyright  2009-2015  Khaled Hosny
+% Copyright  2013       Philipp Gesang
+% Copyright  2013-2016  Joseph Wright
+% ------------------------------------------------
+% This package is free software and may be redistributed and/or modified under
+% the conditions of the LaTeX Project Public License, version 1.3c or higher
+% (your choice): <http://www.latex-project.org/lppl/>.
+% ------------------------------------------------
+% ©/

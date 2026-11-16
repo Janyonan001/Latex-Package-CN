@@ -1,0 +1,46 @@
+%%^^A%%  fontspec-example.tex -- part of FONTSPEC <latex3.github.io/fontspec>
+
+\documentclass{article}
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont{SourceHanSerifSC-Regular.otf}
+\setCJKsansfont{SourceHanSansSC-Regular.otf}
+\setCJKmonofont{SourceHanSansSC-Regular.otf}
+
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}[Scale=MatchLowercase]
+\setmonofont{Inconsolata}[Scale=MatchLowercase]
+
+\begin{document}
+\pagestyle{empty}
+
+\section*{\textsf{fontspec} 宏包基础}
+
+\textsf{fontspec} 宏包为使用 Xe\TeX{} 或 Lua\TeX{} 排版的
+\LaTeX{} 文档实现自动字体选择。基本命令为
+
+{\centering \verb|\fontspec{font display name}[font features]|。\par}
+
+默认字体、无衬线字体与打字机字体可分别用命令
+\verb|\setmainfont|、\verb|\setsansfont| 与 \verb|\setmonofont| 设置，
+如导言区所示。它们的语法与 \verb|\fontspec| 命令相同。
+所有预期的字体字形均可用：
+
+\begin{center}
+  {\itshape Italics and \scshape small caps\dots}\\
+  {\sffamily\bfseries Bold sans serif and \itshape bold italic sans serif\dots}
+\end{center}
+
+数学模式中的文字字体也会随之改变（例如注意 `$\cos(n\pi)=\pm 1$'
+中的余弦函数），但前提是罗马字体与无衬线字体已在导言区设置；
+在文档中途调用 \verb|\setmainfont| 不会影响这些数学模式字体。
+数学符号本身不受影响。
+
+注意导言区加载默认字体时所用的字体特性。罗马字体与无衬线字体会自动启用
+\verb|Ligatures=TeX|，从而支持 \verb|``---''| 这类常规 \TeX{} 连字，
+得到“---”。\verb|Scale=MatchLowercase| 会自动把各字体缩放到相同的 x 高。
+
+更多信息请参阅 \textsf{fontspec} 完整文档。
+
+\end{document}

@@ -1,0 +1,193 @@
+%%^^A%%  fontspec-doc-enc.tex -- part of FONTSPEC <latex3.github.io/fontspec>
+
+\documentclass[a4paper]{l3doc}
+\usepackage{fontspec-doc-style}
+\showexamplesfalse
+\begin{document}
+
+\part{重音与符号命令（“编码”）}
+\label{part:enc}
+
+\textbf{本节所述功能尚处于实验阶段。}
+
+在 Unicode 出现之前，\LaTeX\ 需要做大量工作，以确保源码中的输入字符能根据
+文件编码被正确解释，输出中的字形能根据字体编码被正确选择。有了 Unicode，
+我们便可以享受到单一文件编码与字体编码同时用于输入和输出的便利。
+
+这或许会让人产生一种错觉：只要直接输入 Unicode 文本就能得到正确输出，
+但情况并非总是如此。首先，断词尤其依赖具体语言，因此在文档中切换语言时
+应使用相应标记。\pkg{babel} 与 \pkg{polyglossia} 宏包都提供了这方面的功能。
+
+多语言文档往往会为不同语言使用不同字体，这不只是出于风格考虑，
+更实际的原因是：各字体包含的字形并不相同。（事实上，只有 Code2000
+这类测试字体才接近覆盖完整 Unicode 范围。）某些字体可能非常适合某一用途，
+却缺少少量必要的附加符号或带重音字母。在这些情况下，\pkg{fontspec} 可利用
+\LaTeX2\ 内置的字体编码技术，按字体在所需重音或符号不可用时提供后备选项或
+错误信息。但目前这些特性只能针对使用 \LaTeX\ 命令（而非 Unicode 字符）的输入提供；
+例如在源文件中输入 |\`e| 而非 |è|，或输入 |\textcopyright| 而非 |©|。
+
+\LaTeXe\ 中使用最广泛的编码是 |T1|，并由 \pkg{textcomp} 宏包提供配套的
+“|TS1|”符号。这些编码提供了排各种西欧语言文字所需的字形。与大多数传统
+\LaTeXe\ 输入方式一样，重音与符号通过依赖编码的命令输入，如上所述的 |\`e|。
+自 2017 年起，在 \XeTeX\ 与 \LuaTeX\ 上的 \LaTeXe\ 中，默认编码为 |TU|，
+输入与输出均使用 Unicode。|TU| 编码为输入命令提供了相应的依赖编码定义，
+以匹配 |T1+TS1| 编码的覆盖范围。默认不提供更广的覆盖，因为
+(a)~各字体提供的字形覆盖各不相同，且 (b)~预期大多数用户会直接使用 Unicode 输入。
+
+对于确实需要更细粒度控制的用户，\pkg{fontspec} 提供了一套接口，
+用于构建更具扩展性的系统。
+
+
+\section{从零构建新的 Unicode 编码}
+
+假设你需要为一篇原本使用 |OT2| 编码字体排版的文档提供支持，
+该编码包含用于西里尔字母的依赖编码命令。|OT2| 编码定义文件（|ot2enc.def|）
+中的一段示例如下：
+\begin{Verbatim}[numbers=left,firstnumber=57]
+\DeclareTextSymbol{\CYRIE}{OT2}{5}
+\DeclareTextSymbol{\CYRDJE}{OT2}{6}
+\DeclareTextSymbol{\CYRTSHE}{OT2}{7}
+\DeclareTextSymbol{\cyrnje}{OT2}{8}
+\DeclareTextSymbol{\cyrlje}{OT2}{9}
+\DeclareTextSymbol{\cyrdzhe}{OT2}{10}
+\end{Verbatim}
+
+要以适合 \pkg{fontspec} 的形式重建此编码，可新建一个文件
+（例如命名为 |fontrange-cyr.def|），写入
+\begin{Verbatim}
+...
+\DeclareTextSymbol{\CYRIE}  {\LastDeclaredEncoding}{"0404}
+\DeclareTextSymbol{\CYRDJE} {\LastDeclaredEncoding}{"0402}
+\DeclareTextSymbol{\CYRTSHE}{\LastDeclaredEncoding}{"040B}
+\DeclareTextSymbol{\cyrnje} {\LastDeclaredEncoding}{"045A}
+\DeclareTextSymbol{\cyrlje} {\LastDeclaredEncoding}{"0459}
+\DeclareTextSymbol{\cyrdzhe}{\LastDeclaredEncoding}{"045F}
+...
+\end{Verbatim}
+数值 |"0404|、|"0402| 等分别是各字形的 Unicode 槽位（十六进制）。
+\pkg{fontspec} 宏包提供了若干简写以简化这种输入方式；本例中也可写成
+\begin{Verbatim}
+\EncodingSymbol{\CYRIE}{"0404}
+...
+\end{Verbatim}
+
+要在 \pkg{fontspec} 字体中使用此编码，先在导言区加入：
+\begin{Verbatim}
+\DeclareUnicodeEncoding{unicyr}{
+  \input{fontrange-cyr.def}
+}
+\end{Verbatim}
+随后再进行类似如下的字体加载调用：
+\begin{Verbatim}
+\setmainfont{...}[NFSSEncoding=unicyr]
+\end{Verbatim}
+第一个参数 |unicyr| 是字体族中使用的“编码”名称。
+（所选名称本身并无特殊之处，但必须唯一。）
+|\DeclareUnicodeEncoding| 的第二个参数还允许针对各字体做相应调整。
+下一节将讨论这一用法。
+
+
+\section{调整已有编码}
+
+调整已有编码有三种情形：添加、删除以及重定义某些符号、字母和/或重音。
+
+添加符号等内容时，只需写出
+\begin{Verbatim}
+\DeclareUnicodeEncoding{unicyr}{
+  \input{tuenc.def}
+  \input{fontrange-cyr.def}
+  \EncodingSymbol{\textruble}{"20BD}
+}
+\end{Verbatim}
+当然，若要持续向某一编码添加若干符号，最好新建一个 |fontrange-XX.def| 文件
+以满足需要。
+
+删除符号时，使用 |\UndeclareSymbol|\marg{cmd} 命令。
+例如，若正在加载一个已知缺少（比方说）疑问感叹号的字体（这种情况并不罕见），
+可写出：
+\begin{Verbatim}
+\DeclareUnicodeEncoding{nobang}{
+  \input{tuenc.def}
+  \UndeclareSymbol\textinterrobang
+}
+\end{Verbatim}
+只要使用 |\textinterrobang| 命令排版该符号，它就会在使用默认编码的字体中显示；
+而在任何以 |nobang| 编码加载的字体中，尝试访问该符号时，
+将根据被取消声明的符号情况，要么使用默认后备定义，要么返回错误。
+
+
+第三种情形是重定义符号或重音。此场景下最常见的用途是调整某个重音命令，
+以微调其位置，或完全“伪造”一个重音。例如，下点附加符号用于梵语排版，
+但并非所有字体都把它作为重音符号包含在内。默认情况下，下点在 |TU| 中定义为：
+\begin{Verbatim}
+\EncodingAccent{\d}{"0323}
+\end{Verbatim}
+对于缺少 |"0323| 重音字形（或其间距不佳）的字体，
+可改用“传统”的 \TeX\ 伪造重音构造：
+\begin{Verbatim}
+\DeclareUnicodeEncoding{fakeacc}{
+  \input{tuenc.def}
+  \EncodingCommand{\d}[1]{%
+    \hmode@bgroup
+      \o@lign{\relax#1\crcr\hidewidth\ltx@sh@ft{-1ex}.\hidewidth}%
+    \egroup
+  }
+}
+\end{Verbatim}
+在文档中可这样设置：
+\begin{Verbatim}
+\newfontfamily\sanskitfont{CharisSIL}
+\newfontfamily\titlefont{Posterama}[NFSSEncoding=fakeacc]
+\end{Verbatim}
+之后在文档中无需再做额外操作：
+\begin{Verbatim}
+...{\titlefont   kalita\d m}...  % <- uses fake accent
+...{\sanskitfont kalita\d m}...  % <- uses real accent
+\end{Verbatim}
+重申上文：若以 Unicode 文本（“|kalitaṃ|”）输入，将\emph{绕过}此编码机制，
+得到的只是字体中实际包含的字形。
+
+
+\section{命令汇总}
+
+\LaTeXe\ 内核提供下列适用于 Unicode 编码的字体编码命令：
+\begin{quote}\obeylines
+  \cs{DeclareTextCommand}\marg{command}\marg{encoding}\oarg{num}\oarg{default}\marg{code}
+  \cs{DeclareUnicodeAccent}\marg{command}\marg{encoding}\marg{slot}
+  \cs{DeclareTextSymbol}\marg{command}\marg{encoding}\marg{slot}
+  \cs{DeclareTextComposite}\marg{command}\marg{encoding}\marg{letter}\marg{slot}
+  \cs{DeclareTextCompositeCommand}\marg{command}\marg{encoding}\marg{letter}\marg{code}
+  \cs{UndeclareTextCommand}\marg{command}\marg{encoding}
+\end{quote}
+这些命令的完整文档见 |fntguide.pdf|。
+如上所示，\pkg{fontspec} 还提供下列简写，以简化 Unicode 字体范围编码的定义过程：
+\begin{quote}\obeylines
+  \cs{EncodingCommand}\marg{command}\oarg{num}\oarg{default}\marg{code}
+  \cs{EncodingAccent}\marg{command}\marg{code}
+  \cs{EncodingSymbol}\marg{command}\marg{code}
+  \cs{EncodingComposite}\marg{command}\marg{letter}\marg{slot}
+  \cs{EncodingCompositeCommand}\marg{command}\marg{letter}\marg{code}
+  \cs{UndeclareSymbol}\marg{command}
+  \cs{UndeclareAccent}\marg{command}
+  \cs{UndeclareCommand}\marg{command}
+  \cs{UndeclareComposite}\marg{command}\marg{letter}
+\end{quote}
+
+\end{document}
+
+
+% /©
+% ------------------------------------------------
+% The FONTSPEC package  <latex3.github.io/fontspec>
+% ------------------------------------------------
+% Copyright  2022-2026  The LaTeX project,  LPPL "maintainer"
+% Copyright  2004-2022  Will Robertson
+% Copyright  2009-2015  Khaled Hosny
+% Copyright  2013       Philipp Gesang
+% Copyright  2013-2016  Joseph Wright
+% ------------------------------------------------
+% This package is free software and may be redistributed and/or modified under
+% the conditions of the LaTeX Project Public License, version 1.3c or higher
+% (your choice): <http://www.latex-project.org/lppl/>.
+% ------------------------------------------------
+% ©/

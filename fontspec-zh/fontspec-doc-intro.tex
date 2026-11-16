@@ -1,0 +1,196 @@
+%%^^A%%  fontspec-doc-intro.tex -- part of FONTSPEC <latex3.github.io/fontspec>
+
+\documentclass[a4paper]{l3doc}
+\usepackage{fontspec-doc-style}
+\showexamplesfalse
+\begin{document}
+
+\part{入门指南}
+
+\section{历史沿革}
+
+本宏包最初是作为一个 \LaTeX\ 接口而诞生，用于在 \name{Jonathan Kew} 开发的 \XeTeX\
+中选择系统安装的 \MacOSX\ 字体；\XeTeX\ 是首个被广泛使用的 \TeX\ Unicode 扩展。
+此后，\XeTeX\ 逐步扩展以支持 OpenType 字体，随后被移植为跨平台程序，
+也可运行于 Windows 和 Linux。
+
+近来，\LuaTeX\ 正迅速成为当下主流的 \TeX\ 引擎；它支持 Unicode 编码与 OpenType
+字体，并通过 Lua 编程语言开放了 \TeX\ 的内部机制。Hans Hagen 的
+Con\TeX t Mk.\,IV 是其强大排版系统的重写版本，充分利用了 \LuaTeX\ 的各项特性
+（含字体支持）；其在该领域工作的核心部分被抽取出来，也可供其他 \TeX\ 宏系统使用，
+正是在此基础上，\pkg{fontspec} 才得以适配运行于 \LuaTeX\ 引擎的 \LaTeX。
+
+
+
+\section{简介}
+
+\pkg{fontspec} 宏包允许 \XeTeX\ 或 \LuaTeX\ 的用户在 \LaTeX\ 文档中加载 OpenType
+字体。无需安装字体，即可在文档中按需选择并使用各种字体特性。
+
+若不使用 \pkg{fontspec}，就必须为 \LaTeX\ 编写繁琐的字体定义文件；因为
+\LaTeX\ 的字体选择机制（即所谓 \NFSS）在后台做了大量工作，才得以提供
+\cmd\emph、\cmd\bfseries 这样简便的命令。然而如今可用字体数量不计其数，
+若每想使用一种字体都要编写字体定义（|.fd|）文件，就越来越不合算。
+
+由于 \pkg{fontspec} 设计为可在多种模式下工作，本用户手册被划分为若干相对独立的部分。
+尽管如此，其基本功能的行为完全一致，因此此前在 \XeTeX\ 下使用过 \pkg{fontspec}
+的用户切换到 \LuaTeX\ 应当几乎不会遇到困难。
+
+本手册涉及的细节较多，内容可能较为深入。若想快速上手，可参阅文档
+\path{fontspec-example.tex} 中给出的完整最小示例。
+
+
+\subsection{致谢}
+
+若没有 \XeTeX\ 作者 Jonathan Kew 早期及持续的支持，本宏包不可能问世。
+我在着手编写本宏包时，他曾多次为我指明正确方向。
+
+多年来，我收到了来自世界各地许多朋友在特性需求、文档疑问、缺陷报告、
+字体建议等方面的宝贵反馈，在此向各位致以衷心感谢。
+
+感谢 David Perry 与 Markus B\"ohning 对文档所做的大量改进；并再次感谢
+David Perry 为本手册其中一节撰写文稿。
+
+特别感谢 Khaled Hosny，他是推动 \LuaLaTeX\ 支持的核心力量，
+最终促成了本宏包 2.0 版的发布。
+
+
+
+\section{宏包加载与选项}
+
+基本使用时无需任何宏包选项：
+\begin{Verbatim}
+  \usepackage{fontspec}
+\end{Verbatim}
+宏包选项将在下文逐一介绍；此处先讨论一些预备细节。宏包选项通过
+\LaTeX\ 内置的键值选项机制设置，这意味着本宏包可以用不同选项多次加载，
+而不会触发选项冲突错误。
+\DescribeOption{config}
+\DescribeOption{no-config}
+\texttt{config} 与 \texttt{no-config} 选项必须在首次加载时使用，之后的加载将忽略它们。
+
+\subsection{字体编码}
+
+本宏包将 \NFSS\ 字体编码切换为 \texttt{TU}。\texttt{TU} 是一种新的 Unicode
+字体编码，同时面向 \XeTeX\ 与 \LuaTeX\ 引擎，并自动涵盖 \LaTeX\ 传统
+\texttt{T1} 与 \texttt{TS1} 字体编码所覆盖的符号（例如 |\%|、|\textbullet|、
+|\"u| 等）。\pkg{fontspec} 还提供了一些附加特性，用于定制部分编码细节；
+详见第~\vref{part:enc}~部分。
+
+\DescribeOption{euenc}
+\DescribeOption{tuenc}
+2017 年以前的行为现已过时。\texttt{euenc} 与 \texttt{tuenc} 宏包选项已被忽略。
+凡在代码或文档中显式引用了编码名 \texttt{EU1} 或 \texttt{EU2} 的宏包作者与用户，
+均应更新相应代码或文档（正确做法参见 \vref{sec:api} 中描述的内部变量名）。
+
+
+\subsection{数学字体调整}
+默认情况下，\pkg{fontspec} 会调整 \LaTeX\ 的默认数学设置，以便在罗马字体更换时
+仍保持正确的 Computer Modern 符号。但若已加载其他数学字体宏包
+（如 \pkg{mathpazo} 或 \pkg{unicode-math}），它会尽量避免进行此类调整。
+
+如果你发现 \pkg{fontspec} 在不该改动数学字体时却做了错误改动，
+可应用 \DescribeOption{no-math} 的 |no-math| 宏包选项，手动关闭其在此处的行为。
+
+
+\subsection{配置}
+\label{sec:config}
+
+若希望定制 \pkg{fontspec} 接口的任何部分，应通过编写自己的
+\texttt{fontspec.cfg} 文件来实现；只要 \XeTeX\ 或 \LuaTeX\ 能找到该文件，
+便会自动加载。\pkg{fontspec} 附带了一个 |fontspec.cfg| 文件，
+其中设置了少量默认值。
+
+要按自己的喜好定制 \pkg{fontspec}，可以以标准 |.cfg| 文件为起点，
+或从头自行编写；然后，若只是个别文档使用，可将其放在主文档所在文件夹；
+否则放入 \XeTeX\ 或 \LuaTeX\ 默认搜索的位置，\eg\ 在 Mac\TeX\ 中为
+\path{~/Library/texmf/tex/latex/}。
+
+\DescribeOption{no-config}
+|no-config| 宏包选项将在任何情况下都禁止加载 |fontspec.cfg| 文件。
+这两个选项都必须在首次加载 \pkg{fontspec} 时使用，后续调用将被忽略。
+
+
+\subsection{警告信息}
+\label{sec:quiet-warnings}
+
+本宏包可能给出一些警告；如果你清楚自己在做什么，这些警告可能并无妨碍。
+可使用 \DescribeOption{quiet} 的 |quiet| 宏包选项，将这些警告改为写入记录
+（|\texttt{.log}|）文件。
+
+\DescribeOption{silent}
+若连 |.log| 文件都不想被这些警告占用，可使用 |silent| 宏包选项彻底抑制这些警告。
+
+这两个选项也可在文档中配合 \cs{Setkeys} 使用。使用 \DescribeOption{verbose}
+的 |verbose| 选项可重新启用警告。
+
+\section{与 \LaTeXe\ 及其他宏包的交互}
+
+本节记录 \pkg{fontspec} 为改善与 \LaTeXe\ 及第三方宏包的默认配合行为
+所做的若干调整。
+
+
+
+\subsection{旧式数字与等高数字命令}
+
+\DescribeMacro{\oldstylenums}
+\DescribeMacro{\liningnums}
+\LaTeX\ 对 \cs{oldstylenums} 的定义依赖于一些特殊的字体编码。我们提供了一个与
+\pkg{fontspec} 兼容的替代命令，并顺带提供了其反向选项。使用
+\cs{oldstylenums}\marg{text} 可在 \meta{text} 中显式使用旧式（即小写）数字，
+使用 \cs{liningnums}\marg{text} 则相反。
+
+
+\subsection{斜体小型大写}
+
+该支持自 2020 年起已由 \LaTeXe\ 提供。
+
+
+\subsection{强调与嵌套强调}
+
+该支持自 2020 年起已由 \LaTeXe\ 提供。
+
+
+\subsection{强强调}
+
+\DescribeMacro{\strong}
+\DescribeMacro{\strongenv}
+\cs{strong} 宏的用法与 \cs{emph} 类似，但产生的是字重上的变化。
+若需要环境形式，可使用 |\begin{strongenv}...\end{strongenv}|。
+
+与强调命令一样，这个字体切换命令旨在遍历一系列字体字重。例如，
+若字体设置正确，便可以这样使用 |\strong{...\strong{...}}|，
+其中每一层嵌套的 \cs{strong} 宏都会提高一级字体字重。
+
+\DescribeMacro{\strongfontdeclare}
+目前这一组特性仍带有一定实验性质，尚无比更简便的语法糖可通过 \pkg{fontspec}
+命令定义一系列字体字重。例如，可使用下面的代码为 \cs{strong} 先定义粗体、
+再定义黑体（|k|）字面：
+\begin{Verbatim}
+  \strongfontdeclare{\bfseries,\fontseries{k}\selectfont}
+\end{Verbatim}
+
+\DescribeMacro{\strongreset}
+当 \cs{strong} 嵌套层数过多时，会插入 \cs{strongreset}。默认情况下它什么也不做，
+字体保持不变。如有需要，可用 \cs{renewcommand}\cs{strongreset}|{\mdseries}|
+使其从头重新开始。
+
+为配合 \cs{strong} 而设置字体族的示例，见 \vref{sec:strong-example}。
+
+\end{document}
+
+% /©
+% ------------------------------------------------
+% The FONTSPEC package  <latex3.github.io/fontspec>
+% ------------------------------------------------
+% Copyright  2022-2026  The LaTeX project,  LPPL "maintainer"
+% Copyright  2004-2022  Will Robertson
+% Copyright  2009-2015  Khaled Hosny
+% Copyright  2013       Philipp Gesang
+% Copyright  2013-2016  Joseph Wright
+% ------------------------------------------------
+% This package is free software and may be redistributed and/or modified under
+% the conditions of the LaTeX Project Public License, version 1.3c or higher
+% (your choice): <http://www.latex-project.org/lppl/>.
+% ------------------------------------------------
+% ©/

@@ -1,0 +1,1377 @@
+%%^^A%%  fontspec-doc-opentype.tex -- part of FONTSPEC <latex3.github.io/fontspec>
+
+
+\documentclass[a4paper]{l3doc}
+\usepackage{fontspec-doc-style}
+\showexamplesfalse
+\begin{document}
+
+\part{OpenType}
+\label{sec:opentype-features}
+
+\section{引言}
+\label{sec:opentype-features-intro}
+
+OpenType 字体（以及 AAT、Graphite 等其他“智能”字体技术）可以通过多种方式
+改变文字外观。这些变化被称为字体特性。当用户把某一特性（例如小型大写）应用于
+一段文字时，字体内部的代码会做出相应替换，以小型大写取代小写字母。
+但使用这类特性并不会影响底层文本。在我们的小型大写示例中，小写字母仍存储在
+文档中；只是外观被 OpenType 特性改变了。这使得文本可以毫无障碍地被检索和复制。
+若用户换用另一种不支持小型大写的字体，则会显示“普通”小写字母。
+
+有些 OpenType 特性是支持特定文字所必需的，这些特性通常会自动应用。
+例如印度系文字往往要求在用户输入字符后重新塑形、重新排序，
+以便按读者预期的传统方式显示。另一些特性可用于支持特定语言。
+面向中世纪研究者的 Junicode 字体默认使用古英语形态的字母 thorn，
+而现代冰岛语中的 thorn 形态更圆润。若用户把某段文字标记为冰岛语，
+Junicode 会通过一个本地化字母形态的 OpenType 特性自动切换为冰岛语形态。
+
+还有一大类 OpenType 特性，旨在为众多语言与文字体系提供高质量排版支持。
+前面各节已展示过部分字体特性示例；\pkg{fontspec} 支持的完整 OpenType
+字体特性集合在下文 \ref{sec:ot-feat} 中说明。
+
+OpenType 规范为每个特性规定了四字母代码（例如小型大写为 \texttt{smcp}）。
+下文在列出各特性的 \pkg{fontspec} 名称时一并给出四字母代码，
+供已熟悉 OpenType 的读者参考；若这些代码对你没有意义，可忽略它们。
+
+
+\subsection{如何选择字体特性}
+
+字体特性通过一系列 \meta{feature}=\meta{option} 选择来指定。特性（通常）按逻辑
+分组；例如，所有与连字相关的字体特性都通过书写 \verb|Ligatures={...}| 并传入
+相应参数访问，参数可以是 \texttt{TeX}、\texttt{Rare} 等，如下文
+\ref{sec:ot-feat-liga} 所示。
+
+任何接受非数值输入的特性都可同时给出多个选项，但这样做并非总能生效。
+有些选项会以通常显而易见的方式覆盖其他选项；\Verb|Numbers={OldStyle,Lining}|
+意义不大，因为这两个选项相互排斥，\XeTeX\ 只会使用最后指定的选项
+（本例中以 \opt{Lining} 取代 \opt{OldStyle}）。
+
+若请求了字体所不具备的特性或选项，会在控制台输出中给出警告。
+如 \vref{sec:quiet-warnings} 所述，这些警告可通过选择宏包选项
+\texttt{[quiet]} 抑制。
+
+\subsection{如何获知我的字体支持哪些字体特性？}
+
+尽管我一直希望在 \pkg{fontspec} 中提供一个显示字体所含 OpenType 特性的功能，
+但它始终不在我的优先事项前列。原因之一是已有文档 |opentype-info.tex|，
+可在 \textsc{ctan} 上获取，或在终端窗口中输入 |kpsewhich opentype-info.tex| 找到。
+复制此文件并放到方便的位置，然后在常用的 \TeX\ 编辑器中打开，
+把字体名改为你想查询的字体；用 plain \XeTeX\ 运行后，输出的 \textsc{pdf}
+大致如下：
+
+\begin{framed}
+
+%%% From OpenType-info.tex %%%
+\DeleteShortVerb\"
+\def\myfontname{[Asana-Math.otf]}
+\font\testfont="\myfontname/OT" at 10pt\relax
+
+\rightskip=0pt plus 1fil
+
+\font\titlefont=ec-lmssbx10 at 12pt
+\font\tenrm=ec-lmss10 at 9pt \tenrm
+\font\tentt=ec-lmtt10 at 9pt
+
+\def\fourcharcode#1{\begingroup
+ \count0=#1\count1=\count0
+ \ifnum\count0=0
+  $\langle$default$\rangle$%
+ \else
+  \tentt
+  '%
+  \divide\count0 by "1000000
+  \char\count0
+  \multiply\count0 by "1000000
+  \advance\count1 by -\count0
+  \count0=\count1
+  \divide\count0 by "10000
+  \char\count0
+  \multiply\count0 by "10000
+  \advance\count1 by -\count0
+  \count0=\count1
+  \divide\count0 by "100
+  \char\count0
+  \multiply\count0 by "100
+  \advance\count1 by -\count0
+  \ifnum\count1=32 \ \else \char\count1 \fi
+  '%
+ \fi
+ \endgroup
+}
+
+\newcount\scriptcount
+\newcount\scriptindex
+\newcount\scripttag
+\newcount\langcount
+\newcount\langindex
+\newcount\langtag
+\newcount\featurecount
+\newcount\featureindex
+\newcount\featuretag
+
+\leftline{\titlefont OpenType Layout features found in `\myfontname'}
+\nobreak
+
+\scriptcount=\XeTeXOTcountscripts\testfont
+\ifnum\scriptcount=0 \noindent None\par\fi
+
+\loop
+ \ifnum\scriptindex<\scriptcount
+  \smallskip
+  \scripttag=\XeTeXOTscripttag\testfont\scriptindex
+  \noindent script = \fourcharcode{\scripttag}\endgraf\nobreak
+  \langcount=\XeTeXOTcountlanguages\testfont\scripttag
+  \advance\langcount by 1 % one extra to get the default language system
+  {\loop
+    \langtag=\XeTeXOTlanguagetag\testfont\scripttag\langindex
+    \indent language = \fourcharcode{\langtag}\endgraf\nobreak
+    \featurecount=\XeTeXOTcountfeatures\testfont\scripttag\langtag
+    {\indent\indent \hangindent=3\parindent \hangafter=1 features = \loop
+      \featuretag=\XeTeXOTfeaturetag\testfont\scripttag\langtag\featureindex
+      \fourcharcode{\featuretag}
+      \advance\featureindex by 1
+      \ifnum\featureindex<\featurecount \repeat\endgraf}
+    \advance\langindex by 1
+  \ifnum\langindex<\langcount \medskip \repeat}
+  \advance\scriptindex by 1
+\repeat
+\end{framed}
+
+\noindent 我特意在上文选了一个设计上所含字体特性很少的字体；
+Latin Modern Roman 这类“常规”文字字体包含的特性要多得多，
+我不想让本文档过于杂乱。找到字体所含的脚本、语言与特性后，
+还需把 OpenType 标签与 \pkg{fontspec} 使用的“逻辑”名称对照核实。
+
+\paragraph{otfinfo}
+另一种更简单的方式是使用随 \TeX{}Live 分发的命令行工具 |otfinfo|。
+只需在终端窗口中输入，例如：
+\begin{Verbatim}
+  otfinfo -f `kpsewhich lmromandunh10-oblique.otf`
+\end{Verbatim}
+结果如下：
+\begin{Verbatim}[frame=single]
+aalt	Access All Alternates
+cpsp	Capital Spacing
+dlig	Discretionary Ligatures
+frac	Fractions
+kern	Kerning
+liga	Standard Ligatures
+lnum	Lining Figures
+onum	Oldstyle Figures
+pnum	Proportional Figures
+size	Optical Size
+tnum	Tabular Figures
+zero	Slashed Zero
+\end{Verbatim}
+
+
+\section{OpenType 脚本与语言}\label{sec:ot}
+
+包含多种文字与语言字形的字体，可能针对所支持的不同字符集和语言提供不同的
+字体特性，而同一字体特性也可能随所选脚本或语言表现不同。使用多语言字体时，
+重要的是选定它用于哪种语言，更重要的是选定使用哪种脚本。
+
+“脚本”指所用的字母体系；例如英语和法语都使用拉丁脚本。类似地，
+阿拉伯脚本既可书写阿拉伯语，也可书写波斯语。
+
+\feat{Script} 与 \feat{Language} 特性用于指定这些信息。可选选项分别列于
+\vref{tab:ot-scpt} 与 \vref{tab:ot-lang}。若请求了当前字体不支持的脚本或语言，
+会在控制台输出中打印警告。如需创建新的 \feat{Script} 或 \feat{Language}
+选项，方法见 \vref{sec:newscriptlang}。
+
+由于这些字体特性会改变字体可选哪些特性，\pkg{fontspec} 会在所有其他特性之前
+自动选定 \feat{Script} 与 \feat{Language} 设置；若使用 \XeTeX，还会按
+\vref{sec:renderer-xetex} 所述专门为该字体选用 \opt{OpenType} 渲染器。
+
+OpenType 字体可根据所选脚本与语言提供不同的字体特性。此外，这些设置还可以
+建立自身的字体行为与字形选择（一个例子是保加利亚语、塞尔维亚语与俄语所用
+字母表中部分字母的风格差异）。若出于某种原因需要，\pkg{fontspec} 特性
+\feat{LocalForms} \texttt{=} \opt{Off} 可禁用其中部分替换。需要注意，
+\feat{LocalForms} \texttt{=} \opt{On} 并非 \pkg{fontspec} 的默认设置，
+而是 \XeTeX\ 与 \LuaTeX/\pkg{otfload} 底层字体成形引擎的默认设置。
+
+
+\subsection{\feat{Script} 与 \feat{Language} 示例}
+
+在 \exref{script-lang} 所示示例中，使用 Code2000 字体\note{\url{http://www.code2000.net/}}
+为各种字母体系排版不同输入文本，分别对比应用与不应用 OpenType 脚本的效果。
+只有第二种情形下文字才正确呈现；可以看到许多附加符号间距不正确、
+缺少上下文连字与重排的例子。感谢 \name{Jonathan Kew}、\name{Yves Codet}
+与 \name{Gildas Hamel} 对这些示例的贡献。
+
+\begin{Xexample}[firstline=14,lastline=23]{script-lang}{各种脚本与语言示例。}
+\def\testfeature#1#2{%^^A
+  \fontspec{\examplefont}#2 & \fontspec[#1]{\examplefont}#2\\[1ex]}
+\def \arabictext{العربي}
+\def \devanagaritext{हिन्दी}
+\def \bengalitext{লেখ}
+\def \gujaratitext{મર્યાદા-સૂચક નિવેદન}
+\def \malayalamtext{നമ്മുടെ പാരബര്യ}
+\def \gurmukhitext{ਆਦਿ ਸਚੁ ਜੁਗਾਦਿ ਸਚੁ}
+\def \tamiltext{தமிழ் தேடி}
+\def \hebrewtext{רִדְתָּֽהּ}
+\def \vietnamesetext{cấp số mỗi}
+\begin{tabular}{r@{\quad}l}
+  \gdef\examplefont{FreeSerif.otf}
+  \testfeature{Script=Arabic}{\arabictext}
+  \testfeature{Script=Devanagari}{\devanagaritext}
+  \testfeature{Script=Bengali}{\bengalitext}
+  \testfeature{Script=Gujarati}{\gujaratitext}
+  \testfeature{Script=Malayalam}{\malayalamtext}
+  \testfeature{Script=Gurmukhi}{\gurmukhitext}
+  \testfeature{Script=Tamil}{\tamiltext}
+  \testfeature{Script=Hebrew}{\hebrewtext}
+  \def\examplefont{Doulos_SIL_Regular.ttf}
+  \testfeature{Language=Vietnamese}{\vietnamesetext}
+\end{tabular}
+\end{Xexample}
+
+
+
+\begin{table}[!hbp]
+  \caption{为 OpenType 字体定义的 \opt{Script}。别名以红色¶（{\sffamily\textcolor{red}{\P}}）标记，并列于相邻位置。}
+  \label{tab:ot-scpt}
+\def\dup{\makebox[0pt][r]{\textcolor{red}{\P}}}
+\setlength\columnseprule{0pt}
+  \hrule
+  \begin{multicols}{4}\setlength\parindent{0pt}
+    \sffamily\scriptsize
+    Adlam \par
+    Ahom \par
+    Anatolian Hieroglyphs \par
+    Arabic \par
+    Armenian \par
+    Avestan \par
+    Balinese \par
+    Bamum \par
+    Bassa Vah \par
+    Batak \par
+    Bengali \par
+    Bhaiksuki \par
+    Bopomofo \par
+    Brahmi \par
+    Braille \par
+    Buginese \par
+    Buhid \par
+    Byzantine Music \par
+    Canadian Syllabics \par
+    Carian \par
+    Caucasian Albanian \par
+    Chakma \par
+    Cham \par
+    Cherokee \par
+    \dup CJK \par
+    \dup CJK Ideographic \par
+    Coptic \par
+    Cypriot Syllabary \par
+    Cyrillic \par
+    Default \par
+    Deseret \par
+    Devanagari \par
+    Duployan \par
+    Egyptian Hieroglyphs \par
+    Elbasan \par
+    Ethiopic \par
+    Georgian \par
+    Glagolitic \par
+    Gothic \par
+    Grantha \par
+    Greek \par
+    Gujarati \par
+    Gurmukhi \par
+    Hangul Jamo \par
+    Hangul \par
+    Hanunoo \par
+    Hatran \par
+    Hebrew \par
+    \dup Hiragana and Katakana \par
+    \dup Kana \par
+    Imperial Aramaic \par
+    Inscriptional Pahlavi \par
+    Inscriptional Parthian \par
+    Javanese \par
+    Kaithi \par
+    Kannada \par
+    Kayah Li \par
+    Kharosthi \par
+    Khmer \par
+    Khojki \par
+    Khudawadi \par
+    Lao \par
+    Latin \par
+    Lepcha \par
+    Limbu \par
+    Linear A \par
+    Linear B \par
+    Lisu \par
+    Lycian \par
+    Lydian \par
+    Mahajani \par
+    Malayalam \par
+    Mandaic \par
+    Manichaean \par
+    Marchen \par
+    \dup Math \par
+    \dup Maths \par
+    Meitei Mayek \par
+    Mende Kikakui \par
+    Meroitic Cursive \par
+    Meroitic Hieroglyphs \par
+    Miao \par
+    Modi \par
+    Mongolian \par
+    Mro \par
+    Multani \par
+    Musical Symbols \par
+    Myanmar \par
+    \dup N'Ko \par
+    \dup N'ko \par
+    Nabataean \par
+    Newa \par
+    Ogham \par
+    Ol Chiki \par
+    Old Italic \par
+    Old Hungarian \par
+    Old North Arabian \par
+    Old Permic \par
+    Old Persian Cuneiform \par
+    Old South Arabian \par
+    Old Turkic \par
+    \dup Oriya \par
+    \dup Odia \par
+    Osage \par
+    Osmanya \par
+    Pahawh Hmong \par
+    Palmyrene \par
+    Pau Cin Hau \par
+    Phags-pa \par
+    Phoenician \par
+    Psalter Pahlavi \par
+    Rejang \par
+    Runic \par
+    Samaritan \par
+    Saurashtra \par
+    Sharada \par
+    Shavian \par
+    Siddham \par
+    Sign Writing \par
+    Sinhala \par
+    Sora Sompeng \par
+    Sumero-Akkadian Cuneiform \par
+    Sundanese \par
+    Syloti Nagri \par
+    Syriac \par
+    Tagalog \par
+    Tagbanwa \par
+    Tai Le \par
+    Tai Lu \par
+    Tai Tham \par
+    Tai Viet \par
+    Takri \par
+    Tamil \par
+    Tangut \par
+    Telugu \par
+    Thaana \par
+    Thai \par
+    Tibetan \par
+    Tifinagh \par
+    Tirhuta \par
+    Ugaritic Cuneiform \par
+    Vai \par
+    Warang Citi \par
+    Yi
+  \end{multicols}
+  \hrule
+\end{table}
+
+\begin{table}[p]
+  \vspace*{-3cm}
+  \hspace{-3cm}
+  \def\dup{\makebox[0pt][r]{\textcolor{red}{\P}}}
+  \begin{minipage}{\linewidth+4cm}
+  \caption{为 OpenType 字体定义的 \opt{Language}。别名以红色¶（{\sffamily\textcolor{red}{\P}}）标记，并列于相邻位置。}
+  \label{tab:ot-lang}
+  \setlength\columnseprule{0pt}
+  \hrule
+  \begin{multicols}{6}
+    \everypar{\setlength\parindent{0pt}\setlength\hangindent{2em}}
+    \sffamily\footnotesize\raggedright
+    Abaza \par
+    Abkhazian \par
+    Adyghe \par
+    Afrikaans \par
+    Afar \par
+    Agaw \par
+    Altai \par
+    Amharic \par
+    Arabic \par
+    Aari \par
+    Arakanese \par
+    Assamese \par
+    Athapaskan \par
+    Avar \par
+    Awadhi \par
+    Aymara \par
+    Azeri \par
+    Badaga \par
+    Baghelkhandi \par
+    Balkar \par
+    Baule \par
+    Berber \par
+    Bench \par
+    Bible Cree \par
+    Belarussian \par
+    Bemba \par
+    Bengali \par
+    Bulgarian \par
+    Bhili \par
+    Bhojpuri \par
+    Bikol \par
+    Bilen \par
+    Blackfoot \par
+    Balochi \par
+    Balante \par
+    Balti \par
+    Bambara \par
+    Bamileke \par
+    Breton \par
+    Brahui \par
+    Braj Bhasha \par
+    Burmese \par
+    Bashkir \par
+    Beti \par
+    Catalan \par
+    Cebuano \par
+    Chechen \par
+    Chaha Gurage \par
+    Chattisgarhi \par
+    Chichewa \par
+    Chukchi \par
+    Chipewyan \par
+    Cherokee \par
+    Chuvash \par
+    Comorian \par
+    Coptic \par
+    Cree \par
+    Carrier \par
+    Crimean Tatar \par
+    Church Slavonic \par
+    Czech \par
+    Danish \par
+    Dargwa \par
+    Woods Cree \par
+    German \par
+    Default \par
+    Dogri \par
+    Divehi \par
+    Djerma \par
+    Dangme \par
+    Dinka \par
+    Dungan \par
+    Dzongkha \par
+    Ebira \par
+    Eastern Cree \par
+    Edo \par
+    Efik \par
+    Greek \par
+    English \par
+    Erzya \par
+    Spanish \par
+    Estonian \par
+    Basque \par
+    Evenki \par
+    Even \par
+    Ewe \par
+    French Antillean \par
+    \dup Farsi \par
+    \dup Parsi \par
+    \dup Persian \par
+    Finnish \par
+    Fijian \par
+    Flemish \par
+    Forest Nenets \par
+    Fon \par
+    Faroese \par
+    French \par
+    Frisian \par
+    Friulian \par
+    Futa \par
+    Fulani \par
+    Ga \par
+    Gaelic \par
+    Gagauz \par
+    Galician \par
+    Garshuni \par
+    Garhwali \par
+    Ge'ez \par
+    Gilyak \par
+    Gumuz \par
+    Gondi \par
+    Greenlandic \par
+    Garo \par
+    Guarani \par
+    Gujarati \par
+    Haitian \par
+    Halam \par
+    Harauti \par
+    Hausa \par
+    Hawaiin \par
+    Hammer-Banna \par
+    Hiligaynon \par
+    Hindi \par
+    High Mari \par
+    Hindko \par
+    Ho \par
+    Harari \par
+    Croatian \par
+    Hungarian \par
+    Armenian \par
+    Igbo \par
+    Ijo \par
+    Ilokano \par
+    Indonesian \par
+    Ingush \par
+    Inuktitut \par
+    Irish \par
+    Irish Traditional \par
+    Icelandic \par
+    Inari Sami \par
+    Italian \par
+    Hebrew \par
+    Javanese \par
+    Yiddish \par
+    Japanese \par
+    Judezmo \par
+    Jula \par
+    Kabardian \par
+    Kachchi \par
+    Kalenjin \par
+    Kannada \par
+    Karachay \par
+    Georgian \par
+    Kazakh \par
+    Kebena \par
+    Khutsuri Georgian \par
+    Khakass \par
+    Khanty-Kazim \par
+    Khmer \par
+    Khanty-Shurishkar \par
+    Khanty-Vakhi \par
+    Khowar \par
+    Kikuyu \par
+    Kirghiz \par
+    Kisii \par
+    Kokni \par
+    Kalmyk \par
+    Kamba \par
+    Kumaoni \par
+    Komo \par
+    Komso \par
+    Kanuri \par
+    Kodagu \par
+    Korean Old Hangul \par
+    Konkani \par
+    Kikongo \par
+    Komi-Permyak \par
+    Korean \par
+    Komi-Zyrian \par
+    Kpelle \par
+    Krio \par
+    Karakalpak \par
+    Karelian \par
+    Karaim \par
+    Karen \par
+    Koorete \par
+    Kashmiri \par
+    Khasi \par
+    Kildin Sami \par
+    Kui \par
+    Kulvi \par
+    Kumyk \par
+    Kurdish \par
+    Kurukh \par
+    Kuy \par
+    Koryak \par
+    Ladin \par
+    Lahuli \par
+    Lak \par
+    Lambani \par
+    Lao \par
+    Latin \par
+    Laz \par
+    L-Cree \par
+    Ladakhi \par
+    Lezgi \par
+    Lingala \par
+    Low Mari \par
+    Limbu \par
+    Lomwe \par
+    Lower Sorbian \par
+    Lule Sami \par
+    Lithuanian \par
+    Luba \par
+    Luganda \par
+    Luhya \par
+    Luo \par
+    Latvian \par
+    Majang \par
+    Makua \par
+    Malayalam Traditional \par
+    Mansi \par
+    Marathi \par
+    Marwari \par
+    Mbundu \par
+    Manchu \par
+    Moose Cree \par
+    Mende \par
+    Me'en \par
+    Mizo \par
+    Macedonian \par
+    Male \par
+    Malagasy \par
+    Malinke \par
+    Malayalam Reformed \par
+    Malay \par
+    Mandinka \par
+    Mongolian \par
+    Manipuri \par
+    Maninka \par
+    Manx Gaelic \par
+    Moksha \par
+    Moldavian \par
+    Mon \par
+    Moroccan \par
+    Maori \par
+    Maithili \par
+    Maltese \par
+    Mundari \par
+    Naga-Assamese \par
+    Nanai \par
+    Naskapi \par
+    N-Cree \par
+    Ndebele \par
+    Ndonga \par
+    Nepali \par
+    Newari \par
+    Nagari \par
+    Norway House Cree \par
+    Nisi \par
+    Niuean \par
+    Nkole \par
+    N'ko \par
+    Dutch \par
+    Nogai \par
+    Norwegian \par
+    Northern Sami \par
+    Northern Tai \par
+    Esperanto \par
+    Nynorsk \par
+    Oji-Cree \par
+    Ojibway \par
+    Oriya \par
+    Oromo \par
+    Ossetian \par
+    Palestinian Aramaic \par
+    Pali \par
+    Punjabi \par
+    Palpa \par
+    Pashto \par
+    Polytonic Greek \par
+    Pilipino \par
+    Palaung \par
+    Polish \par
+    Provencal \par
+    Portuguese \par
+    Chin \par
+    Rajasthani \par
+    R-Cree \par
+    Russian Buriat \par
+    Riang \par
+    Rhaeto-Romanic \par
+    Romanian \par
+    Romany \par
+    Rusyn \par
+    Ruanda \par
+    Russian \par
+    Sadri \par
+    Sanskrit \par
+    Santali \par
+    Sayisi \par
+    Sekota \par
+    Selkup \par
+    Sango \par
+    Shan \par
+    Sibe \par
+    Sidamo \par
+    Silte Gurage \par
+    Skolt Sami \par
+    Slovak \par
+    Slavey \par
+    Slovenian \par
+    Somali \par
+    Samoan \par
+    Sena \par
+    Sindhi \par
+    Sinhalese \par
+    Soninke \par
+    Sodo Gurage \par
+    Sotho \par
+    Albanian \par
+    Serbian \par
+    Saraiki \par
+    Serer \par
+    South Slavey \par
+    Southern Sami \par
+    Suri \par
+    Svan \par
+    Swedish \par
+    Swadaya Aramaic \par
+    Swahili \par
+    Swazi \par
+    Sutu \par
+    Syriac \par
+    Tabasaran \par
+    Tajiki \par
+    Tamil \par
+    Tatar \par
+    TH-Cree \par
+    Telugu \par
+    Tongan \par
+    Tigre \par
+    Tigrinya \par
+    Thai \par
+    Tahitian \par
+    Tibetan \par
+    Turkmen \par
+    Temne \par
+    Tswana \par
+    Tundra Nenets \par
+    Tonga \par
+    Todo \par
+    Turkish \par
+    Tsonga \par
+    Turoyo Aramaic \par
+    Tulu \par
+    Tuvin \par
+    Twi \par
+    Udmurt \par
+    Ukrainian \par
+    Urdu \par
+    Upper Sorbian \par
+    Uyghur \par
+    Uzbek \par
+    Venda \par
+    Vietnamese \par
+    Wa \par
+    Wagdi \par
+    West-Cree \par
+    Welsh \par
+    Wolof \par
+    Tai Lue \par
+    Xhosa \par
+    Yakut \par
+    Yoruba \par
+    Y-Cree \par
+    Yi Classic \par
+    Yi Modern \par
+    Chinese Hong Kong \par
+    Chinese Phonetic \par
+    Chinese Simplified \par
+    Chinese Traditional \par
+    Zande \par
+    Zulu
+  \end{multicols}
+  \hspace{4pt}
+  \hrule
+ \end{minipage}
+\end{table}
+
+
+\section{OpenType 字体特性}
+\label{sec:ot-feat}
+
+OpenType 字体特性数量有限，\pkg{fontspec} 为其中约一半提供了接口。
+后续各节将给出完整说明，包括如何启用与禁用单个特性，以及各特性如何相互配合。
+
+\vref{tab:all-ot} 提供了一份简要参考；请注意该清单并不完整——只列出了“启用”
+键，在为方便起见提供了替代接口时，也只列出第一个。
+（例如 |Numbers=OldStyle| 与 |Numbers=Lowercase| 等价。）
+
+为完整起见，\vref{tab:none-ot} 列出了\emph{未}提供 \pkg{fontspec} 接口的
+全部 OpenType 特性。遗漏的特性一部分是有意为之，一部分则是疏忽；例如 |aalt|
+特性在 \TeX\ 中基本无用，因为它是为通过 \textsc{gui} 界面选择某字形的
+“全部替代字形”而设计的。另一些（例如光学边距）则只是由于缺少可用于测试的
+字体而尚未考虑。欢迎就如何、在何处把这些缺失特性加入本宏包提出建议。
+
+\ExplSyntaxOn
+\def\allOTfeat{
+  \prop_map_inline:Nn \g__fontspec_all_opentype_feature_names_prop
+    { \opentypefeature{##1}{##2} }
+}
+\newcommand\opentypefeature[2]{
+  \prop_get:NnNT \g__fontspec_OT_features_prop {#1} \tmpa
+      {
+        \raggedright
+        \hangindent=5.2cm
+        \makebox[1cm][l]{\textsc{#1}}
+        \makebox[4.2cm][l]{
+          \int_compare:nT { \tl_count:N \tmpa > 25 } {\ttcondensed} {\ttfamily}
+          \tmpa
+        }
+        \textit{#2}
+        \par
+        \vspace{2pt}
+     }
+}
+\ExplSyntaxOff
+
+\begin{table}
+\caption{\textsf{fontspec} 中 OpenType 特性一览，按特性标签字母序排列。}
+\label{tab:all-ot}
+\centerline{%
+\begin{minipage}{18cm}
+\small
+\hrule\smallskip
+\begin{multicols}{2}
+\parindent =0pt
+\allOTfeat
+\end{multicols}
+\vspace*{-\smallskipamount}
+\hrule
+\end{minipage}}
+\end{table}
+
+\ExplSyntaxOn
+\renewcommand\opentypefeature[2]{
+  \prop_get:NnNF \g__fontspec_OT_features_prop {#1} \tmpa
+      {
+        \raggedright
+        \hangindent=0.9cm
+        \makebox[0.9cm][l]{\textsc{#1}}%
+        \textit{#2}
+        \par
+     }
+}
+\ExplSyntaxOff
+
+\begin{table}
+\caption{\emph{不受支持}的 OpenType 特性清单。}
+\label{tab:none-ot}
+\bigskip
+\centerline{%
+\begin{minipage}{15cm}
+\hrule\smallskip
+\begin{multicols}{3}
+\parindent =0pt
+\allOTfeat
+\end{multicols}
+\vspace*{-\smallskipamount}
+\hrule
+\end{minipage}}
+\end{table}
+
+\subsection{基于标签的特性}
+
+
+\subsubsection{替代字形 --- \texttt{salt}}
+
+\feat{Alternate} 特性（别名 \feat{StylisticAlternates}）用于在字体存在变体时
+访问替代字体字形，如 \exref{salt} 所示。它采用从 0 开始的数值选择，
+具体数值因字体而异。注意 \texttt{Style=Alternate} 等价于
+\texttt{Alternate=0}，用于访问默认情形。
+
+\begin{Xexample}[firstline=2]{salt}{\feat{Alternate} 特性。}
+  \huge
+  \fontspec{LinLibertine_R.otf}
+  \textsc{a} \& h \\
+  \addfontfeature{Alternate=0}
+  \textsc{a} \& h
+\end{Xexample}
+
+注意编号从 0 开始。在 \LuaTeX\ 引擎下，|Alternate=Random| 随机选择一个替代字形。
+如有需要，为替代字形命名的方式见 \vref{sec:newfeatures}。
+
+
+\subsubsection{字符变体 --- \texttt{cvNN}}
+
+“字符变体”以数值方式选择，用于调整特定字体中（通常）单个字符的输出。
+它们对应 OpenType 特性 |cv01| 到 |cv99|。对于每个可变化的字符，
+都可以在该字形的若干可能选项中选择。例如，在下面这个假设示例中，
+为字形“4”和“5”选择了变体，末尾的 |:|\meta{n} 对应要选择哪一种变体。
+\begin{Verbatim}
+  \fontspec{CV Font}[CharacterVariant={4,5:2}] \& violet
+\end{Verbatim}
+编号完全取决于具体字体；例如字形“5”可能对应字符“v”。字符变体在设计上
+互不冲突，因此可以按字符逐个启用（这与风格替代字形不同）。注意编号从 0 开始。
+
+
+\subsubsection{上下文相关}
+此特性指按字形在单词或字符串中的相对位置“随上下文”变化的字形替换；
+上下文花体等特性通过 \ref{feat:Contextuals} 所列选项访问。
+
+\begin{features}{Contextuals}
+\otf*{Swash}{cswh}
+\otf*{Alternate}{calt}
+\otf*{WordInitial}{init}
+\otf*{WordFinal}{fina}
+\otf*{LineFinal}{falt}
+\otf*{Inner}{medi}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+OpenType 字体中的历史字形通过 \feat{Style=Historic} 特性访问；
+它在 OpenType 中一般\emph{不}属于上下文相关，因此未包含在本特性内。
+
+
+\subsubsection{附加符号}
+
+指定组合附加符号应如何放置。这些通常会根据脚本设置自动控制。
+
+\begin{features}{Diacritics}
+\otf*{MarkToBase}{mark}
+\otf*{MarkToMark}{mkmk}
+\otf*{AboveBase}{abvm}
+\otf*{BelowBase}{blwm}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+
+\subsubsection{分数 --- \texttt{frac}}
+
+\begin{features}{Fractions}
+\otf{On}{+frac}
+\otf{Off}{-frac}
+\otf{Reset}{}
+\cmidrule{2-4}
+\otf*{Alternate}{afrc}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+启用“普通”分数的构造：使用字体内部预先组合好的字形，和/或下标与上标字符。
+覆盖范围因字体而异；见 \exref{ot-frac}。另有一些字体（主要是亚洲字体）
+还提供 \opt{Alternate} 选项。
+
+\begin{Lexample}{ot-frac}{\feat{Fractions} 特性。}
+\setsansfont{IBMPlexSans-Regular.otf}[Fractions=On]
+\setmonofont{IBMPlexMono-Regular.otf}[Fractions=On]
+
+\sffamily 1/2 47/11 1/1000 \par
+\ttfamily 1/2 47/11
+\end{Lexample}
+
+
+
+\subsubsection{字距调整 --- \texttt{kern}}
+\label{sec:kerning}
+
+指定字形间间距如何表现。制作精良的字体包含在不同字符对之间插入不同
+间距量的信息。此字距空间会自动插入，但在少数情况下你可能希望将其关闭。
+
+\begin{features}{Kerning}
+\otf{On}{+kern}
+\otf{Off}{-kern}
+\otf{Reset}{}
+\cmidrule{2-4}
+\otf*{Uppercase}{cpsp}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+如 \vref{sec:letters} 末尾简要提及，\opt{Uppercase} 选项会在大写字母之间
+增加少量字距，见 \exref{kernup}，该示例使用 Venturis ADF 字体\note{\url{http://arkandis.tuxfamily.org/adffonts.html}}
+（感谢 Clea F. Rees 提供建议）。\opt{Uppercase} 选项与由 \opt{On}/\opt{Off}
+选项控制的常规字距调整相互独立。
+
+\begin{Xexample}[firstline=2]{kernup}{为大写字母增加额外字距。（差异通常非常小。）}
+  \large
+  \fontspec{VenturisADF-Bold.otf}
+   UPPERCASE EXAMPLE \\
+  \addfontfeature{Kerning=Uppercase}
+   UPPERCASE EXAMPLE
+\end{Xexample}
+
+
+\subsubsection{字母} \label{sec:letters}
+\opt{Letters} 特性指定当前字体中字母的外观。OpenType 字体可包含下列选项：
+\opt{SmallCaps}、\opt{PetiteCaps}、\opt{UppercaseSmallCaps}、
+\opt{UppercasePetiteCaps} 与 \opt{Unicase}。此外，在 \LuaTeX\ 中
+所有字体都支持 \opt{Uppercase} 与 \opt{Lowercase}。
+
+与早期版本不同，\opt{Uppercase} 与 \opt{Lowercase} 选项会把文字转为大写或
+小写，并不要求文字本来就具有相应大小写。\opt{Uppercase} 的旧行为可通过
+\verb|Style=Uppercase| 获得。选用 \opt{Uppercase} 选项时，若字体支持，
+会自动应用 \verb|Style=Uppercase| 与 \verb|Kerning=Uppercase|。
+
+
+\begin{features}{Letters}
+\otf*{SmallCaps}{smcp}
+\otf*{PetiteCaps}{pcap}
+\otf*{UppercaseSmallCaps}{c2sc}
+\otf*{UppercasePetiteCaps}{c2pc}
+\otf*{Unicase}{unic}
+\otf*{Uppercase}{}
+\otf*{Lowercase}{}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+小形大写（petite caps）比小型大写（small caps）更小。
+\opt{SmallCaps} 与 \opt{PetiteCaps} 把小写字母转为较小的大写字母；
+而 \opt{Uppercase...} 选项把\emph{大写}字母转为较小的大写字母
+（适合应用于本来就全大写的首字母缩写词，如“NASA”）。这一差异见 \exref{caps}。
+“Unicase”是大写与小写字母的一种奇特混合。
+
+\begin{Lexample}{caps}{由小写或大写字母生成小型大写。}
+  \fontspec{Coelacanth.otf}[Letters=SmallCaps]
+   THIS SENTENCE no verb                \\
+  \fontspec{Coelacanth.otf}[Letters=UppercaseSmallCaps]
+   THIS SENTENCE no verb                \\
+  \fontspec{Coelacanth.otf}[Letters=PetiteCaps]
+   THIS SENTENCE no verb
+\end{Lexample}
+
+
+
+\subsubsection{连字}
+\label{sec:ot-feat-liga}
+
+\feat{Ligatures} 指出于功能或 \ae sthetic 原因，用专门绘制的字形替换两个独立字符。
+可同时选择多个选项，清单见 \ref{feat:Ligatures}。使用 Linux Libertine 字体\note{\url{http://www.linuxlibertine.org/}}
+的演示见 \exref{lig}。
+
+注意 \verb|Ligatures=TeX| 所访问的附加特性。它们实际上并非真正的 OpenType
+特性，而是 \pkg{luaotfload} 提供的附加功能（即仅 \LuaTeX），用于模拟 \TeX\
+对弯引号与标点的 \textsc{ascii} 输入行为。在 \XeTeX\ 中这通过 \feat{Mapping}
+特性实现（见 \vref{sec:mapping}）；为保持一致，\verb|Ligatures=TeX| 与
+\verb|Mapping=tex-text| 执行相同功能。
+
+\begin{features}{Ligatures}
+\otf*{Required}{rlig}
+\otf*{Common}{liga}
+\otf*{Contextual}{clig}
+\otf*{Rare/Discretionary}{dlig}
+\otf*{Historic}{hlig}
+\otf*{TeX}{tlig}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+\begin{Lexample}[firstline=2]{lig}{\feat{Ligatures} 特性示例。}
+   \Huge\centering
+   \def\test#1#2{%
+     #2 $\to$ {\addfontfeature{#1} #2}\\}
+   \fontspec{LinLibertine_R.otf}
+   \test{Ligatures=Historic}{strict}
+   \test{Ligatures=Rare}{wurtzite}
+   \test{Ligatures=CommonOff}{firefly}
+\end{Lexample}
+
+
+\subsubsection{本地化字形 --- \texttt{locl}}
+
+\begin{features}{LocalForms}
+\otf{On}{+locl}
+\otf{Off}{-locl}
+\otf{Reset}{}
+\end{features}
+
+此特性用于启用和禁用特定于字体中所选 \feat{Language} 的字形替换等。
+该特性存在时默认自动激活，因此一般无需使用 \feat{LocalForms} \texttt{=} \opt{On}。
+在某些情形下将其设为 \opt{Off} 可能很重要（不过我一时想不出具体例子）。
+
+
+\subsubsection{数字}
+
+\feat{Numbers} 特性定义所选字体中数字的外观，接受 \ref{feat:Numbers}
+所列选项。
+
+\begin{features}{Numbers}
+\otf*{Uppercase}{lnum}
+\otf*{Lowercase}{onum}
+\otf*{Lining}{lnum}
+\otf*{OldStyle}{onum}
+\otf*{Proportional}{pnum}
+\otf*{Monospaced}{tnum}
+\otf*{SlashedZero}{zero}
+\otf*{Arabic}{anum}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+同义词 \opt{Uppercase} 与 \opt{Lowercase} 分别等价于
+\opt{Lining} 与 \opt{OldStyle}。差异已在 \vref{sec:addfontfeatures} 中展示。
+当数字需要纵向对齐时，\opt{Monospaced} 选项对表格材料很有用。
+
+\opt{SlashedZero} 选项把默认的零替换为带斜杠的版本，
+以避免与大写“O”混淆，见 \exref{slashzero}。
+
+\begin{Lexample}{slashzero}{\opt{SlashedZero} 选项的效果。}
+  \fontspec[Numbers=Lining]{texgyrebonum-regular.otf}
+   0123456789
+  \fontspec[Numbers=SlashedZero]{texgyrebonum-regular.otf}
+   0123456789
+\end{Lexample}
+
+\opt{Arabic} 选项（标签 \verb|anum|）根据当前 \opt{Language} 设置
+（见 \vref{sec:ot}），把常规数字映射为相应的阿拉伯文或波斯文数字。
+此选项基于 \pkg{luaotfload} 宏包的一项 \LuaTeX\ 功能，而非 OpenType 特性。
+（因此该特性在 \XeTeX\ 中不可用。）此特性应视为已弃用；虽然目前没有计划
+将其从本宏包中移除，但若字体加载器不再支持它，它可能在几乎不加预告的情况下
+从 \pkg{fontspec} 中消失。
+
+
+\subsubsection{装饰图案 --- \texttt{ornm}}
+
+装饰图案通过 \feat{Ornament} 特性（OpenType 特性 |ornm|）选择，
+与 \feat{Annotation} 特性一样按数值选取。
+
+
+\subsubsection{Style}
+\label{sec:ot-feat-style}
+
+\begin{features}{Style}
+\otf*{Alternate}{salt}
+\otf*{Cursive}{curs}
+\otf*{Historic}{hist}
+\otf*{Italic}{ital}
+\otf*{Ruby}{ruby}
+\otf*{Swash}{swsh}
+\otf*{Titling}{titl}
+\otf*{Uppercase}{case}
+\otf*{HorizontalKana}{hkna}
+\otf*{VerticalKana}{vkna}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+“Ruby”指小型光学字号，在日文排版中用于标注。对于含有多个 |salt|
+OpenType 特性的字体，应改用 \pkg{fontspec} 的 \feat{Alternate} 特性。
+
+\Exref{style-alt} 展示了一个涉及字母表中特定字母字形替换的字体特性示例。
+这些类别中的其他选项以类似方式运作；具体替换归入哪个特性，很大程度上由字体设计师决定。
+
+ \begin{Xexample}[firstline=2]{style-alt}{\feat{Style} 特性 \opt{Alternate} 选项示例。}
+  \Large
+  \fontspec{Quattrocento-Regular.ttf}
+   M Q W                      \\
+  \addfontfeature{Style=Alternate}
+   M Q W
+\end{Xexample}
+
+\opt{Uppercase} 选项用于为附加符号、破折号等字形选择各种大写形式，
+如 \exref{style-uppercase} 所示；注意连字符位置被抬高，以便更好地匹配
+周围字母。它（多半）并不会真的把字母映射为大写。
+ \note{若需要自动大写字母，请参见 \LaTeX\ 的 \cmd\MakeUppercase\ 命令；
+      若使用 \LuaTeX，也可使用 \feat{Letters} 特性。}
+此选项过去在 \feat{Letters} 特性下选择，现已移至此处，因为它一般并不实际
+影响字母本身。\feat{Kerning} 特性也含有一个 \opt{Uppercase} 选项，
+用于在字母之间增加少量间距（见 \vref{sec:kerning}）。
+
+\begin{Lexample}{style-uppercase}{\feat{Style} 特性 \opt{Uppercase} 选项示例。}
+  \fontspec{LinLibertine_R.otf}
+   UPPER-CASE example \\
+  \addfontfeature{Style=Uppercase}
+   UPPER-CASE example
+\end{Lexample}
+
+
+另一些特性则能看到更广泛的改变，覆盖整个字母表的风格。
+例如在某些日文字体中，|Style=Italic| 或 |Style=Ruby| 等特性分别把所有
+拉丁字符改为斜体，或把所有平假名改为较深的光学字形：
+\begin{Verbatim}[firstline=2]
+  \Large \def\kana{ようこそ ワカヨタレソ}
+  \fontspec{Hiragino Mincho Pro}
+   Latin \kana        \\
+  \addfontfeature{Style={Italic, Ruby}}
+   Latin \kana
+\end{Verbatim}
+
+
+\subsubsection{风格集变体 --- \texttt{ssNN}}
+\label{sec:ot-ss}
+
+此特性选择某个“风格集”变体，它通常对应一组字符（一般是某个字母表或其子集）
+的替代字形风格。该特性以数值指定，对应 OpenType 特性 |ss01|、|ss02| 等。
+
+Junicode 字体\note{\url{http://junicode.sf.net}} 的两个演示见 \exref{ss}
+与 \exref{ss2}；感谢 Adam Buchbinder 提供建议。
+
+\begin{Lexample}{ss}{Junicode 字体中使用 \feat{StylisticSet} 特性获得中世纪北欧所用的岛屿字母字形。}
+  \fontspec{Junicode}
+   Insular forms. \\
+  \addfontfeature{StylisticSet=2}
+   Insular forms. \\
+\end{Lexample}
+
+\begin{Lexample}{ss2}{Junicode 字体中使用 \feat{StylisticSet} 特性获得放大的小写字母（大写字母保持不变）。}
+  \fontspec{Junicode}
+   ENLARGED Minuscules. \\
+  \addfontfeature{StylisticSet=6}
+   ENLARGED Minuscules. \\
+\end{Lexample}
+
+可同时选择多个风格集，例如写成 |StylisticSet={1,2,3}|。
+
+对于 \AAT\ 字体，|StylisticSet| 特性是 \feat{Variant} 特性的同义词。
+如有需要，为风格集命名的方式见 \vref{sec:newfeatures}，这应按字体逐一进行。
+
+
+\subsubsection{上下位置}
+
+\begin{features}{VerticalPosition}
+\otf*{Superior}{sups}
+\otf*{Inferior}{subs}
+\otf*{Numerator}{numr}
+\otf*{Denominator}{dnom}
+\otf*{ScientificInferior}{sinf}
+\otf*{Ordinal}{ordn}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+\feat{VerticalPosition} 特性用于访问下标（\opt{Inferior}）、上标
+（\opt{Superior}）数字与字母（有时还有少量标点）。\opt{Ordinal} 选项只会
+提升在某些语言中直接跟在数字之后使用的字符。\opt{ScientificInferior}
+特性会把字形移到比 \opt{Inferior} 特性更低的基线以下。这些见 \exref{vertpos}。
+
+\opt{Numerator} 与 \opt{Denominator} 只应用于构造任意分数（见下一节）。
+
+\begin{Lexample}{vertpos}{\feat{VerticalPosition} 特性。}
+  \fontspec{LibreCaslonText-Regular.otf}[VerticalPosition=Superior]
+   Superior: 1234567890                                   \\
+  \fontspec{LibreCaslonText-Regular.otf}[VerticalPosition=Numerator]
+   Numerator: 12345                                       \\
+  \fontspec{LibreCaslonText-Regular.otf}[VerticalPosition=Denominator]
+   Denominator: 12345                                     \\
+  \fontspec{LibreCaslonText-Regular.otf}[VerticalPosition=ScientificInferior]
+   Scientific Inferior: 12345
+\end{Lexample}
+
+\pkg{realscripts} 宏包（在 \XeTeX\ 下也由 \pkg{xltxtra} 加载）
+重定义了 \cmd\textsubscript\ 与 \cmd\textsuperscript\ 命令，
+使其自动使用上述字体特性，包括在脚注标签中使用。若这是你想使用的
+\pkg{xltxtra} 唯一功能，可考虑单独加载 \pkg{realscripts} 宏包。
+
+
+
+\subsection{中日韩特性}
+
+本节汇总主要面向中文、韩文与日文排版的特性。
+
+
+\subsubsection{圈码 --- \texttt{nalt} }
+
+有些字体配备了各种形式的丰富数字与数词。它们通过 \feat{Annotation}
+特性（OpenType 特性 |nalt|）访问，按数值选取。注意编号从 0 开始。
+\begin{Verbatim}
+  \fontspec{Hiragino Maru Gothic Pro}
+   1 2 3 4 5 6 7 8 9
+  \def\x#1{\\{\addfontfeature{Annotation=#1}
+            1 2 3 4 5 6 7 8 9 }}
+  \x0\x1\x2\x3\x4\x5\x6\x7\x7\x8\x9
+\end{Verbatim}
+
+
+\subsubsection{字符宽度}\label{sec:CharacterWidth}
+
+许多亚洲字体配备了不同间距的字符，以便挤进通常等宽的文字中。
+这些通过 \feat{CharacterWidth} 特性访问。
+
+\begin{features}{CharacterWidth}
+\otf*{Proportional}{pwid}
+\otf*{Full}        {fwid}
+\otf*{Half}        {hwid}
+\otf*{Third}       {twid}
+\otf*{Quarter}     {qwid}
+\otf*{AlternateProportional}{palt}
+\otf*{AlternateHalf}{halt}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+日文假名（平假名或片假名）字形既可按比例排版，以更好地适应横向长度；
+也可等宽排版，以纳入表意文字排版所要求的刚性网格。后一种情形下还有
+半宽形式，用于在给定空间块内容纳更多假名（假名比周围的汉字简单）。
+日文字体中的罗马字母也提供同样的特性，以便按与周围文字相同的风格
+排版外来词。在找到支持这些特性的开源字体之前，示例暂缺。
+%\begin{Verbatim}
+%  \def\texta{ようこそ}\def\textb{ワカヨタレソ}
+%  \def\test{\makebox[2cm][l]{\texta}%
+%            \makebox[2.5cm][l]{\textb}%
+%            \makebox[2.5cm][l]{abcdef}}
+%  \fontspec{Hiragino Mincho Pro}
+%  {\addfontfeature{CharacterWidth=Proportional}\test}\\
+%  {\addfontfeature{CharacterWidth=Full}\test}\\
+%  {\addfontfeature{CharacterWidth=Half}\test}
+%\end{Verbatim}
+
+
+
+
+\subsubsection{中日韩字形}
+
+\begin{features}{CJKShape}
+\otf{Traditional}{trad}
+\otf{Simplified} {smpl}
+\otf{JIS1978}    {jp78}
+\otf{JIS1983}    {jp83}
+\otf{JIS1990}    {jp90}
+\otf{Expert}     {expt}
+\otf{NLC}        {nlck}
+\end{features}
+
+关于中日韩表意文字“应当”长什么样，历来有多种标准。一些字体包含大量替代字形，
+以便在合适的任一种形式下正确显示这些字符。\AAT\ 与 OpenType 字体都支持下列
+\feat{CJKShape} 选项：\opt{Traditional}、\opt{Simplified}、\opt{JIS1978}、
+\opt{JIS1983}、\opt{JIS1990} 与 \opt{Expert}。OpenType 还支持 \opt{NLC} 选项。
+
+\begin{Xexample}[firstline=2]{ot-cjk-shape}{中日韩表意文字呈现的不同标准。}
+  \LARGE\def\text{\noindent 唖噛躯 妍并訝}
+  \fontspec{HaranoAjiGothic-Regular.otf}
+  {\addfontfeature{CJKShape=Traditional}
+  \text }                          \\
+  {\addfontfeature{CJKShape=NLC}
+  \text }                          
+\end{Xexample}
+
+
+\subsubsection{竖排}
+
+\begin{features}{Vertical}
+\otf*{RotatedGlyphs}         {vrt2}
+\otf*{AlternatesForRotation} {vrtr}
+\otf*{Alternates}            {vert}
+\otf*{KanaAlternates}        {vkna}
+\otf*{Kerning}               {vkrn}
+\otf*{AlternateMetrics}      {valt}
+\otf*{HalfMetrics}           {vhal}
+\otf*{ProportionalMetrics}   {vpal}
+\cmidrule{2-4}
+\otf{ResetAll}{}
+\end{features}
+
+OpenType 提供了大量特性，以容纳竖排（中日韩及其他文字）所需的各种情形。
+但 \pkg{fontspec} 尚未提供实现此类竖排的功能；如有可改进之处，欢迎联系。
+
+
+\end{document}
+
+% /©
+% ------------------------------------------------
+% The FONTSPEC package  <latex3.github.io/fontspec>
+% ------------------------------------------------
+% Copyright  2022-2026  The LaTeX project,  LPPL "maintainer"
+% Copyright  2004-2022  Will Robertson
+% Copyright  2009-2015  Khaled Hosny
+% Copyright  2013       Philipp Gesang
+% Copyright  2013-2016  Joseph Wright
+% ------------------------------------------------
+% This package is free software and may be redistributed and/or modified under
+% the conditions of the LaTeX Project Public License, version 1.3c or higher
+% (your choice): <http://www.latex-project.org/lppl/>.
+% ------------------------------------------------
+% ©/

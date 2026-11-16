@@ -14,4 +14,4 @@
 - pgfornament-doc-zh v1.4 2026/10/17 装饰宏包
 - xeCJK 2022/08/05 v3.9.1 只有文档
 - 常见颜色的RGB值
-- 
+- fonspec-cn 2026/08/11 v2.9h

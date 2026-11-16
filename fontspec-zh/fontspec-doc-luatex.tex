@@ -1,0 +1,99 @@
+%%^^A%%  fontspec-doc-luatex.tex -- part of FONTSPEC <latex3.github.io/fontspec>
+
+\documentclass[a4paper]{l3doc}
+\usepackage{fontspec-doc-style}
+\showexamplesfalse
+\begin{document}
+
+\part{仅 \LuaTeX\ 支持的字体特性}
+\label{sec:luatex-features}
+
+\section{不同的字体技术与成形引擎}
+\label{sec:renderer-luatex}
+
+\LuaTeX\ 开箱即用并不直接支持任何字体渲染技术；要正确支持和控制
+OpenType 等技术，需要附加功能。通过 \feat{Renderer} 特性，\pkg{fontspec}
+可向引擎传递若干选项，以控制所使用的字体技术。
+
+2019 年以前，\pkg{luaotfload} 提供两个一般无需用户干预的选项。
+
+\begin{Verbatim}
+  \feat{Renderer} = \opt{Node} : 排版 OpenType 字体的默认“模式”。
+  \feat{Renderer} = \opt{Base} : 一种简化模式，仅在少数情形（如数学排版）下有用。
+\end{Verbatim}
+
+自 2019 年起，Khaled Hosny 开发了在 \LuaTeX\ 中使用 Harfbuzz
+文本成形引擎的能力。当运行支持 Harfbuzz 的合适 \LuaTeX\ 引擎时，
+\pkg{fontspec} 提供下列选项：
+
+\begin{Verbatim}
+  \feat{Renderer} = \opt{HarfBuzz} : 使用 Harfbuzz 引擎，不显式指定“成形器”
+       （旧名 \opt{Harfbuzz} 为兼容而保留）。
+  \feat{Renderer} = \opt{OpenType} : 用 Harfbuzz 引擎与 OpenType 成形器。
+  \feat{Renderer} = \opt{AAT} : 用 Harfbuzz 引擎与 AAT 成形器。
+  \feat{Renderer} = \opt{Graphite} : 用 Harfbuzz 引擎与 Graphite 成形器。
+  \feat{Renderer} = \meta{foo} : 用 Harfbuzz 引擎与 \meta{foo} 成形器。
+\end{Verbatim}
+
+对 Harfbuzz 渲染器的支持尚属初步，今后可能逐步改进。
+请把 Harfbuzz 字体的接口视为可能变动。
+
+\section{自定义字体特性}
+
+\LuaTeX\ 通过 \pkg{luaotfload} 宏包，可为选定字体定义和重定义自定义
+OpenType 特性。此功能对于实现自定义替换，或禁用不需要（但非全部）的连字
+尤其有用。图~\ref{fig:featurefile} 展示了此类功能的一个最小示例。
+
+该示例创建了一个新的 OpenType 特性 \texttt{oneb}，在排版“|1|”时将其替换为
+具名字形 \texttt{one.ss01}。字形名因字体而异，可用 \emph{FontForge}
+等第三方软件查询。另有第三方在仓库“|fonts-in-luatex|”中维护了一批附加示例
+\footnote{\url{https://github.com/mewtant/fonts-in-luatex}}。
+这些示例用于修正或调整一系列商业字体的字体特性，可很好地入门了解
+\LuaTeX\ 所能提供的部分可能性。
+
+更多细节请参阅 \LuaTeX/\pkg{luaotfload} 文档。
+
+\begin{figure}
+\centering
+\begin{Verbatim}
+\documentclass{article}
+\usepackage{fontspec}
+\usepackage{luacode}
+
+\directlua{require("luaotfload-embedding")}
+
+\begin{luacode}
+  fonts.handlers.otf.addfeature {
+    name    = "oneb",
+    type    = "substitution",
+    data    = { one = "one.ss01" },
+  }
+\end{luacode}
+
+\begin{document}
+  \fontspec{Heuristica-Regular.otf}[
+    RawFeature={+oneb}
+  ]
+  1234
+\end{document}
+\end{Verbatim}
+\caption{自定义字体特性示例。}\label{fig:featurefile}
+\end{figure}
+
+\end{document}
+
+% /©
+% ------------------------------------------------
+% The FONTSPEC package  <latex3.github.io/fontspec>
+% ------------------------------------------------
+% Copyright  2022-2026  The LaTeX project,  LPPL "maintainer"
+% Copyright  2004-2022  Will Robertson
+% Copyright  2009-2015  Khaled Hosny
+% Copyright  2013       Philipp Gesang
+% Copyright  2013-2016  Joseph Wright
+% ------------------------------------------------
+% This package is free software and may be redistributed and/or modified under
+% the conditions of the LaTeX Project Public License, version 1.3c or higher
+% (your choice): <http://www.latex-project.org/lppl/>.
+% ------------------------------------------------
+% ©/

@@ -1,0 +1,648 @@
+%%^^A%%  fontspec-doc-fontsel.tex -- part of FONTSPEC <latex3.github.io/fontspec>
+
+\documentclass[a4paper]{l3doc}
+\usepackage{fontspec-doc-style}
+\showexamplesfalse
+\begin{document}
+
+\part{通用字体选择}
+
+\section{主要命令}
+\label{sec:main-cmd}
+
+本节介绍可用于选择字体的各类命令。
+
+\bigskip
+\cmdbox{%
+  \CMD{\string\setmainfont}\marg{font}\oarg{font features}\\
+  \CMD{\string\setsansfont}{\color[gray]{0.5}\marg{font}\oarg{font features}}\\
+  \CMD{\string\setmonofont}{\color[gray]{0.5}\marg{font}\oarg{font features}}
+}
+
+这些是本宏包最主要的字体选择命令，用于设定文档中使用的标准字体，如 \exref{fontload}
+所示。此处所选的字体缩放比例用于使各字体的小写字母高度趋于一致。\feat{Scale}
+字体特性将在 \vref{sec:font-ind-features} 进一步讨论，其中也包括自动缩放的方法。
+注意：可能还需要补充其他选项来选择合适的粗体/斜体字体，但此处已足以说明基本思路。
+
+注意，尽管这些命令外观与行为大体相同，但在默认字体加载设置中，
+\cs{setmainfont} 与 \cs{setsansfont} 命令会自动附带 |Ligatures=TeX| 特性。
+这些默认值（以及可进一步进行的定制）在 \vref{sec:defaults} 中讨论。
+
+\bigskip
+\cmdbox{%
+  \CMD{\string\newfontfamily}\meta{cmd}\marg{font}\oarg{font features}\\
+  \CMD{\string\setfontfamily}{\color[gray]{0.5}\meta{cmd}\marg{font}\oarg{font features}}\\
+  \CMD{\string\renewfontfamily}{\color[gray]{0.5}\meta{cmd}\marg{font}\oarg{font features}}\\
+  \CMD{\string\providefontfamily}{\color[gray]{0.5}\meta{cmd}\marg{font}\oarg{font features}}
+}
+
+这些命令用于定义新的字体族命令（如 \cs{rmfamily}）。
+|new| 命令会检查 \meta{cmd} 是否已定义；若已定义则报错。
+|renew| 命令检查 \meta{cmd} 是否已定义；若未定义则报错。
+|provide| 命令检查 \meta{cmd} 是否已定义；若已定义则静默中止。
+|set| 命令不做任何检查，需自行承担使用风险。
+
+
+\bigskip
+\cmdbox{%
+  \CMD{\string\fontspec}\marg{font}\oarg{font features}
+}
+
+一般不建议在文档正文中直接使用朴素的 \cs{fontspec} 命令。
+它是一个临时命令，最适合用于测试以及一次性加载字体。
+
+上述所有命令都接受逗号分隔的 \meta{font feature}=\meta{option} 列表；
+这些将在后文介绍：
+\begin{itemize}
+\item 通用字体特性见 \vref{sec:font-ind-features}
+\item OpenType 字体见第~\vref{sec:opentype-features}~部分
+\item 仅 \XeTeX\ 支持的通用字体特性见第~\vref{sec:xetex-features}~部分
+\item 仅 \LuaTeX\ 支持的通用字体特性见第~\vref{sec:luatex-features}~部分
+\item \XeTeX\ 中 \AAT\ 字体的特性见 \vref{sec:aat-features}
+\end{itemize}
+
+\begin{Lexample}{fontload}{加载默认字体、无衬线字体与等宽字体。}
+  \setmainfont{texgyrebonum-regular.otf}
+  \setsansfont{lmsans10-regular.otf}[Scale=MatchLowercase]
+  \setmonofont{Inconsolatazi4-Regular.otf}[Scale=MatchLowercase]
+
+  \rmfamily Pack my box with five dozen liquor jugs\par
+  \sffamily Pack my box with five dozen liquor jugs\par
+  \ttfamily Pack my box with five dozen liquor jugs
+\end{Lexample}
+
+\section{字体选择}
+
+在 \LuaTeX\ 与 \XeTeX\ 中，字体既可以按“字体名”选择，也可以按“文件名”选择
+（使用 \ref{sec:main-cmd} 中的 \meta{font} 参数），但两种引擎查找和选择字体的方式
+存在一些差异；如果在一种引擎中调用的字体换到另一种引擎时需要稍加修改才能工作，
+不必过于意外。
+
+
+\subsection{按字体名}
+
+可为 \LuaTeX\ 或 \XeTeX\ 所识别的字体，可以按其通常念出的标准名称加载，
+例如 \emph{Times New Roman} 或 \emph{Adobe Garamond}。
+此处“可为……所识别”通常指“位于标准字体目录中”，如 \MacOSX\ 上的
+|~/Library/Fonts|，或 Windows 上的 |C:\Windows\Fonts|。在 \LuaTeX\ 中，
+\textsc{texmf} 目录树中的字体也可按名称加载；在 \XeTeX\ 中，
+\textsc{texmf} 目录树中的字体可在 Windows 和 Linux 下按名称加载，
+但在 \MacOSX\ 上不行。
+
+最简单的示例如下所示：
+\begin{Verbatim}
+  \setmainfont{Cambria}[ ... ]
+\end{Verbatim}
+其中粗体与斜体字体会被自动找到（若存在），
+并可立即通过常用的 \cs{textit} 与 \cs{textbf} 命令使用。
+
+“字体名”可通过多种方式获得，例如在 Mac~OS~X 的 \emph{Font Book}
+等应用中查看列出的名称。此外，\TeX{}Live 附带命令行程序 \texttt{otfinfo}，
+可查询此信息；例如：
+\begin{Verbatim}
+    otfinfo -i `kpsewhich lmroman10-regular.otf`
+\end{Verbatim}
+会得到一行类似如下的结果：
+\begin{Verbatim}
+  Preferred family:    Latin Modern Roman
+\end{Verbatim}
+（“preferred family”名称通常比“family”名称更合适。）
+
+\paragraph{仅 \LuaTeX\ 用户}
+若要按名称而非文件名加载字体（\eg\ 用“Latin Modern Roman”而非“ec-lmr10”），
+可能需要运行随 \pkg{luaotfload} 宏包分发的脚本 \texttt{luaotfload-tool}。
+注意：若事先未运行该脚本，首次尝试排版时进程会停顿（最长）数分钟（但仅此一次）。
+更多信息请参阅 \pkg{luaotfload} 文档。
+
+
+\subsection{按文件名}
+\label{sec:by-file-name}
+
+\XeTeX\ 与 \LuaTeX\ 也允许按文件名而非字体名加载字体。
+当你拥有大量字体时，有时并不希望把它们全部安装到系统字体目录中；
+此时从磁盘的其他位置加载会更方便。在 \XeTeX\ 中，
+加载位于 \TeX\ 发行版内部的 OpenType 字体
+（如 \path{/usr/local/texlive/2013/texmf-dist/fonts/opentype/public}）时
+也必须使用这种方式。此类位置中的字体对 \XeTeX\ 可见，但无法按字体名加载，
+只能按文件名加载；\LuaTeX\ 则没有这一限制。
+（如果你出于某种原因，即使在使用 \LuaTeX\ 时也希望将字体限制为
+\TeX\ 发行版所提供的字体，可使用 \DescribeOption{KpseOnly} 的
+\texttt{KpseOnly} 选项。）
+
+按文件名选择字体时，凡是能在默认搜索路径中找到的字体
+（包括当前目录中的字体）都可直接使用，无需显式指定字体文件在磁盘上的位置。
+
+按文件名选择的字体必须显式给出粗体与斜体变体，
+除非为该字体族提供了 |.fontspec| 文件（见 \ref{sec:fontspecfile}）。
+下面先给出几个全部显式指定的示例：
+\begin{Verbatim}
+  \setmainfont{texgyrepagella-regular.otf}[
+       BoldFont       = texgyrepagella-bold.otf ,
+       ItalicFont     = texgyrepagella-italic.otf ,
+       BoldItalicFont = texgyrepagella-bolditalic.otf ]
+\end{Verbatim}
+\pkg{fontspec} 通过 |.otf| 扩展名的存在判断该字体应按文件名选择。
+另一种方式是单独指定扩展名，如下所示：
+\begin{Verbatim}
+  \setmainfont{texgyrepagella-regular}[
+       Extension      = .otf ,
+       BoldFont       = texgyrepagella-bold ,
+       ... ]
+\end{Verbatim}
+如有需要，还可以基于必填的“字体名”参数对字体名使用缩写：
+\begin{Verbatim}
+  \setmainfont{texgyrepagella}[
+       Extension      = .otf ,
+       UprightFont    = *-regular ,
+       BoldFont       = *-bold ,
+       ... ]
+\end{Verbatim}
+此时“texgyrepagella”不再是实际字体的名称，而是用于构造各个字形的字体名；
+|*| 会被替换为“texgyrepagella”。注意，这种情况下必须使用 |UprightFont|
+来构造所使用的常规字体的字体名。
+
+要加载不在默认搜索路径中的字体，必须使用 |Path| 特性指定其在文件系统中的位置：
+\begin{Verbatim}
+  \setmainfont{texgyrepagella}[
+       Path           = /Users/will/Fonts/ ,
+       UprightFont    = *-regular ,
+       BoldFont       = *-bold ,
+       ... ]
+\end{Verbatim}
+注意，\XeTeX\ 与 \LuaTeX\ 可以在不给出扩展名的情况下加载字体，
+但 \pkg{fontspec} 必须知道要去搜索文件；这可以通过使用不带参数的
+|Path| 特性来表明：
+\begin{Verbatim}
+  \setmainfont{texgyrepagella-regular}[
+       Path, BoldFont = texgyrepagella-bold,
+       ... ]
+\end{Verbatim}
+我个人倾向于始终显式写出扩展名；这样也能让 \pkg{fontspec}
+自动识别出该字体应按文件名加载。
+
+在本宏包的早期版本中，|Path| 特性还以别名 |ExternalLocation| 提供；
+但后者现已弃用，新文档不应再使用。
+
+
+\subsection{使用 .fontspec 文件按自定义名称选择}
+\label{sec:fontspecfile}
+
+当 \pkg{fontspec} 首次被要求加载某字体时，会搜索名为
+“\meta{fontname}\texttt{.fontspec}”的字体设置文件。%
+\footnote{位于当前文件夹或标准 \texttt{texmf} 位置中。}
+若想按字体个别地\emph{禁用}此特性，可使用 \feat{IgnoreFontspecFile} 字体选项。
+
+该文件的内容可用于指定字体字形与字体特性，
+而不必把这些信息写进每一篇文档。因此，它比上面列出的几种方式更为灵活。
+
+搜索此 |.fontspec| 文件时，\meta{fontname} 中的空格会被去除，
+文件扩展名也会省略。例如，对于 |\setmainfont{TeX Gyre Adventor}|，
+对应的 |.fontspec| 文件名为 \texttt{TeXGyreAdventor.fontspec}。
+若想为 |\setmainfont{texgyreadventor-regular.otf}| 透明地加载选项，
+则配置文件名为 \texttt{texgyreadventor-regular.fontspec}。
+
+注意：虽然空格会被去除，但名称的大小写仍须保持一致。
+
+此机制可用于为自己的字体集合定义自定义名称或别名。该文件内部的语法沿用
+\cs{defaultfontfeatures} 的语法（后文将更详细地定义），与标准
+\pkg{fontspec} 字体加载语法一致。举例来说，假设我们要定义一个通过
+\verb|\setmainfont{My Charis}| 加载的字体族。
+对应的 \texttt{MyCharis.fontspec} 文件可包含如下内容：
+\begin{Verbatim}
+  \defaultfontfeatures[My Charis]
+    {
+      Extension = .ttf ,
+      UprightFont    = CharisSILR,
+      BoldFont       = CharisSILB,
+      ItalicFont     = CharisSILI,
+      BoldItalicFont = CharisSILBI,
+      % <any other desired options>
+    }
+\end{Verbatim}
+\cs{defaultfontfeatures} 的可选参数必须与字体加载命令
+（\verb|\setmainfont| 等）所请求的名称完全一致——尤其要注意此处空格是有意义的，
+因此 |\setmainfont{MyCharis}| 无法“看到” |.fontspec| 文件中的默认字体特性设置。
+
+最后注意，单个字体字面的选项也可以用这种方式定义。
+沿用上面的例子，下面为不同字面分别设置颜色：
+\begin{Verbatim}
+  \defaultfontfeatures[CharisSILR]{Color=blue}
+  \defaultfontfeatures[CharisSILB]{Color=red}
+\end{Verbatim}
+这类配置行既可以内联存放在 \texttt{MyCharis.fontspec} 中，
+也可以放在各自独立的 |.fontspec| 文件中；通过这种方式，
+\pkg{fontspec} 可以处理“嵌套”的配置选项。
+
+当使用 \cs{defaultfontfeatures} 按自定义名称指定字体字面时，
+使用 \feat{Font} 特性设置该字面的文件名。例如：
+\begin{Verbatim}
+  \defaultfontfeatures[charis]
+    {
+      UprightFont = charis-regular,
+      % <other desired options for all font faces in the family>
+    }
+
+  \defaultfontfeatures[charis-regular]
+    {
+      Font = CharisSILR
+      % <other desired options just for the `upright' font>
+    }
+\end{Verbatim}
+此处的 \pkg{fontspec} 接口在设计上力求灵活，以适应多种使用场景；
+当把若干字体字面归并为一个更大的字体族时，达成同一结果的方式不止一种。
+
+
+\subsection{查询字体是否“存在”}
+
+\cmdbox{
+  \CMD{\string\IfFontExistsTF}\marg{font name}\marg{true branch}\marg{false branch}
+}
+
+条件命令 \cs{IfFontExistsTF} 用于测试 \meta{font name} 是否存在或可加载。
+若存在，则执行 \meta{true branch} 代码；否则执行 \meta{false branch} 代码。
+
+由于引擎在字体缺失时可能需要扫描文件系统，此命令可能较慢。尽管如此，
+对于希望为文档定义“后备字体”以提高可移植性的用户而言，它一直是备受欢迎的需求。
+
+此命令中 \meta{font name} 的语法是 \cs{fontspec} 等所用字体加载语法的
+受限/简化版本。待按文件名加载的字体通过相应扩展名（|.otf| 等）识别，
+路径应内联写出。例如：
+\begin{Verbatim}
+  \IfFontExistsTF{cmr10}{T}{F}
+  \IfFontExistsTF{Times New Roman}{T}{F}
+  \IfFontExistsTF{texgyrepagella-regular.otf}{T}{F}
+  \IfFontExistsTF{/Users/will/Library/Fonts/CODE2000.TTF}{T}{F}
+\end{Verbatim}
+
+\cs{IfFontExistsTF} 命令是编程接口函数 \cs{fontspec_font_if_exist:nTF}
+（\vref{sec:api}）的同义命令。
+
+
+
+\section{选择字体族的命令}
+
+当某一具有特定特性集的字体会在文档中反复多次使用时，
+每次都调用 \cs{fontspec} 效率不高。虽然 \cs{fontspec} 命令在首次调用之后
+不会再定义新的字体实例，但特性选项仍需被解析和处理。
+
+为此，可以使用 \cmd\newfontfamily\ 及其变体命令创建新命令来加载特定字体族，
+这些命令在 \vref{sec:main-cmd} 中列出，并在 \exref{nff} 中演示。例如，
+应使用此宏创建与 \cmd\rmfamily\ 用法相同的命令。
+若想创建一个仅在其参数内部切换字体的命令
+（即与 \cs{emph} 行为相同），可用普通 \LaTeX\ 命令定义：
+\begin{Verbatim}
+  \newcommand\textnote[1]{{\notefont #1}}
+  \textnote{This is a note.}
+\end{Verbatim}
+注意双花括号是有意为之；内层一对用于界定字体切换的作用域。
+
+\begin{Lexample}{nff}{定义新的字体族。}
+  \newfontfamily\notefont{Kurier}
+  \notefont This is a \emph{note}.
+\end{Lexample}
+
+\emph{给高级用户的说明：}\cs{newfontfamily}（以及 \cs{newfontface}，
+见下一节）定义的命令携带其编码信息，因此即使文档设置为使用传统 \TeX\ 编码，
+这些命令仍能正常工作。例如，
+\begin{Verbatim}
+\documentclass{article}
+\usepackage{fontspec}
+\newfontfamily\unicodefont{Lucida Grande}
+\usepackage{mathpazo}
+\usepackage[T1]{fontenc}
+\begin{document}
+A legacy \TeX\ font. {\unicodefont A unicode font.}
+\end{document}
+\end{Verbatim}
+
+
+\section{选择单个字体字面的命令}
+
+\cmdbox{%
+  \CMD{\string\newfontface}\meta{cmd}\marg{font}\oarg{font features}\\
+  \CMD{\string\setfontface}{\color[gray]{0.5}\meta{cmd}\marg{font}\oarg{font features}}\\
+  \CMD{\string\renewfontface}{\color[gray]{0.5}\meta{cmd}\marg{font}\oarg{font features}}\\
+  \CMD{\string\providefontface}{\color[gray]{0.5}\meta{cmd}\marg{font}\oarg{font features}}
+}
+
+有时只需要某一特定字体字面，而不希望自动连带选择斜体或粗体变体。
+在为文档中某个非常特定的场合选择字体时，这种情况很常见。
+例如，假设需要一个不属于文档字体设置的特殊花体字体，
+便可使用 \cmd\newfontface\ 来实现，如 \exref{nfface} 所示。
+
+\begin{Xexample}{nfface}{定义单个字体字面。}
+  \newfontface\qedfont{EBGaramond-Regular.otf}[Style=Swash]
+  \qedfont QED
+  % \emph, \textbf, etc., all don't work
+\end{Xexample}
+
+
+\subsection{更精细地控制字体字形选择}
+\label{sec:bfitfonts}
+
+\cmdbox{
+ \feat{BoldFont} = \meta{font name} \\
+ \feat{ItalicFont} = \meta{font name} \\
+ \feat{~BoldItalicFont} = \meta{font name} \\
+ \feat{SlantedFont} = \meta{font name} \\
+ \feat{BoldSlantedFont} = \meta{font name} \\
+ \feat{SwashFont} = \meta{font name} \\
+ \feat{BoldSwashFont} = \meta{font name} \\
+ \feat{SmallCapsFont} = \meta{font name} \\
+ \feat{UprightFont} = \meta{font name}
+}
+
+自动选择粗体、斜体与粗斜体字体并不能满足所有字体的需求：有些字体甚至没有
+粗体或斜体字形，此时技术娴熟（或运气不错）的设计者或许能从另一种完全不同的字体中
+挑选出搭配良好的配套字形；另一些字体则可能有一系列粗体与斜体字体可供选择。
+\feat{BoldFont} 与 \feat{ItalicFont} 特性正是为这些情况提供的。
+若只使用其中之一，则粗斜体字体会作为新字体的默认项被请求。见 \exref{bff}。
+
+\begin{Lexample}{bff}{显式选择粗体字体。}
+  \setmainfont{Ysabeau-Hairline.otf}%
+           [BoldFont={Ysabeau-Thin.otf}]
+                Hairline         \\
+  {\itshape     Hairline Italic} \\
+  {\bfseries               Thin       } \\
+  {\bfseries\itshape       Thin Italic} \\
+\end{Lexample}
+
+若未定义粗斜体字形，或者你想\emph{同时}指定自定义粗体与斜体字形，
+可使用 \feat{BoldItalicFont} 特性。
+
+
+
+\subsubsection{小型大写字形}
+
+对于现代 OpenType 字体，小型大写字形包含在同一字体字面内，
+\pkg{fontspec} 会自动检测它们，供 \cs{textsc} 与 \cs{scshape} 命令使用。
+在 OpenType 出现之前，受 PostScript Type~1 格式允许字形数量的限制，
+字体族通常把小型大写字形放在单独的字体中分发。对于这类字体，
+可为所指定字体族中的每个字体声明 \feat{SmallCapsFont} 来使用：
+\begin{Verbatim}
+  \setmainfont{ <upright> }[
+    UprightFeatures    = { SmallCapsFont={ <sc> } } ,
+    BoldFeatures       = { SmallCapsFont={ <bf sc> } } ,
+    ItalicFeatures     = { SmallCapsFont={ <it sc> } } ,
+    BoldItalicFeatures = { SmallCapsFont={ <bf it sc> } } ,
+  ]
+  Roman 123 \\ \textsc{Small caps 456}
+\end{Verbatim}
+对于大多数把小型大写作为字体特性的现代字体，一般不需要这种程度的控制。
+
+粗体、斜体与小型大写字体都可以加载与主字体不同的字体特性。
+详见 \ref{sec:bfit-feat}。当为 |SmallCapsFont| 选择 OpenType 字体时，
+小型大写字体特性\emph{不会}自动启用。这种情况下，如有必要，用户应改为写出：
+\begin{Verbatim}
+  \setmainfont{...}[
+    SmallCapsFont={...},
+    SmallCapsFeatures={Letters=SmallCaps},
+  ]
+\end{Verbatim}
+
+
+\subsubsection{倾斜字体字形}
+
+当一个字体族同时拥有倾斜（slanted）与斜体（italic）字形时，
+可使用对应的 \feat{SlantedFont} 与 \feat{BoldSlantedFont} 特性分别指定。
+若不使用这些特性，\LaTeX\ 用于倾斜的字体切换命令
+（\cs{textsl}、\cs{slshape}）将默认回退到斜体字形。
+
+
+\subsubsection{花体字体字形}
+
+字体族中的花体字形由 \LaTeX\ 命令 \cs{textsw} 与 \cs{swshape} 支持。
+这些命令假定花体字形在某种意义上与斜体字形“平行”——例如，
+同时写下 \cs{swshape} 与 \cs{itshape} 并不会得到斜体花体字形
+（只会得到最后声明的那一个）。\pkg{fontspec} 宏包沿用了这一方式，
+同时也认识到：OpenType 字体理论上可能拥有各种奇特的字形组合，
+例如“斜体花体小型大写”。试图支持任意复杂的情形会让设置（以及代码）更加困难，
+而收益相对有限——在这类情况下，可改用 \pkg{fontspec} 的其他特性选择机制
+（如 |\addfontfeature{Style=Swash}|）。
+
+因此，设置相当简单：
+\begin{Verbatim}
+  \setmainfont{...}[
+        SwashFont = {...} ,
+    BoldSwashFont = {...} ,
+  ]
+\end{Verbatim}
+这里不对 |+swsh| OpenType 特性是否可用作任何假设；如有需要，
+须像下面这样显式请求“Swash”特性：
+\begin{Verbatim}
+  \setmainfont{...}[
+        SwashFont = {...} ,
+        SwashFeatures = {Style=Swash} ,
+        ...
+  ]
+\end{Verbatim}
+今后这一过程可能会变得更加自动化。
+
+
+
+\subsection{显式指定 \NFSS\ 字体族}
+
+在 \LaTeX\ 的 \NFSS\ 中，字体族以诸如 `\texttt{ppl}'（Palatino）、
+`\texttt{lmr}'（Latin Modern Roman）等名称定义，并通过 \cs{fontfamily} 命令选择：
+\begin{Verbatim}
+  \fontfamily{ppl}\selectfont
+\end{Verbatim}
+在 \pkg{fontspec} 中，字体族名称根据字体的 fontname 自动生成；例如，
+首次写下 |\fontspec{Times New Roman}| 会生成内部字体族名
+`\texttt{TimesNewRoman(1)}'。请注意，不应依赖所生成的名称。
+
+在某些情况下，希望能够自行指定这一内部字体族名称，以便在其他地方复用它，
+与其他使用 \LaTeX\ 字体选择接口的宏包交互；示例如下：
+\begin{Verbatim}
+  \usepackage{fancyvrb}
+  \fvset{fontfamily=myverbatimfont}
+\end{Verbatim}
+在 \pkg{fontspec} 中以这种方式选择字体时，使用 \feat{NFSSFamily} 特性：%
+\footnote{感谢 Luca Fascione 提供示例，并促成此特性最终得以实现。}
+\begin{Verbatim}
+  \newfontfamily\verbatimfont{Inconsolata}[NFSSFamily=myverbatimfont]
+\end{Verbatim}
+之后便可写出如下命令：
+\begin{Verbatim}
+  \fontfamily{myverbatimfont}\selectfont
+\end{Verbatim}
+这本质上与写 |\verbatimfont| 相同；回到最初的例子：
+\begin{Verbatim}
+  \fvset{fontfamily=myverbatimfont}
+\end{Verbatim}
+仅在确有必要时使用此特性；在其他所有情况下，建议使用 \pkg{fontspec}
+生成的内置字体切换命令（如上例中的 |\verbatimfont|）。
+
+若不想显式设置 \NFSS\ 字体族，但又想知道它是什么，
+\pkg{fontspec} 编程接口中为宏包作者提供了另一种机制；
+详见函数 \cs{fontspec_set_family:Nnn}（\vref{sec:api}）。
+
+\subsection{选择额外的 \NFSS\ 字体字面}
+
+\LaTeX\ 的字体选择机制（\NFSS）比迄今讨论的 \pkg{fontspec} 接口更为灵活。
+它为每个字体字面指定一个\emph{族}（见上文）、一个\emph{字重}
+（如粗体、细体或窄体）以及一个\emph{字形}（如斜体、倾斜或小型大写）。
+\feat{BoldFont} 等 \pkg{fontspec} 特性所指定的字面都属于 \NFSS\ 的默认字重与字形；
+但拥有多个字重、字形等的字体族也并不少见。
+
+如果你用“标准四件套”（常规、粗体、斜体、粗斜体）字形设置好一个常规字体族，
+之后又想为某个文档元素使用比如细体字体，许多用户会很乐意用
+\cs{newfontface}\cs{\meta{switch}} 定义，并使用由此得到的 \cs{\meta{switch}} 字体。
+但在另一些情况下，使用额外的 \NFSS\ 说明符加载附加字体会更方便，甚至是必要的。
+
+\cmdbox{
+  \texttt{FontFace = }\marg{series}\marg{shape}
+     \texttt{\char`\{} \texttt{Font = }\meta{font name} \texttt, \meta{features} \texttt{\char`\}} \\
+  \texttt{FontFace = }\marg{series}\marg{shape}\marg{font name}
+}
+
+如此指定的字体会继承主字体的字体特性，并可按需附带额外的 \meta{features}。
+（注意，可选的 \marg{features} 参数仍需用花括号包裹。）
+在同一声明中可使用多个 \feat{FontFace} 命令来指定多个字体。例如：
+\begin{Verbatim}
+  \setmainfont{font1.otf}[
+     FontFace = {c}{\shapedefault}{ font2.otf } ,
+     FontFace = {c}{m}{ Font = font3.otf , Color = red }
+    ]
+\end{Verbatim}
+写下 |\fontseries{c}\selectfont| 会选中 |font2|；随后再跟
+|\fontshape{m}\selectfont| 会选中 |font3|（红色）。
+一个以不同字重、常规字形（|\shapedefault|，如上所示）定义的字体字面，
+会尝试寻找匹配的小型大写特性并同时定义该字面。
+反之，以非标准字形定义的字体字面则不会这样做。
+
+字形与字重代码的选择有相应标准；\LaTeXe\ 字体选择指南%
+\footnote{\texttt{texdoc fntguide}} 中有完整列表。
+
+\feat{FontFace} 命令还能与 \feat{SizeFeatures} 命令正确配合，如下所示：
+\begin{Verbatim}
+  FontFace = {c}{n}{
+    Font = lmsans10-oblique.otf ,
+    SizeFeatures = {
+      { Size =   -10 , Font = lmsans8-oblique.otf   } ,
+      { Size = 10-15                                } ,
+      { Size = 15-   , Font = lmsans17-oblique.otf  } ,
+    },
+  },
+\end{Verbatim}
+注意，若省略首个 \feat{Font} 特性，则每个字号都需要在内部单独声明 \feat{Font}。
+
+\subsubsection{配合 \cs{strong} 的示例}
+\label{sec:strong-example}
+
+若想设置一个字体族，使 \cs{strong} 能够嵌套以便逐级访问更粗的字重，
+可使用类似下面的声明：
+\begin{Verbatim}
+\setmonofont{SourceCodePro}[
+  Extension = .otf ,
+  UprightFont = *-Light ,
+  BoldFont = *-Regular ,
+  FontFace = {k}{n}{*-Black} ,
+]
+\strongfontdeclare{\bfseries,\fontseries{k}\selectfont}
+\end{Verbatim}
+
+今后计划提供更多“语法糖”，使这一过程更加简便。
+
+
+\subsection{数学字体}
+
+当 \cmd\setmainfont、\cmd\setsansfont\ 与 \cmd\setmonofont\ 用于导言区时，
+它们还会定义数学模式下 \cmd\mathrm\ 类命令内部使用的字体。
+这只会在导言区发生，因为 \LaTeX\ 在处理过这一阶段后会冻结数学字体。此外，
+\pkg{fontspec} 宏包必须在任何数学字体宏包（\eg\ \pkg{euler}）之后加载，才能正常工作。
+（实际上，只有 \pkg{euler} 会带来问题。%
+\note{说到 \pkg{euler}，若想使用其 \texttt{[mathbf]} 选项，它将无法生效；
+需要改为在 \pkg{fontspec} 加载之后放置如下代码：
+\ttfamily\cmd\AtBeginDocument\char`\{\cmd\DeclareMathAlphabet\cmd\mathbf\char`\{U\char`\}\char`\{eur\char`\}\char`\{b\char`\}\char`\{n\char`\}\char`\}}）
+
+注意，\pkg{fontspec} 不会更改一般数学内容的字体；仅会影响常规与粗体字形。
+若要更改数学符号所用字体，可参阅 \pkg{mathspec} 宏包或 \pkg{unicode-math} 宏包。
+
+注意，你可能会发现加载某些数学宏包并不像预期那样顺利，因为 \pkg{fontspec}
+（以及一般意义上的 \XeTeX）打破了 \TeX\ 关于数学字符与重音位置的许多假定。
+遇到问题可与我联系，但我无法保证能够修复所有不兼容之处。
+Lucida 与 Euler 数学字体应当没有问题；其余字体则需留意可能出现的问题。
+
+\cmdbox{
+  \cmd{\setmathrm}\marg{font name}\oarg{font features} \\
+  \cmd{\setmathsf}\marg{font name}\oarg{font features} \\
+  \cmd{\setmathtt}\marg{font name}\oarg{font features} \\
+  \cmd{\setboldmathrm}\marg{font name}\oarg{font features}
+}
+
+然而，排版数学内容时，默认正文字体未必是你希望使用的字体
+（尤其是在使用特殊连字等情况下）。为此，你可以选择使用上述命令
+（用法与其他类 \cmd\fontspec\ 命令相同），显式指定 \cmd\mathrm\ 等命令内部使用的字体。
+此外，\cmd\setboldmathrm\ 命令可用于定义粗体数学模式下 \cmd\mathrm\ 所用的字体
+（粗体数学模式可通过 \cmd\boldmath\ 等命令激活）。
+
+例如，若将 Optima 与 Euler 数学字体配合使用，导言区可能如下：
+\begin{Verbatim}
+  \usepackage{mathpazo}
+  \usepackage{fontspec}
+  \setmainfont{Optima}
+  \setmathrm{Optima}
+  \setboldmathrm[BoldFont={Optima ExtraBlack}]{Optima Bold}
+\end{Verbatim}
+这些命令与 \pkg{unicode-math} 宏包兼容。话虽如此，\pkg{unicode-math}
+还定义了一种更通用的方式来定义数学模式所用字体；若你已在使用该宏包，
+可忽略本小节。
+
+
+\section{其他字体选择细节}
+
+\paragraph{可选参数——自 v2.4 起}
+在 \pkg{fontspec} 问世的头十年里，可选字体特性是通过位于字体名之前的
+括号参数来选择的，如下所示：
+\begin{Verbatim}
+  \setmainfont[
+    lots and lots ,
+    and more and more ,
+    an excessive number really ,
+    of font features could go here
+  ]{myfont.otf}
+\end{Verbatim}
+在我看来这种语法始终显得笨拙，因为最重要的信息——字体名称——被放在了最后。
+如今这些参数的顺序已经颠倒过来：
+\begin{Verbatim}
+  \setmainfont{myfont.otf}[
+    lots and lots ,
+    and more and more ,
+    an excessive number really ,
+    of font features could go here
+  ]
+\end{Verbatim}
+希望这不会带来什么问题。
+\begin{enumerate}
+ \item 向后兼容性得到保留，两种写法都可使用。
+ \item 实际上，如果你确实想这样写，也可以写出
+ \begin{Verbatim}
+  \fontspec[Ligatures=Rare]{myfont.otf}[Color=red]
+ \end{Verbatim}
+ 两组特性都会被应用。
+
+\end{enumerate}
+
+\paragraph{空格}
+\cmd\fontspec\ 与 \cmd\addfontfeatures\ 会忽略尾部空格，
+就像一个“不带花括号”的控制序列；\eg\ `|M. \fontspec{...} N|' 与
+`|M. \fontspec{...}N|' 是等价的。
+
+\end{document}
+
+% /©
+% ------------------------------------------------
+% The FONTSPEC package  <latex3.github.io/fontspec>
+% ------------------------------------------------
+% Copyright  2022-2026  The LaTeX project,  LPPL "maintainer"
+% Copyright  2004-2022  Will Robertson
+% Copyright  2009-2015  Khaled Hosny
+% Copyright  2013       Philipp Gesang
+% Copyright  2013-2016  Joseph Wright
+% ------------------------------------------------
+% This package is free software and may be redistributed and/or modified under
+% the conditions of the LaTeX Project Public License, version 1.3c or higher
+% (your choice): <http://www.latex-project.org/lppl/>.
+% ------------------------------------------------
+% ©/
