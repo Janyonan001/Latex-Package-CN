@@ -1,0 +1,1552 @@
+% !TeX TS-program = xelatex
+% 编译流程：xelatex → makeindex `gind.ist` → 两遍 xelatex
+% makeindex -s gind.ist mdframed-doc.idx
+
+
+
+\setcounter{errorcontextlines}{999}
+\documentclass[parskip=false,11pt,]{ltxmdf}
+\usepackage{pdfpages}
+\usepackage[framemethod=TikZ]{mdframed}
+\usetikzlibrary{shadows}
+\surroundwithmdframed[middlelinecolor=ltxmdfblue,middlelinewidth=1pt,%
+                      roundcorner=10pt,innertopmargin=0pt,%
+                      leftmargin=1cm,rightmargin=1cm,%
+                      innerleftmargin=-15pt,innerrightmargin=-15pt,%
+                      ignorelastdescenders,%
+                      settings={\lstset{resetmargins}},%
+                      skipbelow=\topskip,skipabove=\topskip,%
+                      innerbottommargin=0pt,backgroundcolor=gray!10]%
+                     {tltxmdfexample}
+
+\EnableCrossrefs
+\CodelineIndex
+\OnlyDescription
+\begin{document}
+
+ \CharacterTable
+  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+   Digits        \0\1\2\3\4\5\6\7\8\9
+   Exclamation   \!     Double quote  \"     Hash (number) \#
+   Dollar        \$     Percent       \%     Ampersand     \&
+   Acute accent  \'     Left paren    \(     Right paren   \)
+   Asterisk      \*     Plus          \+     Comma         \,
+   Minus         \-     Point         \.     Solidus       \/
+   Colon         \:     Semicolon     \;     Less than     \<
+   Equals        \=     Greater than  \>     Question mark \?
+   Commercial at \@     Left bracket  \[     Backslash     \\
+   Right bracket \]     Circumflex    \^     Underscore    \_
+   Grave accent  \`     Left brace    \{     Vertical bar  \|
+   Right brace   \}     Tilde         \~}
+
+ \GetFileInfo{mdframed.sty}
+
+
+ \title{\Pack{mdframed} 宏包
+       \footnote{对宏包 \texttt{framed.sty} 的扩展}}
+ \subtitle{自动跨页的边框环境}
+ \author{\href{mailto:marco.daniel@mada-nada.de}{Marco Daniel},
+        \href{mailto:marco.daniel@mada-nada.de}{Elke Schubert}}
+ \version{\mdversion}
+ \date{\mdfmaindate}
+ \introduction{给文字加框的常规方法（\Cmd{fbox}
+              或 \Cmd{fcolorbox}）需要手动处理分页，也就是说
+              你不得不把 \Cmd{fbox} 拆成两个。本宏包定义了环境
+              \Pack{mdframed}，能够自动处理带框文字的分页。\par
+              通过定义新的环境，用户可以在多种个性化的
+              外观之间进行选择。%
+             \par\kern.5\baselineskip\noindent
+             相关文件：\quad
+              \begin{tabular}[t]{ll}
+               \url{mdframed-example-default.pdf} &
+               \url{mdframed-example-tikz.pdf} \\
+               \url{mdframed-example-pstricks.pdf}  &
+               \url{mdframed-example-texsx.pdf}
+              \end{tabular}
+             \par\kern.5\baselineskip\noindent
+             备注：\quad\parbox[t]{.8\linewidth}{%
+                我在 \href{https://github.com/marcodaniel/mdframed}{GitHub}
+                上为 \Pack{mdframed} 建立了代码仓库，你可以在那里
+                \href{https://github.com/marcodaniel/mdframed}{下载}
+                当前的开发版本。}%
+ }
+
+ \maketitle
+
+ \vspace*{2\baselineskip} 
+
+ \section{设计动机}
+ 许多用户希望（进一步）突出引理、定义、证明等内容。
+  \Pack{mdframed} 宏包允许你创建带可跨页边框的环境。
+ 我认为示例是展示其特性的最佳方式。
+ 
+ \newmdtheoremenv[%
+    outerlinewidth  = 2             ,%
+    roundcorner     = 10pt          ,%
+    leftmargin      = 40            ,%
+    rightmargin     = 40            ,%
+    backgroundcolor = yellow!40     ,%
+    outerlinecolor  = blue!70!black ,% 
+    innertopmargin  = \topskip      ,%
+    splittopskip    = \topskip      ,%
+    ntheorem        = true          ,% 
+   ]{theorem}{定理}[section]
+ 
+ \begin{theorem}[勾股定理]
+  在任意直角三角形中，以斜边为边长的正方形面积，
+  等于以两条直角边为边长的正方形面积之和。
+  
+ \[ a^2+b^2=c^2 \]
+ \end{theorem}
+ 
+ 该边框由以下设置定义。
+ 
+\begin{tltxmdfexample}[columns=fixed,fontadjust=false]
+ \newmdtheoremenv[%
+    outerlinewidth  = 2             ,%
+    roundcorner     = 10pt          ,%
+    leftmargin      = 40            ,%
+    rightmargin     = 40            ,%
+    backgroundcolor = yellow!40     ,%
+    outerlinecolor  = blue!70!black ,% 
+    innertopmargin  = \topskip      ,%
+    splittopskip    = \topskip      ,%
+    ntheorem        = true          ,% 
+   ]{theorem}{定理}[section]
+ \begin{theorem}[勾股定理]
+ ...
+ \end{theorem}
+\end{tltxmdfexample}
+ 
+ 
+ \section{语法}\label{sec:syntax}
+ 
+ \minisec{\Pack{mdframed} 所需的宏包}
+ 宏包本身会加载以下宏包：
+  \begin{center}
+   \Pack{kvoptions}\qquad\Pack{xparse}\qquad\Pack{etoolbox}
+   \quad\Pack{color}.
+  \end{center}
+ 根据选项 \Opt{framemthod} 的不同，\Pack{mdframed} 还会加载：
+  \begin{center}
+   \Pack{xcolor}\qquad\Pack{tikz}\qquad\Pack{pstricks}.
+  \end{center}
+ 
+ 按常规方式加载本宏包：
+\begin{tltxmdfexample}
+  \usepackage[<全局选项>]{mdframed}
+\end{tltxmdfexample}
+ 
+ 只有选项 \Opt{framemethod} 应当通过 \Cmd{usepackage} 的
+ 可选参数传入；其余选项都应通过 \Cmd{mdfsetup} 或相关环境设置。
+ 如果你需要用到 \Pack{amsthm}，应在它之后再加载本宏包。
+ \minisec{提供的环境}
+ 本宏包只定义了一个环境，语法如下：
+\begin{tltxmdfexample}
+  \begin{mdframed}[<局部选项>]
+     <内容>
+  \end{mdframed}
+\end{tltxmdfexample}
+ 关于如何用 \Pack{mdframed} 创建自定义环境，请参见 \ref{sec:cmds} 节。
+ 
+ \minisec{浮动体的自动检测}
+ \Pack{mdframed} 会检测当前环境是否处于 \Pack{float}
+ 或 \Pack{minipage} 环境内部。若在这类环境中使用
+ \Pack{mdframed}，它会自动启用 \Opt{nobreak} 选项。
+ 
+ 
+ 
+ %%%%%%%%%%%%%%%%%%%%%%%
+ \section{边框}\label{sec:frames}
+ 
+ 通常来说，\Pack{mdframed} 只会绘制若干线条。
+ 为支持跨页，宏包提供了以下几种边框样式。
+ 若以 \Opt{framemethod=default} 加载本宏包，
+ 则只能绘制单一线条。下图灰色方框内部即为将要排版文字的区域。
+ \newcommand\Punkt[2][below]{%
+ 	\node[label=#1:#2] at (#2){\tikz\fill(0,0)circle(0.05);};}
+ \newcommand\Single[1][]{\path[#1] (O)--(O|-P)--(P)--(P|-O)--cycle;}
+ \newcommand\FirstSecond[1][]{\path[#1] (O|-P)--(O)--(P|-O)--(P);}
+ \newcommand\MiddleFlaeche[1][]{\path[#1] (O)--(O|-P)--(P)--(P|-O);}
+ \newcommand\MiddleLinien[1][]{\path[#1] (O)--(O|-P)(P)--(P|-O);}
+ \begin{center}
+ \vspace*{2\baselineskip}
+ \null\hfill
+ \begin{tikzpicture}[baseline=(current bounding box.north)]
+ 	\coordinate (O) at (0,0);
+ 	\pgfmathsetlengthmacro\x{4cm+2mm+6mm}
+ 	\pgfmathsetlengthmacro\y{2cm+2mm+6mm}
+ 	\coordinate (P) at (\x,\y);
+ 	\begin{scope}
+ 		\Single[line width=3mm,draw=blue!20]
+ 		\Single[clip]
+ 		\Single[fill=gray!70]
+ 		\Single[line width=7mm,draw=green!20]
+ 	\end{scope}
+ 	\Single[line width=2mm,draw=red!20,use as bounding box]
+ 	\node[anchor=south,font=\bfseries,text width=4cm,align=center] %
+        at (24mm,35mm) {单页边框};
+ \end{tikzpicture}%
+ \hfill%
+ \begin{tikzpicture}[baseline=(current bounding box.north)]
+ 	\coordinate (O) at (0,0);
+ 	\pgfmathsetlengthmacro\x{4cm+2mm+6mm}
+ 	\pgfmathsetlengthmacro\y{-2cm-1mm-3mm}
+ 	\coordinate (P) at (\x,\y);
+ 	\begin{scope}
+ 		\FirstSecond[line width=3mm,draw=blue!20]
+ 		\FirstSecond[clip]
+ 		\FirstSecond[fill=gray!70]
+ 		\FirstSecond[line width=7mm,draw=green!20]
+ 	\end{scope}
+ 	\FirstSecond[line width=2mm,draw=red!20,use as bounding box]
+ 	\node[anchor=south,font=\bfseries,text width=4cm,align=center] 
+            at (2.4,0.7) {第一个框 —— 输出的第一部分};
+ \end{tikzpicture}
+ \hfill\null
+ 
+ \vspace{3\baselineskip}
+ 
+  \null\hfill
+ \begin{tikzpicture}[baseline=(current bounding box.north)]
+ 	\coordinate (O) at (0,0);
+ 	\pgfmathsetlengthmacro\x{4cm+2mm+6mm}
+ 	\pgfmathsetlengthmacro\y{2cm+1mm+3mm}
+ 	\coordinate (P) at (\x,\y);
+ 	\begin{scope}
+ 		\FirstSecond[line width=3mm,draw=blue!20]
+ 		\FirstSecond[clip]
+ 		\FirstSecond[fill=gray!70]
+ 		\FirstSecond[line width=7mm,draw=green!20]
+ 	\end{scope}
+ 	\FirstSecond[line width=2mm,draw=red!20,use as bounding box]
+ 	\node[anchor=south,font=\bfseries,text width=4cm,align=center] %
+        at (24mm,25mm) {第二个框 —— 输出的最后一部分};
+ \end{tikzpicture}%
+ \hfill%
+ \begin{tikzpicture}[baseline=(current bounding box.north)]
+ 	\coordinate (O) at (0,0);
+ 	\pgfmathsetlengthmacro\x{4cm+2mm+6mm}
+ 	\pgfmathsetlengthmacro\y{2cm}
+ 	\coordinate (P) at (\x,\y);
+ 	\begin{scope}
+ 		\MiddleLinien[line width=3mm,draw=blue!20]
+ 		\MiddleFlaeche[clip]
+ 		\MiddleFlaeche[fill=gray!70]
+ 		\MiddleLinien[line width=7mm,draw=green!20]
+ 	\end{scope}
+ 	\MiddleLinien[line width=2mm,draw=red!20,use as bounding box]
+ 	\node[anchor=south,font=\bfseries,text width=4cm,align=center] 
+        at (24mm,20mm) {中间的框 —— 输出的中间部分};
+ \end{tikzpicture}
+ \hfill\null
+ 
+ \captionof{figure}{基本边框}\label{fig:basicframes}
+\end{center} 
+ %%%%%%%%%%%%%%%%%%%%%%%
+ \section{命令}\label{sec:cmds}
+
+ 以下命令可在使用 \Pack{mdframed} 时为你提供帮助。
+ 
+ \ExplCmd{newmdenv[选项]\{环境名\}} 该命令用于定义一个新环境，
+ 并由 \Env{mdframed} 为其加框。命令语法如下：
+\begin{tltxmdfexample}
+ \newmdenv[<mdframed 选项>]{环境名称}
+\end{tltxmdfexample}
+ 这样就可以写出：
+\begin{tltxmdfexample}
+  \newmdenv[linecolor=red,frametitle=信息框]{infobox}
+
+  \begin{infobox}[backgroundcolor=yellow]
+   一些信息\ldots
+  \end{infobox}
+\end{tltxmdfexample}
+ \ExplCmd{renewmdenv[选项]\{环境名\}} 
+      使用该命令可以重新定义由 \Cmd{newmdenv}
+      创建的环境。
+ 
+ \ExplCmd{surroundwithmdframed[选项]\{环境\}} 
+      有时你已经有预先定义好的环境。该命令可以在不改变
+      原名称的前提下，用 \Env{mdframed} 给某个已有
+      \Env{环境} 加框。例如要给 \Env{verbatim}
+      环境加上 \Env{mdframed}，只需这样写：
+\begin{tltxmdfexample}
+  \surroundwithmdframed[linewidth=2pt]{verbatim}
+\end{tltxmdfexample}
+
+ 
+ \ExplCmd{mdflength\{选项\}} 
+     若想使用 \Pack{mdframed} 定义的长度（例如
+     \Opt{innerleftmargin}），可以使用命令 \Cmd{mdflength}。
+\begin{tltxmdfexample}
+  间距为 \hspace{\mdflength{innerleftmargin}} 
+  \the\mdflength{innerleftmargin}
+\end{tltxmdfexample}
+ 结果如下：
+ \begin{center}
+  间距为 \hspace{\mdflength{innerleftmargin}} \the\mdflength{innerleftmargin}
+ \end{center}
+
+ 
+ \ExplCmd{mdfsetup\{选项\}}设置选项时，
+ 既可以使用 \Cmd{usepackage} 的可选参数，
+ 也可以使用命令 \Cmd{mdfsetup}，后者不限于导言区。
+ 在一个分组内，设置仅作用于局部。\par
+ \textbf{\color{red!70!black}在此我建议使用
+ 命令 \Cmd{mdfsetup}，而不是通过 \Cmd{usepackage} 的可选参数
+ 设置宏包选项，这样可以避免非健壮命令出错。}^^A
+ \footnote{感谢 Heiko Oberdiek 与 Philipp Stephani
+ \href{https://groups.google.com/group/de.comp.text.tex/^^A
+       browse_thread/thread/15c5ad290490d426?hl=de}^^A
+       {kvoptions 选项声明失败的讨论}}
+ 唯一的例外是选项 \Opt{framemethod}，它必须作为
+ \Cmd{usepackage} 的可选参数给出。
+
+ 
+ 
+ 
+ \section{定义自定义样式}
+ 下一节将介绍所有选项。不过，除了把选项作为全局选项或环境
+ 可选参数传入之外，你还可以定义自己的样式。方法如下：
+ \ExplCmd{mdfdefinestyle\{样式名\}\{选项\}} 
+   \Cmd{mdfdefinestyle} 允许用户定义不同的样式，再通过
+   \Opt{style} 作为 \Pack{mdframed} 的选项使用。
+ \ExplCmd{mdfapptodefinestyle\{样式名\}\{选项\}} 
+      该命令用于向已定义的样式追加选项。\footnote{感谢
+       Martin Scharrer 与 Enrico Gregorio：\newline
+      \href{http://tex.stackexchange.com/questions/34684/argument-of-setkeys}
+           {http://tex.stackexchange.com/questions/34684/argument-of-setkeys}}
+ \ExplOpt{style} 
+      若已用 \Cmd{mdfdefinestyle} 定义了某个样式，就可以用
+      键 \Opt{style} 载入该样式。\Pack{mdframed} 目前
+      没有预定义样式。
+
+ 下面是一个小例子：
+\begin{tltxmdfexample}[morekeywords={mystyle}]
+ \mdfdefinestyle{mystyle}{leftmargin=1cm,linecolor=blue}
+ \begin{mdframed}[style=mystyle]
+  文本
+ \end{mdframed}
+\end{tltxmdfexample}
+ 
+ 
+ %%%%%%%%%%%%%%%%%%%%%%%
+ \section{选项}
+ 本宏包提供多种用于调整边框的选项，下一节逐一列出。
+ 文档未列出部分可供调整的内部宏。
+ 所列选项分为全局选项与局部选项；全局选项
+ 不能在 \Cmd{mdfsetup} 内部使用。
+ 
+ \subsection{全局选项}\label{globopt}
+ 以下选项仅为全局选项。
+ 
+ \ExplOpt[none]{xcolor}
+ 设置该键后，宏包 \Pack{xcolor} 将以给定的
+ 参数被加载。若不提供任何值，\mbox{\Pack{mdframed}}
+ 会不带选项地加载宏包 \Pack{color}。若
+ \Pack{xcolor} 已被加载，则给定的选项将被忽略。
+ 建议在 \Pack{mdframed} 之前加载 \Pack{xcolor}。
+ 
+ \ExplOpt[default]{framemethod} 
+     通过该键可以改变边框的绘制方式。可以选择边框由
+ 以下方式之一绘制：
+ \begin{enumerate}
+  \item \LaTeX 命令 {\small\Cmd{hrule}, \Cmd{vrule}, \Cmd{rule}},
+  \item \Pack{TikZ} {\small（将加载宏包 \Pack{TikZ}）} 或
+  \item \Pack{PSTricks} {\small（将加载宏包 \Pack{pstricks}）}。
+ \end{enumerate}
+ 选项 \Opt{framemethod} 接受一个字符串，允许的组合
+ 列于下表。
+ \begin{center}
+ \renewcommand*\arraystretch{1.3}
+ \captionof{table}{\Opt{framemethod} 的可用键}
+ \begin{tabular}{@{}>{\small\bfseries}l>{\small\ttfamily}l@{}}
+  \toprule
+   \multicolumn{1}{@{}l}{\textbf{方式}} & \multicolumn{1}{l}{可用键}\\
+  \midrule
+   \LaTeX 命令   & default, tex, latex, none, 0  \\
+   \Pack{TikZ}     & tikz, pgf, 1                  \\
+   \Pack{PSTricks} & pstricks, ps, postscript, 2   \\
+  \bottomrule
+ \end{tabular}
+ \end{center}
+
+ 图省事的话，也可以使用以下简写：
+ \Opt{tikz}, \Opt{TikZ}, \Opt{pstricks}, \Opt{PSTricks} 或 \Opt{ps}。
+ 当然，默认方式没有对应的键。
+
+ \minisec{备注}
+ 上述方式名无论写成大写、小写或大小写混合，
+ 效果都相同。
+
+ 下面列出的其余选项均可全局或局部设置，且不限于导言区。
+ 我尽量让选项名称做到见名知义。
+
+ \subsection{恢复设置}
+ 有时需要清除此前所做的全部设置。每个默认值
+ 都保存在一个样式中，可通过选项 \Opt{default} 调用，
+ 或用更直观的名称
+ \Opt{style=defaultoptions}；两者效果相同。
+
+ 下面是一个小例子：
+\begin{tltxmdfexample}[morekeywords={mystyle}]
+ \mdfsetup{%
+   middlelinecolor=red,
+   middlelinewidth=2pt,
+   backgroundcolor=red!10,
+   roundcorner=10pt}
+ \begin{mdframed}
+ 文本\par 文本
+ \end{mdframed}
+
+ \begin{mdframed}[default]
+ 文本\par 文本
+ \end{mdframed}
+\end{tltxmdfexample}
+ 
+ \begin{mdframed}[%
+ backgroundcolor=yellow!70!brown,linewidth=1.5pt,
+ roundcorner=8pt,linecolor=brown!70!black,innerleftmargin=10pt]
+  \mdfsetup{default,
+   middlelinecolor=red,
+   middlelinewidth=2pt,
+   backgroundcolor=red!10,
+   roundcorner=10pt}
+ \begin{mdframed}
+ 文本\par 文本
+ \end{mdframed}
+
+ \begin{mdframed}[default]
+ 文本\par 文本
+ \end{mdframed}
+ \end{mdframed}
+
+
+
+ \subsection{长度选项}\label{optlength}
+ 
+ 图 \eqref{fig:laengen} 给出了可调整的长度
+ （另见图 \eqref{fig:basicframes}）。
+ 
+ \begin{center}
+ \begin{tikzpicture}[scale=0.9]
+      %Declaration
+      \newlength{\linew}
+      \setlength{\linew}{5pt}
+      \tikzstyle{every node}=[font=\bfseries\large\sffamily]
+      \coordinate (innersep) at (3.2,2.25);
+      \coordinate (outersep) at (3.2,2);
+      %Center
+      \node[fill=green!10,draw=black,framed,rounded corners,
+            minimum width=3cm,minimum height=1.5cm]%
+            (CenterNode) {内容};
+      
+      %frames
+      \draw[draw=red!70!black,line width=\linew] %
+                ($(CenterNode)+(innersep)$) %
+                rectangle ($(CenterNode)-(innersep)$);
+      \draw[draw=blue!70!black,line width=\linew] %
+                ($(CenterNode)+(innersep)+(\linew,\linew)$)%
+                rectangle ($(CenterNode)-(innersep)+(-\linew,-\linew)$);
+      \draw[draw=yellow!70!black,line width=\linew]
+                ($(CenterNode)+(innersep)+(2\linew,2\linew)$)%
+                rectangle ($(CenterNode)-(innersep)+(-2\linew,-2\linew)$);
+      \draw[draw=black,line width=1] ($(CenterNode)+(innersep)+(outersep)$)%
+                rectangle ($(CenterNode)-(innersep)-(outersep)$);
+      
+      
+      \tikzstyle{every node}=[font=\small\ttfamily]
+      %%innertopmargin
+      \draw[draw=black,triangle 45-triangle 45]let \p1=(innersep) in
+            (CenterNode.north)  -- ($(CenterNode)+(0,\y1)-(0,.5\linew)$) ;
+      \path let \p1=(innersep) in
+            (CenterNode.north)
+            edge 
+            node[align=center,framed,fill=white,draw=white]{innertopmargin} 
+            ($(CenterNode)+(0,\y1)-(0,.5\linew)$) ;
+      %%innerbottommargin
+      \draw[draw=black,triangle 45-triangle 45]let \p1=(innersep) in
+            (CenterNode.south)  -- ($(CenterNode)-(0,\y1)+(0,.5\linew)$) ;
+      \path let \p1=(innersep) in
+            (CenterNode.south)  
+            edge 
+            node[align=center,framed,fill=white,draw=white]{innerbottommargin}
+            ($(CenterNode)-(0,\y1)+(0,.5\linew)$) ;
+      
+      %%innerleftmargin
+      \draw[draw=black,triangle 45-triangle 45]let \p1=(innersep) in
+            (CenterNode.west)  -- ($(CenterNode)-(\x1,0)+(.5\linew,0)$) ;
+      \path let \p1=(innersep) in
+            (CenterNode.west)  edge 
+            node[align=center,rotate=90,framed,fill=white,draw=white]
+                {innerleftmargin}  
+            ($(CenterNode)-(\x1,0)+(.5\linew,0)$) ;
+      %%innerrightmargin
+      \draw[draw=black,triangle 45-triangle 45]let \p1=(innersep) in
+            (CenterNode.east)  -- ($(CenterNode)+(\x1,0)-(.5\linew,0)$) ;
+      \path let \p1=(innersep) in
+            (CenterNode.east)  edge
+            node[align=center,rotate=90,framed,fill=white,draw=white]
+               {innerrightmargin}  
+            ($(CenterNode)+(\x1,0)-(.5\linew,0)$) ;
+      
+      
+      %%leftmargin
+      \draw[draw=black,triangle 45-triangle 45]
+            let \p1=(innersep) , \p2=(outersep) in
+            ($(CenterNode)-(\x1,0)-(2.5\linew,0)$)  --
+            ($(CenterNode)-(\x1,0)-(\x2,0)$) ;
+      \path let \p1=(innersep) , \p2=(outersep) in
+            ($(CenterNode)-(\x1,0)-(2.5\linew,0)$)  edge 
+            node[align=center,rotate=0,framed,fill=white,draw=white]
+                {leftmargin}  
+            ($(CenterNode)-(\x1,0)-(\x2,0)$) ;
+      %%rightmargin
+      \draw[draw=black,triangle 45-triangle 45]
+            let \p1=(innersep) , \p2=(outersep) in
+            ($(CenterNode)+(\x1,0)+(2.5\linew,0)$)  --
+            ($(CenterNode)+(\x1,0)+(\x2,0)$) ;
+      \path let \p1=(innersep) , \p2=(outersep) in
+            ($(CenterNode)+(\x1,0)+(2.5\linew,0)$)  edge 
+            node[align=center,rotate=0,framed,fill=white,draw=white]
+            {rightmargin}  
+            ($(CenterNode)+(\x1,0)+(\x2,0)$)  ;
+      
+      %%skipabove
+      \draw[draw=black,triangle 45-triangle 45]
+            let \p1=(innersep) , \p2=(outersep) in
+            ($(CenterNode)+(0,\y1)+(0,2.5\linew)$)  -- 
+            ($(CenterNode)+(0,\y1)+(0,\y2)$) ;
+      \path let \p1=(innersep) , \p2=(outersep) in
+            ($(CenterNode)+(0,\y1)+(0,2.5\linew)$)  edge 
+            node[align=center,rotate=0,framed,fill=white,draw=white]
+                {skipabove}
+            ($(CenterNode)+(0,\y1)+(0,\y2)$) ;
+      %%skipbelow
+      \draw[draw=black,triangle 45-triangle 45]
+            let \p1=(innersep) , \p2=(outersep) in
+            ($(CenterNode)-(0,\y1)-(0,2.5\linew)$)  -- 
+            ($(CenterNode)-(0,\y1)-(0,\y2)$) ;
+      \path let \p1=(innersep) , \p2=(outersep) in
+            ($(CenterNode)-(0,\y1)-(0,2.5\linew)$)  edge 
+            node[align=center,rotate=0,framed,fill=white,draw=white]
+                {skipbelow}
+            ($(CenterNode)-(0,\y1)-(0,\y2)$) ;
+ \end{tikzpicture}
+ 
+  \captionof{figure}{\Pack{mdframed} 可调长度}
+  \label{fig:laengen}
+ \end{center}
+ 
+ \ExplOpt[pt]{defaultunit}
+ 所有长度接受两种输入：第一种是长度（如 2pt），
+ 第二种是数值（如 2），它将乘以
+ \Opt{defaultunit}。为便于查阅，下表列出了所有长度选项及其
+ 默认值。选项名称已尽量做到见名知义，
+ 故不再逐一说明；但下面仍会介绍一些特殊的提示与长度。
+
+ 
+ 第一张表列出边框几何相关的长度。
+ \begin{center}
+ \def\arraystretch{1.4}
+ \begin{tabular}{@{}%
+ 	  >{\Opt\bgroup}l<{\egroup}@{${}={}$}>{\ttfamily}l%
+   @{\qquad}
+ 	  >{\Opt\bgroup}l<{\egroup}@{${}={}$}>{\ttfamily}l%
+ 	  @{}}
+    \hline
+ 	  skipabove       & 0pt  & skipbelow         & 0pt  \\
+ 	  leftmargin      & 0pt  & rightmargin       & 0pt  \\
+ 	  innerleftmargin & 10pt & innerrightmargin  & 10pt \\
+ 	  innertopmargin  & 5pt  & innerbottommargin & 5pt  \\
+    \hline
+ \end{tabular}
+ \end{center}
+ 在介绍下一组选项之前，先给出一个使用上述长度的例子。
+\begin{tltxmdfexample}[morekeywords={mystyle}]
+ \mdfdefinestyle{mdfexample1}{leftmargin=1cm,rightmargin=2cm,%
+   innerleftmargin=1cm,innerrightmargin=1cm,roundcorner=10pt}
+ \begin{mdframed}[style=mdfexample1]
+   在任意直角三角形中，以斜边为边长的正方形面积，
+   等于以两条直角边为边长的正方形面积之和。
+ \end{mdframed}
+\end{tltxmdfexample}
+ \begin{mdframed}[%
+ backgroundcolor=yellow!70!brown,linewidth=1.5pt,
+ roundcorner=8pt,linecolor=brown!70!black,innerleftmargin=10pt]
+ \mdfdefinestyle{mdfexample1}{default,leftmargin=1cm,rightmargin=2cm,%
+   innerleftmargin=2cm,innerrightmargin=1cm,roundcorner=10pt}
+ \begin{mdframed}[style=mdfexample1]
+   在任意直角三角形中，以斜边为边长的正方形面积，
+   等于以两条直角边为边长的正方形面积之和。
+ \end{mdframed}
+ \end{mdframed}
+
+
+ 下一张表列出用于调整 \Env{mdframed} 线条的选项。
+ 若使用 \Opt{framemethod=default}，边框只有一条线。
+ \begin{center}
+ \def\arraystretch{1.4}
+ \begin{tabular}{@{}%
+ 	>{\Opt\bgroup}l<{\egroup}@{${}={}$}>{\ttfamily}l%
+   @{\qquad}
+ 	>{\Opt\bgroup}l<{\egroup}@{${}={}$}>{\ttfamily}l%
+   @{\qquad}
+ 	>{\Opt\bgroup}l<{\egroup}@{${}={}$}>{\ttfamily}l%
+ 	@{}}
+     \hline
+ 	     linewidth       & 0.4pt  & innerlinewidth & 0pt  &
+ 	     middlelinewidth & 0.4pt \\
+ 	     outerlinewidth  & 0pt    & roundcorner     & 0pt &   
+        \multicolumn{2}{c}{}    \\
+      \hline
+ \end{tabular}
+ \end{center}
+ 若使用 \Opt{framemethod=tikz} 或 \Opt{framemethod=pstricks}，
+ 选项 \Opt{linewidth} 是选项 \Opt{middlelinewidth} 的别名。
+ 
+ 
+ \subsection{颜色选项}
+ 下面给边框增添一些色彩。限制条件与长度选项相同：
+ \Opt{framemethod=default} 下只有一条线。
+ \begin{center}
+ \def\arraystretch{1.4}
+ \begin{tabular}{@{}%
+ 	>{\Opt\bgroup}l<{\egroup}@{${}={}$}>{\ttfamily}l%
+   @{\qquad}
+ 	>{\Opt\bgroup}l<{\egroup}@{${}={}$}>{\ttfamily}l%
+ 	@{}}
+     \hline
+ 	     linecolor       & black  & innerlinecolor  & black  \\
+ 	     middlelinecolor & black  & outerlinecolor  & black  \\
+        backgroundcolor & white  & fontcolor       & black  \\
+      \hline
+ \end{tabular}
+ \end{center}
+ 
+ \ExplOpt[\{\}]{font} 
+ 虽说它并非真正的颜色选项，但你也可以指定内容的
+ 字体，这可通过选项 \Opt{font} 实现。
+
+ 掌握了长度和颜色之后，下面来改进之前的例子。
+\begin{tltxmdfexample}[morekeywords={example1}]
+ \mdfapptodefinestyle{example1}{backgroundcolor=brown!20,%
+    linecolor=red!40!black,linewidth=4pt}
+ \begin{mdframed}[style=mdfexample1]
+   在任意直角三角形中，以斜边为边长的正方形面积，
+   等于以两条直角边为边长的正方形面积之和。
+ \end{mdframed}
+\end{tltxmdfexample}
+ \begin{mdframed}[%
+ backgroundcolor=yellow!70!brown,linewidth=1.5pt,
+ roundcorner=8pt,linecolor=brown!70!black,innerleftmargin=10pt]
+ \mdfdefinestyle{mdfexample1}{default,leftmargin=1cm,rightmargin=2cm,%
+   innerleftmargin=2cm,innerrightmargin=1cm,roundcorner=10pt,%
+   backgroundcolor=brown!20,linecolor=red!40!black, linewidth=4pt}
+ \begin{mdframed}[style=mdfexample1]
+   在任意直角三角形中，以斜边为边长的正方形面积，
+   等于以两条直角边为边长的正方形面积之和。
+ \end{mdframed}
+ \end{mdframed}
+
+
+
+ \subsection{阴影}\label{sec:shadow}
+ 突出边框的另一种方式是添加阴影。\Pack{mdframed}
+ 提供了若干基础阴影选项。对于 \Opt{framemethod=tikz}，
+ 需要由用户通过 \verb+\usetikzlibrary{shadows}+ 加载
+ \Pack{shadows} 库。
+ \ExplOpt[8\,pt]{shadowsize}
+ \ExplOpt[black!50]{shadowcolor}
+ 是否使用阴影取决于选项 \Opt{shadow}，取值可为
+ \texttt{true} 或 \texttt{false}。启用阴影后会出现两个新选项：
+ \Opt{shadowsize} 与 \Opt{shadowcolor}。
+\begin{tltxmdfexample}[morekeywords={example1}]
+ \begin{mdframed}[backgroundcolor=gray!40,shadow=true,roundcorner=8pt]
+   在任意直角三角形中，以斜边为边长的正方形面积，
+   等于以两条直角边为边长的正方形面积之和。
+ \end{mdframed}
+\end{tltxmdfexample}
+ \begin{mdframed}[backgroundcolor=gray!40!white,shadow=true,roundcorner=8pt]
+   在任意直角三角形中，以斜边为边长的正方形面积，
+   等于以两条直角边为边长的正方形面积之和。
+ \end{mdframed}
+
+
+ \subsection{隐藏线条}
+ 前文图示展示了输出的默认行为。
+ \Pack{mdframed} 允许只绘制指定的线条。若不想要右边线，
+ 可写 \Opt{rightline=false}。下表列出与此相关的所有键
+ 及其默认值。
+ \begin{center}
+ \def\arraystretch{1.4}
+ \begin{tabular}{@{}%
+ 	>{\Opt\bgroup}l<{\egroup}@{${}={}$}>{\ttfamily}l%
+   @{\qquad}
+ 	>{\Opt\bgroup}l<{\egroup}@{${}={}$}>{\ttfamily}l%
+ 	@{}}
+     \hline
+ 	     topline  & true  & rightline  & true  \\
+ 	     leftline & true  & bottomline & true  \\
+      \hline
+ \end{tabular}
+ \end{center}
+ \ExplOpt[false]{hidealllines} 
+ 若想禁用全部线条，可以使用简写
+ \Opt{hidealllines}。
+
+
+ \subsection{双栏（twoside）模式}
+ 
+ 许多书籍采用 \texttt{twoside} 模式排版，此时
+ 最好按页面内外侧设置边距。除前面介绍的
+ \Opt{leftmargin} 与 \Opt{rightmargin} 外，还可以使用
+ 选项 \Opt{outermargin} 与 \Opt{innermargin}。当然，在
+ \texttt{oneside} 模式下这两个选项无效。即使文档采用
+ \texttt{twoside} 模式，若不想使用 \Opt{outermargin} 与
+ \Opt{innermargin}，也可通过选项
+ \Opt{usetwoside} 关闭该行为。该键的取值为 \texttt{true} 或
+ \texttt{false}。
+ 
+
+ \subsection{脚注}
+ 在环境内部可以照常使用命令 \Cmd{footnote}。
+ \Pack{mdframed} 采用 \Pack{minipage} 环境的语法，
+ 并共用同一套计数器。
+ 
+ 所有脚注文字都会收集到一个框中，显示在
+ \Pack{mdframed} 环境的末尾。
+ 
+ \ExplOpt[\mbox{} \Cmd{bigskipamount}]{footnotedistance} 
+      该长度为 \Pack{mdframed} 环境末尾与
+      \Cmd{footnoterule} 之间的距离。
+ \ExplOpt[true]{footnoteinside} 
+      脚注的位置可通过选项
+      \Opt{footnoteinside} 改变。脚注显示在环境末尾，
+      但可以决定输出位于 \Pack{mdframed} 框内
+      还是框外。
+ 
+ \minisec{注意}
+ 当选项 \Opt{footnoteinside=false} 时，脚注输出
+ 不处于被拆分的边框之内。我认为这样并不可取，因为
+ 新页面的第一行不宜是脚注。
+
+
+
+
+\subsection{分页}
+ \Pack{mdframed} 会在必要时拆分内容。图
+ \ref{fig:basicframes} 给出了默认的拆分样式。不过
+ 在某些情况下不应发生分页。
+ \ExplOpt[false]{nobreak} 
+ 为此可使用选项 \Opt{nobreak}，取值为
+ \texttt{true} 或 \texttt{false}。如图
+ \ref{fig:basicframes} 所示，不同部分的绘制方式不同，
+ 例如 \Pack{mdframed} 的中间部分只有左右两条边线。
+ 
+ \ExplOpt[false]{everyline} 
+ 若希望 \Pack{mdframed} 的每一部分都拥有完整边框，可使用
+ 选项 \Opt{everyline}，此时各部分都按独立边框显示。
+
+ 前一节介绍了选项 \Opt{innertopmargin} 与
+ \Opt{innerbottommaring}。发生分页时，还有两个新的长度选项
+ 会影响分页处的间距。
+ \ExplOpt[0\,pt]{splittopskip} 
+   设置环境被拆分后，上半部分底部预留的间距长度。
+ \ExplOpt[0\,pt]{splitbottomskip} 
+   设置环境被拆分后，下半部分顶部预留的间距长度。
+ 
+ \subsection{边框标题}
+ 本节介绍与边框标题相关的所有选项，
+ 不再按其属性分类。
+ 
+ \ExplOpt[none]{frametitle} 
+      为环境设置标题。将标题作为环境选项传入，
+      写法如 \Opt{frametitle=\{边框标题\}}。
+ \ExplOpt[\Cmd{normalfont}\Cmd{bfseries}]{frametitlefont}
+      设置 \Opt{frametitle} 的字体格式。
+ \ExplOpt[\Cmd{raggedleft}]{frametitlealignment}
+      设置 \Opt{frametitle} 的对齐方式。该选项必须通过 \Cmd{mdfsetup} 设置。
+ \ExplOpt[false]{frametitlerule} 
+      将此键设为 \Opt{true}，可在边框标题
+      与正文之间加一条分隔线。
+ \ExplOpt[.2\,pt]{frametitlerulewidth}
+      设置 \Env{mdframed} 正文与标题之间
+      分隔线的宽度。
+ \ExplOpt[5\,pt]{frametitleaboveskip}
+      设置边框标题与 \Env{mdframed} 上边距之间的间距。
+ \ExplOpt[5\,pt]{frametitlebelowskip}
+      设置边框标题与其分隔线之间的间距。
+ \ExplOpt[backroundcolor]{frametitlebackgroundcolor}
+      设置边框标题的背景颜色。
+ \ExplOpt[false]{repeatframetitle}
+      在每一段拆分出的边框上重复显示标题。
+
+
+ 下图展示使用选项 \Opt{frametitle} 时各长度的含义。
+ 
+ \begin{center}
+ \begin{tikzpicture}[scale=0.9]
+      %Declaration
+      \tikzstyle{every node}=[font=\bfseries\large\sffamily]
+      \coordinate (innersep) at (3.2,2.25);
+      \coordinate (outersep) at (3.2,2);
+      %Center box
+      \node[fill=green!10,draw=red!70!black,very thick,fill opacity=.2,
+            text opacity=1,minimum width=9cm,minimum height=3cm,]%
+            (CenterNode) {框内内容};
+      %frametitle box
+      \node[fill=yellow!70,draw=red!70!black,very thick,fill opacity=.2,
+            text opacity=1,minimum width=9cm,minimum height=3cm,anchor=south]%
+            at (CenterNode.north) (frametitle) {边框标题};
+ % frametitlerule
+     \draw[line width=3pt,blue!60!black] (frametitle.south west) 
+                                      -- (frametitle.south east)
+              node[pos=1,anchor=west,text width=4cm] 
+                  {\Opt{frametitlerulewidth}\\\Opt{frametitlerule=true}};
+ % frametitlebelowskip
+     \draw[very thick,blue!60!black,latex-latex,shorten >=0.2cm] 
+          (frametitle.south) -- (frametitle.center)
+          node[pos=0.5,anchor=west] 
+             {\Opt{ frametitlebelowskip}};
+ % frametitleaboveskip
+     \draw[very thick,blue!60!black,latex-latex,shorten >=0.2cm] 
+          (frametitle.north) -- (frametitle.center)
+           node[pos=0.5,anchor=west] {\Opt{ frametitleaboveskip}};
+ % innertopmargin
+     \draw[very thick,blue!60!black,latex-latex,shorten >=0.2cm] 
+          (CenterNode.north) -- (CenterNode.center)
+               node[pos=0.5,anchor=west] {\Opt{ innertopmargin}};
+ % splittopskip
+     \draw[very thick,blue!60!black,latex-latex,shorten >=0.2cm] 
+          (CenterNode.north) -- (CenterNode.center)
+               node[pos=0.5,anchor=east] {\Opt{splittopskip}};
+ % global frame
+  \draw[thick] (-5.5,-2.1) rectangle (9.4,5.5);
+ \end{tikzpicture}
+  \captionof{figure}{使用 \Opt{frametitle} 时各长度的含义}
+  \label{fig:frametitlelaengen}
+ \end{center}
+ 
+
+ \minisec{备注与注意}
+ 边框标题的拆分是一个相当棘手的问题。若使用
+ 选项 \Opt{repeatframetitle}，拆分几乎必然出错；
+ 另一方面，使用该选项时用户必须妥善准备
+ 内容。
+
+ \subsection{环境内部的标题命令}
+
+ 若要在 \Pack{mdframed} 环境内部提供小标题，可使用
+ 命令 \Cmd{mdfsubtitle}。相关选项列于下文。
+
+ \ExplCmd{mdfsubtitle} 
+      在 \Pack{mdframed} 内部设置内部一级小标题。
+
+ 该命令接受一个可选参数和一个
+ 必选参数。可选参数用于设置 \Pack{mdframed} 选项，
+ 且仅在局部生效；小标题的第二个参数也允许
+ 分段。
+
+ \Cmd{mdfsubtitle} 内部不支持换行分段。
+
+\begin{tltxmdfexample}
+  \mdfsubtitle[<选项>]{小标题}
+\end{tltxmdfexample}
+
+
+ \subsubsection{与一级标题相关的选项}
+ \ExplOpt[false]{subtitleaboveline}
+     是否在小标题上方绘制一条线。
+ \ExplOpt[false]{subtitlebelowline}
+     是否在小标题下方绘制一条线。
+ \ExplOpt[\string\normalfont\string\bfseries]{subtitlefont}
+     设置小标题的字体。
+ \ExplOpt[white]{subtitlebackgroundcolor}
+     设置小标题在上下两条线之间的
+     背景颜色。
+ \ExplOpt[black]{subtitleabovelinecolor}
+     设置上方线条的颜色。
+ \ExplOpt[black]{subtitlebelowlinecolor}
+     设置下方线条的颜色。
+ \ExplOpt[0.8\,pt]{subtitleabovelinewidth}
+     设置上方线条的宽度。
+ \ExplOpt[0.6\,pt]{subtitlebelowlinewidth}
+     设置下方线条的宽度。
+ \ExplOpt[\string\baselineskip]{subtitleaboveskip}
+     设置绘制上方线之前的间距。
+ \ExplOpt[1.2\string\baselineskip]{subtitlebelowskip}
+     设置绘制下方线之后的间距。
+ \ExplOpt[0.5\string\baselineskip]{subtitleinneraboveskip}
+     设置上方线与小标题本身之间的间距。
+ \ExplOpt[0.5\string\baselineskip]{subtitleinnerbelowskip}
+     设置小标题与下方线之间的间距。
+
+ 下面用一个示例演示其效果：
+
+\newmdenv[%
+ roundcorner=5pt,nobreak=true,
+ subtitlebelowline=true,subtitleaboveline=true,
+ subtitlebackgroundcolor=yellow!70!white,
+ backgroundcolor=blue!20!white,
+ frametitle={定理},frametitlerule=true,
+ frametitlebackgroundcolor=yellow!70!white,
+ ]{subtitleenv}
+
+ \begin{subtitleenv}
+   若干文字 \ldots
+   \mdfsubtitle{注记}
+   若干文字 \ldots
+ \end{subtitleenv}
+
+\begin{tltxmdfexample}
+\newmdenv[%
+ roundcorner=5pt,
+ subtitlebelowline=true,subtitleaboveline=true,
+ subtitlebackgroundcolor=yellow!70!white,
+ backgroundcolor=blue!20!white,
+ frametitle={定理},frametitlerule=true,
+ frametitlebackgroundcolor=yellow!70!white,
+ ]{subtitleenv}
+\begin{subtitleenv}
+  一些文本 \ldots
+  \mdfsubtitle{注记}
+  一些文本 \ldots
+\end{subtitleenv}
+\end{tltxmdfexample}
+
+
+     
+ \subsection{通用选项}\label{genopt}
+ 有些选项无法归入上述类别，集中列于本节。
+ \ExplOpt[false]{ntheorem} 
+      设置此布尔键之前，必须先加载
+      宏包 \Pack{ntheorem}。启用该选项后，会把
+      \Cmd{theorempreskipamount} 与
+      \Cmd{theorempostskipamount} 设为 0\,pt，以避免额外的垂直间距。
+ \ExplOpt[0\,pt]{needspace} 
+      有时需要在边框被拆分之前预留一个最小高度，
+      这时可使用 \Opt{needspace}。
+      该选项接受一个长度，用于设定边框拆分前
+      所需的最小高度。
+ \ExplOpt[false]{ignorelastdescenders} 
+      尝试忽略 \Env{mdframed} 最后一行的下伸字母。该
+      思路来自 Tobias Weh，实现方案由
+      Stefan Lemke 提供。参见
+      \href{http://tex.stackexchange.com/questions/47584/how-to-make-^^A
+            mdframed-ignore-descenders-in-last-line}^^A
+           {如何让 mdframed 忽略最后一行的下伸字母}。
+ 此外，还有一些可供调整的长度。
+ \ExplOpt[\textbackslash linewidth]{userdefinedwidth} 
+      设置整个 \Pack{mdframed} 环境的宽度。
+      该宽度包含线宽与内部边距，
+      外部边距不计入其中。
+
+ \ExplOpt[left]{align} 
+      有时需要对齐环境本身。
+      为此提供了选项 \Opt{align}，可取以下
+      字符串：
+      \begin{itemize}
+       \item \Opt{left}，
+       \item \Opt{right}，以及
+       \item \Opt{center}。
+      \end{itemize}
+      \Opt{left} 或 \Opt{right} 对齐取决于给定的长度
+      \Opt{leftmargin} 与 \Opt{rightmargin}。后文会给出一个示例
+      来演示这段仍显笨拙的中文说明。
+
+ 请谨慎使用此选项。
+
+
+ \subsection{TikZ 选项}\label{tikzopt}
+ \mbox{}
+ \ExplOpt[\{\}]{tikzsetting}
+      通过该键可以向 \Cmd{tikzset} 传递若干选项。
+      下一节给出了一些示例。务必
+      将 \Opt{tikzsetting} 的选项置于花括号中。
+ \ExplOpt[\{\}]{apptotikzsetting}
+      通过该键可以向 \Opt{tikzsetting} 追加若干选项。
+      该键基于对 \Pack{mdframed} 预定义键进行
+      调整的思路。\Pack{mdframed} 通过
+      \Cmd{tikzset} 定义了以下用于绘制边框的键。
+      \begin{itemize}
+       \item \Cmd{tikzset\{mdfbox/.style\}}
+       \item \Cmd{tikzset\{mdfcorners/.style\}}
+       \item \Cmd{tikzset\{mdfbackground/.style\}}
+       \item \Cmd{tikzset\{mdfinnerline/.style\}}
+       \item \Cmd{tikzset\{mdfouterline/.style\}}
+       \item \Cmd{tikzset\{mdfmiddleline/.style\}}
+       \item \Cmd{tikzset\{mdfframetitlerule/.style\}}
+       \item \Cmd{tikzset\{mdfframetitlebackground/.style\}}
+       \item \Cmd{tikzset\{mdfshadow/.style\}}
+      \end{itemize}
+      \textbf{修改其中任何一个之前，请先查看
+              文件 \texttt{md-frame-1.mdf} 了解其设置。}
+
+
+ \subsection{PSTricks 选项}\label{pstricksopt}
+ \mbox{}
+ \ExplOpt[\{\}]{pstrickssetting}
+      通过该键可以向 \Cmd{psset} 传递若干选项。
+      例如若希望所有线条为虚线，可设置
+      \Opt{pstrickssetting=\{linestyle=dashed\}}。务必
+      将 \Opt{pstrickssetting} 的选项置于花括号中。
+ \ExplOpt[\{\}]{pstricksappsetting}
+      \Pack{mdframed} 为不同元素使用预定义样式。结合本选项
+      使用 \Cmd{addtopsstyle} 即可扩充这些定义。
+      预定义样式包括：
+      \begin{itemize}
+       \item \Opt{mdfbackgroundstyle}
+       \item \Opt{mdfframetitlebackgroundstyle}
+       \item \Opt{mdfouterlinestyle}
+       \item \Opt{mdfinnerlinestyle}
+       \item \Opt{mdfmiddlelinestyle}
+      \end{itemize}
+       \textbf{修改其中任何一个之前，请先查看文件
+               \texttt{md-frame-2.mdf} 了解其设置。}
+
+
+ \section{钩子与布尔标志}\label{hooksandbools}
+ 以下选项与布尔标志可供各类用户使用；当然
+ 其中一些需要较深的使用经验。
+
+ \ExplOpt[\{\}]{settings} 
+ 本选项允许用户在 \Pack{mdframed} 开头提交一些宏代码。
+ 所给内容在保存框开始之前执行。
+
+ \ExplOpt[\{\}]{extra}
+      向每一个绘制出的边框追加内容。
+ \ExplOpt[\{\}]{singleextra}
+      通过该键，可仅为未拆分的边框，向
+      \Pack{mdframed} 的绘制环境追加额外内容。
+ \ExplOpt[\{\}]{firstextra}
+      通过该键，可仅为拆分边框的第一部分，向
+      \Pack{mdframed} 的绘制环境追加额外内容。
+ \ExplOpt[\{\}]{middleextra}
+      通过该键，可仅为拆分边框的中间部分，向
+      \Pack{mdframed} 的绘制环境追加额外内容，且仅作用于拆分边框的中间部分。 
+      \limitation[TikZ、PSTricks]
+ \ExplOpt[\{\}]{secondextra}
+      通过该键，可仅为拆分边框的最后一部分，向
+      \Pack{mdframed} 的绘制环境追加额外内容。
+
+
+ 在能向边框各部分追加内容之外，还可以判断
+ 当前绘制的是边框的哪一部分。为此定义了若干布尔标志，
+ 可用 \Cmd{ifbool\{布尔标志名\}} 检测。输出
+ 内容之前，所有标志均设为 true。
+ \ExplOpt[false]{mdfsingleframe}
+ 该布尔仅在未拆分的边框上为 true。
+ \ExplOpt[false]{mdffirstframe}
+ 该布尔仅在边框第一部分上为 true。
+ \ExplOpt[false]{mdfmiddleframe}
+ 同上。
+ \ExplOpt[false]{mdflastframe}
+ 同上。
+
+ 面向高级用户，还有一些可用于调整输出的钩子：
+ \ExplOpt[\{\}]{beforesingleframe}
+ 传给本选项的代码在单个边框
+ 排版之前执行。
+ \ExplOpt[\{\}]{aftersingleframe}
+ 传给本选项的代码在单个边框
+ 排版之后执行。
+ \ExplOpt[\{\}]{beforebreak}
+ 本选项的值仅在可拆分的边框上执行。如前所述，
+ 可作用于第一段与中间段边框。
+ \ExplOpt[\{\}]{afterbreak}
+ 本选项的值仅在可拆分的边框上执行。如前所述，
+ 可作用于第一段与中间段边框。
+ \ExplOpt[\{\}]{beforelastframe}
+ 本选项仅在拆分边框的最后一段上执行。
+ \ExplOpt[\{\}]{afterlastframe} 
+ 本选项仅在拆分边框的最后一段上执行。
+
+ \ExplOpt[\{\}]{startcode}
+ 传给本选项的代码在环境
+ 开头执行。
+ \ExplOpt[\{\}]{startinnercode}
+ 本选项在保存框开头执行。
+ \ExplOpt[\{\}]{endinnercode}
+ 本选项在保存框末尾执行。
+ \ExplOpt[\{\}]{endcode}
+ 本代码在环境末尾执行。
+
+ \section{定理环境}
+ 本节介绍哪些命令可用于配合 \Pack{mdframed} 定义
+ 定理类环境。
+ 
+ \ExplCmd{newmdtheoremenv} 
+ 由于本宏包常用来突出定理类环境，
+ 因而提供了一条简化该过程的命令。命令语法
+ 如下：
+ 
+\begin{tltxmdfexample}[deletekeywords={mdframed}]
+ \newmdtheoremenv[<mdframed 选项>]{<环境名>}%
+                 [<编号参照>]{<标题>}[<编号层级>]
+\end{tltxmdfexample}
+ 最后四个参数与命令 \Cmd{newtheorem} 相同。
+ 只有第一个可选参数用于传递 \Pack{mdframed} 选项。
+ 一个简单的示例如下：
+\begin{tltxmdfexample}
+ \theoremstyle{<定理样式>}
+ \newmdtheoremenv[linecolor=blue]{lemma}{引理}[section]
+ ...
+ \begin{lemma}[标题示例]
+   文本   文本   文本   文本   文本   文本
+ \end{lemma}
+\end{tltxmdfexample}
+ 目前还没有 \Cmd{renewmdtheoremenv}！
+
+
+ \ExplCmd{mdtheorem} 
+ 这是 \Cmd{newtheorem} 的一种特殊形式。命令语法
+ 如下。
+\begin{tltxmdfexample}[deletekeywords={mdframed}]
+ \mdtheorem[<mdframed 选项>]{<环境名>}%
+                 [<编号参照>]{<标题>}[<编号层级>]
+\end{tltxmdfexample}
+ 可以看到，各参数与 \Cmd{newtheorem} 相同，但该命令
+ 会忽略所有 \Cmd{theoremstyle}。这是基于以下
+ 设计。
+
+ 命令 \Cmd{mdtheorem} 根据给定的第一个必选参数
+ 创建两个环境。第一个环境以该参数命名，生成带编号的定理；
+ 第二个环境在第一个必选参数名后加星号，
+ 排版格式相同，但不带编号。
+
+ 新定义环境的语法与普通定理
+ 环境相同。
+\begin{tltxmdfexample}[deletekeywords={mdframed}]
+ \begin{环境}[可选标题]
+  ...
+ \end{环境}
+\end{tltxmdfexample}
+ 原理是：命令的标题文字会被用作边框标题。
+ 这样便可使用边框标题的全部选项。此外
+ \Pack{mdframed} 还提供了下文说明的附加选项。
+
+ \ExplOpt[\{:\}]{theoremseparator}
+      设置定理编号与标题之间的分隔符。
+      仅当给出定理标题时，才会打印
+      \Opt{theoremseparator}。
+ \ExplOpt[\{\}]{theoremtitlefont}
+      通过选项 \Opt{frametitlefont} 可以调整
+      边框标题的字体；而选项 \Opt{theoremtitlefont} 允许
+      为定理标题设置另一种字体。
+ \ExplOpt[\protect\Cmd{space}]{theoremspace}
+      设置 \Opt{theoremseparator} 之后的间距。
+
+ 示例可参见随附文件。
+
+
+
+
+ \section{复杂示例 —— Matlab 命令行窗口}
+ 下面这个示例改编自 TeX.SX 上的一个提问。
+ \definecolor{DarkBlue}{rgb}{.11,.23,.60}
+ \mdfdefinestyle{commandline}%
+ {leftmargin=5pt, rightmargin=10pt,innerleftmargin=15pt,
+  middlelinecolor=DarkBlue,
+  middlelinewidth=2pt,
+  frametitlerule=false,
+  backgroundcolor=black!10!white,
+  frametitle={命令窗口},
+  frametitlefont={\normalfont\sffamily\color{white}\hspace{-1em}},
+  frametitlebackgroundcolor=DarkBlue,
+  singleextra={\draw[black!20,line width=12pt] 
+       ($(O)+(7pt,1pt)$) --
+       ($(O|-P)+(7pt,-\mdfframetitleboxtotalheight)-(0,1pt)$);
+       \node[inner sep=0pt,color=black]at ($(O)+(7pt,9pt)$)%
+       {$\scriptstyle f\!x$}; },
+  nobreak=true,
+ }
+ 
+ \lstnewenvironment{script} {%
+   \lstset{language=Matlab,basicstyle=\tiny\ttfamily,breaklines=true,%
+           aboveskip=0pt,belowskip=0pt}}{}
+ \surroundwithmdframed[style=commandline]{script}
+ \begin{script}
+ >> help sin
+  sin    以弧度为参数的正弦函数。
+     sin(X) 表示 X 中各元素的正弦值。
+ 
+     另见 asin、sind。
+ 
+     重载方法：
+        sdpvar/sin
+        codistributed/sin
+        gpuArray/sin
+ 
+     帮助浏览器中的参考页
+        doc sin
+ 
+ >> 
+ \end{script}
+
+ 得到该结果的代码如下：
+\begin{tltxmdfexample}[moretexcs={lstnewenvironment,definecolor,lstset}]
+ \definecolor{DarkBlue}{rgb}{.11,.23,.60}
+ \mdfdefinestyle{commandline}%
+ {leftmargin=5pt, rightmargin=10pt,innerleftmargin=15pt,
+  middlelinecolor=DarkBlue,
+  middlelinewidth=2pt,
+  frametitlerule=false,
+  backgroundcolor=black!10!white,
+  frametitle={命令窗口},
+  frametitlefont={\normalfont\sffamily\color{white}\hspace{-1em}},
+  frametitlebackgroundcolor=DarkBlue,
+  singleextra={\draw[black!20,line width=12pt] 
+       ($(O)+(7pt,1pt)$) --
+       ($(O|-P)+(7pt,-\mdfframetitleboxtotalheight)-(0,1pt)$);
+       \node[inner sep=0pt,color=black]at ($(O)+(7pt,9pt)$)%
+       {$\scriptstyle f\!x$}; },
+  nobreak,
+ }
+ 
+ \lstnewenvironment{script} {%
+   \lstset{language=Matlab,basicstyle=\tiny\ttfamily,breaklines=true,%
+           aboveskip=0pt,belowskip=0pt}}{}
+ \surroundwithmdframed[style=commandline]{script}
+ \begin{script}
+ >> help sin
+  sin    以弧度为参数的正弦函数。
+     sin(X) 表示 X 中各元素的正弦值。
+ 
+     另见 asin、sind。
+ 
+     重载方法：
+        sdpvar/sin
+        codistributed/sin
+        gpuArray/sin
+ 
+     帮助浏览器中的参考页
+        doc sin
+ 
+ >> 
+ \end{script}
+\end{tltxmdfexample}
+
+ 
+ 
+ 
+ \section{示例}
+ 
+ 我把示例拆分到四个文档文件中。这些文件
+ 分别是
+ \begin{description}
+ \item[\texttt{mdframed-example-default}] 
+       演示用 \Opt{framemethod=default} 创建的示例。
+ \item[\texttt{mdframed-example-tikz}]
+       演示用 \Opt{framemethod=TikZ} 创建的示例。
+ \item[\texttt{mdframed-example-pstricks}] 
+       演示用 \Opt{framemethod=pstricks} 创建的示例。
+ \item[\texttt{mdframed-example-texsx}] 
+       演示与 \Pack{listings} 等交互的示例。
+ \end{description}
+ 
+ 各示例通常并不完全等同，但一般可以改用到
+ 其他绘制方式上。
+ 因此我强烈建议翻阅所有示例文件。
+
+ 韩国 \TeX 小组制作了一份非常精彩的演示文稿。我想分享这个
+ 链接，因为它确实是一件很棒的作品：
+ \href{http://prezi.com/zc355i9tcsgz/talk-kts-2012-mdframed/}^^A
+      {kts 2012 mdframed}。
+ 
+
+ \IfFileExists{mdframed-example-default.pdf}%
+   {\includepdf[pages=-]{mdframed-example-default.pdf}}{}
+ \IfFileExists{mdframed-example-tikz.pdf}%
+   {\includepdf[pages=-]{mdframed-example-tikz.pdf}}{}
+ \IfFileExists{mdframed-example-texsx.pdf}%
+   {\includepdf[pages=-]{mdframed-example-texsx.pdf}}{}
+ \IfFileExists{mdframed-example-pstricks.pdf}%
+   {\includepdf[pages=-]{mdframed-example-pstricks.pdf}}{}
+
+ \section{错误、警告与提示信息}
+ 
+ \Pack{mdframed} 会在 \texttt{日志} 文件中输出不同的错误、警告与
+ 提示信息。有些 \LaTeX 编辑器，如
+ \TeX Maker 或 \TeX Studio，设有专门的错误与警告标签页，
+ 但不显示提示信息，因此应直接查看 \texttt{日志文件}。
+ 
+ 以下为 \Pack{mdframed} 产生的错误与警告。
+ 
+\begin{tltxmdfexample}
+   宏包 ... 不存在，但 mdframed 需要它
+\end{tltxmdfexample}
+ 要避免此问题，应安装
+ \ref{sec:syntax} 节列出的所需宏包。
+ 
+\begin{tltxmdfexample}
+   宏包选项 style 已弃用
+   请改用 framemethod 代替 style
+\end{tltxmdfexample}
+ 自 0.9d 版本起，\Pack{mdframed} 改变了选项
+ \Opt{style} 的含义：该选项用于载入由
+ \Cmd{mdfdefinestyle} 定义的样式。请改用 \Opt{framemethod}
+ （见 \ref{globopt} 节）。
+ 
+\begin{tltxmdfexample}
+  未知的 framemethod .... mdframed
+\end{tltxmdfexample}
+ 选项 \Opt{framemethod} 的输入字符串无法识别。参见
+ \ref{globopt} 节。
+ 
+\begin{tltxmdfexample}
+   尚未加载 ntheorem
+\end{tltxmdfexample}
+ 要使用选项 \Opt{ntheorem}，必须先
+ 加载宏包 \Pack{ntheorem}。
+ 
+\begin{tltxmdfexample}
+  内容宽度仅有 3cm
+\end{tltxmdfexample}
+ \Pack{mdframed} 根据给定选项计算内容宽度。
+ 若内容宽度小于
+ 3\,cm，就会出现此警告。应调整
+ 设置以获得更大的宽度。
+ 
+\begin{tltxmdfexample}
+  出现了不良分页
+  必须手动调整：修改文字、间距
+  或其他内容
+\end{tltxmdfexample}
+ 有时垂直空间足以容纳边线以及边线与内容之间的间距，
+ 却不足以容纳内容本身。
+ 此时会给出此警告，因为该框的
+ 内容为空。可以调整设置，或在
+ \Pack{mdframed} 环境之前插入 \Cmd{clearpage}。
+ 目前我还没有办法彻底避免这类情况。
+ 
+\begin{tltxmdfexample}
+  出现了不良分页
+  因为被拆分的框为空
+  必须调整页面设置，例如
+  使用 enlargethispage 等手段
+  出现了不良分页
+\end{tltxmdfexample}
+ 理由同上。
+ 
+\begin{tltxmdfexample}
+  出现了不良分页
+  因为最后一个被拆分的框为空
+  必须调整设置
+\end{tltxmdfexample}
+ 理由同上，但仅出现在最后一个框中。
+ 
+ 
+\begin{tltxmdfexample}
+  选项 ... 已被占用
+  在第 ... 行输入中不再生效
+\end{tltxmdfexample}
+ 若在文档
+ 正文中设置全局选项，就会出现此警告。
+ 
+ \section{已知局限}
+  本节汇总已知问题。若遇到
+  其他问题，请发邮件至
+  \href{mailto:marco.daniel@mada-nada.de}{marco.daniel at mada-nada.de}。
+
+    对本宏包的进一步扩展，你有什么想法或期望吗？
+    欢迎告诉我！
+ 
+ \begin{enumerate}
+  \item 目前该环境与宏包
+        \Pack{gmverb} 不兼容。
+  \item 若加载宏包 \Pack{picins}，边框将无法拆分。
+        这源于宏包 picins 的一个问题：它把
+        \Cmd{@captype} 定义为全局。
+        要配合 picins 使用，可采用下面的临时办法。
+\begin{tltxmdfexample}
+\usepackage{picins}
+\makeatletter
+\let\@captype\@undefined
+\def\newcaption{%
+ \begingroup%
+  \def\@captype{figure}%
+  \refstepcounter\@captype\@dblarg{\@newcaption\@captype}%
+ \endgroup%
+}
+\makeatother
+\end{tltxmdfexample}
+  \item \Pack{mdframed} 无法处理
+        文档类 \Pack{beamer} 的选项 \Opt{allowframebreaks}。
+ \item 嵌套的 \Env{mdframed} 环境无法拆分。 
+ \end{enumerate}
+ 
+ 
+ \section{待办事项}
+ \textbf{\color{red} 更新文档十分重要}
+ \begin{enumerate}
+   \item 见“已知问题”。
+   \item 目前还无法把
+         宏包 \Pack{multicol} 的环境
+         \Cmd{begin\{multicols\}} 与 \Pack{mdframed} 的全部选项配合使用。
+   \item 创建新的样式。
+   \item 改进分页。
+   \item 改进脚注。
+   \item 改进文档与示例。
+   \item 为 \Opt{frametitle} 创建样式。
+   \item 提供 \Env{mdframed} 的行内版本，行为类似
+         \Cmd{fbox}。
+   \item 在文件 \Pack{md-frame-1.mdf} 中加入 \Cmd{ht}\Cmd{strutbox}。
+ \end{enumerate}                 
+ 
+ \section{致谢}
+  \textsf{Dick Nickalls;\quad Dietrich Grau;\quad Piazza Luca;\quad%
+          Jobst Hoffmann;\quad Martin Scharrer;\quad Enrico Gregorio;\quad 
+          Heiko Oberdiek;\quad Philipp Stephani}。
+ \medskip
+ 
+ \noindent 感谢校对
+ 
+ \textsf{Alan Munn} 与 \textsf{Nahid Shajari}
+ 
+ 希望没有遗漏任何人。
+ \clearpage
+ \appendix
+
+ \section{更多信息}
+ %\addtocontents{toc}{\protect\setcounter{tocdepth}{-4}}
+ 下一节介绍如何创建
+ 你自己的边框。
+ \subsection{\Pack{mdframed} 的工作原理}
+ 通过环境 \Cmd{begin\{mdframed\}} \ldots \Cmd{end\{mdframed\}}，
+ 全部内容会保存在名为
+ \Cmd{mdf@splitbox@one} 的 \Cmd{savebox} 中。在计算出
+ \Cmd{mdf@splitbox@one} 的宽度与高度（由 \Pack{mdframed.sty} 完成）之后，
+ 依次放置该框（由 \Pack{md-frame-X.mdf} 完成）。下图演示了
+ 这一过程。
+ 
+ \begin{center}
+ \begin{tikzpicture}
+ \newcommand{\mybox}[1]{\parbox{3.5cm}{\centering\small #1}}
+ \tikzstyle{every node}=[font=\sffamily]
+ \tikzset{mymatrixnodes/.style={%
+      matrix of nodes,
+      nodes={framed,draw=black,fill=yellow!10,},
+      column sep=4.5cm,
+      row sep=1.5cm,
+      }}
+ \matrix(m)[mymatrixnodes]
+   {%
+    \mybox{读入内容并存入 \Cmd{mdf@splitbox@one}}              &
+    \mybox{\Cmd{mdf@putbox@single}}                                         \\
+    \mybox{将 \textbackslash mdf@splitbox@one 拆分到
+           页面剩余空间中的 \Cmd{mdf@splitbox@two}}                                       &
+    \mybox{\Cmd{mdf@putbox@first}}                                          \\
+    \mybox{\Cmd{mdf@splitbox@one} 的内容在新
+           页面上有足够空间}                                                             &
+    \mybox{\Cmd{mdf@putbox@second}}                                         \\
+    \mybox{将 \Cmd{mdf@splitbox@one} 拆分到页面剩余空间中的
+           \Cmd{mdf@splitbox@two}}                                                &
+    \mybox{\Cmd{mdf@putbox@middle}}                                         \\
+ };
+ 
+ \tikzstyle{every path}=[black,-triangle 45,thick,shorten >=4pt,shorten <=4pt]
+ \draw  (m-1-1) edge 
+        node[align=center,anchor=south]{页面上空间足够} (m-1-2);
+ \draw  (m-2-1) edge 
+        node[align=center,anchor=south]{排出 \Cmd{mdf@splitbox@two}}
+         (m-2-2);
+ \draw  (m-3-1) edge 
+        node[align=center,anchor=south]{是} (m-3-2);
+ \draw  (m-4-1) edge 
+        node[align=center,anchor=south]{排出 \Cmd{mdf@splitbox@two}}
+         (m-4-2);
+ 
+ \draw  (m-2-2) edge node[align=center,fill=white]%
+        {计算新 \Cmd{mdf@splitbox@one} 的高度} (m-3-1);
+ 
+ 
+ \draw  (m-1-1) edge 
+        node[align=center,anchor=west]{页面上空间不足} (m-2-1);
+ \draw  (m-3-1) edge node[align=center,anchor=west]{否} (m-4-1);
+ 
+ \draw  let \p1=($(m-4-2.south)-(0,1)$), \p2=($(m-3-1.west)-(0.8,0)$) in
+       (m-4-2.south) -- ($(m-4-2.south)+(0,-1)$) --
+            node[align=center,anchor=north]%
+            {计算新 \Cmd{mdf@splitbox@one} 的高度} (\x2,\y1)
+        -- ($(m-3-1.west)-(0.8,0)$)-- ($(m-3-1.west)$) ;
+ 
+ 
+ \end{tikzpicture}
+ 
+ \captionof{figure}{\Pack{mdframed} 内容的安放方式}\label{fig:way}
+ \end{center}
+ 
+ 内容宽度由以下设置共同决定：
+ \Opt{leftmargin}、\Opt{rightmargin}、\Opt{linewidth}、
+ \Opt{innerleftmargin} 与 \Opt{innerrightmargin}
+ （见图 \eqref{fig:laengen}）。
+ 
+ \subsection{边框命令}
+ \Pack{mdframed} 认识四种“边框命令”。
+ 这些命令告诉 \LaTeX\ 如何安放 \Pack{mdframed} 的内容。 
+ \begin{description}
+   \item[\Cmd{mdf@putbox@single}] 
+        安放单个未拆分边框的内容。
+   \item[\Cmd{mdf@putbox@first}]  
+        安放拆分边框第一段的内容。
+   \item[\Cmd{mdf@putbox@middle}] 
+        安放拆分边框中间段的内容。
+   \item[\Cmd{mdf@putbox@second}] 
+        安放拆分边框最后一段的内容。
+ \end{description}
+ 
+ 借助上述命令给出一个示例。命令 \Cmd{box}
+ 取出保存框中的内容并排版输出。
+ 
+ 首先排出不带任何设置（但带有已计算宽度）的单个框。
+\begin{tltxmdfexample}
+ \makeatletter
+  \def\mdf@putbox@single{\box\mdf@splitbox@one}
+ \makeatother
+\end{tltxmdfexample}
+ 这里使用命令 \Cmd{leftline}，使“边框命令”从
+ 左侧开始。
+\begin{tltxmdfexample}[deletekeywords={leftline},moretexcs={leftline}]
+ \makeatletter
+  \def\mdf@putbox@single{\leftline{\box\mdf@splitbox@one}}
+ \makeatother
+\end{tltxmdfexample}
+ 
+ 接下来需要了解各长度的命名方式。所有可由选项
+ 修改的长度均采用以下语法：
+\begin{tltxmdfexample}
+ \mdf@<长度名称>@length
+\end{tltxmdfexample}
+ 例如 leftmargin 对应的长度为：
+\begin{tltxmdfexample}
+ \mdf@leftmargin@length
+\end{tltxmdfexample}
+ 
+ 若只想绘制一条带正确 \Opt{leftmargin} 的左边线，
+ 可按如下方式定义 \Cmd{mdf@putboxsingle}。
+ 
+\begin{tltxmdfexample}[deletekeywords={leftline},moretexcs={leftline}]
+ \makeatletter
+ \def\mdf@putbox@single{%
+          \leftline{%
+              \hspace*{\mdf@leftmargin@length}%
+              \rule[-\dp\mdf@splitbox@one]{\mdf@linewidth}%
+                   {\ht\mdf@splitbox@one+\dp\mdf@splitbox@one}%
+              \box\mdf@splitbox@one
+          }%
+ }
+ \makeatother
+\end{tltxmdfexample}
+ 
+ 这样便可实现你想要的效果。若创建自己的样式，
+ 可将文件保存为 \Pack{md-frame-X.mdf}。
+ 其中 \Pack{X} 必须为整数。
+ 之后即可通过选项 \Opt{framemethod}，
+ 设为 \Opt{framemethod=X} 来载入该文件。
+ 
+
+\PrintIndex
+
+\end{document}

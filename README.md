@@ -15,3 +15,6 @@
 - xeCJK 2022/08/05 v3.9.1 只有文档
 - 常见颜色的RGB值
 - fonspec-cn 2026/08/11 v2.9h
+- mdframed-doc 2013/07/01 1.9b
+- listings 2025/11/14 Version 1.11b
+- tex by topic-cn

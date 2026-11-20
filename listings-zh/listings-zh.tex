@@ -1,0 +1,61 @@
+% !TeX TS-program = lualatex
+% =====================================================================
+% listings-zh.tex
+% listings 宏包中文文档的独立编译入口（由 listings-zh.dtx 的驱动段抽出）
+%
+% 编译引擎：LuaLaTeX
+%   说明：本手册样例中存在“在宏定义内保存 lstlisting”的用法，
+%   该用法与 XeLaTeX 下的 xeCJK 宏包存在兼容问题，会导致结尾被吞掉、
+%   编译中止；改用 LuaLaTeX 可正常完整编译。
+%
+% 编译步骤（在本文件所在目录）：
+%   lualatex listings-zh.tex
+%   makeindex -s gind.ist listings-zh.idx
+%   lualatex listings-zh.tex
+%   lualatex listings-zh.tex
+% 说明：makeindex 必须加载 gind.ist 样式（与 doc.sty 的索引字符约定一致），
+%   否则内部宏名中的 @ 会被误当作排序/显示分隔符，导致索引出现多余花括号报错。
+% 说明：\PageIndex 配合 hypdoc 把索引页码封装为内部超链接，使索引条目可点击跳转。
+% =====================================================================
+\documentclass[a4paper]{ltxdoc}
+% \DisableCrossrefs
+% \OnlyDescription
+
+\usepackage{lstdoc}             % 文档构建支持宏包
+\usepackage[UTF8]{ctex}         % 中文支持
+\usepackage{textcomp}           % 直引号等字符
+\usepackage{mdframed}           % 外部文件边框
+\usepackage{moreverb}           % 写外部文件
+\usepackage{xcolor}             % 背景着色
+\usepackage{tablefootnote}      % 表格脚注
+
+\makeindex
+\PageIndex                       % 启用 hypdoc 索引回链：索引页码可点击跳转到对应页面
+
+% 补丁：给 lstdoc 直写 \index 的键名/外观条目补 hdpindex 封装，使这些条目页码也可点击
+\makeatletter
+\def\SpecialMainAspectIndex#1{%
+    \@bsphack
+    \index{aspects:\levelchar\protect\aspectname{#1}\encapchar hdpindex{main}}%
+    \@esphack}
+\def\SpecialMainKeyIndex#1{%
+    \@bsphack
+    \index{keys\levelchar\protect\keyname{#1}\encapchar hdpindex{main}}%
+    \@esphack}
+\def\lstaspectindex#1#2{%
+    \global\@namedef{lstkandc@\string#1}{}%
+    \@ifundefined{lstisaspect@\string#1}
+        {\index{unknown\levelchar
+                \protect\texttt{\protect\string\string#1}#2\encapchar hdpindex{main}}}%
+        {\index{\@nameuse{lstisaspect@\string#1}\levelchar
+                \protect\texttt{\protect\string\string#1}#2\encapchar hdpindex{main}}}%
+}
+\makeatother
+
+\renewcommand{\indexname}{索引}
+\renewcommand{\lstlistingname}{列表}
+\renewcommand{\lstlistlistingname}{列表清单}
+
+\begin{document}
+    \DocInput{listings-zh.dtx}
+\end{document}
