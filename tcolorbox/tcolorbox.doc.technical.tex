@@ -1,0 +1,733 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{技术概览与定制}\label{sec:technical}%
+\tcbset{external/prefix=external/technical_}%
+本节对 |tcolorbox| 的皮肤概念做技术层面的概述。
+对于 |tcolorbox| 的大多数应用场景，你无需了解此处描述的种种细节。
+你可以直接参阅 \zvref{sec:skins}，那里记录了面向大多数用户的定制选项。
+
+以下说明同时涵盖 \mylib{skins} 程序库的相关选项与设置，
+另见 \zvref{sec:skins}。
+
+\subsection{皮肤与绘制引擎}\label{sec:skincorekeys}
+从技术角度看，\emph{皮肤}是对 |tcolorbox| 外观的一种样式定义。
+核心宏包提供了若干用于皮肤的额外选项键，但本身只附带两个皮肤，
+即 \refSkin{standard} 和 \refSkin{standard jigsaw}。
+\mylib{skins} 程序库则补充了更多皮肤。要切换皮肤，
+只需设置核心宏包中的一个选项即可。
+
+\begin{docTcbKey}{skin}{=\meta{name}}{样式，无默认值，初始 \texttt{standard}}
+  将当前皮肤设置为 \meta{name}。这是一个样式定义，会同时设置以下所有键，
+  也就是说，对许多使用场景而言无需再做其他设置。
+\begin{dispExample}
+\tcbset{colback=Salmon!50!white,colframe=FireBrick!75!black,
+  width=(\linewidth-8mm)/2,before=,after=\hfill,equal height group=ske}
+
+\begin{tcolorbox}[adjusted title=My title]
+  This is my content.
+\end{tcolorbox}
+\begin{tcolorbox}[beamer,adjusted title=My title]
+  This is my content.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{skin first}{=\meta{name}}{样式，无默认值，初始 \texttt{standard}}
+  若文本框被设置为 \refKey{/tcb/breakable} 且\emph{确实}发生了断开，
+  则将断开序列中\emph{第一}段所使用的皮肤设置为 \meta{name}，
+  参见 \zvref{subsec:breaksequence}。通常该键由 \refKey{/tcb/skin} 自动设置。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{skin middle}{=\meta{name}}{样式，无默认值，初始 \texttt{standard}}
+  若文本框被设置为 \refKey{/tcb/breakable} 且\emph{确实}发生了断开，
+  则将断开序列中各\emph{中间}段（若存在）所使用的皮肤设置为 \meta{name}，
+  参见 \zvref{subsec:breaksequence}。通常该键由 \refKey{/tcb/skin} 自动设置。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{skin last}{=\meta{name}}{样式，无默认值，初始 \texttt{standard}}
+  若文本框被设置为 \refKey{/tcb/breakable} 且\emph{确实}发生了断开，
+  则将断开序列中\emph{最后}一段所使用的皮肤设置为 \meta{name}，
+  参见 \zvref{subsec:breaksequence}。通常该键由 \refKey{/tcb/skin} 自动设置。
+\end{docTcbKey}
+
+
+\clearpage
+
+|tcolorbox| 的皮肤由至多四个\emph{引擎}绘制。
+之后再绘制文本内容，而文本内容不属于皮肤的一部分。
+这四个步骤是：
+\begin{enumerate}
+\item 文本框的\emph{边框}，由 \refKey{/tcb/frame engine} 绘制。
+\item 文本框的\emph{内部}。带标题文本框的内部与不带标题者绘制方式不同。
+  使用 \refKey{/tcb/interior titled engine} 或 \refKey{/tcb/interior engine}
+  来绘制内部。
+\item 文本框的\emph{分隔线}（前提是存在下部）；
+  由 \refKey{/tcb/segmentation engine} 绘制。
+\item 文本框的\emph{标题区}（前提是存在标题且
+  \refKey{/tcb/title filled} 设为 |true|）；由
+  \refKey{/tcb/title engine} 绘制。
+\end{enumerate}
+
+\begin{docTcbKey}{frame engine}{=\meta{name}}{无默认值，初始 \texttt{standard}}
+  将文本框的\emph{边框}绘制引擎设置为 \meta{name}。
+  通常该键由 \refKey{/tcb/skin} 自动设置。
+  \meta{name} 的可选取值为：
+  \begin{itemize}
+  \item\docValue{standard}：核心宏包中的原始代码，
+  \item\docValue{path}：由 \refKey{/tcb/frame style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathjigsaw}：由 \refKey{/tcb/frame style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathfirst}：由 \refKey{/tcb/frame style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathfirstjigsaw}：由 \refKey{/tcb/frame style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathmiddle}：由 \refKey{/tcb/frame style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathmiddlejigsaw}：由 \refKey{/tcb/frame style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathlast}：由 \refKey{/tcb/frame style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathlastjigsaw}：由 \refKey{/tcb/frame style} 控制的 \tikzname\ 路径，
+  \item\docValue{freelance}：已弃用。
+  \item\docValue{spartan}：相当精简的代码。
+  \item\docValue{empty}：什么也不绘制。
+\end{itemize}
+\end{docTcbKey}
+
+\begin{docTcbKey}{interior titled engine}{=\meta{name}}{无默认值，初始 \texttt{standard}}
+  将带标题文本框的\emph{内部}绘制引擎设置为 \meta{name}。
+  通常该键由 \refKey{/tcb/skin} 自动设置。
+  \meta{name} 的可选取值为：
+  \begin{itemize}
+  \item\docValue{standard}：核心宏包中的原始代码，
+  \item\docValue{path}：由 \refKey{/tcb/interior style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathfirst}：由 \refKey{/tcb/interior style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathmiddle}：由 \refKey{/tcb/interior style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathlast}：由 \refKey{/tcb/interior style} 控制的 \tikzname\ 路径，
+  \item\docValue{freelance}：已弃用。
+  \item\docValue{spartan}：相当精简的代码。
+  \item\docValue{empty}：什么也不绘制。
+  \end{itemize}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}{interior engine}{=\meta{name}}{无默认值，初始 \texttt{standard}}
+  将不带标题文本框的\emph{内部}绘制引擎设置为 \meta{name}。
+  通常该键由 \refKey{/tcb/skin} 自动设置。
+  \meta{name} 的可选取值为：
+  \begin{itemize}
+  \item\docValue{standard}：核心宏包中的原始代码，
+  \item\docValue{path}：由 \refKey{/tcb/interior style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathfirst}：由 \refKey{/tcb/interior style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathmiddle}：由 \refKey{/tcb/interior style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathlast}：由 \refKey{/tcb/interior style} 控制的 \tikzname\ 路径，
+  \item\docValue{freelance}：已弃用。
+  \item\docValue{spartan}：相当精简的代码。
+  \item\docValue{empty}：什么也不绘制。
+  \end{itemize}
+\end{docTcbKey}
+
+\begin{docTcbKey}{segmentation engine}{=\meta{name}}{无默认值，初始 \texttt{standard}}
+  将文本框的\emph{分隔线}绘制引擎设置为 \meta{name}。
+  通常该键由 \refKey{/tcb/skin} 自动设置。
+  \meta{name} 的可选取值为：
+  \begin{itemize}
+  \item\docValue{standard}：核心宏包中的原始代码，
+  \item\docValue{path}：由 \refKey{/tcb/segmentation style} 控制的 \tikzname\ 路径，
+  \item\docValue{freelance}：已弃用。
+  \item\docValue{spartan}：相当精简的代码。
+  \item\docValue{empty}：什么也不绘制。
+  \end{itemize}
+\end{docTcbKey}
+
+\begin{docTcbKey}{title engine}{=\meta{name}}{无默认值，初始 \texttt{standard}}
+  将带标题文本框的\emph{标题区}绘制引擎设置为 \meta{name}。
+  通常该键由 \refKey{/tcb/skin} 自动设置。
+  \meta{name} 的可选取值为：
+  \begin{itemize}
+  \item\docValue{standard}：核心宏包中的原始代码，
+  \item\docValue{path}：由 \refKey{/tcb/title style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathfirst}：由 \refKey{/tcb/title style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathmiddle}：由 \refKey{/tcb/title style} 控制的 \tikzname\ 路径，
+  \item\docValue{pathlast}：由 \refKey{/tcb/title style} 控制的 \tikzname\ 路径，
+  \item\docValue{freelance}：已弃用。
+  \item\docValue{spartan}：相当精简的代码。
+  \item\docValue{empty}：什么也不绘制。
+  \end{itemize}
+\end{docTcbKey}
+
+\begin{marker}
+在将某个引擎设置为初始取值之后，
+还可以使用代码选项键来修改生成的图形代码，
+参见 \zvref{subsec:addcodeoptions}。
+\end{marker}
+
+\clearpage
+\begin{docTcbKey}{geometry nodes}{\colOpt{=true\textbar false}}{默认 |true|，初始 |false|}
+  若已加载 \mylib{skins} 程序库且本选项设为 |true|，
+  则会为一个 |tcolorbox| 定义至多四个 \tikzname\ 节点，
+  分别名为 |frame|、|interior|、|segmentation| 和 |title|。
+  这些节点描述了 |tcolorbox| 中同名各部分的边界，
+  供大多数基于 \tikzname 的引擎使用。
+  通常该键由 \refKey{/tcb/skin} 自动设置。
+\begin{dispExample}
+\tcbset{colback=Salmon!50!white,colframe=FireBrick!75!black,
+  width=(\linewidth-8mm)/2,before=,after=\hfill,equal height group=geon}
+
+\begin{tcolorbox}[adjusted title=The title]
+  The upper part.\tcblower The lower part.
+\end{tcolorbox}
+\begin{tcolorbox}[enhanced,adjusted title=The title,
+  frame code={\path[draw=red,fill=red!25]
+      (frame.south west) rectangle (frame.north east);},
+  interior titled code={\path[draw=blue,fill=blue!25]
+      (interior.south west) rectangle (interior.north east);},
+  segmentation code={\path[draw=green,fill=green!25]
+      (segmentation.south west) rectangle (segmentation.north east);},
+  title code={\path[draw=black,fill=brown!75!black]
+      (title.south west) rectangle (title.north east);}]
+  The upper part.\tcblower The lower part.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+
+
+
+
+\clearpage
+\subsection{代码选项键}\label{subsec:addcodeoptions}
+以下代码选项适用于所有皮肤。
+%which
+%use engines of type |freelance|.
+%Especially, the skin \refSkin{freelance} supports \emph{all} of them,
+%\refSkin{standard} and \refSkin{enhanced} \emph{none} of them.
+所用的 \meta{图形代码} 可以是任意 \refPkg{pgf} 代码。
+除 \refSkin{standard} 和 \refSkin{standard jigsaw} 之外的所有皮肤，
+其 \meta{图形代码} 也可以是任意 \refPkg{tikz} 代码。
+
+
+\begin{docTcbKey}{frame code}{\colOpt{=\meta{graphical code}}}{代码，默认取自 |standard|}
+  所给的 \meta{图形代码} 用于绘制文本框的\emph{边框}。
+  %This option is available only if the \refKey{/tcb/frame engine} is set to |freelance|.
+\begin{dispExample}
+\tcbset{colback=red!5!white,colframe=red!75!black}
+
+\begin{tcolorbox}[enhanced,frame code={
+  \foreach \n in {north east,north west,south east,south west}
+  {\path [fill=red!75!black] (interior.\n) circle (3mm); } }]
+This is a \textbf{tcolorbox}.
+\tcblower
+This is the lower part.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{frame empty}{}{样式，无取值}
+  这是将 \refKey{/tcb/frame code} 设为空的快捷方式。
+  本选项会去除边框的绘制。
+  也可改用 \refKey{/tcb/frame hidden}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{interior titled code}{\colOpt{=\meta{graphical code}}}{代码，默认取自 |standard|}
+  若文本框带标题，则所给的 \meta{图形代码} 用于绘制
+  文本框的\emph{内部}。
+  %This option is available only if the \refKey{/tcb/interior titled engine} is set to |freelance|.
+\begin{dispExample}
+\tcbset{colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries}
+
+\begin{tcolorbox}[enhanced,title=My title,interior titled code={
+  \path[draw=red!5!white,line width=5mm,line cap=round]
+    ([xshift=3mm,yshift=-3mm]interior.north west)
+    --([xshift=-3mm,yshift=3mm]interior.south east)
+    ([xshift=3mm,yshift=3mm]interior.south west)
+    --([xshift=-3mm,yshift=-3mm]interior.north east);}]
+This is a \textbf{tcolorbox}.
+\tcblower
+This is the lower part.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{interior titled empty}{}{样式，无取值}
+  这是将 \refKey{/tcb/interior titled code} 设为空的快捷方式。
+  本选项会去除内部的绘制。
+  也可改用 \refKey{/tcb/interior hidden}。
+\end{docTcbKey}
+
+
+
+\clearpage
+\begin{docTcbKey}{interior code}{\colOpt{=\meta{graphical code}}}{代码，默认取自 |standard|}
+  若文本框不带标题，则所给的 \meta{图形代码} 用于绘制
+  文本框的\emph{内部}。%\\
+  %This option is available only if the \refKey{/tcb/interior engine} is set to |freelance|.
+\begin{dispExample}
+\tcbset{colback=red!5!white,colframe=red!75!black}
+
+\begin{tcolorbox}[enhanced,interior code={
+  \path[draw=red!5!white,line width=5mm,line cap=round]
+    ([xshift=3mm,yshift=-3mm]interior.north west)
+    --([xshift=-3mm,yshift=3mm]interior.south east)
+    ([xshift=3mm,yshift=3mm]interior.south west)
+    --([xshift=-3mm,yshift=-3mm]interior.north east);}]
+This is a \textbf{tcolorbox}.
+\tcblower
+This is the lower part.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{interior empty}{}{样式，无取值}
+  这是将 \refKey{/tcb/interior code} 设为空的快捷方式。
+  本选项会去除内部的绘制。
+  也可改用 \refKey{/tcb/interior hidden}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{segmentation code}{\colOpt{=\meta{graphical code}}}{代码，默认取自 |standard|}
+  所给的 \meta{图形代码} 用于绘制文本框的\emph{分隔}区域。%\\
+  %This option is available only if the \refKey{/tcb/segmentation engine} is set to |freelance|.
+\begin{dispExample}
+\tcbset{colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries}
+
+\begin{tcolorbox}[enhanced,title=My title,segmentation code={
+  \path[top color=red!5!white,bottom color=red!5!white,middle color=blue]
+  (segmentation.south west) rectangle (segmentation.north east);}]
+This is a \textbf{tcolorbox}.
+\tcblower
+This is the lower part.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{segmentation empty}{}{样式，无取值}
+  这是将 \refKey{/tcb/segmentation code} 设为空的快捷方式。
+  本选项会去除分隔线的绘制。
+  也可改用 \refKey{/tcb/segmentation hidden}。
+\end{docTcbKey}
+
+
+
+\clearpage
+\begin{docTcbKey}{title code}{\colOpt{=\meta{graphical code}}}{代码，默认取自 |standard|}
+  所给的 \meta{图形代码} 用于绘制文本框的\emph{标题}区域。
+  %\\
+  %This option is available only if the \refKey{/tcb/title engine} is set to |freelance|.
+\begin{dispExample}
+\tcbset{colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries,
+  coltitle=black}
+
+\begin{tcolorbox}[enhanced,title=My title,title code={
+  \path[draw=yellow,solid,decorate,line width=2mm,
+    decoration={coil,aspect=0,segment length=10.1mm}]
+    ([xshift=1mm]title.west) -- ([xshift=-1mm]title.east);}]
+This is a \textbf{tcolorbox}.
+\tcblower
+This is the lower part.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{title empty}{}{样式，无取值}
+  这是将 \refKey{/tcb/title code} 设为空的快捷方式。
+  本选项会去除标题区的绘制。
+  也可改用 \refKey{/tcb/title hidden}。
+\end{docTcbKey}
+
+\clearpage
+\subsection{子皮肤}\label{subsec:subskins}
+子皮肤是一种新的 \refKey{/tcb/skin}，
+它基于某个已有皮肤并对其进行扩展或修改。
+
+\begin{marker}
+切勿在子皮肤定义内部使用几何设置或边界框选项！
+当一个皮肤被另一个皮肤替换时，整体边界框应保持不变。
+尤其是，若某皮肤用于可断开的文本框，否则可能产生难以预料且不理想的结果。
+如果你还想同时改变几何尺寸，请另用一个样式。
+可参考皮肤 \refSkin{beamer} 与样式 \refKey{/tcb/beamer} 作为范例。
+\end{marker}
+
+\begin{docCommand}{tcbsubskin}{\marg{name}\marg{base skin}\marg{options}}
+  创建一个新皮肤 \meta{name}，它继承已有 \meta{base skin} 的全部属性，
+  再加上所给的 \meta{options}。
+  新皮肤 \meta{name} 可用作以下各键的取值：
+  \refKey{/tcb/skin}、
+  \refKey{/tcb/skin first}、
+  \refKey{/tcb/skin middle} 和
+  \refKey{/tcb/skin last}。
+  \meta{base skin} 可取 \refSkin{standard}、\refSkin{empty}、
+  \refSkin{enhanced}，或 \mylib{skins} 程序库中的任意皮肤，
+  参见 \zvref{sec:skins}。
+
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\tcbsubskin{mycross}{empty}{frame code={%
+  \draw[red,line width=5pt] (frame.south west)--(frame.north east);
+  \draw[red,line width=5pt] (frame.north west)--(frame.south east);},
+  skin first=mycross,skin middle=mycross,skin last=mycross }
+
+\begin{tcolorbox}[skin=mycross]
+  This is my content.
+\end{tcolorbox}
+\end{dispExample}
+
+\end{docCommand}
+
+
+\begin{docTcbKey}{skin first is subskin of}{=\marg{base skin}\marg{options}}{无默认值，初始未设置}
+  创建一个新的匿名皮肤，它继承已有 \meta{base skin} 的全部属性，
+  再加上所给的 \meta{options}。该皮肤被设为 \refKey{/tcb/skin first}。\\
+  详见第~\pageref{freeboxexample}~页的完整示例。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{skin middle is subskin of}{=\marg{base skin}\marg{options}}{无默认值，初始未设置}
+  创建一个新的匿名皮肤，它继承已有 \meta{base skin} 的全部属性，
+  再加上所给的 \meta{options}。该皮肤被设为 \refKey{/tcb/skin middle}。\\
+  详见第~\pageref{freeboxexample}~页的完整示例。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{skin last is subskin of}{=\marg{base skin}\marg{options}}{无默认值，初始未设置}
+  创建一个新的匿名皮肤，它继承已有 \meta{base skin} 的全部属性，
+  再加上所给的 \meta{options}。该皮肤被设为 \refKey{/tcb/skin last}。\\
+  详见第~\pageref{freeboxexample}~页的完整示例。
+\end{docTcbKey}
+
+
+\clearpage
+\subsection{绘制流程}\label{subsec:tcolorboxdrawing}
+
+\bgroup
+
+根据 |tcolorbox| 定义的复杂程度，最终生成的文本框会经由一系列
+或简或繁的步骤绘制而成。
+
+为了记录并演示这些绘制步骤，我们考察下面这个文本框定义：
+
+\begin{dispListing}
+\newtcolorbox{testbox}[1][]{enhanced,title=Test Box,
+  boxrule=1mm,titlerule=0.5mm,colframe=blue!50!black,
+  interior style={top color=blue!20!green!50!white,bottom color=blue!20!yellow!50!white},
+  colbacktitle=blue!50!green!90!white,segmentation style={solid},
+  fonttitle=\bfseries,drop fuzzy shadow,borderline={0.3mm}{0.35mm}{yellow!50!white},
+  underlay={\path[fill image opacity=0.15,fill image scale=0.9,
+    fill stretch picture={\draw[blue,line width=2mm] circle (1);}]
+    (interior.south west) rectangle (interior.north east);},
+  watermark text={Watermark},watermark color={green!20!white},
+  finish={\begin{tcbclipframe}
+    \path[bottom color=black,top color=black!50!white,opacity=0.1]
+      (frame.south west) -- (frame.south east) -- (frame.north east) -- cycle;
+    \path[top color=white,bottom color=black!50!white,opacity=0.1]
+      (frame.south west) -- (frame.north east) -- (frame.north west) -- cycle;
+    \end{tcbclipframe}},#1}
+\end{dispListing}
+\tcbusetemp
+
+对于这一定义，我们将得到最多的绘制步骤：
+
+\newtcolorbox{itembox}{oversize,enhanced,frame empty,segmentation empty,colback=white,middle=2mm,boxsep=0pt,
+  fuzzy halo=0.5mm with blue!15!white,
+  before lower=\raggedright\begin{itemize},after lower=\end{itemize}}
+
+\tcbset{finishcomment/.style={
+  finish={\node[fill=white,draw=black!50!white,rounded corners] at (frame.center) {#1};}
+}}
+
+
+\begin{itembox}
+\begin{testbox}[frame empty,interior titled empty,title empty,segmentation empty,
+  no shadow,no borderline,no underlay,no overlay,no finish,opacityupper=0,opacitylower=0,opacitytitle=0,
+  drop fuzzy shadow=red!75!white,
+  finishcomment={1.~阴影}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item 见 \ref{subsec:shadows} 节（第 \pageref{subsec:shadows} 页）。
+\end{itembox}
+
+\begin{itembox}
+\begin{testbox}[interior titled empty,title empty,segmentation empty,
+  no borderline,no underlay,no overlay,no finish,opacityupper=0,opacitylower=0,opacitytitle=0,
+  colframe=red!75!white,
+  finishcomment={2.~边框}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item\refKey{/tcb/colframe}, \refKey{/tcb/opacityframe}
+\item\refKey{/tcb/frame code}
+\item\refKey{/tcb/frame style}
+\end{itembox}
+
+
+\begin{itembox}
+\begin{testbox}[title empty,segmentation empty,
+  no borderline,no underlay,no overlay,no finish,opacityupper=0,opacitylower=0,opacitytitle=0,
+  colback=red!75!white,
+  finishcomment={3.~内部}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item\refKey{/tcb/colback}, \refKey{/tcb/opacityback}
+\item\refKey{/tcb/interior code}, \refKey{/tcb/interior titled code}
+\item\refKey{/tcb/interior style}
+\end{itembox}
+
+
+\begin{itembox}
+\begin{testbox}[segmentation empty,
+  no borderline,no underlay,no overlay,no finish,opacityupper=0,opacitylower=0,opacitytitle=0,
+  colbacktitle=red!75!white,
+  finishcomment={4.~标题区}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item\refKey{/tcb/colbacktitle}, \refKey{/tcb/opacitybacktitle}
+\item\refKey{/tcb/title code}
+\item\refKey{/tcb/title style}
+\end{itembox}
+
+
+\begin{itembox}
+\begin{testbox}[
+  no borderline,no underlay,no overlay,no finish,opacityupper=0,opacitylower=0,opacitytitle=0,
+  segmentation style={solid,red!75!white},
+  finishcomment={5.~分隔线}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item\refKey{/tcb/lower separated}
+\item\refKey{/tcb/segmentation code}
+\item\refKey{/tcb/segmentation style}
+\end{itembox}
+
+
+\begin{itembox}
+\begin{testbox}[
+  no borderline,no underlay,no overlay,no finish,opacityupper=0,opacitylower=0,opacitytitle=0,
+  borderline={0.3mm}{0.35mm}{red!75!white},
+  finishcomment={6.~边框线}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item\zvref{subsec:borderline}
+\end{itembox}
+
+
+\begin{itembox}
+\begin{testbox}[
+  no underlay,no overlay,no finish,opacityupper=0,opacitylower=0,opacitytitle=0,
+  underlay={\path[opacity=0.15,fill image scale=0.9,
+    fill stretch picture={\draw[red,line width=2mm] circle (1);}]
+    (interior.south west) rectangle (interior.north east);},
+  finishcomment={7.~底层}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item\zvref{subsec:skinboxedtitle}
+\item\zvref{subsec:skinunderlay}
+\end{itembox}
+
+
+\begin{itembox}
+\begin{testbox}[
+  no finish,opacityupper=0,opacitylower=0,opacitytitle=0,
+  watermark color={red!75!white},
+  finishcomment={8.~覆盖层}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item\zvref{subsec:overlays}
+\item\zvref{subsec:watermarks}
+\end{itembox}
+
+
+\begin{itembox}
+\begin{testbox}[
+  no finish,
+  colupper=red!75!white,coltitle=red!75!white,collower=red!75!white,
+  finishcomment={9.~文本内容}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item\refKey{/tcb/colupper}, \refKey{/tcb/collower}, \refKey{/tcb/coltitle}
+\item\refKey{/tcb/fontupper}, \refKey{/tcb/fontlower}, \refKey{/tcb/fonttitle}
+\item\refKey{/tcb/opacityupper}, \refKey{/tcb/opacitylower}, \refKey{/tcb/opacitytitle}
+\end{itembox}
+
+
+\begin{itembox}
+\begin{testbox}[
+  finishcomment={10.~收尾}]
+\lipsum[2]
+\tcblower
+下部
+\end{testbox}
+\tcblower
+\item\zvref{subsec:skinfinish}
+\end{itembox}
+
+综合起来，该文本框的绘制效果如下：
+\begin{dispExample}
+% \usepackage{lipsum}
+\begin{testbox}
+\lipsum[2]
+\tcblower
+Lower part
+\end{testbox}
+\end{dispExample}
+
+\egroup
+
+
+\clearpage
+\subsection{颜色名称}\label{subsec:tech_colornames}
+|tcolorbox| 的颜色设置会被存入若干命名颜色中，
+这些颜色可在文本框内部使用，例如用于覆盖层。
+\tcbdocmarginnote{\tcbdocnew{2019-01-18}}
+这些颜色名称是：
+\begin{itemize}
+\item\docColor{tcbcolframe}，由 \refKey{/tcb/colframe} 设置（边框颜色）
+\item\docColor{tcbcolback}，由 \refKey{/tcb/colback} 设置（背景颜色）
+\item\docColor{tcbcolbacktitle}，由 \refKey{/tcb/colbacktitle} 设置（标题背景颜色）
+\item\docColor{tcbcolbacklower}，由 \refKey{/tcb/colbacklower} 设置（下部的背景颜色，随皮肤而定；
+  需加载 \mylib{skins} 程序库）
+\item\docColor{tcbcolupper}，由 \refKey{/tcb/colupper} 设置（上部文本颜色）
+\item\docColor{tcbcollower}，由 \refKey{/tcb/collower} 设置（下部文本颜色）
+\item\docColor{tcbcoltitle}，由 \refKey{/tcb/coltitle} 设置（标题文本颜色）
+\end{itemize}
+
+\medskip
+
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\begin{tcolorbox}[title=Color names,
+    colframe=blue!50!black,colback=blue!5,
+    colbacktitle=blue!50,colupper=red!35!black]
+  \foreach \name in {tcbcolframe,tcbcolback,tcbcolbacktitle,tcbcolbacklower,
+    tcbcolupper,tcbcollower,tcbcoltitle}
+  {\tikz\path[draw,fill=\name]
+    (0,0) rectangle node[right=4mm,font=\ttfamily]{\name} (0.8,0.8);\par}
+\end{tcolorbox}
+\end{dispExample}
+
+
+
+\clearpage
+\subsection{有用的属性}\label{subsec:tech_properties}
+
+以下宏描述了若干\textit{属性}，可供绘制流程使用，
+参见 \zvref{subsec:tcolorboxdrawing}。有时它们甚至在文本框内容内部也可用。
+它们全部被视为\textit{只读}，用户不应重新定义。
+
+\begin{docCommand}[doc new=2016-02-16]{tcbheightspace}{}
+  若 |tcolorbox| 的高度不是自然高度，则强制尺寸与自然尺寸之间的
+  间距差由 \refCom{tcbheightspace} 保存。
+  该宏不能在文本框内容内部使用，但可用于皮肤，
+  或在 \refKey{/tcb/underlay}、\refKey{/tcb/overlay} 等内部使用。
+
+  若需要在文本框内容内部获取此类间距信息，请改用
+  \refKey{/tcb/space to}。
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\newtcolorbox{testbox}[2][]{enhanced,size=fbox,
+  colframe=blue!75!black,colback=white,height=#2,
+  underlay={\node[above,inner sep=3pt] at (interior.south){%
+    \includegraphics[width=\tcbtextwidth,height=\tcbheightspace-3pt]{goldshade.png}};
+    },
+  #1}
+\begin{testbox}{3cm}
+  This is my box. The space is filled with a picture.
+\end{testbox}
+\begin{testbox}{2cm}
+  This is my box. The space is filled with a picture.
+\end{testbox}
+\end{dispExample}
+\end{docCommand}
+
+\enlargethispage*{1cm}
+
+\begin{docCommand}[doc new=2016-02-16]{tcbtextwidth}{}
+  该属性表示文本框内容的宽度。
+  \begin{itemize}
+  \item 若同时存在下部，则它表示上部的宽度。
+  \item 对于 \refKey{/tcb/sidebyside} 文本框，它表示文本宽度与分隔线之和。
+  \item 除 \refKey{/tcb/fit} 文本框外，该属性可在文本框内容文本内部使用。
+  \item \refCom{tcbtextwidth} 可用于所有类型的文本框，供皮肤或
+    \refKey{/tcb/underlay}、\refKey{/tcb/overlay} 等内部使用。
+  \end{itemize}
+\begin{dispExample}
+\begin{tcolorbox}[colframe=blue!75!black]
+  Inside a box: \tcbtextwidth\ (=\the\linewidth).
+\end{tcolorbox}
+\end{dispExample}
+\end{docCommand}
+
+\pagebreak
+\begin{docCommand}[doc new=2016-02-16]{tcbtextheight}{}
+  该属性表示文本框内容的指定高度。若文本框大于自然高度，
+  则实际内容将小于 \refCom{tcbtextheight}。
+  \begin{itemize}
+  \item 对于用 \refKey{/tcb/height} 固定了高度的文本框，
+    该属性可在文本框内容文本内部使用；对于其他文本框，
+    它在文本框内容内部表示为 |0pt|。
+  \item \refCom{tcbtextheight} 可用于所有类型的文本框，供皮肤或
+    \refKey{/tcb/underlay}、\refKey{/tcb/overlay} 等内部使用。
+  \end{itemize}
+
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\begin{tcolorbox}[enhanced,colframe=blue!75!black,
+    underlay={\node[left,red] at (frame.east) {Here: \tcbtextheight};}]
+  Inside a box with natural height: \tcbtextheight.
+\end{tcolorbox}
+\begin{tcolorbox}[enhanced,colframe=blue!75!black,height=1cm,
+    underlay={\node[left,red] at (frame.east) {Here: \tcbtextheight};}]
+  Inside a box with fixed height: \tcbtextheight.
+\end{tcolorbox}
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}[doc new=2017-04-25]{tcbsegmentstate}{}
+  该宏取值为 |0|、|1| 或 |2|。它为每个未断开的文本框和每个断开后的部分文本框设置，
+  含义如下：
+  \begin{itemize}
+    \item\docValue{0}：当前（部分）文本框只包含上部。
+    \item\docValue{1}：当前（部分）文本框同时包含上部和下部。
+      可使用分隔线节点进行定位。
+    \item\docValue{2}：当前（部分）文本框只包含下部。
+      这只可能出现在可断开文本框的各段中。
+  \end{itemize}
+  像 \refSkin{bicolor} 这样的皮肤会利用该属性来绘制（部分）文本框。
+\begin{dispExample}
+% \tcbuselibrary{skins,raster}
+\begin{tcbraster}[raster equal height,enhanced,
+    watermark text=\tcbsegmentstate]
+  \begin{tcolorbox}Upper part\end{tcolorbox}
+  \begin{tcolorbox}Upper part\tcblower Lower part\end{tcolorbox}
+\end{tcbraster}
+\end{dispExample}
+\end{docCommand}

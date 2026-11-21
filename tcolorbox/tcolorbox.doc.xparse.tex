@@ -1,0 +1,19 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{程序库 \mylib{xparse}}\label{sec:xparse}%
+\tcbset{external/prefix=external/xparse_}%
+该程序库可通过宏包选项或在导言区中加载：
+\begin{dispListing}
+\tcbuselibrary{xparse}
+\end{dispListing}
+这会加载 \refPkg{xparse} 宏包 \cite{latexproject:xparse}。
+
+注意：在 5.0.2 版本之前，本程序库包含需要 \refPkg{xparse} 宏包的代码。
+如今该宏包已基本成为 \LaTeX\ 内核的一部分，本程序库的代码已迁移到
+|tcolorbox| 宏包的其他部分。因此，现存的程序库几乎只是一个仅用于加载
+|xparse| 的占位壳。
+
+与其包含 \mylib{xparse} 程序库，不如直接包含 \refPkg{xparse} 宏包，
+\textbf{前提是确实需要}（\LaTeX\ 内核已包含几乎所需的一切）。
+保留本程序库仅为兼容之用。

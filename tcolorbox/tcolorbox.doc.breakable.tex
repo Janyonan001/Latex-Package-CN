@@ -1,0 +1,862 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{\mylib{breakable} 程序库}\label{sec:breakable}%
+\tcbset{external/prefix=external/breakable_}%
+本程序库可通过宏包选项或在导言区中加载：
+\begin{dispListing}
+\tcbuselibrary{breakable}
+\end{dispListing}
+同时还会加载 \refPkg{pdfcol} 宏包。
+
+\subsection{技术概述}
+\mylib{breakable} 程序库支持 |tcolorbox| 的自动跨页断开。
+用 \refKey{/tcb/breakable} 开启此功能，用 \refKey{/tcb/unbreakable} 关闭。
+
+{
+\tcbset{colframe=Navy,colback=AliceBlue,fonttitle=\bfseries,
+  watermark color=AliceBlue!85!Navy,enhanced}
+若一个 |tcolorbox| 被设为 \refKey{/tcb/breakable}，则执行以下算法：
+\begin{enumerate}
+\item 文本框内容被读入一个盒子寄存器，做法与不可断开情形类似但不完全相同。
+\item 若整个文本框能放进当前页，则作为未断开的文本框输出，算法结束。
+  \begin{tcolorbox}[title=Unbroken Box,watermark text=unbroken]
+  The box.
+  \end{tcolorbox}
+\item 否则，检查上部文本框是否至少能放下 \refKey{/tcb/lines before break} 行。
+  若不能，则插入一个分页，算法回到第 2 步。
+\item 现在开始\emph{断开序列}。
+  将上部或下部文本框切分，使其恰好能放进当前页。
+  这一段称为断开序列的\emph{首部分}，并输出。
+  \begin{tcolorbox}[title=Broken Box,watermark text=first,skin=enhancedfirst]
+  The box.
+  \end{tcolorbox}
+\item
+  若整个文本框的剩余内容能放进当前页，则算法转到第 7 步，
+  否则转到第 6 步。
+\item
+  将上部或下部文本框切分，使其恰好能放进当前页。
+  这一段称为断开序列的\emph{中部分}，并输出。
+  然后算法回到第 5 步。
+  \begin{tcolorbox}[watermark text=middle,skin=enhancedmiddle]
+  The box.
+  \end{tcolorbox}
+\item
+  剩余部分称为断开序列的\emph{末部分}，并输出。算法结束。
+  \begin{tcolorbox}[watermark text=last,skin=enhancedlast]
+  The box.
+  \end{tcolorbox}
+\end{enumerate}
+}
+
+该算法会保证可选的分隔线不会出现在文本框末尾。
+对可选的下部文本框也会检查其至少包含 \refKey{/tcb/lines before break} 行。
+
+\clearpage
+原则上，断开序列中所有文本框共享相同的几何参数。不同之处在于：
+\begin{itemize}
+\item 所给 \refKey{/tcb/before} 与 \refKey{/tcb/after} 取值
+  只用于\emph{首}部分之前和\emph{末}部分之后
+  （即断开序列的首尾）。
+\item 断开序列各部分之间的特殊行为可由
+  \refKey{/tcb/toprule at break}、
+  \refKey{/tcb/bottomrule at break}、
+  \refKey{/tcb/enlarge top at break by} 与
+  \refKey{/tcb/enlarge bottom at break by} 指定。
+\item \refKey{/tcb/skin} 决定\emph{首}、\emph{中}、\emph{末}部分的外观。
+  实际上，每种分段类型都有自己的皮肤，由选项
+  \refKey{/tcb/skin first}、\refKey{/tcb/skin middle} 与
+  \refKey{/tcb/skin last} 给出。通常，这些选项由主皮肤自动设置，
+  参见 \zvref{subsec:breaksequence}。
+\end{itemize}
+
+
+\subsection{限制与已知问题}
+\begin{itemize}
+\item 普通可断开 |tcolorbox| 的上部与下部，其总高度上限各约为 65536pt（约 2300cm）。
+  若某一部分超过此长度，输出会在无任何警告的情况下出错。
+  对于长度超过 65536pt 的超大文本框，可对 \refKey{/tcb/breakable} 使用
+  \docValue{unlimited} 取值。使用 \docValue{unlimited} 设置后，
+  所用算法对文本框高度（在理论上）没有限制；
+  但对于超过 300 页的文本框（视编译器设置与文本框内容而定），
+  很可能需要增大编译器内存。
+  不过，建议仅对关键的大型文本框使用 \docValue{unlimited}。
+  %,since there \emph{may} be a single interline space deviation (lost glue) around
+  %every 2300cm, e.\,g.\ a \refCom{tcbline*} \emph{may} get lost.
+\item 可以在一个 |tcolorbox| 内部嵌套不可断开的 |tcolorbox|，甚至嵌套在可断开的框内。
+  但不能在可断开的框内再嵌套可断开的框。
+  嵌套框的 \refKey{/tcb/breakable} 键会被自动忽略\footnote{在 |tcolorbox| 3.04 之前，
+  嵌套框的 \refKey{/tcb/breakable} 键不会被忽略。}，
+  即内层框总是不可断开。\par
+  说到底，若你真的（不大可能）希望嵌套框可断开，
+  可对内层框使用 \refKey{/tcb/enforce breakable}\footnote{在 |tcolorbox| 3.04 之前，
+  \refKey{/tcb/enforce breakable} 的行为与 \refKey{/tcb/breakable} 相同。}。
+  \textbf{但是，在可断开框内再放可断开框，通常会得到一团糟。}
+\item\tcbdocmarginnote{\tcbdocnew{2020-09-17}}
+  视所用 \LaTeX\ 引擎而定，若正文内容中含有改变文字颜色的命令，
+  颜色可能无法延续到断开后的下一个文本框。
+  更多信息参见 \refKey{/tcb/use color stack} 的文档。
+\item\tcbdocmarginnote{\tcbdocnew{2014-10-30}}
+  \refPkg{footmisc} 宏包的 |perpage| 选项在可断开文本框内被刻意停用，
+  因为所有脚注都放在文本框末尾（可能远离引用点）。
+\item\tcbdocmarginnote{\tcbdocnew{2016-02-15}}
+  把一个实际上并未断开的文本框设为 \refKey{/tcb/breakable}，
+  会得到一个\emph{几乎}与不可断开框相同的框。
+  两者的视觉差异被尽量控制到无法察觉，但在某些
+  \refKey{/tcb/before} 与 \refKey{/tcb/after} 设置下仍可能出现，
+  尤其是文本框之前恰好有自动分页时。
+\item\tcbdocmarginnote{\tcbdocnew{2016-05-25}}
+  Lua\TeX\ 0.95 版改变了底层 |\vsplit| 的行为（是 bug 吗？！），
+  导致文本框断开效果很差。感谢 Jeremy Engel，
+  \mylib{breakable} 程序库为此包含了一个补丁，
+  同时还会加载 \refPkg{ifluatex} 宏包。
+\end{itemize}
+
+
+\clearpage
+\subsection{主要选项键}
+\begin{docTcbKey}[][doc updated=2017-02-01]{breakable}{\colOpt{=true\textbar false\textbar unlimited}}{默认 |true|，初始 |false|}
+  允许 |tcolorbox| 跨页断开。若文本框大于当前页可用空间，
+  它会自动断开并延续到下一页。各种 |tcolorbox| 都可以设为可断开。
+  断开后的外观取决于所用皮肤。若不确定，
+  请使用 \refKey{/tcb/enhanced} 来断开文本框。
+  断开序列的各部分由计数器 \docCounter{tcbbreakpart} 编号。
+  \begin{itemize}
+  \item\docValue{false}：将 |tcolorbox| 设为不可断开。
+  \item\docValue{true}：让 |tcolorbox| 在页与页之间断开。
+    上部与下部的总高度上限各约为 65536pt（约 2300cm，即约 90 页）。
+  \item\docValue{unlimited}：用于可断开框总高度不受限的实验性代码。
+    对于超过 300 页（甚至更短）的文本框，需要增大编译器内存。
+  \end{itemize}
+
+\begin{dispListing}
+% \usepackage{lipsum}  % preamble
+\tcbset{enhanced jigsaw,colback=red!5!white,colframe=red!75!black,
+  watermark color=yellow!25!white,watermark text=\arabic{tcbbreakpart},
+  fonttitle=\bfseries}
+
+\begin{tcolorbox}[breakable,title=My breakable box]
+\lipsum[1-6]
+\end{tcolorbox}
+\end{dispListing}
+\end{docTcbKey}
+{\tcbusetemp}
+
+
+\begin{docTcbKey}{unbreakable}{}{无取值，初始已设置}
+  将 |tcolorbox| 设为不可断开。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{enforce breakable}{}{无取值}
+  |tcolorbox| 内的 |tcolorbox| 会自动被设为不可断开。
+  对这样的内层框使用 \refKey{/tcb/breakable} 没有效果。
+  若\emph{确实}希望内层框可断开，请使用 \refKey{/tcb/enforce breakable}。
+  \textbf{这通常会得到一堆破碎的文本框。建议不要使用本选项。}\\
+  注意，\refKey{/tcb/enforce breakable} 保留了宏包 3.04 版之前
+  \refKey{/tcb/breakable} 的功能，是为向后兼容而存在的。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc updated=2018-07-26]{title after break}{=\meta{text}}{无默认值，初始为空}
+  \refKey{/tcb/title} 只用于断开序列的\emph{首}部分。
+  使用 |title after break| 可为其后所有部分创建一行标题，
+  内容为 \meta{text}。
+  标题文字的格式化另见 \refKey{/tcb/extras title after break}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{notitle after break}{}{无取值，初始已设置}
+  若此前设置过标题，则移除断开序列后续部分的标题行。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{adjusted title after break}{=\meta{text}}{样式，无默认值，初始未设置}
+  与 \refKey{/tcb/adjusted title} 类似，但作用于
+  \refKey{/tcb/title after break}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{lines before break}{=\meta{number}}{无默认值，初始 |2|}
+  保证上部或下部文本框在断开之前，至少能放下所给 \meta{number} 行。
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}[][doc updated=2017-07-05]{break at}{=\meta{length}\colOpt{/\meta{length}/\ldots/\meta{length}}}{无默认值，初始 |0pt|}
+  在所给 \meta{length} 处定义断开点。
+  第一个 \meta{length} 定义第一个分段框的（最大）高度，
+  第二个 \meta{length} 定义第二个分段框的（最大）高度，依此类推。
+  最后一个 \meta{length} 值用于其后所有分段框（若存在）。
+  \begin{itemize}
+  \item 把 \meta{length} 设为 |0pt|，表示断开时使用自然可用的空间。
+  \item 把 \meta{length} 设为负值，表示断开时使用该负值与自然可用空间之和
+        （文本框高度会缩小）。注意，在 4.10 版之前，负值被当作 |0pt| 处理。
+  \end{itemize}
+\begin{dispExample}
+% \usepackage{multicol,lipsum}
+\begin{multicols}{3}\footnotesize
+Breakable boxes inside a |multicols| environment need special attendance.
+They are broken by default at |\textheight|.
+The |break at| option can be used to insert better break points by hand.
+\begin{tcolorbox}[enhanced jigsaw,size=small,vfill before first,
+  colframe=red,colback=yellow!10!white,before title=\raggedright,
+  title={Broken box inside a |multicols| environment},fonttitle=\bfseries,
+  enforce breakable,% use only breakable in the real world!
+  pad at break=1mm,break at=3cm/6.3cm ]
+\lipsum[1]
+\end{tcolorbox}
+\refKey{/tcb/height fixed for} may also be considered for |multicols| environments.
+\end{multicols}
+\end{dispExample}
+\end{docTcbKey}
+
+\enlargethispage*{1cm}
+
+\begin{docTcbKey}{enlargepage}{=\meta{length}\colOpt{/\meta{length}/\ldots/\meta{length}}}{无默认值，初始 |0pt|}
+  为断开序列的各页插入一个 |\enlargethispage|\marg{length}，
+  即允许放大（或缩小）分段框。第一个 \meta{length} 作用于第一个分段框，
+  第二个 \meta{length} 作用于第二个分段框，依此类推。
+  最后一个 \meta{length} 值用于其后所有分段框（若存在）。
+  注意，浮动文本框不会被放大。
+\begin{dispListing}
+\begin{tcolorbox}[breakable,enlargepage=0mm/\baselineskip/2\baselineskip/0mm,...
+\end{dispListing}
+  上面的示例代码把第二个分段框放大一行，第三个分段框放大两行，
+  其后各部分不再放大。
+  \begin{marker}
+  若第一个分段框之前发生自动分页，则页面放大会同时作用于
+  第一个分段框\emph{之前}的那一页\emph{和}第一个分段框所在的页。
+  可插入一个手动断开以避免这种情况。\\
+  一般而言，|enlargepage| 只应在文档最后阶段用于微调。
+  \end{marker}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}{enlargepage flexible}{=\meta{length}}{无默认值，初始 |0pt|}
+  允许自动放大页面，最多放大 \meta{length}。
+  若放大后有足够空间，算法可借此避免断开某个文本框；
+  此外，断开序列的\emph{末}分段框也可被放大，以避免继续断开。\\
+  注意，这种潜在放大是在 \refKey{/tcb/enlargepage} 设置之外\emph{附加}的。
+  但 \refKey{/tcb/enlargepage flexible} 会覆盖
+  \refKey{/tcb/pad before break*} 或 \refKey{/tcb/pad at break*} 的设置。
+\begin{dispListing}
+% The following setting hinders orphan lines for the last partial box
+\tcbset{enlargepage flexible=\baselineskip}
+\end{dispListing}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-12-15]{compress page}{\colOpt{=\meta{option}}}{默认 |all|，初始 |baselineskip|}
+  本选项控制放置未断开文本框或断开序列首部分的那一页上的
+  间距管理。可选的 \meta{option} 取值为：
+  \begin{itemize}
+  \item\docValue{all}（默认值）：
+    该页上所有可伸缩的胶量都可能被用于未断开文本框或断开序列首部分。
+    因此，该页上的所有垂直间距都可能被压缩到其最小值。
+  \item\docValue{baselineskip}（初始值）：
+    该页上最多一个 |\baselineskip| 的可伸缩胶量
+    可能被用于未断开文本框或断开序列首部分。
+  \item\docValue{none}：
+    断开算法尊重该页上给定胶量的目标尺寸。
+    这是 |3.34| 版之前的初始值。
+  \end{itemize}
+  \begin{marker}
+  注意，本选项不影响文本框\emph{内容}本身。
+  \end{marker}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{shrink break goal}{=\meta{length}}{无默认值，初始 |0pt|}
+  当断开算法产生不美观的断开时，这是一个应急参数。
+  它把当前文本框部分的目标高度缩短 \meta{length}，从而可能得到更小的文本框。
+  切勿使用负值。\emph{通常，根本用不到本选项。}
+\end{docTcbKey}
+
+
+
+\begin{docTcbKey}[][doc new=2020-10-09]{use color stack}{\colOpt{=true\textbar false}}{默认 |true|，初始 |false|}
+  视所用 \LaTeX\ 引擎与已加载的宏包而定，若正文中含有改变颜色的命令，
+  颜色可能无法延续到断开后的下一个文本框。
+  对某些引擎，可以借助额外的颜色栈让颜色在断开后保留。
+  可通过 \refKey{/tcb/use color stack} 并借助 \refPkg{pdfcol} 宏包来启用这种颜色栈。
+  这可以全局设置，也可以逐框设置。
+  \begin{marker}
+  注意，启用 \refKey{/tcb/use color stack} 会在
+  \refEnv{tcolorbox} 上部与下部的开头插入一个带 \emph{whatsit} 的颜色命令。
+  这\emph{可能}会增加额外的垂直间距，
+  例如当文本框内容以 \emph{enumerate} 之类的列表开头时！
+  \end{marker}
+  \begin{itemize}
+  \item pdf\TeX：支持颜色栈。
+  \item Lua\TeX：支持颜色栈，但建议\emph{改用}加载
+     \refPkg{luacolor} 宏包，它可避免上述间距问题。
+  \item Xe\TeX：（目前）不支持颜色栈。据闻，
+     配合 \refPkg{fontspec} 宏包，可用
+     |\addfontfeatures{Color=mycolor}| 添加一种能在断开后保留的字体颜色。
+  \end{itemize}
+  若 |pdfcol| 无法为所用引擎初始化额外的颜色栈，
+  则 \refKey{/tcb/use color stack} 会被静默忽略。
+
+\clearpage
+下面示例的结果取决于所用的 \LaTeX\ 引擎与已加载的宏包。
+若使用 pdf\TeX、不带 |luacolor| 的 Lua\TeX{} 以及 Xe\TeX 编译，
+右侧为蓝色。使用 |luacolor| 的 Lua\TeX{} 会得到下一个结果。
+
+\begin{dispExample}
+% \usepackage{multicol,lipsum}
+\begin{multicols}{2}\footnotesize
+Breakable box without color stack.
+\begin{tcolorbox}[enhanced jigsaw,
+  size=small, colframe=gray, colback=yellow!10!white, colupper=blue,
+  enforce breakable,% use only breakable in the real world!
+  vfill before first, pad at break=1mm, break at=33mm ]
+    Some blue text.\par\smallskip
+    {\color{red}\itshape\lipsum[2]}\par\smallskip
+    More blue text.
+\end{tcolorbox}
+Text after box.
+\end{multicols}
+\end{dispExample}
+
+下面再启用 \refKey{/tcb/use color stack} 做一次。结果同样取决于所用的
+\LaTeX\ 引擎：对 Xe\TeX{}，右侧保持蓝色；对 pdf\TeX{} 和 Lua\TeX{}，
+右侧呈红蓝两色。
+
+\begin{dispExample}
+% \usepackage{multicol,lipsum}
+\begin{multicols}{2}\footnotesize
+Breakable box with color stack.
+\begin{tcolorbox}[enhanced jigsaw, use color stack,
+  size=small, colframe=gray, colback=yellow!10!white, colupper=blue,
+  enforce breakable,% use only breakable in the real world!
+  vfill before first, pad at break=1mm, break at=33mm ]
+    Some blue text.\par\smallskip
+    {\color{red}\itshape\lipsum[2]}\par\smallskip
+    More blue text.
+\end{tcolorbox}
+Text after box.
+\end{multicols}
+\end{dispExample}
+
+\end{docTcbKey}
+
+
+
+
+\clearpage
+\subsection{断开外观的选项键}
+
+\begin{docTcbKey}{toprule at break}{=\meta{length}}{无默认值，初始 \texttt{0.5mm}}
+  仅当文本框为 \refKey{/tcb/breakable} 时，把上横线线宽设为 \meta{length}。
+  此时它作用于断开序列中的\emph{中}部分与\emph{末}部分。
+  注意，若之后使用 \refKey{/tcb/toprule}，会覆盖此值。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{bottomrule at break}{=\meta{length}}{无默认值，初始 \texttt{0.5mm}}
+  仅当文本框为 \refKey{/tcb/breakable} 时，把下横线线宽设为 \meta{length}。
+  此时它作用于断开序列中的\emph{首}部分与\emph{中}部分。
+  注意，若之后使用 \refKey{/tcb/bottomrule}，会覆盖此值。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{topsep at break}{=\meta{length}}{无默认值，初始 \texttt{0mm}}
+  在断开序列的\emph{中}部分与\emph{末}部分顶部额外增加 \meta{length} 垂直间距。
+  一般而言，若这些部分以横线或标题开头，不建议更改此值。
+\end{docTcbKey}
+
+\begin{docTcbKey}{bottomsep at break}{=\meta{length}}{无默认值，初始 \texttt{0mm}}
+  在断开序列的\emph{首}部分与\emph{中}部分底部额外增加 \meta{length} 垂直间距。
+  一般而言，若这些部分以横线结尾，不建议更改此值。
+\end{docTcbKey}
+
+\begin{docTcbKey}{pad before break}{=\meta{length}}{样式，无默认值，初始 \texttt{3.5mm}}
+  把正文内容之后、断开点之前的垂直间距总量设为 \meta{length}。
+  本样式将 \refKey{/tcb/toprule at break} 设为 |0pt|，
+  并按需调整 \refKey{/tcb/topsep at break}。
+  一般而言，若断开序列的\emph{中}部分与\emph{末}部分
+  以横线或标题开头，不建议更改此值。
+\end{docTcbKey}
+
+\begin{docTcbKey}{pad before break*}{=\meta{length}}{样式，无默认值}
+  将 \refKey{/tcb/pad before break} 设为 \meta{length}，
+  并把 \refKey{/tcb/enlargepage flexible} 设为一个合适的值，
+  以避免出现空的收尾边框。
+\end{docTcbKey}
+
+\begin{docTcbKey}{pad after break}{=\meta{length}}{样式，无默认值，初始 \texttt{3.5mm}}
+  把断开点之后、正文内容之前的垂直间距总量设为 \meta{length}。
+  本样式将 \refKey{/tcb/bottomrule at break} 设为 |0pt|，
+  并按需调整 \refKey{/tcb/bottomsep at break}。
+  一般而言，若断开序列的\emph{首}部分与\emph{中}部分
+  以横线结尾，不建议更改此值。
+\end{docTcbKey}
+
+\begin{docTcbKey}{pad at break}{=\meta{length}}{样式，无默认值，初始 \texttt{3.5mm}}
+  同时把 \refKey{/tcb/pad before break} 与 \refKey{/tcb/pad after break}
+  设为 \meta{length} 的简写。
+\end{docTcbKey}
+
+\enlargethispage*{10mm}
+
+\begin{docTcbKey}{pad at break*}{=\meta{length}}{样式，无默认值}
+  将 \refKey{/tcb/pad at break} 设为 \meta{length}，
+  并把 \refKey{/tcb/enlargepage flexible} 设为一个合适的值，
+  以避免出现空的收尾边框。
+\end{docTcbKey}
+
+\begin{dispListing}
+% \usepackage{lipsum}  % preamble
+\tcbset{colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries}
+
+\begin{tcolorbox}[enhanced jigsaw,breakable,pad at break*=0mm,
+  title={For this box, the pad space at the break point is set to 0mm}]
+  \lipsum[1-2]
+\end{tcolorbox}
+\end{dispListing}
+{\tcbusetemp}
+
+
+\begin{marker}
+\refKey{/tcb/pad at break} 或 \refKey{/tcb/pad at break*}
+应作为选项列表中最后一个选项使用，因为它们会调整其他设置。
+\end{marker}
+
+
+\begin{marker}
+另见 \refKey{/tcb/enlarge top at break by}
+与 \refKey{/tcb/enlarge bottom at break by}。
+\end{marker}
+
+
+\begin{docTcbKey}{height fixed for}{=\meta{part}}{无默认值，初始 |none|}
+  当断开序列的某个分段框有一定可用空间时，该分段框通常比这一空间小
+  （取决于文本框内容）。对给定的 \meta{part}，可把高度设为占满全部可用空间。
+  \begin{itemize}
+  \item\docValue{none}：每个分段 |tcolorbox| 都按其自然高度设置。
+  \item\docValue{first}：\emph{首}分段框的高度设为占满可用空间。
+  \item\docValue{middle}：所有\emph{中}分段框的高度设为占满可用空间。
+  \item\docValue{last}：\emph{末}分段框的高度设为占满可用空间。
+  \item\docValue{first and middle}：\emph{首}分段框与所有\emph{中}分段框
+    的高度设为占满可用空间。
+  \item\docValue{middle and last}：所有\emph{中}分段框与\emph{末}分段框
+    的高度设为占满可用空间。
+  \item\docValue{all}：所有分段框的高度都设为占满可用空间。
+  \end{itemize}
+\begin{marker}
+  若文本框最终并未断开，则本选项不生效。
+  不可断开框设置固定高度参见 \refKey{/tcb/height}；
+  不可断开框占满最大高度参见 \refKey{/tcb/height fill}。
+\end{marker}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{vfill before first}{\colOpt{=true\textbar false}}{默认 |true|，初始 |false|}
+  在\emph{首}分段框开头插入一个 |\vfill|，把该分段框推到当前页末尾。
+  这可作为 \refKey{/tcb/height fixed for}|=|\docValue{first} 的替代做法，
+  用于得到两端对齐的栏或页。
+  若文本框实际并未断开，则不插入该 |\vfill|。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2017-03-20]{segmentation at break}{\colOpt{=true\textbar false}}{默认 |true|，初始 |true|}
+  若可断开文本框含有\emph{上部}与\emph{下部}，且断开点恰好落在
+  两部分之间的\emph{分隔处}，则
+  \begin{itemize}
+  \item 若 \refKey{/tcb/segmentation at break} 设为 |true|，
+    分隔线（或类似元素）作为含有\emph{下部}的分段框的第一个元素画出。
+  \item 若 \refKey{/tcb/segmentation at break} 设为 |false|，
+    则完全不画分隔线。对于 \refSkin{bicolor}、\refSkin{tile}
+    或 \refSkin{beamer} 等皮肤，这样做可能更合适。
+  \end{itemize}
+\end{docTcbKey}
+
+
+\clearpage
+\subsection{分段框的附加选项}\label{subsec:extras}
+
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras}{=\marg{options}}{无默认值，初始未设置}
+  在皮肤设置完成之后，为断开序列中的每个文本框（包括未断开的框）
+  添加 |tcolorbox| \meta{options}。这发生在文本框处理流程中相当靠后的阶段。
+  此处\emph{不要使用}几何与断开设置，因为它们要么被忽略，
+  要么产生意想不到的负面效果。但可以更改大部分颜色、皮肤效果、
+  阴影、边框、边框代码等。\par
+  \refKey{/tcb/extras} 作用于每个文本框（包括未断开的框），
+  而 \refKey{/tcb/extras first}、\refKey{/tcb/extras middle}、
+  \refKey{/tcb/extras last}、\refKey{/tcb/extras unbroken} 等
+  则把附加选项作用于特定的分段框。\par
+  \refKey{/tcb/extras} 以及 \refKey{/tcb/extras first} 等是可叠加的，
+  即所给 \meta{options} 会追加到此前的附加选项之后。
+  使用 \refKey{/tcb/no extras} 可移除所有附加选项。\par
+  如有需要，\refKey{/tcb/extras pre} 会把选项前置到此前的附加选项之前。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2015-07-16]{no extras}{}{样式，无默认值，初始已设置}
+  若此前设置过附加选项，本选项将其全部移除。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras broken}{=\marg{options}}{无默认值，初始未设置}
+  若文本框被设为 \refKey{/tcb/breakable} 且\emph{确实}发生了断开，
+  则把 \meta{options} 添加到断开序列的每个文本框。
+  \refKey{/tcb/extras} 会覆盖本键。
+  本键是同时设置 \refKey{/tcb/extras first}、\refKey{/tcb/extras middle}
+  与 \refKey{/tcb/extras last} 的简写。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras unbroken}{=\marg{options}}{无默认值，初始未设置}
+  若文本框被设为 \refKey{/tcb/breakable} 但\emph{实际并未}断开，
+  或文本框被设为 \refKey{/tcb/unbreakable}，
+  则把 \meta{options} 添加到该文本框。
+  \refKey{/tcb/extras} 会覆盖本键。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{no extras unbroken}{}{样式，无默认值，初始已设置}
+  若此前设置过未断开框的附加选项，本选项将其移除。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras first}{=\marg{options}}{无默认值，初始未设置}
+  若文本框被设为 \refKey{/tcb/breakable} 且\emph{确实}发生了断开，
+  则把 \meta{options} 添加到断开序列的\emph{首}框。
+  \refKey{/tcb/extras} 会覆盖本键。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{no extras first}{}{样式，无默认值，初始已设置}
+  若此前设置过首框附加选项，本选项将其移除。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras middle}{=\marg{options}}{无默认值，初始未设置}
+  若文本框被设为 \refKey{/tcb/breakable} 且\emph{确实}发生了断开，
+  则把 \meta{options} 添加到断开序列的每个\emph{中}框（若存在）。
+  \refKey{/tcb/extras} 会覆盖本键。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{no extras middle}{}{样式，无默认值，初始已设置}
+  若此前设置过中框附加选项，本选项将其移除。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras last}{=\marg{options}}{无默认值，初始未设置}
+  若文本框被设为 \refKey{/tcb/breakable} 且\emph{确实}发生了断开，
+  则把 \meta{options} 添加到断开序列的\emph{末}框。
+  \refKey{/tcb/extras} 会覆盖本键。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{no extras last}{}{样式，无默认值，初始已设置}
+  若此前设置过末框附加选项，本选项将其移除。
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras unbroken and first}{=\marg{options}}{无默认值，初始未设置}
+  同时设置 \refKey{/tcb/extras unbroken} 与
+  \refKey{/tcb/extras first} 的简写。
+  \refKey{/tcb/extras} 会覆盖本键。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras middle and last}{=\marg{options}}{无默认值，初始未设置}
+  同时设置 \refKey{/tcb/extras middle} 与
+  \refKey{/tcb/extras last} 的简写。
+  \refKey{/tcb/extras} 会覆盖本键。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras unbroken and last}{=\marg{options}}{无默认值，初始未设置}
+  同时设置 \refKey{/tcb/extras unbroken} 与
+  \refKey{/tcb/extras last} 的简写。
+  \refKey{/tcb/extras} 会覆盖本键。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-07-16]{extras first and middle}{=\marg{options}}{无默认值，初始未设置}
+  同时设置 \refKey{/tcb/extras first} 与
+  \refKey{/tcb/extras middle} 的简写。
+  \refKey{/tcb/extras} 会覆盖本键。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2018-07-26]{extras title after break}{=\marg{options}}{无默认值，初始未设置}
+  若文本框设有 \refKey{/tcb/title after break}，则把 \meta{options}
+  添加到首次断开之后的所有标题，即所有中部分与末部分的标题。
+  可通过选择 \meta{options} 来调整断开后标题的颜色、字体与对齐方式，
+  例如用 \refKey{/tcb/coltitle}、\refKey{/tcb/fonttitle}、\refKey{/tcb/halign title}。
+  注意，\refKey{/tcb/colbacktitle} 需放入 \refKey{/tcb/extras middle and last}。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2018-07-26]{no extras title after break}{}{样式，无默认值，初始已设置}
+  若此前设置过断开后标题的附加选项，本选项将其移除。
+\end{docTcbKey}
+
+\bigskip
+
+\begin{exdispExample}{extras}
+% \usepackage{lipsum,multicol}
+% \usetikzlibrary{decorations.pathmorphing}
+% \tcbuselibrary{skins}
+\newtcolorbox{mybox}[1][]{
+  tile,
+  colback=green!7,coltitle=blue!50!black,colbacktitle=blue!5,
+  center title,
+  toprule=1.25mm,bottomrule=1.25mm,
+  extras unbroken and first={
+    borderline north={0.25mm}{0.5mm}{blue,decoration={zigzag,amplitude=0.5mm},decorate}},
+  extras unbroken and last={
+    borderline south={0.25mm}{0.5mm}{blue,decoration={zigzag,amplitude=0.5mm},decorate}},
+  #1
+}
+
+\begin{mybox}[title=My unbroken box]
+\lipsum[1]
+\end{mybox}
+
+\begin{multicols}{3}
+  \begin{mybox}[title=My broken box,
+    enforce breakable,% use only breakable in the real world!
+    break at=4.2cm,pad at break=2mm,
+    height fixed for=first and middle,  ]
+  \lipsum[2]
+  \end{mybox}
+\end{multicols}
+\end{exdispExample}
+
+
+
+
+\clearpage
+\subsection{可断开文本框与 \texttt{multicol} 宏包}\label{subsec:multicol}
+\begin{marker}
+在 4.10 版中，在 Frank Mittelbach 的帮助下，改进了
+用于检测 |multicols| 环境内 |tcolorbox| 可用高度的算法。
+这一改动\emph{可能}影响已有的用户代码，这些代码\emph{可能}需要相应调整。
+\end{marker}
+
+\begin{multicols}{2}
+\begin{tcolorbox}[enhanced jigsaw,size=small,breakable,colback=yellow!10!white,
+  colframe=red!50!white,break at=3cm,height fixed for=all]
+不可断开的 |tcolorbox| 可以不加特别处理地用在
+\refPkg{multicol} 宏包 \cite{mittelbach:multicol} 的 |multicols| 环境内。
+
+从 3.10 版起，可断开的 |tcolorbox| 会检测自己是否处于
+|multicols| 环境内。但可断开框的断开点选择无法由
+|multicols| 的平衡例程完成。默认情况下，文本框会在栏的最大高度处断开。
+要得到满意的结果，请使用 \refKey{/tcb/break at} 与 \refKey{/tcb/height fixed for} 选项。
+\end{tcolorbox}
+\end{multicols}
+
+\enlargethispage{\baselineskip}
+\begin{dispListing}
+% \usepackage{lipsum,multicol}  % preamble
+\footnotesize
+\begin{multicols}{2}
+  \lipsum[1]
+  \begin{tcolorbox}[enhanced jigsaw,breakable,size=title,
+    colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries,
+    title=My breakable box,pad at break=1mm, break at=-\baselineskip/0pt ]
+  \lipsum[2-4]
+  \end{tcolorbox}
+  \lipsum[4]
+\end{multicols}
+\end{dispListing}
+{\tcbusetemp}
+
+\clearpage
+
+\begin{multicols}{2}
+\small
+这个示例本身已放在一个 |multicols| 环境内。
+这一次，\emph{中}部分占满整栏高度（此处为 |\textheight|）。
+使用 \refKey{/tcb/height fixed for} 让该文本框部分占满整个高度，
+以便与相邻栏对齐。
+\begin{dispListing}
+% \usepackage{lipsum,multicol}
+\lipsum[1]
+\begin{tcolorbox}[enhanced jigsaw,
+  breakable,
+  size=title,
+  colback=red!5!white,
+  colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=My breakable box,
+  pad at break=2mm,
+  break at=-\baselineskip/0pt,
+  height fixed for=middle ]
+\lipsum[2-7]
+\end{tcolorbox}
+\lipsum[8]
+\end{dispListing}
+{\tcbusetemp}
+\end{multicols}
+
+
+下面的示例中，一个 |\tcolorbox| 完全填满了 |\multicols| 环境。
+这里用 \refKey{/tcb/height fixed for} 让三栏都占满整个高度。
+注意，合适的 \refKey{/tcb/break at} 取值不是自动计算的，而是手动设置的。
+
+\begin{dispListing}
+% \usepackage{lipsum,multicol}  % preamble
+\small
+\begin{multicols}{3}
+  \begin{tcolorbox}[enhanced jigsaw,breakable,size=small,
+    colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries,
+    title=My breakable box,pad at break=2mm,drop fuzzy shadow,
+    height fixed for=all, break at=11.4cm ]
+  \lipsum[1-3]
+  \end{tcolorbox}
+\end{multicols}
+\end{dispListing}
+{\tcbusetemp}
+
+\clearpage
+\subsection{插入断开点}\label{subsec:breakpoints}
+
+\begin{docCommand}[doc new=2017-07-05]{tcbbreak}{}
+  若当前页或栏有足够空间，\emph{可断开}文本框不会被断开。
+  因此，常见的用 |\break|、|\pagebreak|、|\columnbreak| 等插入罚值来分页的做法，
+  \emph{只有}在文本框已经（不插入这些罚值而）至少断成两部分时才会如期生效。
+  \par\smallskip
+  要\emph{强制}分页或分栏，\refCom{tcbbreak} 会另起一段，
+  并插入一条超高横线，从而引发断开，随后立即丢弃。
+  你可以忽略这一技术细节，直接像使用 |\pagebreak| 一样使用它。\par\smallskip
+  对于\emph{不可断开文本框}，\refCom{tcbbreak} 等同于插入 |\par|，
+  即只是另起一段。\par\smallskip
+  另见 \refKey{/tcb/break at}，用于定义按高度断开。
+
+\begin{dispListing}
+% \usepackage{lipsum,multicol}  % preamble
+\begin{multicols}{3}
+  \begin{tcolorbox}[breakable,enhanced jigsaw,size=small,
+    colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries,
+    title=Break into parts
+  ]
+  First part\tcbbreak
+  Second part\tcbbreak
+  Third part
+  \end{tcolorbox}
+\end{multicols}
+
+\begin{multicols}{3}
+  \begin{tcolorbox}[enhanced jigsaw,size=small,
+    colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries,
+    title=You shall not break
+  ]
+  First part\tcbbreak
+  Second part\tcbbreak
+  Third part
+  \end{tcolorbox}
+\end{multicols}
+
+\end{dispListing}
+{\tcbusetemp}
+
+\end{docCommand}
+
+
+
+\clearpage
+\subsection{各皮肤的断开序列}\label{subsec:breaksequence}
+下面的图示记录了不同皮肤的\emph{断开序列}。
+根据 |tcolorbox| 所使用的主皮肤，分别给出断开序列各部分实际使用的皮肤。
+
+\def\tcbbreakskininto#1#2#3#4#5{%
+\begin{center}\begin{tikzpicture}
+\tcbset{width=7cm,colframe=Navy,colback=AliceBlue,fonttitle=\bfseries,
+  watermark color=AliceBlue!85!Navy,#5
+  }
+\node[above] (unbroken) at (0,0) {\begin{tcolorbox}[title=Unbroken Box,skin=#1,watermark text=unbroken,height=3.8cm]
+\texttt{skin=#1}
+\end{tcolorbox}};
+\node[above] (first) at (8.7,2.4) {\begin{tcolorbox}[title=Broken Boxes,skin=#2,watermark text=first,height=1.4cm]
+\texttt{skin=#2}
+\end{tcolorbox}};
+\node[above] (middle) at (8.7,1.2) {\begin{tcolorbox}[skin=#3,watermark text=middle,height=1cm]
+\texttt{skin=#3}
+\end{tcolorbox}};
+\node[above] (last) at (8.7,0) {\begin{tcolorbox}[skin=#4,watermark text=last,height=1cm]
+\texttt{skin=#4}
+\end{tcolorbox}};
+\path[draw=FireBrick,line width=2pt,->] (unbroken) edge (first.west) edge (middle.west) edge (last.west);
+\end{tikzpicture}\end{center}}
+
+\tcbbreakskininto{standard}{standard}{standard}{standard}{watermark text/.style={}}
+\tcbbreakskininto{standard jigsaw}{standard jigsaw}{standard jigsaw}{standard jigsaw}{watermark text/.style={}}
+\tcbbreakskininto{spartan}{spartan}{spartan}{spartan}{}
+\clearpage
+\tcbbreakskininto{enhanced}{enhancedfirst}{enhancedmiddle}{enhancedlast}{}
+\tcbbreakskininto{enhancedfirst}{enhancedfirst}{enhancedmiddle}{enhancedmiddle}{}
+\tcbbreakskininto{enhancedmiddle}{enhancedmiddle}{enhancedmiddle}{enhancedmiddle}{}
+\tcbbreakskininto{enhancedlast}{enhancedmiddle}{enhancedmiddle}{enhancedlast}{}
+\clearpage
+\tcbbreakskininto{enhanced jigsaw}{enhancedfirst jigsaw}{enhancedmiddle jigsaw}{enhancedlast jigsaw}{}
+\tcbbreakskininto{enhancedfirst jigsaw}{enhancedfirst jigsaw}{enhancedmiddle jigsaw}{enhancedmiddle jigsaw}{}
+\tcbbreakskininto{enhancedmiddle jigsaw}{enhancedmiddle jigsaw}{enhancedmiddle jigsaw}{enhancedmiddle jigsaw}{}
+\tcbbreakskininto{enhancedlast jigsaw}{enhancedmiddle jigsaw}{enhancedmiddle jigsaw}{enhancedlast jigsaw}{}
+\clearpage
+{\tcbset{borderline={2pt}{0pt}{black!10!white}}%
+\tcbbreakskininto{empty}{emptyfirst}{emptymiddle}{emptylast}{}
+\tcbbreakskininto{emptyfirst}{emptyfirst}{emptymiddle}{emptymiddle}{}
+\tcbbreakskininto{emptymiddle}{emptymiddle}{emptymiddle}{emptymiddle}{}
+\tcbbreakskininto{emptylast}{emptymiddle}{emptymiddle}{emptylast}{}
+}
+\clearpage
+\tcbbreakskininto{bicolor}{bicolorfirst}{bicolormiddle}{bicolorlast}{bicolor}
+\tcbbreakskininto{bicolorfirst}{bicolorfirst}{bicolormiddle}{bicolormiddle}{bicolor}
+\tcbbreakskininto{bicolormiddle}{bicolormiddle}{bicolormiddle}{bicolormiddle}{bicolor}
+\tcbbreakskininto{bicolorlast}{bicolormiddle}{bicolormiddle}{bicolorlast}{bicolor}
+\clearpage
+\tcbbreakskininto{bicolor jigsaw}{bicolorfirst jigsaw}{bicolormiddle jigsaw}{bicolorlast jigsaw}{bicolor jigsaw}
+\tcbbreakskininto{bicolorfirst jigsaw}{bicolorfirst jigsaw}{bicolormiddle jigsaw}{bicolormiddle jigsaw}{bicolor jigsaw}
+\tcbbreakskininto{bicolormiddle jigsaw}{bicolormiddle jigsaw}{bicolormiddle jigsaw}{bicolormiddle jigsaw}{bicolor jigsaw}
+\tcbbreakskininto{bicolorlast jigsaw}{bicolormiddle jigsaw}{bicolormiddle jigsaw}{bicolorlast jigsaw}{bicolor jigsaw}
+\clearpage
+\tcbbreakskininto{tile}{tilefirst}{tilemiddle}{tilelast}{tile,colbacktitle=Navy}
+\tcbbreakskininto{tilefirst}{tilefirst}{tilemiddle}{tilemiddle}{tile,colbacktitle=Navy}
+\tcbbreakskininto{tilemiddle}{tilemiddle}{tilemiddle}{tilemiddle}{tile,colbacktitle=Navy}
+\tcbbreakskininto{tilelast}{tilemiddle}{tilemiddle}{tilelast}{tile,colbacktitle=Navy}
+\clearpage
+\tcbbreakskininto{beamer}{beamerfirst}{beamermiddle}{beamerlast}{beamer}
+\tcbbreakskininto{beamerfirst}{beamerfirst}{beamermiddle}{beamermiddle}{beamer}
+\tcbbreakskininto{beamermiddle}{beamermiddle}{beamermiddle}{beamermiddle}{beamer}
+\tcbbreakskininto{beamerlast}{beamermiddle}{beamermiddle}{beamerlast}{beamer}
+\clearpage
+\tcbbreakskininto{widget}{widgetfirst}{widgetmiddle}{widgetlast}{widget}
+\tcbbreakskininto{widgetfirst}{widgetfirst}{widgetmiddle}{widgetmiddle}{widget}
+\tcbbreakskininto{widgetmiddle}{widgetmiddle}{widgetmiddle}{widgetmiddle}{widget}
+\tcbbreakskininto{widgetlast}{widgetmiddle}{widgetmiddle}{widgetlast}{widget}
+\tcbbreakskininto{draft}{draft}{draft}{draft}{draft}
+\clearpage
+\tcbbreakskininto{freelance}{freelancefirst}{freelancemiddle}{freelancelast}{}
+\tcbbreakskininto{freelancefirst}{freelancefirst}{freelancemiddle}{freelancemiddle}{}
+\tcbbreakskininto{freelancemiddle}{freelancemiddle}{freelancemiddle}{freelancemiddle}{}
+\tcbbreakskininto{freelancelast}{freelancemiddle}{freelancemiddle}{freelancelast}{}
+
+
+
+
+\clearpage
+\subsection{手动断开（假断开）}
+
+\begin{marker}
+真正的分栏断开参见 \zvref{subsec:multicol}。
+\end{marker}
+
+由于断开后文本框的外观由皮肤负责，因此很容易\flqq 伪造一次断开\frqq。
+为此，其实根本不需要 \mylib{breakable} 程序库。
+
+\begin{dispExample}
+\tcbset{enhanced,equal height group=fakedbreak,
+  colback=LightGreen,colframe=DarkGreen,
+  width=(\linewidth-6mm)/3,nobeforeafter,
+  left=1mm,right=1mm,top=1mm,bottom=1mm,middle=1mm}
+%
+\begin{tcolorbox}[title=My broken box,skin=enhancedfirst]
+This is a box which breaks from one column to another
+\end{tcolorbox}\hfill
+\begin{tcolorbox}[skin=enhancedmiddle]
+column. I am sorry to say that this is a trick.
+Nevertheless, you may use this trick for your
+\end{tcolorbox}\hfill
+\begin{tcolorbox}[skin=enhancedlast]
+own purposes.
+\end{tcolorbox}
+\end{dispExample}
+
+

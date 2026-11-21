@@ -1,0 +1,264 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{Beamer 支持}\label{sec:beamer}%
+\tcbset{external/prefix=external/beamer_}%
+\mylib{skins} 程序库为 \refPkg{beamer} 宏包 \cite{tantau:beamer} 新增了若干支持选项。
+对于下面的选项，需通过宏包选项或在导言区中加载 \mylib{skins} 程序库：
+\begin{dispListing}
+\tcbuselibrary{skins}
+\end{dispListing}
+
+\mylib{skins} 程序库所有其他选项的文档见 \zvref{sec:skins}。
+
+\begin{docTcbKey}[][doc new and updated={2015-01-09}{2019-03-01}]{only}{=\pbarg{overlay specification}\marg{options}}{样式，无默认值，初始未设置}
+  根据 |beamer| \meta{叠加说明} 设置所给 |tcolorbox| \meta{选项}。
+  注意，这需要 |beamer| 文档类 \cite{tantau:beamer}。
+  \meta{选项}仅在指定的 |beamer| 帧上使用。
+
+
+\begin{fulldocumentlisting}{}
+\documentclass{beamer}
+\usepackage[many]{tcolorbox}
+\begin{document}
+
+\begin{frame}
+  \begin{tcolorbox}[title=My title,fonttitle=\bfseries,
+      enhanced,colframe=red!50!black,colback=red!10,colbacktitle=red,
+      sidebyside,righthand width=3cm,
+      lowerbox=invisible,lower separated=false,
+      drop lifted shadow,
+      only=<1>{colbacktitle=yellow,coltitle=red!50!black,colframe=red},
+      only=<3>{colback=yellow!50,watermark text={Attention!}},
+      only=<3->{lowerbox=visible}  ]
+    This is a test.
+    \begin{itemize}[<+->]
+      \item One
+      \item Two
+      \item \alert<3>{Three}
+      \item Four
+    \end{itemize}
+  \tcblower
+    \begin{equation*}
+    \int\limits_{1}^{x} \frac{1}{t}~dt = \ln(x).
+    \end{equation*}
+  \end{tcolorbox}
+\end{frame}
+\end{document}
+\end{fulldocumentlisting}
+
+
+\begin{fulldocumentlisting}{}
+\documentclass{beamer}
+\usepackage[most]{tcolorbox}
+\begin{document}
+
+\begin{frame}[fragile]
+  \begin{tcblisting}{beamer,colback=blue!5,colframe=blue!20!gray,coltitle=yellow,
+    title=Example,
+    only=<1>{lowerbox=invisible},only=<2>{}
+  }
+This is an \textbf{example listing}
+  \end{tcblisting}
+\end{frame}
+\end{document}
+\end{fulldocumentlisting}
+
+\begin{marker}
+选项 \refKey{/tcb/only} 在 4.20 版本之前属于核心宏包。
+\end{marker}
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new={2025-05-28}]{alt}{=\pbarg{overlay specification}\marg{default}\marg{alternative}}{样式，无默认值，初始未设置}
+  根据 |beamer| \meta{叠加说明}，在不同的 |tcolorbox| 选项之间切换。
+  \meta{默认}选项用于指定的幻灯片，其余幻灯片使用 \meta{替代}选项。
+  注意，这需要 |beamer| 文档类 \cite{tantau:beamer}。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2025-07-07}]{set alt}{=\marg{default}\marg{alternative}}{无默认值，初始为 \brackets{}\brackets{}}
+  保存参数，供后续与 \refKey{/tcb/use alt} 配合使用。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2025-07-07}]{use alt}{=\pbarg{overlay specification}}{样式，无默认值，初始未设置}
+  与 \refKey{/tcb/alt} 相同，但使用由 \refKey{/tcb/set alt} 保存的参数。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2025-05-28}]{temporal}{=\pbarg{overlay specification}\marg{before slide}\marg{default}\marg{after slide}}{样式，\linebreak 无默认值，初始未设置}
+  根据 |beamer| \meta{叠加说明}，在不同的 |tcolorbox| 选项之间临时切换。
+  \meta{默认}选项用于指定的幻灯片，
+  其之前的幻灯片使用 \meta{之前幻灯片}选项，
+  其之后的幻灯片使用 \meta{之后幻灯片}选项。
+  注意，这需要 |beamer| 文档类 \cite{tantau:beamer}。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2025-07-07}]{set temporal}{=\marg{before slide}\marg{default}\marg{after slide}}{无默认值，初始为 \brackets{}\brackets{}\brackets{}}
+  保存参数，供后续与 \refKey{/tcb/use temporal} 配合使用。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2025-07-07}]{use temporal}{=\pbarg{overlay specification}}{样式，无默认值，初始未设置}
+  与 \refKey{/tcb/temporal} 相同，但使用由 \refKey{/tcb/set temporal} 保存的参数。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new={2019-03-01}]{hide}{=\pbarg{overlay specification}}{样式，无默认值，初始未设置}
+  根据 |beamer| \meta{叠加说明} 设置 \refKey{/tcb/beamer hidden} 样式。
+  \refKey{/tcb/beamer hidden} 可被重定义以进行定制。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2019-03-01}]{beamer hidden}{}{样式，无选项，初始为 |nirvana|}
+  本样式不打算直接使用，而是通过应用 \refKey{/tcb/hide} 以隐藏方式调用。
+  该样式可被重定义。
+\begin{dispListing}
+\tcbset{
+  beamer hidden/.style={invisible,interior hidden,colframe=blue!20!gray!15},
+}
+\end{dispListing}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2019-03-01}]{alert}{=\pbarg{overlay specification}}{样式，无默认值，初始未设置}
+  根据 |beamer| \meta{叠加说明} 设置 \refKey{/tcb/beamer alerted} 样式。
+  \refKey{/tcb/beamer alerted} 可被重定义以进行定制。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new={2019-03-01}]{beamer alerted}{}{样式，无选项，初始为 |fuzzy halo|}
+  本样式不打算直接使用，而是通过应用 \refKey{/tcb/alert} 以隐藏方式调用。
+  该样式可被重定义。
+\begin{dispListing}
+\tcbset{
+  beamer alerted/.style={colframe=red!50!gray},
+}
+\end{dispListing}
+\end{docTcbKey}
+
+
+\clearpage
+
+下面的示例使用 \mylib{raster} 中的 \refEnv{tcbitemize}，
+以便方便地使用一组逐个显现的文本框。
+
+
+\begin{fulldocumentlisting}{run pdflatex}
+\documentclass{beamer}
+\usepackage[most]{tcolorbox}
+\begin{document}
+
+\begin{frame}
+  \begin{tcbitemize}[raster equal height=rows,
+    enhanced,colback=blue!5,colframe=blue!20!gray,coltitle=yellow,
+    ]
+  \tcbitem[title=One,alert=<1>]
+    First Statement
+  \tcbitem[title=Two,hide=<-1>,alert=<2>]
+    Second Statement
+  \tcbitem[title=Three,hide=<-2>,alert=<3>]
+    Test
+  \tcbitem[title=Four,hide=<-3>,alert=<4>]
+    \begin{equation*}
+    \int\limits_{1}^{x} \frac{1}{t}~dt = \ln(x).
+    \end{equation*}
+  \tcbitem[title=Five,hide=<-4>,alert=<5>]
+    \includegraphics[width=1cm]{goldshade.png}
+  \tcbitem[title=Six,hide=<-5>,alert=<6>]
+    Test
+  \end{tcbitemize}
+\end{frame}
+\end{document}
+\end{fulldocumentlisting}
+
+
+
+\begin{fulldocumentlisting}{run pdflatex}
+\documentclass{beamer}
+\usepackage[most]{tcolorbox}
+\begin{document}
+
+\begin{frame}
+  \begin{tcbitemize}[raster equal height=rows,enhanced,
+    set temporal={invisible,interior hidden,colframe=blue!20!gray!15}
+                 {colback=red!5,colframe=red!50!gray,coltitle=yellow}
+                 {colback=blue!5,colframe=blue!20!gray,coltitle=yellow},
+    ]
+  \tcbitem[title=One,use temporal=<1>]
+    First Statement
+  \tcbitem[title=Two,use temporal=<2>]
+    Second Statement
+  \tcbitem[title=Three,use temporal=<3>]
+    Test
+  \tcbitem[title=Four,use temporal=<4>]
+    \begin{equation*}
+    \int\limits_{1}^{x} \frac{1}{t}~dt = \ln(x).
+    \end{equation*}
+  \tcbitem[title=Five,use temporal=<5>]
+    \includegraphics[width=1cm]{goldshade.png}
+  \tcbitem[title=Six,use temporal=<6>]
+    Test
+  \end{tcbitemize}
+\end{frame}
+\end{document}
+\end{fulldocumentlisting}
+
+
+
+\begin{fulldocumentlisting}{run pdflatex}
+\documentclass{beamer}
+\usepackage[most]{tcolorbox}
+\begin{document}
+
+\begin{frame}
+  \begin{tcbitemize}[raster equal height=rows,beamer,
+    colback=blue!5,colframe=blue!20!gray,coltitle=yellow,
+    set temporal={colback=white,colframe=gray!50,
+                    opacityupper=0.2,opacitytitle=0.2}
+                 {colframe=red!50!gray,fuzzy halo}
+                 {},
+    ]
+  \tcbitem[title=One,use temporal=<1>]
+    First Statement
+  \tcbitem[title=Two,use temporal=<2>]
+    Second Statement
+  \tcbitem[title=Three,use temporal=<3>]
+    Test
+  \tcbitem[title=Four,use temporal=<4>]
+    \begin{equation*}
+    \int\limits_{1}^{x} \frac{1}{t}~dt = \ln(x).
+    \end{equation*}
+  \tcbitem[title=Five,use temporal=<5>]
+    \includegraphics[width=1cm]{goldshade.png}
+  \tcbitem[title=Six,use temporal=<6>]
+    Test
+  \end{tcbitemize}
+\end{frame}
+\end{document}
+\end{fulldocumentlisting}
+
+
+\begin{fulldocumentlisting}{run pdflatex}
+\documentclass{beamer}
+\usepackage[most]{tcolorbox}
+
+\NewTColorBox{mybox}{ d<> }{enhanced,
+  temporal=<#1>{empty,invisible}
+               {colback=red!5,colframe=red!20!gray}
+               {colframe=blue!20!gray,colback=blue!5},
+}
+\begin{document}
+
+\begin{frame}
+  \begin{mybox}<1>
+    First Statement
+  \end{mybox}
+  \begin{mybox}<2>
+    Second Statement
+  \end{mybox}
+  \begin{mybox}<3>
+    Third Statement
+  \end{mybox}
+  \begin{mybox}<4>
+    Final Statement
+  \end{mybox}
+\end{frame}
+\end{document}
+\end{fulldocumentlisting}

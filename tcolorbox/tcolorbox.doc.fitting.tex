@@ -1,0 +1,634 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{\mylib{fitting} 程序库}\label{sec:fitting}%
+\tcbset{external/prefix=external/fitting_}%
+该程序库通过宏包选项或在导言区中用以下方式加载：
+\begin{dispListing}
+\tcbuselibrary{fitting}
+\end{dispListing}
+
+\subsection{程序库的宏}
+
+\begin{docCommand}{tcboxfit}{\oarg{options}\marg{box content}}
+  创建一个彩色文本框，把给定的 \meta{box content} 自适应缩放到
+  文本框的宽和高。|\tcboxfit| 必须具有固定高度。
+  若未给定固定高度，则构造一个正方形框。
+  原则上，\refEnv{tcolorbox} 的大多数 \meta{options} 都可用于
+  |\tcboxfit|，但有若干限制。|\tcboxfit| 不能有下部，也不能断开。
+
+\enlargethispage*{1cm}
+\begin{dispExample}
+% \usepackage{lipsum} \tcbuselibrary{raster}
+\tcbset{colframe=blue!50!black,colback=red!10!white,
+    boxsep=0pt,top=1mm,bottom=1mm,left=1mm,right=1mm,
+    fit algorithm=hybrid*,raster equal skip=1mm}
+\begin{tcbraster}[raster columns=3,raster valign=bottom]
+  \tcboxfit[height=8cm]{\lipsum[1]}
+  \tcboxfit[height=4cm]{\lipsum[1]}
+  \tcboxfit[height=2cm]{\lipsum[1]}
+\end{tcbraster}
+\begin{tcbraster}[colback=green!10!white,boxsep=1mm]
+  \tcboxfit[height=4cm]{\lipsum[2]}
+  \tcboxfit[height=4cm,title=With a title]{\lipsum[2]}
+\end{tcbraster}
+\end{dispExample}
+\end{docCommand}
+
+
+\clearpage
+
+
+\begin{docCommands}[
+    doc name        = tcbfitdim,
+    doc description = {只读 \LaTeX\ 长度},
+    doc updated     = 2020-04-24,
+  ]{}
+  这是一个 \LaTeX\ 长度，由 \refKey{/tcb/fit algorithm} 的大多数变体
+  自动调整。因此它绝不应由用户改动，只能只读使用。
+  \refCom{tcbfitdim} 对应字体尺寸，也可用于据此计算文本框边距
+  或其他间距。\refCom{tcbfitdim} 的初始值与最大值由
+  \refKey{/tcb/fit basedim} 设置。
+\end{docCommands}
+
+
+\begin{docCommand}{tcbfontsize}{\marg{factor}}
+  在文本框内部选取一种字号，它相对 \refCom{tcbfitdim} 按给定的
+  \meta{factor} 缩放。另见 \refKey{/tcb/fit fontsize macros}。
+
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+\tcbset{colback=red!5!white,size=small,
+  colframe=red!75!black}
+\begin{tcolorbox}[fit basedim=10pt]
+  {\tcbfontsize{0.25} Very tiny,}\\
+  {\tcbfontsize{0.5} Small,}\\
+  {\tcbfontsize{1} Normal,}\\
+  {\tcbfontsize{2} Large,}\\
+  {\tcbfontsize{4} Huge.}
+\end{tcolorbox}
+\end{dispExample*}
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+\tcbset{colback=red!5!white,size=small,
+  colframe=red!75!black}
+\begin{tcolorbox}[fit basedim=10pt,
+    fit to height=2cm]
+  {\tcbfontsize{0.25} Very tiny,}\\
+  {\tcbfontsize{0.5} Small,}\\
+  {\tcbfontsize{1} Normal,}\\
+  {\tcbfontsize{2} Large,}\\
+  {\tcbfontsize{4} Huge.}
+\end{tcolorbox}
+\end{dispExample*}
+\end{docCommand}
+
+
+\clearpage
+\subsection{生成 \texttt{\textbackslash tcboxfit} 命令}\label{subsec:fitting_new}
+
+
+\begin{docCommand}{newtcboxfit}{\oarg{init options}\brackets{\texttt{\textbackslash}\rmfamily\meta{name}}\oarg{number}\oarg{default}\marg{options}}
+  基于 \refCom{tcboxfit} 创建新宏 \texttt{\textbackslash}\meta{name}。
+  基本上，|\newtcboxfit| 的用法类似 |\newcommand|。
+  新宏 \texttt{\textbackslash}\meta{name} 可选地接受 \meta{number}$+1$ 个参数，
+  其中 \meta{default} 是第一个可选参数的默认值。
+  \meta{options} 传给底层的 |\tcboxfit|。
+  \meta{init options} 可用于设置自动编号，参见 \zvref{sec:initkeys}。
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+\newtcboxfit{\mybox}{colback=red!5!white,
+  colframe=red!75!black,width=4cm,
+  height=1.5cm,halign=center}
+
+\mybox{This is my own box.}\par
+\mybox{This is my own box with more text
+       to be written.}
+\end{dispExample*}
+
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+% \usepackage{lipsum}
+\newtcboxfit{\mybox}[2]{colback=red!5!white,
+  colframe=red!75!black,fonttitle=\bfseries,
+  boxsep=1mm,left=0mm,right=0mm,top=0mm,
+  bottom=0mm,halign=center,valign=center,
+  nobeforeafter,width=#1,height=#2}
+
+\mybox{2.5cm}{1cm}{First box}%
+\mybox{2.5cm}{1cm}{Second box with more text}\\
+\mybox{5cm}{2cm}{Third box with text}\\
+\mybox{5cm}{3cm}{\lipsum[1]}
+\end{dispExample*}
+
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+% \usepackage{lipsum}
+\newtcboxfit{\mybox}[2][]{colback=red!5!white,
+  colframe=red!75!black,
+  width=#2,height=#2/3*2,#1}
+
+\mybox[colback=yellow]{5cm}%
+  {\lipsum[2]}
+\end{dispExample*}
+\end{docCommand}
+
+
+\begin{docCommand}{renewtcboxfit}{\oarg{init options}\brackets{\texttt{\textbackslash}\rmfamily\meta{name}}\oarg{number}\oarg{default}\marg{options}}
+  用法类似 \refCom{newtcboxfit}，但基于 |\renewcommand| 而非 |\newcommand|。
+  用于重新定义一个已存在的宏。
+\end{docCommand}
+
+
+\clearpage
+
+\begin{docCommand}{NewTCBoxFit}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}}
+  基于 \refCom{tcboxfit} 创建新命令 \texttt{\textbackslash}\meta{name}。
+  基本上，\refCom{NewTCBoxFit} 的用法类似 |\NewDocumentCommand|。也就是说，
+  新命令 \texttt{\textbackslash}\meta{name} 按照给定的 \LaTeX3 参数
+  \meta{specification} 构造，参见 \cite{latexproject:usrguide}。
+  若 \texttt{\textbackslash}\meta{name} 已被定义，则报错。
+  \meta{options} 传给底层的 \refCom{tcboxfit}。\\
+  注意：\refKey{/tcb/savedelimiter} 会自动设为给定的 \meta{name}。\\
+  \meta{init options} 可用于设置自动编号，参见 \zvref{sec:initkeys}。
+
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+% \usepackage{lipsum}
+
+\NewTCBoxFit{\mybox}{ O{} m !o }
+ {colback=red!5!white,
+  colframe=red!75!black,
+  width=#2,height=#2/3*2,
+  IfValueT={#3}{height=#3},
+  #1}
+
+\mybox[colback=yellow]{5cm}%
+  {\lipsum[2]}
+
+\mybox[colback=yellow]{5cm}[4cm]{\lipsum[2]}
+\end{dispExample*}
+\end{docCommand}
+
+\begin{docCommand}{RenewTCBoxFit}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}}
+  用法类似 \refCom{NewTCBoxFit}，但基于 |\RenewDocumentCommand| 而非 |\NewDocumentCommand|。
+  用于重新定义一个已存在的命令。
+\end{docCommand}
+
+\begin{docCommand}{ProvideTCBoxFit}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}}
+  用法类似 \refCom{NewTCBoxFit}，但基于 |\ProvideDocumentCommand| 而非 |\NewDocumentCommand|。
+  仅当命令 \texttt{\textbackslash}\meta{name} 尚未定义时才创建它。
+\end{docCommand}
+
+\begin{docCommand}{DeclareTCBoxFit}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}}
+  用法类似 \refCom{NewTCBoxFit}，但基于 |\DeclareDocumentCommand| 而非 |\NewDocumentCommand|。
+  无论是否已存在同名命令，新命令 \texttt{\textbackslash}\meta{name} 都会被创建。
+\end{docCommand}
+
+\clearpage
+
+\begin{docCommand}{NewTotalTCBoxFit}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}\marg{content}}
+  基于 \refCom{tcboxfit} 创建新命令 \texttt{\textbackslash}\meta{name}。
+  与 \refCom{NewTCBoxFit} 不同，此处还指定了 |\tcboxfit| 的 \meta{content}。\\
+  基本上，\refCom{NewTotalTCBoxFit} 的用法类似 |\NewDocumentCommand|。也就是说，
+  新命令 \texttt{\textbackslash}\meta{name} 按照给定的 \LaTeX3 参数
+  \meta{specification} 构造，参见 \cite{latexproject:usrguide}。
+  若 \texttt{\textbackslash}\meta{name} 已被定义，则报错。
+  \meta{options} 传给底层的 \refCom{tcboxfit}，并以指定的
+  \meta{content} 填充。\\
+  注意：\refKey{/tcb/savedelimiter} 会自动设为给定的 \meta{name}。\\
+  \meta{init options} 可用于设置自动编号，参见 \zvref{sec:initkeys}。
+
+\begin{dispExample}
+% \usepackage{lipsum}
+
+\NewTotalTCBoxFit{\multibox}{ O{} m O{10} m }
+ {nobeforeafter,colback=red!5!white,colframe=red!75!black,width=#2,height=#2/3*2,
+  valign=center,#1}
+ { \foreach \n in {1,...,#3} { #4} }
+
+\multibox{5cm}{I shall not repeat.}
+\multibox[colframe=blue!75!white]{5cm}[20]{I shall not repeat.}\\
+\multibox[colback=yellow,height=5cm]{14cm}[100]{I shall not repeat.}
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{RenewTotalTCBoxFit}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}\marg{content}}
+  用法类似 \refCom{NewTotalTCBoxFit}，但基于 |\RenewDocumentCommand| 而非 |\NewDocumentCommand|。
+  用于重新定义一个已存在的命令。
+\end{docCommand}
+
+\begin{docCommand}{ProvideTotalTCBoxFit}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}\marg{content}}
+  用法类似 \refCom{NewTotalTCBoxFit}，但基于 |\ProvideDocumentCommand| 而非 |\NewDocumentCommand|。
+  仅当命令 \texttt{\textbackslash}\meta{name} 尚未定义时才创建它。
+\end{docCommand}
+
+\begin{docCommand}{DeclareTotalTCBoxFit}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}\marg{content}}
+  用法类似 \refCom{NewTotalTCBoxFit}，但基于 |\DeclareDocumentCommand| 而非 |\NewDocumentCommand|。
+  无论是否已存在同名命令，新命令 \texttt{\textbackslash}\meta{name} 都会被创建。
+\end{docCommand}
+
+
+\clearpage
+\subsection{程序库的选项键}\label{subsec:fit}
+
+对于宽、高均已固定的文本框，其内容字号可自动调整。
+这称为\emph{自适应框捕获模式}。注意：自适应控制算法会
+为文本框构造一系列版本并选出\enquote{最佳}者，
+因此编译时间比普通文本框长得多。
+若改换字号并不能改变文本框内容的整体尺寸，该算法就会失效。
+\refCom{tcboxfit} 宏默认使用此算法。
+
+
+\medskip
+\begin{marker}
+  自适应控制键仅适用于不可断开、且无下部的文本框。
+  文本框内容不应改动计数器。
+\end{marker}
+\medskip
+
+\enlargethispage*{5mm}
+\begin{docTcbKey}{fit}{}{样式，初始未设置}
+  将 \refKey{/tcb/capture} 模式设为 \docValue{fitbox}，即启用
+  字号自动调整算法。这样，\refEnv{tcolorbox} 的行为就类似
+  \refCom{tcboxfit}，把给定的 \meta{box content} 自适应缩放到
+  文本框的宽和高。因此文本框必须具有固定高度；
+  若未给定固定高度，则构造一个正方形框。
+  字号尺寸 \refCom{tcbfitdim} 也可用于调整文本框边距，
+  因为字号极小的文本框或许并不需要很大的边距。
+  所构造文本框的个数会存入宏 \docAuxCommand{tcbfitsteps}，供分析之用。
+
+\begin{dispExample}
+% \usepackage{lipsum}
+% \tcbuselibrary{skins}
+\newtcolorbox{fitting}[2][]{fit,height=#2,boxsep=1pt,valign=center,opacityupper=0.5,
+  top=0.4\tcbfitdim,bottom=0.4\tcbfitdim,left=0.75\tcbfitdim,right=0.75\tcbfitdim,
+  enhanced,watermark text={\tcbfitsteps},colframe=blue!75!black,colback=white,#1}
+
+\begin{fitting}{4cm}
+\lipsum[1]
+\end{fitting}
+
+\begin{fitting}{2cm}
+\lipsum[2]
+\end{fitting}
+
+\begin{fitting}{1cm}
+\lipsum[3]
+\end{fitting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}{fit to}{=\meta{width} and \meta{height}}{样式，初始未设置}
+  这是使用 \refKey{/tcb/fit} 并分别设置 \meta{width} 与 \meta{height} 的快捷方式。
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+\tcbset{colback=red!5!white,colframe=red!75!black}
+
+\begin{tcolorbox}[fit to=3cm and 2cm]
+  This box content is fitted to the given
+  dimensions.
+\end{tcolorbox}
+\end{dispExample*}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{fit to height}{=\meta{height}}{样式，初始未设置}
+  这是使用 \refKey{/tcb/fit} 并单独设置 \meta{height} 的快捷方式。
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+\tcbset{colback=red!5!white,colframe=red!75!black}
+
+\begin{tcolorbox}[fit to height=2cm]
+  This box content is fitted to the given
+  height.
+\end{tcolorbox}
+\end{dispExample*}
+\end{docTcbKey}
+
+\begin{docTcbKey}{fit basedim}{=\meta{length}}{无默认值，初始为 |10pt|}
+  将字号调整算法的起始字号尺寸设为 \meta{length}。
+  该算法绝不会放大此尺寸。因此，最终的 \refCom{tcbfitdim}
+  等于或小于 \meta{length}。
+
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+\tcbset{colback=red!5!white,colframe=red!75!black}
+
+\begin{tcolorbox}[fit to=4cm and 2cm]
+  Too few words for the box.
+\end{tcolorbox}
+
+\begin{tcolorbox}[fit to=4cm and 2cm,
+  fit basedim=50pt]
+  Enough words for the box.
+\end{tcolorbox}
+\end{dispExample*}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{fit skip}{=\meta{real value}}{无默认值，初始为 |1.2|}
+  将所选字体的行距值设为 \meta{real value} 乘以 \refCom{tcbfitdim}。
+
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+% \usepackage{lipsum}
+\tcbset{colback=red!5!white,
+  colframe=red!75!black,left=1mm,
+  right=1mm,boxsep=0mm}
+
+\begin{tcolorbox}[fit to=5cm and 4cm,
+  fit skip=1.0  ]
+  \lipsum[1]
+\end{tcolorbox}
+\end{dispExample*}
+\end{docTcbKey}
+
+
+
+\clearpage
+\begin{docTcbKey}{fit fontsize macros}{}{样式，初始未设置}
+  重新定义标准 \LaTeX\ 字号宏
+  |\tiny|、|\scriptsize|、|\footnotesize|、|\small|、|\normalsize|、
+  |\large|、|\Large|、|\LARGE|、|\huge| 和 |\Huge|，
+  使它们相对当前 \refCom{tcbfitdim} 设置字号。
+  注意：重新定义后的宏仍会遵守数学公式的展示间距值。
+  另见 \refCom{tcbfontsize}。
+
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+% \usepackage{lipsum}
+\tcbset{colback=red!5!white,
+  colframe=red!75!black,left=1mm,
+  right=1mm,boxsep=0mm}
+
+\begin{tcolorbox}[fit to height=4cm]
+  {\Large\bfseries This text is
+             not adapted:\par}
+  \lipsum[2]
+\end{tcolorbox}
+
+\begin{tcolorbox}[fit to height=4cm,
+  fit fontsize macros ]
+  {\Large\bfseries This text is adapted:\par}
+  \lipsum[2]
+\end{tcolorbox}
+\end{dispExample*}
+
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+\tcbset{colback=red!5!white,
+  colframe=red!75!black,left=1mm,
+  right=1mm,boxsep=0mm}
+
+\let\realHuge=\Huge
+
+\begin{tcolorbox}[fit basedim=7pt,
+  fontupper=\normalsize,
+  fit fontsize macros]
+The relative font size macros
+are also usable without the
+\textit{fit} algorithm.\par
+{\Huge Adapted Huge} ---
+{\realHuge Original Huge}
+\end{tcolorbox}
+
+\end{dispExample*}
+
+
+\begin{dispExample*}{sbs,lefthand ratio=0.6}
+\tcbset{size=fbox,colback=red!5!white,
+  colframe=red!75!black}
+
+\tcboxfit[height=5cm,
+  fit fontsize macros,
+  fonttitle=\normalsize\bfseries,
+  title=Adapted title]
+{\lipsum[2]}
+
+\end{dispExample*}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}{fit height plus}{=\meta{dimension}}{无默认值，初始为 |0pt|}
+  在进行字号自适应之前，允许把固定高度放大至多给定的 \meta{dimension}。
+  调整高度之后，还会尝试可选的 \refKey{/tcb/fit width plus}。
+\begin{dispExample}
+% \usepackage{lipsum}
+\tcbset{colback=red!5!white,colframe=red!75!black,left=1mm,top=1mm,bottom=1mm,
+  right=1mm,boxsep=0mm,width=3cm,height=3cm,nobeforeafter}
+
+\begin{tcolorbox}[fit]
+This is a tcolorbox.
+\end{tcolorbox}
+\begin{tcolorbox}[fit,fit height plus=1cm]
+This is a tcolorbox.
+\end{tcolorbox}
+\begin{tcolorbox}[fit]
+\lipsum[2]
+\end{tcolorbox}
+\begin{tcolorbox}[fit,fit height plus=1cm]
+\lipsum[2]
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{fit width plus}{=\meta{dimension}}{无默认值，初始为 |0pt|}
+  在进行字号自适应之前，允许把固定宽度放大至多给定的 \meta{dimension}。
+  调整宽度之前，会先尝试可选的 \refKey{/tcb/fit height plus}。
+  \enlargethispage*{1cm}
+\begin{dispExample}
+% \usepackage{lipsum}
+\tcbset{colback=red!5!white,colframe=red!75!black,left=1mm,top=1mm,bottom=1mm,
+  right=1mm,boxsep=0mm,width=3cm,height=3cm,nobeforeafter}
+
+\begin{tcolorbox}[fit]
+This is a tcolorbox.
+\end{tcolorbox}
+\begin{tcolorbox}[fit,fit width plus=1cm]
+This is a tcolorbox.
+\end{tcolorbox}
+\begin{tcolorbox}[fit]
+\lipsum[2]
+\end{tcolorbox}
+\begin{tcolorbox}[fit,fit width plus=1cm]
+\lipsum[2]
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{marker}
+通常（但并非必然），|tcolorbox| 的可选标题不参与自适应运算。
+若使用了 \refKey{/tcb/fit width plus}，标题也会随新宽度调整。
+若标题文字内部有计数器递增，则可能被递增不止一次。
+为避免此问题，建议用 \refKey{/tcb/phantom} 或 \refKey{/tcb/step and label}
+来设置计数器，或改用自动编号，参见 \zvref{sec:numberedboxes}。
+\end{marker}
+
+
+\begin{docTcbKey}{fit width from}{=\meta{min} \texttt{to} \meta{max}}{样式，无默认值}
+  将文本框宽度设为 \meta{min}，并允许宽度放大至多 \meta{max}。
+\begin{dispExample}
+% \usepackage{lipsum}
+\tcbset{colback=red!5!white,colframe=red!75!black,left=1mm,top=1mm,bottom=1mm,
+  right=1mm,boxsep=0mm,height=4cm}
+
+\begin{tcolorbox}[fit,width=\linewidth/2]
+\lipsum[2]
+\end{tcolorbox}\par
+\begin{tcolorbox}[fit width from=\linewidth/2 to \linewidth]
+\lipsum[2]
+\end{tcolorbox}\par
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}{fit height from}{=\meta{min} \texttt{to} \meta{max}}{样式，无默认值}
+  将文本框高度设为 \meta{min}，并允许高度放大至多 \meta{max}。
+\begin{dispExample}
+% \usepackage{lipsum}
+\newtcolorbox{mybox}{colback=red!5!white,colframe=red!75!black,left=1mm,top=1mm,
+  bottom=1mm,right=1mm,boxsep=0mm,width=4cm,nobeforeafter,
+  fit height from=1cm to 8cm}
+
+\begin{mybox}
+This is a tcolorbox.
+\end{mybox}
+\begin{mybox}
+This is a tcolorbox. This is a tcolorbox. This is a tcolorbox.
+\end{mybox}
+\begin{mybox}
+\lipsum[2]
+\end{mybox}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}{fit algorithm}{=\meta{name}}{无默认值，初始为 |fontsize|}
+设定在可选地调整宽、高\emph{之后}，自适应过程所用的算法。
+下文所说"调整字号"均指调整 \refCom{tcbfitdim}。
+  \meta{name} 的可选取值为：
+  \begin{itemize}
+  \item\docValue{fontsize}（初始值）：
+    该算法采用二分法，不断调整字号直到满足某些停止条件。
+    这是最耗时的方法，但稳健且效果令人满意。
+    \begin{marker}
+    此方法要求所用字体可任意缩放！
+    文字以外的内容不会被缩小。
+    宽高比可完全保证。
+    \end{marker}
+  \item\docValue{fontsize*}:\tcbdocmarginnote{\tcbdocnew{2014-10-29}}
+    先应用 \docValue{fontsize} 算法。若字号已缩小而所得高度过小，
+    则把文本框挤压以填满该区域。
+    \begin{marker}
+    此方法要求所用字体可任意缩放！
+    文字以外的内容可能被轻微重新缩放。
+    宽高比无法完全保证。
+    \end{marker}
+  \item\docValue{areasize}：
+    该算法不缩放字体，而是计算文字所需的面积大小。
+    用一两步把文本框塑造成所需宽高比，
+    最后用标准宏 |\resizebox| 整体缩小。
+    \begin{marker}
+    所用字体不必可缩放。文本框的所有内容都会被缩小。
+    宽高比无法完全保证。
+    \end{marker}
+  \item\docValue{areasize*}:\tcbdocmarginnote{\tcbdocnew{2014-10-29}}
+    应用 \docValue{areasize} 算法，但若内容已缩小而所得高度过小，
+    则把文本框挤压以填满该区域。
+    \begin{marker}
+    所用字体不必可缩放。文本框的所有内容都会被缩小。
+    宽高比无法完全保证。
+    \end{marker}
+  \item\docValue{hybrid}：
+    先用一两步估计所需字号，再如上应用 \docValue{areasize} 自适应。
+    \begin{marker}
+    此方法要求所用字体可任意缩放！
+    文字以外的内容可能被轻微重新缩放。
+    宽高比无法完全保证。
+    \end{marker}
+  \item\docValue{hybrid*}:\tcbdocmarginnote{\tcbdocnew{2014-10-29}}
+    先用一两步估计所需字号，再如上应用 \docValue{areasize*} 自适应。
+    \begin{marker}
+    此方法要求所用字体可任意缩放！
+    文字以外的内容可能被轻微重新缩放。
+    宽高比无法完全保证。
+    \end{marker}
+  \item\docValue{squeeze}：
+    直接粗暴地把文本框缩小以填满区域。
+    \begin{marker}
+    宽高比很可能变得很难看。
+    最终成稿不应使用此方法。
+    \end{marker}
+\end{itemize}
+
+
+\end{docTcbKey}
+\begin{dispExample}
+% \usepackage{lipsum}
+\newtcboxfit{\mybox}[1]{colback=red!5!white,colframe=red!75!black,left=1mm,top=1mm,
+  bottom=1mm,right=1mm,boxsep=0mm,width=3.5cm,height=7cm,nobeforeafter,
+  before upper=\textcolor{blue}{\rule{5mm}{5mm}}\ ,
+  enhanced,watermark text={\tcbfitsteps},
+  fonttitle=\bfseries,adjusted title={#1},fit algorithm=#1}
+
+\mybox{fontsize}{\lipsum[2]}\hfill
+\mybox{hybrid}{\lipsum[2]}\hfill
+\mybox{areasize}{\lipsum[2]}\hfill
+\mybox{squeeze}{\lipsum[2]}
+
+Quality \dotfill versus \dotfill Speed
+\end{dispExample}
+
+
+\begin{dispExample}
+% \usepackage{lipsum}
+\newtcboxfit{\mybox}[2]{colback=red!5!white,colframe=red!75!black,left=1mm,top=1mm,
+  size=tight,width=7.2cm,height=5cm,nobeforeafter,
+  before upper=\textcolor{blue}{\rule{5mm}{5mm}}\ ,
+  enhanced,fonttitle=\bfseries,adjusted title={#2},fit algorithm=#1}
+
+\mybox{hybrid}{hybrid (possible gap at end)}{\lipsum[1]}\hfill
+\mybox{hybrid*}{hybrid* (no gap but possibly squeezed)}{\lipsum[1]}
+\end{dispExample}
+
+
+\clearpage
+\begin{marker}
+以下各选项用于设置自适应算法的控制参数。
+它们主要适用于 |fontsize| 变体，参见 \refKey{/tcb/fit algorithm}。
+这些选项应视为实验性的，今后如有必要很可能会更改。
+\end{marker}
+
+\begin{docTcbKey}{fit maxstep}{=\meta{number}}{无默认值，初始为 |20|}
+  设置字号调整算法的最大步数。通常情况下，算法在达到初始的 20 步之前就会停止。
+  若文本框内容并不收缩，此值可防止死循环。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{fit maxfontdiff}{=\meta{dimension}}{无默认值，初始为 |0.1pt|}
+  当字号的确定偏差在 \meta{dimension} 以内时，算法停止。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{fit maxfontdiffgap}{=\meta{dimension}}{无默认值，初始为 |1pt|}
+  当行数已确定、且字号的确定偏差在 \meta{dimension} 以内时，算法停止。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{fit maxwidthdiff}{=\meta{dimension}}{无默认值，初始为 |1pt|}
+  当（可选的）可变文本框宽度的确定偏差在 \meta{dimension} 以内时，算法停止。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{fit maxwidthdiffgap}{=\meta{dimension}}{无默认值，初始为 |10pt|}
+  当行数已确定、且（可选的）可变文本框宽度的确定偏差在 \meta{dimension} 以内时，算法停止。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{fit warning}{=\meta{value}}{无默认值，初始为 |off|}
+  通常，自适应控制算法会构造若干辅助文本框以选出最优者。
+  若不关闭，构造这些辅助框可能产生大量 |hbox| 警告。
+  本选项键用于改变 |\hbadness| 值。
+  \begin{itemize}
+  \item\docValue{off}：关闭大多数 |`Underfull \hbox'| 与 |`Overfull \hbox'| 警告
+    （包括最终所用文本框的警告）。
+  \item\docValue{on}：显示所有辅助文本框的全部警告。
+  \item\docValue{final}：仅显示最终所用文本框的警告。
+    注意：为输出这些信息还需额外构造一个文本框。
+  \end{itemize}
+\end{docTcbKey}
+

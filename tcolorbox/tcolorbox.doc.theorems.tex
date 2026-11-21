@@ -1,0 +1,1293 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{\mylib{theorems} 程序库}\label{sec:theorems}%
+\tcbset{external/prefix=external/theorems_}%
+本程序库可通过宏包选项或在导言区中加载：
+\begin{dispListing}
+\tcbuselibrary{theorems}
+\end{dispListing}
+同时还会加载 \refPkg{amsmath} 宏包。
+
+Denis Bitouz\'e、Yukai Chou 以及其他许多人为本程序库提供了非常宝贵的意见。
+
+
+\subsection{程序库命令}
+
+\begin{docCommands}[
+    doc parameter = \oarg{init options}\marg{name}\marg{display name}\marg{options}\marg{prefix},
+    doc updated=2022-07-18
+    ]
+    {
+      { doc name = NewTcbTheorem },
+      { doc name = newtcbtheorem }
+    }
+  基于 |tcolorbox| 创建新环境 \meta{name} 和 \meta{name}|*|，用于框住一个
+  （数学）定理。\meta{display name} 与编号一起显示在标题行中，
+  例如 \mbox{\flqq Theorem 5.1\frqq}。
+  \meta{options} 会传递给底层的 |tcolorbox| 以控制外观。
+  %The \meta{counter} is used for automatic numbering.
+  \meta{init options} 用于设置自动编号，参见 \zvref{sec:initkeys}.\par\medskip
+
+  若 \meta{name} 取为 |footheorem|，则新环境说明如下：
+  \begin{docEnvironments}[
+      doc no index,
+      doc name = footheorem,
+      doc parameter = \oarg{keys}\oarg{short}\marg{title}\marg{marker}
+    ]{}
+    这里，\meta{title} 是定理的标题文字，
+    同时也被设为 \refKey{/tcb/nameref} 标识符。
+    可选地，\meta{short} 会代替标题文字用作 \refKey{/tcb/nameref} 标识符
+    以及定理清单中的名称。
+    \meta{keys} 用于补充 \meta{options}，仅在少数情况下使用。
+    定理会自动以 \meta{prefix}\meta{separator}\meta{marker} 加标签，
+    其中 \meta{separator} 预定义为 \enquote{|:|}，
+    参见 \refKey{/tcb/label separator}。
+  \end{docEnvironments}
+  \begin{docEnvironments}[
+      doc no index,
+      doc name = footheorem*,
+      doc parameter = \oarg{keys}\marg{title}
+    ]{}
+    这是一个不编号的变体。同样地，\meta{title} 是定理的标题文字，
+    \meta{keys} 用于补充 \meta{options}。
+    该变体不加标签，也不会出现在定理清单中。
+  \end{docEnvironments}
+
+  \begin{marker}
+  \refCom{NewTcbTheorem} 与 \refCom{newtcbtheorem} 完全相同，
+  二者都基于 |\NewDocumentCommand| 的 \refCom{NewTColorBox}。
+  \end{marker}
+\clearpage
+
+
+\inputpreamblelisting{F}
+\begin{dispExample}
+% usage of `\nameref' needs `nameref' or `hyperref' to be loaded
+\begin{mytheo}{This is my title}{theoexample}
+  This is the text of the theorem. The counter is automatically assigned and,
+  in this example, prefixed with the section number. This theorem is numbered with
+  \ref{th:theoexample}, it is given on page~\pageref{th:theoexample},
+  and it is titled \flqq\nameref{th:theoexample}\frqq.
+\end{mytheo}
+\end{dispExample}
+
+
+\begin{dispExample}
+% usage of `\nameref' needs `nameref' or `hyperref' to be loaded
+\begin{mytheo}[][Concise title]{This my very long theorem title with
+    too much words}{theoexample2}
+  Here we have a long and a short title. This theorem is numbered with
+  \ref{th:theoexample2}, it is given on page~\pageref{th:theoexample2},
+  and it is titled \flqq\nameref{th:theoexample2}\frqq.
+\end{mytheo}
+\end{dispExample}
+
+\begin{dispExample}
+\begin{mytheo}[label=myownlabel]{This is my title}{}
+  The label parameter can be left empty without \LaTeX\ error.
+  Or you may use an own label to reference Theorem \ref{myownlabel}.
+\end{mytheo}
+\end{dispExample}
+
+\begin{dispExample}
+\begin{mytheo}{}{}
+  The title can also be left empty without problem. Note that the \enquote{:}
+  vanished magically.
+\end{mytheo}
+\end{dispExample}
+
+\begin{dispExample}
+\begin{mytheo*}{Unnumbered Theorem}
+  This theorem is not numbered.
+\end{mytheo*}
+\end{dispExample}
+
+\begin{dispExample}
+\begin{mytheo*}{}
+  This theorem has no number and no title.
+\end{mytheo*}
+\end{dispExample}
+
+\begin{marker}
+要永久关闭 \texttt{nameref} 功能，
+请在 \meta{options} 列表中加入
+\mbox{\texttt{nameref/.style=\{\}}}。
+\end{marker}
+
+\end{docCommands}
+
+\medskip
+
+\begin{docCommands}[
+    doc parameter = \oarg{init options}\marg{name}\marg{display name}\marg{options}\marg{prefix},
+    doc updated=2022-07-18
+    ]
+    {
+      { doc name = RenewTcbTheorem },
+      { doc name = renewtcbtheorem }
+    }
+  与 \refCom{NewTcbTheorem} 类似，但底层基于 |\RenewDocumentEnvironment|
+  而非 |\NewDocumentEnvironment|。用于重新定义已存在的环境。
+\end{docCommands}
+
+
+\begin{docCommands}[
+    doc parameter = \oarg{init options}\marg{name}\marg{display name}\marg{options}\marg{prefix},
+    doc new       = 2022-07-18,
+    doc name      = ProvideTcbTheorem,
+    ]{}
+  与 \refCom{NewTcbTheorem} 类似，但底层基于 |\ProvideDocumentEnvironment|
+  而非 |\NewDocumentEnvironment|。仅当新环境尚未定义时才创建。
+\end{docCommands}
+
+
+\begin{docCommands}[
+    doc parameter = \oarg{init options}\marg{name}\marg{display name}\marg{options}\marg{prefix},
+    doc new       = 2022-07-18,
+    doc name      = DeclareTcbTheorem,
+    ]{}
+  与 \refCom{NewTcbTheorem} 类似，但底层基于 |\DeclareDocumentEnvironment|
+  而非 |\NewDocumentEnvironment|。总会创建新环境，并可能重新定义已存在的环境。
+\end{docCommands}
+
+
+\clearpage
+\begin{docCommand}{tcboxmath}{\oarg{options}\marg{mathematical box content}}
+  创建一个宽度恰好适配所给 \meta{mathematical box content} 的
+  \refEnv{tcolorbox}。该文本框用于作为较大公式的一部分，
+  可代替 \refPkg{amsmath} 的 |\boxed| 宏。
+
+\begin{dispExample}
+\begin{equation}
+\tcbset{fonttitle=\scriptsize}
+\tcboxmath[colback=LightBlue!25!white,colframe=blue]{ a^2 = 16 }
+\quad \Rightarrow \quad
+\tcboxmath[colback=Salmon!25!white,colframe=red,title=Implication]%
+  { a = 4 ~\vee~ a=-4. }
+\end{equation}
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{tcbhighmath}{\oarg{options}\marg{mathematical box content}}
+  这是 \refCom{tcboxmath} 宏的一个特例，它使用样式
+  \refKey{/tcb/highlight math}。
+  用于对公式的局部进行随上下文变化的高亮。
+  通过 \refKey{/tcb/highlight math style} 设置的颜色，
+  在定理或其他有色区域内部与外部可以不同。
+
+\begin{dispExample}
+\tcbset{myformula/.style={colback=yellow!10!white,colframe=red!50!black,
+  every box/.style={highlight math style={colback=LightBlue!50!white,colframe=Navy}}
+  }}
+
+\begin{align}
+  \tcbhighmath{\sum\limits_{n=1}^{\infty} \frac{1}{n}} &= \infty.\\
+  \int x^2 ~\text{d}x                     &= \frac13 x^3 + c.
+\end{align}
+
+\begin{tcolorbox}[ams align,myformula]
+  \tcbhighmath{\sum\limits_{n=1}^{\infty} \frac{1}{n}} &= \infty.\\
+  \int x^2 ~\text{d}x                     &= \frac13 x^3 + c.
+\end{tcolorbox}
+\end{dispExample}
+
+\clearpage
+\refCom{tcbhighmath} 可与 \refPkg{empheq} 宏包配合使用，
+后者允许指定自定义的加框命令来标记多行公式。
+
+\begin{dispExample}
+% \usepackage{empheq}
+\begin{empheq}[box=\tcbhighmath]{align}
+a&=\sin(z)\\
+E&=mc^2 + \int_a^b x\, dx
+\end{empheq}
+
+\tcbset{highlight math style={enhanced,
+  colframe=red!60!black,colback=yellow!50!white,arc=4pt,boxrule=1pt,
+  drop fuzzy shadow}}
+
+\begin{empheq}[box=\tcbhighmath]{align}
+a&=\sin(z)\\
+E&=mc^2 + \int_a^b x\, dx
+\end{empheq}
+\end{dispExample}
+
+除 \refCom{tcbhighmath} 之外，也可以基于 \refCom{tcbox} 轻松定义一个
+行为类似 \refCom{tcbhighmath} 的独立新文本框：
+
+\begin{dispExample}
+% \usepackage{empheq}
+\newtcbox{\otherbox}[1][]{nobeforeafter,math upper,tcbox raise base,
+  enhanced,frame hidden,boxrule=0pt,interior style={top color=green!10!white,
+  bottom color=green!10!white,middle color=green!50!yellow},
+  fuzzy halo=1pt with green,#1}
+
+\begin{empheq}[box=\otherbox]{align}
+a&=\sin(z)\\
+E&=mc^2 + \int_a^b x\, dx
+\end{empheq}
+
+\begin{equation}
+\tcbhighmath{E} = \otherbox{mc^2}
+\end{equation}
+\end{dispExample}
+\end{docCommand}
+
+
+\clearpage
+\subsection{程序库的选项键}
+
+
+\begin{docTcbKey}{separator sign}{=\meta{sign}}{无默认值，初始 |:|}
+  所给 \meta{sign} 用于定理标题文字内部，作为
+  带编号的显示名称与具体标题文字之间的分隔符。
+  若没有具体标题文字，则省略该符号。
+
+\begin{dispExample}
+% \usepackage{amssymb}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   separator sign={\ $\blacktriangleright$}}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{separator sign colon}{}{样式，无取值，初始已设置}
+将 \refKey{/tcb/separator sign} 设为默认的冒号 |:|。
+\end{docTcbKey}
+
+\begin{docTcbKey}{separator sign dash}{}{样式，无取值}
+将 \refKey{/tcb/separator sign} 设为 en-dash（短横）。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   separator sign dash}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{separator sign none}{}{样式，无取值}
+将 \refKey{/tcb/separator sign} 设为空。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   separator sign none}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}{description delimiters}{=\marg{left}\marg{right}}{无默认值，初始为空}
+  所给 \meta{left} 与 \meta{right} 分隔符用于框住定理的描述性标题文字。
+
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   description delimiters={\flqq}{\frqq}}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{description delimiters parenthesis}{}{样式，无取值}
+将 \refKey{/tcb/description delimiters} 设为 |(| 和 |)|。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   description delimiters parenthesis}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{description delimiters none}{}{样式，无取值，初始已设置}
+将 \refKey{/tcb/description delimiters} 设为默认的空文字。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{description color}{\colOpt{=\meta{color}}}{默认为空，初始为空}
+  设置描述性标题文字的 \meta{color}，使其区别于 \refKey{/tcb/coltitle}。
+  若使用 |description color| 而不带值，则颜色恢复为 \refKey{/tcb/coltitle}。
+
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   description color=red!25!yellow}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}{description font}{\colOpt{=\meta{text}}}{默认为空，初始为空}
+  在描述性标题文字之前设置 \meta{text}（例如字体设置），使其区别于 \refKey{/tcb/fonttitle}。
+  若使用 |description font| 而不带值，则移除该 \meta{text}。
+
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   description delimiters={\glqq}{\grqq},
+   description font=\mdseries\itshape}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{description formatter}{\colOpt{=\meta{macro}}}{默认为空，初始为空}
+  设置 \meta{macro} 作为描述性标题文字的格式化命令。
+  该 \meta{macro} 必须接受一个必选参数（描述文字）。\\
+  注意，若使用本选项，\refKey{/tcb/description delimiters}、
+  \refKey{/tcb/description color} 和 \refKey{/tcb/description font} 将被忽略。\\
+  若使用 |description formatter| 而不带值，则格式化命令恢复为默认行为。
+
+\begin{dispExample}
+\newtcbox{\formbox}{enhanced,frame empty,size=minimal,boxsep=2pt,arc=1pt,
+  on line,interior style image=goldshade.png}
+
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   description formatter=\formbox}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{terminator sign}{=\meta{sign}}{无默认值，初始为空}
+  所给 \meta{sign} 用作定理标题文字末尾的终止符。
+
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   terminator sign={.}}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}{terminator sign colon}{}{样式，无取值，初始已设置}
+将 \refKey{/tcb/terminator sign} 设为冒号 |:|。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   separator sign dash,terminator sign colon}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{terminator sign dash}{}{样式，无取值}
+将 \refKey{/tcb/terminator sign} 设为 en-dash（短横）。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   terminator sign dash}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{terminator sign none}{}{样式，无取值}
+将 \refKey{/tcb/terminator sign} 设为默认的空文字。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2016-04-19]{label separator}{=\meta{separator}}{无默认值，初始 |:|}
+  所给 \meta{separator} 用于那些由 \refCom{newtcbtheorem} 定义的环境
+  所创建的标签。该 \meta{separator} 放在 \meta{prefix}
+  （由 \refCom{newtcbtheorem} 定义）与 \meta{marker}
+  （由具体定理环境定义）之间。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   label separator=*}{theo}
+\begin{sometheorem}{My example}{myex}
+My theorem text.
+\end{sometheorem}
+See Example~\ref{theo*myex}.
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2018-01-12]{theorem full label supplement}{=\marg{style}}{无默认值，初始为空}
+  所给 \meta{style} 用于那些由 \refCom{newtcbtheorem} 定义的环境
+  所创建的标签。该 \meta{style} 使用一个参数，
+  该参数自动设为环境的完整标签标记，即由
+  \meta{prefix}（由 \refCom{newtcbtheorem} 定义）、
+  \refKey{/tcb/label separator} 和
+  \meta{marker}（由具体定理环境定义）组成的文字。
+
+\begin{dispExample}
+% The following adds a hyper target to all environments
+% created with \newtcbtheorem
+\tcbset{theorem full label supplement={hypertarget={#1}}}
+
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+   {colback=white,colframe=red!50!black,fonttitle=\bfseries}{theo}
+\begin{sometheorem}{My example}{myex2}
+My theorem text.
+\end{sometheorem}
+This automated \hyperlink{theo:myex2}{hyper target can be linked to with a
+ hyper link}.
+\end{dispExample}
+
+第二次使用 \refKey{/tcb/theorem full label supplement} 会覆盖第一次的设置。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2018-01-12]{theorem label supplement}{=\marg{style}}{无默认值，初始为空}
+  所给 \meta{style} 用于那些由 \refCom{newtcbtheorem} 定义的环境
+  所创建的标签。该 \meta{style} 使用一个参数，
+  该参数自动设为具体定理环境所定义的标签 \meta{marker}。\par
+  第二次使用 \refKey{/tcb/theorem label supplement} 会覆盖第一次的设置，
+  但 \refKey{/tcb/theorem full label supplement}
+  与 \refKey{/tcb/theorem label supplement} 可以独立使用。
+
+\begin{dispExample}
+% `marginnote' has to be loaded
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+   {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+    theorem label supplement={hypertarget={XYZ-##1}},
+    theorem full label supplement={code={\marginnote{##1}}}
+   }{theo}
+\begin{sometheorem}{My example}{myex3}
+My theorem text.
+\end{sometheorem}
+This automated \hyperlink{XYZ-myex3}{hyper target can be linked to with a
+ hyper link}.
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2020-10-21]{theorem hanging indent}{\colOpt{=\docValue*{auto}\textbar \meta{length}}}{默认 \docValue*{auto}，初始 \docValue*{auto}}
+  将定理标题的悬挂缩进设为 \docValue{auto} 或给定的 \meta{length}。
+  取 \docValue{auto} 时，悬挂缩进与定理的显示名称、编号和分隔符相匹配。
+  若 \meta{length} 为负值，则定理标题不悬挂缩进，而是正向缩进。
+
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries}{theo}
+
+\begin{sometheorem}{This is a very long and complicated title for a quite
+  short and nearly empty theorem}{myexA1}
+My theorem text.
+\end{sometheorem}
+
+\begin{sometheorem}[theorem hanging indent=5mm]{This is a very long and
+  complicated title for a quite short and nearly empty theorem}{myexA2}
+My theorem text.
+\end{sometheorem}
+
+\begin{sometheorem}[theorem hanging indent=0pt]{This is a very long and
+  complicated title for a quite short and nearly empty theorem}{myexA3}
+My theorem text.
+\end{sometheorem}
+
+\begin{sometheorem}[theorem hanging indent=-5mm]{This is a very long and
+  complicated title for a quite short and nearly empty theorem}{myexA4}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+
+
+\clearpage
+\begin{docTcbKey}{theorem name and number}{}{样式，无取值，初始已设置}
+在标题中先打印定理名称，再打印定理编号。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   theorem name and number}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{theorem number and name}{}{样式，无取值}
+在标题中先打印定理编号，再打印定理名称。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   theorem number and name}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{theorem name}{}{样式，无取值}
+在标题中只打印定理名称，不打印编号。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {enhanced,colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   theorem name,watermark text={\thetcbcounter}}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+\enlargethispage*{20mm}
+
+\begin{docTcbKey}[][doc new=2021-12-03]{theorem number}{}{样式，无取值}
+在标题中只打印定理编号，不打印名称。
+\begin{dispExample}
+\newtcbtheorem[use counter from=mytheo]{sometheorem}{Theorem}%
+  {enhanced,colback=white,colframe=red!50!black,fonttitle=\bfseries,
+   theorem number}{theo}
+\begin{sometheorem}{My example}{}
+My theorem text.
+\end{sometheorem}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}{theorem}{=\marg{display name}\marg{counter}\marg{title}\marg{marker}}{无默认值}
+  本键可直接用于 |tcolorbox| 中，以更灵活的方式创建一个定理类型的文本框。
+  \meta{display name} 与递增的 \meta{counter} 值以及 \meta{title}
+  一起用于框的标题行。此外，还会用所给 \meta{marker} 创建一个 |\label|。
+\begin{dispExample}
+% \newcounter{texercise}%  preamble
+\begin{tcolorbox}[colback=green!10,colframe=green!50!black,arc=4mm,
+                  theorem={Test}{texercise}{Direct usage}{myMarker}]
+Here, we see the test \ref{myMarker}.
+\end{tcolorbox}
+\end{dispExample}
+为了在文档中获得统一外观，不应像上面示例那样直接使用键 |theorem|，
+而应通过手动新建环境或使用 \refCom{newtcbtheorem} 来使用它。
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}{highlight math}{}{样式，无取值}
+  一个供 \refCom{tcbhighmath} 使用的样式，
+  预定义为 |notitle,nophantom,colframe=red,colback=yellow!25!white|。\par
+  可用常规的 |pgf| 键技巧或 \refKey{/tcb/highlight math style} 来修改它。
+\begin{dispExample}
+\begin{align*}
+  \tcbhighmath{1} + 1 &= 2,\\
+  \tcbset{highlight math/.append style={left=0mm,right=0mm,top=0mm,bottom=0mm}}
+  \tcbhighmath{1} + 1 &= 2.
+\end{align*}
+\end{dispExample}
+
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{highlight math style}{=\meta{style definition}}{样式，无默认值}
+  将 \refKey{/tcb/highlight math} 的定义改为
+  |notitle,nophantom| 再加上所给 \meta{style definition}。
+  另一个示例参见 \refCom{tcbhighmath}。
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\tcbset{highlight math style={enhanced,%<-- needed for the `remember' options
+  colframe=red,colback=red!10!white,boxsep=0pt}}
+\begin{align*}
+\tcbhighmath[remember as=fx]{f(x)}
+     &= \int\limits_{1}^{x} \frac{1}{t^2}~dt
+      = \left[ -\frac{1}{t} \right]_{1}^{x}\\
+     &= -\frac{1}{x} + \frac{1}{1}\\
+     &=
+\tcbhighmath[remember,overlay={%
+    \draw[blue,very thick,->] (fx.south) to[bend right] ([yshift=2mm]frame.west);}]
+  {1-\frac{1}{x}.}
+\end{align*}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}{math upper}{}{样式，无取值}
+将上部设为数学模式，字体为 |\displaystyle|。
+\end{docTcbKey}
+
+\begin{docTcbKey}{math lower}{}{样式，无取值}
+将下部设为数学模式，字体为 |\displaystyle|。
+\end{docTcbKey}
+
+\begin{docTcbKey}{math}{}{样式，无取值}
+将上部\emph{和}下部都设为数学模式，字体为 |\displaystyle|。
+\begin{dispExample}
+\begin{tcolorbox}[math,colback=yellow!10!white,colframe=red!50!black]
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} = \infty.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{marker}
+  以下样式只经过与原始 \refPkg{amsmath} 环境配合使用的测试。
+  例如，若把 |equation| 环境重新定义为 |gather|，
+  则\emph{不应}使用 \refKey{/tcb/ams equation}。
+  显然，此时应改用 \refKey{/tcb/ams gather}。
+\end{marker}
+
+\begin{docTcbKey}[][doc updated=2014-10-30]{ams equation upper}{}{样式，无取值}
+  在上部的开头和结尾各加入一个 |amsmath| 的 |equation| 环境。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc updated=2014-10-30]{ams equation lower}{}{样式，无取值}
+  在下部的开头和结尾各加入一个 |amsmath| 的 |equation| 环境。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc updated=2014-10-30]{ams equation}{}{样式，无取值}
+  在上部\emph{和}下部的开头和结尾各加入一个 |amsmath| 的 |equation| 环境。
+\begin{dispExample}
+\begin{tcolorbox}[ams equation,colback=yellow!10!white,colframe=red!50!black]
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} = \infty.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc updated=2014-10-30]{ams equation* upper}{}{样式，无取值}
+  在上部的开头和结尾各加入一个 |amsmath| 的 |equation*| 环境。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc updated=2014-10-30]{ams equation* lower}{}{样式，无取值}
+  在下部的开头和结尾各加入一个 |amsmath| 的 |equation*| 环境。
+\end{docTcbKey}
+
+\enlargethispage*{2cm}
+\begin{docTcbKey}[][doc updated=2014-10-30]{ams equation*}{}{样式，无取值}
+  在上部\emph{和}下部的开头和结尾各加入一个 |amsmath| 的 |equation*| 环境。
+\begin{dispExample}
+\begin{tcolorbox}[ams equation*,colback=yellow!10!white,colframe=red!50!black]
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} = \infty.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKeys}[
+    doc parameter   = ,
+    doc description = {样式，无取值},
+  ]
+  {
+    {
+      doc name    = ams align,
+      doc updated = 2024-06-27,
+    },
+    {
+      doc name = ams align upper,
+    }
+  }
+  在上部的开头和结尾各加入一个 |amsmath| 的 |align| 环境。
+\begin{dispExample}
+\begin{tcolorbox}[ams align,colback=yellow!10!white,colframe=red!50!black]
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} &= \infty.\\
+  \int x^2 ~\text{d}x                    &= \frac13 x^3 + c.
+\end{tcolorbox}
+\end{dispExample}
+\begin{marker}
+  使用 \refKey{/tcb/ams align upper} 或 \refKey{/tcb/ams align} 的
+  文本框不能有下部！若需要下部，请改用
+  \refKey{/tcb/ams nodisplayskip upper}。
+\end{marker}
+\end{docTcbKeys}
+
+\begin{docTcbKey}{ams align lower}{}{样式，无取值}
+  在下部的开头和结尾各加入一个 |amsmath| 的 |align| 环境。
+\end{docTcbKey}
+
+
+\begin{docTcbKeys}[
+    doc parameter   = ,
+    doc description = {样式，无取值},
+  ]
+  {
+    {
+      doc name    = ams align*,
+      doc updated = 2024-06-27,
+    },
+    {
+      doc name = ams align* upper,
+    }
+  }
+  在上部的开头和结尾各加入一个 |amsmath| 的 |align*| 环境。
+\begin{dispExample}
+\begin{tcolorbox}[ams align*,colback=yellow!10!white,colframe=red!50!black]
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} &= \infty.\\
+  \int x^2 ~\text{d}x                    &= \frac13 x^3 + c.
+\end{tcolorbox}
+\end{dispExample}
+\begin{marker}
+  使用 \refKey{/tcb/ams align* upper} 或 \refKey{/tcb/ams align*} 的
+  文本框不能有下部！若需要下部，请改用
+  \refKey{/tcb/ams nodisplayskip upper}。
+\end{marker}
+\end{docTcbKeys}
+
+\begin{docTcbKey}{ams align* lower}{}{样式，无取值}
+  在下部的开头和结尾各加入一个 |amsmath| 的 |align*| 环境。
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKeys}[
+    doc parameter   = ,
+    doc description = {样式，无取值},
+  ]
+  {
+    {
+      doc name    = ams gather,
+      doc updated = 2024-06-27,
+    },
+    {
+      doc name = ams gather upper,
+    }
+  }
+  在上部的开头和结尾各加入一个 |amsmath| 的 |gather| 环境。
+\begin{dispExample}
+\begin{tcolorbox}[ams gather,colback=yellow!10!white,colframe=red!50!black]
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} = \infty.\\
+  \int x^2 ~\text{d}x = \frac13 x^3 + c.
+\end{tcolorbox}
+\end{dispExample}
+\begin{marker}
+  使用 \refKey{/tcb/ams gather upper} 或 \refKey{/tcb/ams gather} 的
+  文本框不能有下部！若需要下部，请改用
+  \refKey{/tcb/ams nodisplayskip upper}。
+\end{marker}
+\end{docTcbKeys}
+
+\begin{docTcbKey}{ams gather lower}{}{样式，无取值}
+  在下部的开头和结尾各加入一个 |amsmath| 的 |gather| 环境。
+\end{docTcbKey}
+
+\begin{docTcbKeys}[
+    doc parameter   = ,
+    doc description = {样式，无取值},
+  ]
+  {
+    {
+      doc name    = ams gather*,
+      doc updated = 2024-06-27,
+    },
+    {
+      doc name = ams gather* upper,
+    }
+  }
+  在上部的开头和结尾各加入一个 |amsmath| 的 |gather*| 环境。
+\begin{dispExample}
+\begin{tcolorbox}[ams gather*,colback=yellow!10!white,colframe=red!50!black]
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} = \infty.\\
+  \int x^2 ~\text{d}x = \frac13 x^3 + c.
+\end{tcolorbox}
+\end{dispExample}
+\begin{marker}
+  使用 \refKey{/tcb/ams gather* upper} 或 \refKey{/tcb/ams gather*} 的
+  文本框不能有下部！若需要下部，请改用
+  \refKey{/tcb/ams nodisplayskip upper}。
+\end{marker}
+\end{docTcbKeys}
+
+\begin{docTcbKey}{ams gather* lower}{}{样式，无取值}
+  在下部的开头和结尾各加入一个 |amsmath| 的 |gather*| 环境。
+\end{docTcbKey}
+
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2026-05-04]{ams subequations upper}{}{样式，无取值}
+  在上部的开头和结尾各加入一个 |amsmath| 的 |subequations| 环境。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2026-05-04]{ams subequations lower}{}{样式，无取值}
+  在下部的开头和结尾各加入一个 |amsmath| 的 |subequations| 环境。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2026-05-04]{ams subequations}{}{样式，无取值}
+  在上部\emph{和}下部的开头和结尾各加入一个 |amsmath| 的 |subequations| 环境。
+\begin{dispExample}
+\begin{tcolorbox}[ams subequations,colback=yellow!10!white,colframe=red!50!black]
+  \begin{align}
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} &= \infty.\\
+  \int x^2 ~\text{d}x                    &= \frac13 x^3 + c.
+  \end{align}
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKeys}[
+    doc parameter   = ,
+    doc description = {样式，无取值},
+  ]
+  {
+    {
+      doc name = ams subequations align,
+      doc new  = 2026-05-04,
+    },
+    {
+      doc name = ams subequations align upper,
+    }
+  }
+  在上部的开头和结尾各加入一个 |amsmath| 的 |subequations| 环境
+  和一个 |align| 环境。
+\begin{dispExample}
+\begin{tcolorbox}[ams subequations align,
+    colback=yellow!10!white,colframe=red!50!black]
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} &= \infty.\\
+  \int x^2 ~\text{d}x                    &= \frac13 x^3 + c.
+\end{tcolorbox}
+\end{dispExample}
+\begin{marker}
+  使用 \refKey{/tcb/ams subequations align upper} 或
+  \refKey{/tcb/ams subequations align} 的文本框不能有下部！
+  若需要下部，请改用 \refKey{/tcb/ams nodisplayskip upper}。
+\end{marker}
+\end{docTcbKeys}
+
+\begin{docTcbKey}{ams subequations align lower}{}{样式，无取值}
+  在下部的开头和结尾各加入一个 |amsmath| 的 |subequations| 环境
+  和一个 |align| 环境。
+\end{docTcbKey}
+
+
+\clearpage
+
+
+\begin{docTcbKeys}[
+    doc parameter   = ,
+    doc description = {样式，无取值},
+  ]
+  {
+    {
+      doc name = ams subequations gather,
+      doc new  = 2026-05-04,
+    },
+    {
+      doc name = ams subequations gather upper,
+    }
+  }
+  在上部的开头和结尾各加入一个 |amsmath| 的 |subequations| 环境
+  和一个 |gather| 环境。
+\begin{dispExample}
+\begin{tcolorbox}[ams subequations gather,
+    colback=yellow!10!white,colframe=red!50!black]
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} = \infty.\\
+  \int x^2 ~\text{d}x                    = \frac13 x^3 + c.
+\end{tcolorbox}
+\end{dispExample}
+\begin{marker}
+  使用 \refKey{/tcb/ams subequations gather upper} 或
+  \refKey{/tcb/ams subequations gather} 的文本框不能有下部！
+  若需要下部，请改用 \refKey{/tcb/ams nodisplayskip upper}。
+\end{marker}
+\end{docTcbKeys}
+
+\begin{docTcbKey}{ams subequations gather lower}{}{样式，无取值}
+  在下部的开头和结尾各加入一个 |amsmath| 的 |subequations| 环境
+  和一个 |gather| 环境。
+\end{docTcbKey}
+
+\begin{docTcbKey}{ams nodisplayskip upper}{}{样式，无取值}
+  为上部消除随后的 |align| 或 |gather| 环境的 |\abovedisplayskip|。
+  注意，文本内容必须以此类公式开头。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{ams nodisplayskip lower}{}{样式，无取值}
+  为下部消除随后的 |align| 或 |gather| 环境的 |\abovedisplayskip|。
+  注意，文本内容必须以此类公式开头。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{ams nodisplayskip}{}{样式，无取值}
+  为上部\emph{和}下部消除随后的 |align| 或 |gather| 环境的
+  |\abovedisplayskip|。注意，文本内容必须以此类公式开头。
+\begin{dispExample}
+\begin{tcolorbox}[ams nodisplayskip,colback=yellow!10!white,colframe=red!50!black]
+  \begin{gather}
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} = \infty.\\
+  \int x^2 ~\text{d}x = \frac13 x^3 + c.
+  \end{gather}
+  And now for something completely different.
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+使用 \refCom{newtcolorbox} 可以轻松创建新的彩色数学环境：
+
+\begin{dispExample}
+\newtcolorbox{mymath}{ams gather*,colback=yellow!10!white,colframe=red!50!black}
+
+\begin{mymath}
+  \sum\limits_{n=1}^{\infty} \frac{1}{n} = \infty.\\
+  \int x^2 ~\text{d}x = \frac13 x^3 + c.
+\end{mymath}
+\end{dispExample}
+
+\bigskip
+\begin{marker}
+  所有上述选项（如 \refKey{/tcb/ams gather upper}、\refKey{/tcb/ams gather lower}、
+  \refKey{/tcb/ams gather}）都会（部分地）设置（覆盖）键
+  \refKey{/tcb/before upper}、\refKey{/tcb/after upper}、
+  \refKey{/tcb/before lower}、\refKey{/tcb/after lower}。\par
+  因此，例如 |\tcbset{ams gather,before upper={\text{Pythagoras:}}}|
+  会产生错误结果。这种情况请使用
+  |\tcbset{ams gather,before upper app={\text{Pythagoras:}}}|，
+  参见 \refKey{/tcb/before upper app}。
+\end{marker}
+
+
+\clearpage
+\begin{docTcbKey}{theorem style}{=\meta{name}}{无默认值，初始 |standard|}
+  将预定义样式 \meta{name} 应用于定理环境。
+  其中部分可选的 \meta{name} 取值借用了 \refPkg{theorem} 和
+  \refPkg{ntheorem} 宏包的样式名称，以便方便地使用已知模式。
+\begin{marker}
+这些样式会改变 \refKey{/tcb/separator sign}、
+\refKey{/tcb/description delimiters}、\refKey{/tcb/terminator sign} 等。
+因此，这类键应在定理样式\emph{之后}再应用。
+\end{marker}
+
+下面的示例使用：
+\inputpreamblelisting{J}
+
+预定义样式有：
+\begin{itemize}
+%
+\item\docValue{standard}：这是初始值。
+\begin{dispExample}
+\begin{theorem}[theorem style=standard]{standard}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\item\docValue{change standard}
+\begin{dispExample}
+\begin{theorem}[theorem style=change standard]{change standard}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\item\docValue{plain}
+\begin{dispExample}
+\begin{theorem}[theorem style=plain]{plain}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\clearpage
+\item\docValue{break}
+\begin{dispExample}
+\begin{theorem}[theorem style=break]{break}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\item\docValue{plain apart}
+\begin{dispExample}
+\begin{theorem}[theorem style=plain apart]{plain apart}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\item\docValue{change}
+\begin{dispExample}
+\begin{theorem}[theorem style=change]{change}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\item\docValue{change break}
+\begin{dispExample}
+\begin{theorem}[theorem style=change break]{change break}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\item\docValue{change apart}
+\begin{dispExample}
+\begin{theorem}[theorem style=change apart]{change apart}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\clearpage
+\item\docValue{margin}
+\begin{dispExample}
+\begin{theorem}[theorem style=margin,left=10mm]{margin}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\begin{theorem}[theorem style=margin,left=10mm,oversize]{margin}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\item\docValue{margin break}
+\begin{dispExample}
+\begin{theorem}[theorem style=margin break,left=10mm]{margin break}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\begin{theorem}[theorem style=margin break,left=10mm,oversize]{margin break}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\item\docValue{margin apart}
+\begin{dispExample}
+\begin{theorem}[theorem style=margin apart,left=10mm]{margin apart}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\begin{theorem}[theorem style=margin apart,left=10mm,oversize]{margin apart}{}
+This is my theorem. \begin{equation*} a^2 + b^2 = c^2. \end{equation*}
+\end{theorem}
+\end{dispExample}
+%
+\end{itemize}
+\end{docTcbKey}
+
+
+%
+\clearpage
+\subsection{定义与定理示例}
+下面演示如何运用 \refCom{newtcbtheorem}
+来突出显示数学定义、定理等内容。
+
+首先，为彩色文本框的外观创建一些额外的 |tcb| 键。
+这里假定定理与推论应使用相同的颜色。
+下面所有环境共用一个计数器编号，但这很容易更改。
+此处计数器输出中还加入了小节编号。
+此外，使用 \refPkg{zref-clever} 宏包 \cite{barros:zref-clever} 来生成智能交叉引用。
+
+\inputpreamblelisting{G}
+
+现在用 \refCom{newtcbtheorem} 创建共用编号的定理环境。
+其中用 |defstyle| 与 |theostyle| 控制外观。
+
+\begin{marker}
+若不需要 \refPkg{zref-clever} 支持，可从上面的定义中去掉
+\refKey{/tcb/label type}。
+\end{marker}
+
+
+至此，下面的示例所需的一切都已准备就绪。
+
+\begin{dispExample}
+The following theorem is numbered as \zcref[S]{theo:diffbarstetig}
+and referenced with the marker \texttt{theo:diffbarstetig}.
+Alternatively, use the basic form Theorem~\ref{theo:diffbarstetig}.
+
+\begin{Theorem}{Differenzierbarkeit bedingt Stetigkeit, wobei diese Benennung
+  zu Testzwecken ungew\"{o}hnlich lang ist}{diffbarstetig}%
+  Eine Funktion $f:I\to\mathbb{R}$ ist in $x_0\in I$ stetig, wenn $f$ in
+  $x_0$ differenzierbar ist.
+\end{Theorem}
+\end{dispExample}
+
+
+\begin{dispExample}
+The following definition is numbered as \zcref[cap]{def:diffbarkeit} and
+referenced with the marker \texttt{def:diffbarkeit}.\bigskip
+
+\begin{Definition}{Differenzierbarkeit}{diffbarkeit}
+  Eine Funktion $f:~I\to\mathbb{R}$ auf einem Intervall $I$ hei\ss{}t in
+  $x_0\in I$ differenzierbar oder linear approximierbar,
+  wenn der Grenzwert
+  \begin{equation*}
+  \lim\limits_{x\to x_0}\frac{f(x)-f(x_0)}{x-x_0}=
+  \lim\limits_{h\to 0}\frac{f(x_0+h)-f(x_0)}{h}
+  \end{equation*}
+  existiert. Bei Existenz hei\ss{}t dieser Grenzwert Ableitung
+  oder Differentialquotient von $f$ in $x_0$ und man
+  schreibt f\"{u}r ihn
+  \begin{equation*}
+  f'(x_0)\quad\text{oder}\quad\frac{df}{dx}(x_0).
+  \end{equation*}
+\end{Definition}
+\end{dispExample}
+
+
+\begin{dispExample}
+The following corollary is numbered as \zcref{cor:nullstellen} and
+referenced with the marker \texttt{cor:nullstellen}.\bigskip
+
+\begin{Corollary}{Nullstellenexistenz}{nullstellen}
+  Ist $f:[a,b]\to\mathbb{R}$ stetig und haben $f(a)$ und $f(b)$ entgegengesetzte
+  Vorzeichen, also $f(a)f(b)<0$, so besitzt $f$ eine Nullstelle $x_0\in]a,b[$,
+  also $f(x_0)=0$.
+\end{Corollary}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{Theorem}[boxrule=2mm,toptitle=-1.5mm,bottomtitle=-1.5mm]{%
+    Hinreichende Bedingung f\"{u}r Wendepunkte}{wendehinreichend}%
+  $f$ sei eine auf einem Intervall $]a,b[$ dreimal stetig differenzierbare Funktion.
+  Ist $f''(x_0)=0$ in $x_0\in]a,b[$ und $f'''(x_0)\ne 0$, so ist
+  $(x_0,f(x_0))$ ein Wendepunkt von $f$.
+\end{Theorem}
+\end{dispExample}
+
+\begin{dispExample}
+% \usepackage{zref-clever}
+% \usepackage{zref-vario}
+% \tcbuselibrary{skins}
+\newtcbtheorem[use counter from=Definition]{YetAnotherTheorem}{Theorem}%
+  {theorem style=plain apart,label type=theorem,enhanced,frame hidden,
+  boxrule=2mm,titlerule=0mm,toptitle=1mm,bottomtitle=1mm,
+  fonttitle=\bfseries\large,fontupper=\normalsize,
+  coltitle=green!35!black,colbacktitle=green!15!white,
+  colback=green!50!yellow!15!white,borderline={1pt}{0pt}{green!25!blue},
+  }{theo}
+
+\begin{YetAnotherTheorem}{Mittelwertsatz f\"{u}r $n$ Variable}{meanvaluetheorem}%
+  Es sei $n\in\mathbb{N}$, $D\subseteq\mathbb{R}^n$ eine offene Menge und
+  $f\in C^{1}(D,\mathbb{R})$. Dann gibt es auf jeder Strecke
+  $[x_0,x]\subset D$ einen Punkt $\xi\in[x_0,x]$, so dass gilt
+  \begin{equation*}
+  f(x)-f(x_0) = \operatorname{grad} f(\xi)^{\top}(x-x_0)
+  \end{equation*}
+\end{YetAnotherTheorem}
+
+\medskip
+Here, |zref-clever| support is used to reference \zcref{theo:meanvaluetheorem}
+on \zcpageref{theo:meanvaluetheorem}. This \zcref*[noref]{theo:meanvaluetheorem}
+can also be referenced by |\zvref| resulting in \zvref{theo:meanvaluetheorem}.
+\end{dispExample}
+
+\begin{marker}
+注意，上面的示例中使用了 \refKey{/tcb/label type}，
+以便把所需的名称信息提供给 \refPkg{zref-clever} \cite{barros:zref-clever}。
+\end{marker}
+
+\clearpage
+
+\begin{dispExample}
+Here, using |\zvref| resulting in \zvref{theo:meanvaluetheorem}
+is more interesting\ldots
+\end{dispExample}
+
+
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\newtcbtheorem[use counter from=Definition]{YetAnotherTheorem}{Theorem}%
+  {theorem style=change apart,enhanced,arc=0mm,outer arc=0mm,
+  boxrule=0mm,toprule=1mm,bottomrule=1mm,left=1mm,right=1mm,
+  titlerule=0mm,toptitle=0mm,bottomtitle=1mm,top=0mm,
+  colframe=red!50!black,colback=red!5!white,coltitle=red!50!black,
+  title style={top color=yellow!50!white,bottom color=red!5!white,
+    middle color=yellow!50!white},
+  fonttitle=\bfseries\sffamily\normalsize,fontupper=\normalsize\itshape,
+  }{theo}
+
+\begin{YetAnotherTheorem}{Mittelwertsatz f\"{u}r $n$ Variable}{mittelwertsatz_n2}%
+  Es sei $n\in\mathbb{N}$, $D\subseteq\mathbb{R}^n$ eine offene Menge und
+  $f\in C^{1}(D,\mathbb{R})$. Dann gibt es auf jeder Strecke
+  $[x_0,x]\subset D$ einen Punkt $\xi\in[x_0,x]$, so dass gilt
+  \begin{equation*}
+  f(x)-f(x_0) = \operatorname{grad} f(\xi)^{\top}(x-x_0)
+  \end{equation*}
+\end{YetAnotherTheorem}
+\end{dispExample}
+
+
+\begin{dispExample}
+% \usepackage{varwidth}   \tcbuselibrary{skins}
+\newtcbtheorem[use counter from=Definition]{YetAnotherTheorem}{Theorem}%
+{enhanced,frame empty,interior empty,colframe=ForestGreen!50!white,
+  coltitle=ForestGreen!50!black,fonttitle=\bfseries,colbacktitle=ForestGreen!15!white,
+  borderline={0.5mm}{0mm}{ForestGreen!15!white},
+  borderline={0.5mm}{0mm}{ForestGreen!50!white,dashed},
+  attach boxed title to top center={yshift=-2mm},
+  boxed title style={boxrule=0.4pt},varwidth boxed title}{theo}
+
+\begin{YetAnotherTheorem}{Mittelwertsatz f\"{u}r $n$ Variable}{mittelwertsatz_n3}%
+  Es sei $n\in\mathbb{N}$, $D\subseteq\mathbb{R}^n$ eine offene Menge und
+  $f\in C^{1}(D,\mathbb{R})$. Dann gibt es auf jeder Strecke
+  $[x_0,x]\subset D$ einen Punkt $\xi\in[x_0,x]$, so dass gilt
+  \begin{equation*}
+  f(x)-f(x_0) = \operatorname{grad} f(\xi)^{\top}(x-x_0)
+  \end{equation*}
+\end{YetAnotherTheorem}
+\end{dispExample}
+
+
+\clearpage
+想让你的定理更加引人注目？看这里……
+
+\begin{dispExample}
+% tcbuselibrary{skins}  % preamble
+\begin{Theorem}[enhanced,
+    fuzzy halo=3mm with yellow,
+    fuzzy halo=2mm with red,
+    fuzzy halo=1mm with yellow,
+    watermark color=red!35!white,
+    watermark text={Overacting\\Fundamental Theorem}]%
+  {Fundamental Theorem of Theorems}{fundamental}%
+  \lipsum[1-2]
+\end{Theorem}
+\end{dispExample}
+
+再来试试更稳妥的风格：
+
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\newtcbtheorem[use counter from=Definition]{YetAnotherTheorem}{Theorem}%
+  {theorem style=plain,enhanced,colframe=blue!50!black,colback=yellow!20!white,
+   coltitle=red!50!black,fonttitle=\upshape\bfseries,fontupper=\itshape,
+   drop fuzzy shadow=blue!50!black!50!white,boxrule=0.4pt}{theo}
+
+\begin{YetAnotherTheorem}{Mittelwertsatz f\"{u}r $n$ Variable}{mittelwertsatz_n4}%
+  Es sei $n\in\mathbb{N}$, $D\subseteq\mathbb{R}^n$ eine offene Menge und
+  $f\in C^{1}(D,\mathbb{R})$. Dann gibt es auf jeder Strecke
+  $[x_0,x]\subset D$ einen Punkt $\xi\in[x_0,x]$, so dass gilt
+  \begin{equation*}
+  f(x)-f(x_0) = \operatorname{grad} f(\xi)^{\top}(x-x_0)
+  \end{equation*}
+\end{YetAnotherTheorem}
+\end{dispExample}
+
+
+\clearpage
+\subsection{在 \texttt{tcolorbox} 中使用其他定理环境}\label{subsec:theorems_other}
+
+除了用前面介绍的方法创建定理环境之外，
+也可以用 |tcolorbox| 把其他宏包提供的环境框起来。
+
+例如，可以用 \refPkg{theorem} 宏包或 \refPkg{amsthm} 宏包的方法创建环境，
+再用 \refCom{tcolorboxenvironment} 给这些环境加上文本框。
+
+\inputpreamblelisting{K}
+
+\begin{dispExample}
+\begin{lem}
+  \lipsum[2]
+\end{lem}
+
+\lipsum[3]
+
+\begin{proof}
+  \lipsum*[4]
+\end{proof}
+\end{dispExample}

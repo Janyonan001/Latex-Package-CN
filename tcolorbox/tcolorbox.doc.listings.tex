@@ -1,0 +1,1745 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{程序库
+  \mylib{listings}、
+  \mylib{listingsutf8} 与
+  \mylib{minted}}\label{sec:listings}%
+\tcbset{external/prefix=external/listings_}%
+
+\subsection{加载程序库}
+与其他 \refEnv{tcolorbox} 程序库不同，
+\mylib{listings}、\mylib{listingsutf8} 和 \mylib{minted} 这三个程序库
+是互斥的：它们都做同一件事，即并排显示代码列表，
+同时可在 \LaTeX\ 中排版该列表或不排版。
+它们的区别仅在于底层负责显示代码列表的核心 \LaTeX\ 宏包。
+因此通常只需其中\emph{一个}程序库。
+如果你不清楚该选用哪一个，且使用 |pdflatex|，应选用 \mylib{listingsutf8}；
+如果你使用 |xelatex| 或 |lualatex|，应选用 \mylib{listings}，
+因为 |xelatex| 和 |lualatex| 与 \mylib{listingsutf8} 不兼容。
+
+\begin{marker}
+程序库的加载顺序会影响默认设置以及 \refKey{/tcb/reset} 的行为。
+后加载程序库的设置会覆盖先加载程序库的设置。同一程序库不会被重复加载。
+\end{marker}
+
+
+\subsubsection{加载 \mylib{listings}}
+本程序库使用 \refPkg{listings} 宏包 \cite{hoffmann:listings} 来排版代码列表。
+可通过宏包选项或在导言区中加载：
+\begin{dispListing}
+\tcbuselibrary{listings}
+\end{dispListing}
+同时还会加载 \refPkg{listings} 宏包 \cite{hoffmann:listings}。
+
+本程序库将 \refKey{/tcb/listing engine} 设置为 |listings|。
+若该设置被其他程序库覆盖，可用以下命令恢复：
+\begin{dispListing}
+\tcbset{listing engine=listings}
+\end{dispListing}
+
+\subsubsection{加载 \mylib{listingsutf8}}
+\begin{marker}
+使用 Xe\LaTeX\ 或 Lua\LaTeX\ 时不需要本程序库（反而会带来麻烦）。
+因此，当\emph{不}使用 pdf\LaTeX\ 时，加载本程序库会被自动替换为
+仅加载 \mylib{listings}。
+\end{marker}
+若要让 |listings| 支持 UTF-8 编码的源代码，
+可加载程序库变体 \mylib{listingsutf8}，
+借助 \refPkg{listingsutf8} 宏包 \cite{oberdiek:listingsutf8} 提供支持。
+\begin{dispListing}
+\tcbuselibrary{listingsutf8}
+\tcbset{listing utf8=latin1}% optional; `latin1' is the default.
+\end{dispListing}
+同时还会加载 \mylib{listings} 程序库，
+以及 \refPkg{listings} \cite{hoffmann:listings} 和
+\refPkg{listingsutf8} \cite{oberdiek:listingsutf8} 宏包。
+
+本程序库将 \refKey{/tcb/listing engine} 设置为 |listings|。
+若该设置被其他程序库覆盖，可用以下命令恢复：
+\begin{dispListing}
+\tcbset{listing engine=listings}
+\end{dispListing}
+
+
+\clearpage
+\subsubsection{加载 \mylib{minted}}
+本程序库使用 \refPkg{minted} 宏包 \cite{poore:minted} 来排版代码列表。
+可通过宏包选项或在导言区中加载：
+\begin{dispListing}
+\tcbuselibrary{minted}
+\end{dispListing}
+同时还会加载 \refPkg{minted} 宏包 \cite{poore:minted}。
+
+\begin{marker}
+若要使用 \refPkg{minted} 的旧版本 v2.9，
+请\emph{在}加载本程序库\emph{之前}写入以下内容：
+\begin{dispListing}
+\usepackage{minted2}
+\end{dispListing}
+\end{marker}
+
+\begin{marker}
+\refPkg{minted} 宏包使用外部工具 |Pygments| \cite{pygments:web} 进行语法高亮。
+在使用本程序库之前，必须先安装并配置好该工具，
+参见 \cite{poore:minted} 与 \cite{pygments:web}。
+如果 \refPkg{minted} \cite{poore:minted} 宏包无法工作，
+则 \refEnv{tcolorbox} 的 \mylib{minted} 程序库也无法工作。
+\end{marker}
+
+本程序库将 \refKey{/tcb/listing engine} 设置为 |minted|。
+若该设置被其他程序库覆盖，可用以下命令恢复：
+\begin{dispListing}
+\tcbset{listing engine=minted}
+\end{dispListing}
+
+
+\subsection{各程序库的通用命令}
+
+\begin{docEnvironment}{tcblisting}{\marg{options}}
+  基于 \refEnv{tcolorbox} 创建一个彩色文本框。
+  通过给定的 \meta{options} 控制，
+  环境内容既可按普通方式排版，也可同时作为代码列表排版。
+  此外，\meta{options} 还控制 \refEnv{tcolorbox} 的外观与功能。
+  默认情况下，代码列表被视为 \LaTeX\ 列表。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black}
+This is a \LaTeX\ example which displays the text as source code
+and in compiled form.
+\end{tcblisting}
+\end{dispExample}
+
+\clearpage
+
+\begin{dispExample}
+% \tcbuselibrary{listings} /or/ \tcbuselibrary{listingsutf8}
+\begin{tcblisting}{colback=yellow!5,colframe=yellow!50!black,listing only,
+    title=This is source code in another language (XML), fonttitle=\bfseries,
+  listing options={language=XML,columns=fullflexible,keywordstyle=\color{red}}}
+<?xml version="1.0"?>
+<project name="Package tcolorbox" default="documentation" basedir=".">
+  <description>
+    Apache Ant build file (http://ant.apache.org/)
+  </description>
+</project>
+\end{tcblisting}
+\end{dispExample}
+
+\enlargethispage*{10mm}
+
+\begin{dispExample}
+% \tcbuselibrary{minted}
+\begin{tcblisting}{colback=yellow!5,colframe=yellow!50!black,listing only,
+    title=This is source code in another language (XML), fonttitle=\bfseries,
+  listing engine=minted,minted language=xml}
+<?xml version="1.0"?>
+<project name="Package tcolorbox" default="documentation" basedir=".">
+  <description>
+    Apache Ant build file (http://ant.apache.org/)
+  </description>
+</project>
+\end{tcblisting}
+\end{dispExample}
+
+
+
+\begin{dispExample}
+% This box is as wide as needed (listing only !!)
+% \tcbuselibrary{skins}
+\begin{tcblisting}{colback=green!5!white,colframe=green!50!black,listing only,
+  hbox,enhanced,drop fuzzy shadow,before=\begin{center},after=\end{center}}
+\begin{tikzpicture}
+\fill[red] (0,0) rectangle (1,1);
+\end{tikzpicture}
+\end{tcblisting}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\clearpage
+\begin{docEnvironment}{tcboutputlisting}{}
+  将环境内容保存到一个文件中，文件名由 \refKey{/tcb/listing file} 的键值指定。
+  之后可通过 \refCom{tcbinputlisting}、\refCom{tcbuselistingtext}
+  或 \refCom{tcbuselistinglisting} 载入该文件。
+\begin{dispListing}
+\begin{tcboutputlisting}
+This \textbf{text} is written to a standardized file for later usage.
+\end{tcboutputlisting}
+\end{dispListing}
+\end{docEnvironment}
+
+
+\begin{docCommand}{tcbinputlisting}{\marg{options}}
+  基于 \refEnv{tcolorbox} 创建一个彩色文本框。
+  文本内容从一个文件中读取，文件名由 \refKey{/tcb/listing file} 的键值指定。
+  除此之外，其功能与 \refEnv{tcblisting} 相同。
+\begin{dispExample}
+\tcbinputlisting{colback=red!5!white,colframe=red!75!black,text only}
+\tcbinputlisting{colback=green!5,colframe=green!75!black,listing only}
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{tcbuselistingtext}{}
+  从由 \refKey{/tcb/listing file} 键值指定的文件中载入文本。
+\begin{dispExample}
+\tcbuselistingtext
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}{tcbuselistinglisting}{}
+  将由 \refKey{/tcb/listing file} 键值指定的文件中的文本作为代码列表排版。
+\begin{dispExample}
+\tcbuselistinglisting
+\end{dispExample}
+\end{docCommand}
+
+%\enlargethispage*{5mm}
+\begin{docCommand}{tcbusetemplisting}{}
+  将由 \refEnv{tcbwritetemp} 写入的临时文件中的文本作为代码列表排版。
+\end{docCommand}
+
+
+\clearpage
+\subsection{生成 \texttt{tcblisting} 环境}\label{subsec:listing_newlistings}
+
+\begin{marker}
+若要创建一种新的 \refEnv{tcblisting} 环境且只带一个可选参数，
+强烈建议使用 \refCom{DeclareTCBListing} 或 \refCom{NewTCBListing}，
+而不要使用 \refCom{newtcblisting}，以避免内容扫描问题。
+\end{marker}
+
+\begin{docCommand}{newtcblisting}{\oarg{init options}\marg{name}\oarg{number}\oarg{default}\marg{options}}
+  基于 \refEnv{tcblisting} 创建一个名为 \meta{name} 的新环境。
+  基本上，\refCom{newtcblisting} 的工作方式与 |\newenvironment| 类似。
+  即新环境 \meta{name} 可带 \meta{number} 个参数，
+  其中 \meta{default} 是第一个可选参数的默认值。
+  \meta{options} 会传递给底层的 \refEnv{tcblisting}。
+  注意，\refKey{/tcb/savedelimiter} 会自动设为给定的 \meta{name}。
+  \meta{init options} 用于设置自动编号，参见 \zvref{sec:initkeys}。
+\begin{dispExample*}{sbs,lefthand ratio=0.5}
+\newtcblisting{mybox}{%
+  colback=red!5!white,
+  colframe=red!75!black}
+
+\begin{mybox}
+This is my \LaTeX\ box.
+\end{mybox}
+\end{dispExample*}
+
+\begin{dispExample*}{sbs,lefthand ratio=0.5}
+\newtcblisting{mybox}[1]{%
+  colback=red!5!white,
+  colframe=red!75!black,
+  fonttitle=\bfseries,
+  title={#1}}
+
+\begin{mybox}{Listing Box}
+This is my \LaTeX\ box.
+\end{mybox}
+\end{dispExample*}
+
+\begin{dispExample*}{sbs,lefthand ratio=0.5}
+\newtcblisting{mybox}[2][]{%
+  colback=red!5!white,
+  colframe=red!75!black,
+  fonttitle=\bfseries,
+  title={#2},#1}
+
+\begin{mybox}[listing only]
+  {Listing Box}
+This is my \LaTeX\ box.
+\end{mybox}
+\bigskip
+
+\begin{mybox}[listing side text]
+  {Listing Box}
+This is my
+\LaTeX\ box.
+\end{mybox}
+\end{dispExample*}
+
+\clearpage
+\inputpreamblelisting{C}
+
+\begin{dispExample*}{sbs,lefthand ratio=0.5}
+\begin{mycbox}{Listing Box}
+This is my \LaTeX\ box.
+\end{mycbox}
+\end{dispExample*}
+\end{docCommand}
+
+
+%\enlargethispage*{1cm}
+\begin{docCommand}{renewtcblisting}{\oarg{init options}\marg{name}\oarg{number}\oarg{default}\marg{options}}
+  与 \refCom{newtcblisting} 类似，但底层基于 |\renewenvironment| 而非 |\newenvironment|。
+  用于重新定义一个已存在的环境。
+\end{docCommand}
+
+
+\clearpage
+
+\begin{docCommand}{NewTCBListing}{\oarg{init options}\marg{name}\marg{specification}\marg{options}}
+  基于 \refEnv{tcblisting} 创建一个名为 \meta{name} 的新环境。\\
+  基本上，\refCom{NewTCBListing} 的工作方式与 |\NewDocumentEnvironment| 类似。
+  即新环境 \meta{name} 按照 \cite{latexproject:usrguide} 中给出的
+  \LaTeX3 参数 \meta{specification} 构造。
+  若 \meta{name} 已被定义，则会报错。
+  \meta{options} 会传递给底层的 \refEnv{tcblisting}。\\
+  注意，\refKey{/tcb/savedelimiter} 会自动设为给定的 \meta{name}。\\
+  \meta{init options} 用于设置自动编号，参见 \zvref{sec:initkeys}。
+
+\begin{dispExample*}{sbs,lefthand ratio=0.5}
+\NewTCBListing{mybox}{ s O{} m }{%
+  colback=red!5!white,
+  colframe=red!75!black,
+  fonttitle=\bfseries,
+  IfBooleanTF={#1}
+    {listing side text}
+    {text side listing},
+  title={#3},#2}
+
+\begin{mybox}{Listing Box}
+This is my
+\LaTeX\ box.
+\end{mybox}
+\bigskip
+
+\begin{mybox}*{Listing Box}
+This is my
+\LaTeX\ box.
+\end{mybox}
+\bigskip
+
+\begin{mybox}[colback=yellow]
+  {Listing Box}
+This is my
+\LaTeX\ box.
+\end{mybox}
+\end{dispExample*}
+\end{docCommand}
+
+\begin{docCommand}{RenewTCBListing}{\oarg{init options}\marg{name}\marg{specification}\marg{options}}
+  与 \refCom{NewTCBListing} 类似，但底层基于 |\RenewDocumentEnvironment|
+  而非 |\NewDocumentEnvironment|。用于重新定义一个已存在的环境。
+\end{docCommand}
+
+\begin{docCommand}{ProvideTCBListing}{\oarg{init options}\marg{name}\marg{specification}\marg{options}}
+  与 \refCom{NewTCBListing} 类似，但底层基于 |\ProvideDocumentEnvironment|
+  而非 |\NewDocumentEnvironment|。仅当环境 \meta{name} 尚未定义时才创建它。
+\end{docCommand}
+
+\begin{docCommand}{DeclareTCBListing}{\oarg{init options}\marg{name}\marg{specification}\marg{options}}
+  与 \refCom{NewTCBListing} 类似，但底层基于 |\DeclareDocumentEnvironment|
+  而非 |\NewDocumentEnvironment|。无论是否已存在同名环境，都会创建新环境。
+\end{docCommand}
+
+\clearpage
+
+\begin{marker}
+以可选参数（如 \verb+O{}+）结尾的列表环境需要特别注意。
+若没有前缀 \flqq\verb+!+\frqq{}，环境开始后的空格会被裁去，
+参见 \cite{latexproject:usrguide}。
+当未使用可选参数、且环境内容以方括号或反斜杠开头时，
+这会导致错误或不期望的行为。
+加上前缀 \flqq\verb+!+\frqq 后，在环境开始处留一个空格或换行
+即可避免这些问题。
+\end{marker}
+
+\begin{dispListing*}{title={以可选参数结尾的环境的注意事项},fonttitle=\bfseries}
+\DeclareTCBListing{mybox}{ !O{} }{listing only,#1}
+
+\begin{mybox}[colframe=red]
+\good
+\end{mybox}
+
+\begin{mybox}[colframe=red]\good\end{mybox}
+
+\begin{mybox}
+\good
+\end{mybox}
+
+\begin{mybox} \good\end{mybox}
+
+\begin{mybox}\bad!\end{mybox}
+
+\begin{mybox}
+[\good]
+\end{mybox}
+
+\begin{mybox} [\good]\end{mybox}
+
+\begin{mybox}[\bad!]\end{mybox}
+\end{dispListing*}
+
+
+\begin{dispListing*}{title={请勿使用},fonttitle=\bfseries}
+\DeclareTCBListing{mybox}{ O{} }{listing only,#1}
+
+\begin{mybox}[colframe=red]
+\good
+\end{mybox}
+
+\begin{mybox}[colframe=red]\good\end{mybox}
+
+\begin{mybox}
+\bad!
+\end{mybox}
+
+\begin{mybox} \bad!\end{mybox}
+
+\begin{mybox}\bad!\end{mybox}
+
+\begin{mybox}
+[\bad!]
+\end{mybox}
+
+\begin{mybox} [\bad!]\end{mybox}
+
+\begin{mybox}[\bad!]\end{mybox}
+\end{dispListing*}
+
+
+\clearpage
+\subsection{生成 \texttt{\textbackslash tcbinputlisting} 命令}\label{subsec:listings_inputlisting}
+\enlargethispage*{1cm}
+
+\begin{docCommand}{newtcbinputlisting}{\oarg{init options}\brackets{\texttt{\textbackslash}\rmfamily\meta{name}}\oarg{number}\oarg{default}\marg{options}}
+  基于 \refCom{tcbinputlisting} 创建一个新宏 \texttt{\textbackslash}\meta{name}。
+  基本上，\refCom{newtcbinputlisting} 的工作方式与 |\newcommand| 类似。
+  新宏 \texttt{\textbackslash}\meta{name} 可带 \meta{number} 个参数，
+  其中 \meta{default} 是第一个可选参数的默认值。
+  \meta{options} 会传递给底层的 \refCom{tcbinputlisting}。
+  \meta{init options} 用于设置自动编号，参见 \zvref{sec:initkeys}。
+
+\begin{dispExample}
+\newtcbinputlisting[use counter from=mycbox]{\mylisting}[2][]{%
+  listing file={#2},
+  title=Listing (\thetcbcounter) of \texttt{#2},
+  colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries,
+  listing only,breakable,#1}
+
+\mylisting[before upper=\textit{This is the included file content:}]
+          {\jobname.tcbtemp}
+\end{dispExample}
+
+\begin{dispExample}
+\newtcbinputlisting[use counter from=mycbox]{\mylisting}[2][]{%
+  listing engine=minted,minted language=latex,minted style=colorful,
+  listing file={#2},
+  title=Listing (\thetcbcounter) of \texttt{#2},
+  colback=red!5!white,colframe=red!75!black,fonttitle=\bfseries,
+  listing only,breakable,#1}
+
+\mylisting[before upper=\textit{This is the included file content:}]
+          {\jobname.tcbtemp}
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}{renewtcbinputlisting}{\oarg{init options}\brackets{\texttt{\textbackslash}\rmfamily\meta{name}}\oarg{number}\oarg{default}\marg{options}}
+  与 \refCom{newtcbinputlisting} 类似，但底层基于 |\renewcommand|
+  而非 |\newcommand|。用于重新定义一个已存在的宏。
+\end{docCommand}
+
+\clearpage
+
+\begin{docCommand}{NewTCBInputListing}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}}
+  基于 \refCom{tcbinputlisting} 创建一个新命令 \texttt{\textbackslash}\meta{name}。
+  基本上，\refCom{NewTCBInputListing} 的工作方式与 |\NewDocumentCommand| 类似。
+  即新命令 \texttt{\textbackslash}\meta{name} 按照 \cite{latexproject:usrguide}
+  中给出的 \LaTeX3 参数 \meta{specification} 构造。
+  若 \texttt{\textbackslash}\meta{name} 已被定义，则会报错。
+  \meta{options} 会传递给底层的 \refCom{tcbinputlisting}。\\
+  \meta{init options} 用于设置自动编号，参见 \zvref{sec:initkeys}。
+
+\begin{dispExample}
+% counter from previous example
+\NewTCBInputListing[use counter from=pabox]{\mylisting}{ O{} O{red} m }{%
+  listing file={#3},title=Listing~\thetcbcounter,
+  colback=#2!5!white,colframe=#2!50!black,colbacktitle=#2!75!black,
+  fonttitle=\bfseries,listing only,#1}
+
+\mylisting[before upper=\textit{This is the included file content:}]
+  [blue]{\jobname.tcbtemp}
+\end{dispExample}
+  \end{docCommand}
+
+\begin{docCommand}{RenewTCBInputListing}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}}
+  与 \refCom{NewTCBInputListing} 类似，但底层基于 |\RenewDocumentCommand|
+  而非 |\NewDocumentCommand|。用于重新定义一个已存在的命令。
+\end{docCommand}
+
+\begin{docCommand}{ProvideTCBInputListing}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}}
+  与 \refCom{NewTCBInputListing} 类似，但底层基于 |\ProvideDocumentCommand|
+  而非 |\NewDocumentCommand|。仅当命令 \texttt{\textbackslash}\meta{name} 尚未定义时才创建它。
+\end{docCommand}
+
+\begin{docCommand}{DeclareTCBInputListing}{\oarg{init options}\brackets{\texttt{\textbackslash}\meta{name}}\marg{specification}\marg{options}}
+  与 \refCom{NewTCBInputListing} 类似，但底层基于 |\DeclareDocumentCommand|
+  而非 |\NewDocumentCommand|。无论是否已存在同名命令，都会创建新命令。
+\end{docCommand}
+
+
+
+\clearpage
+\subsection{\mylib{listings} 程序库的选项键}\label{sec:speclistingkeys}
+
+\begin{docTcbKey}{listing options}{=\meta{key list}}{无默认值，初始为 |style=tcblatex|}
+  设置排版代码列表时所使用的 \refPkg{listings} \cite{hoffmann:listings} 宏包选项。
+  对于 \LaTeX\ 列表，有一个预定义的 |listings| 样式 |tcblatex| 可供使用。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!25,left=6mm,
+listing options={style=tcblatex,numbers=left,numberstyle=\tiny\color{red!75!black}}}
+This is a \LaTeX\ example which displays the text as source code
+and in compiled form. Additionally, we use line numbers here.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{no listing options}{}{无取值，初始未设置}
+  是 |listing options={}| 的简写。
+  这会移除 \refPkg{listings} 宏包的所有选项，
+  包括 \refEnv{tcblisting} 的标准样式 |tcblatex| 以及编码预设。
+  如果你想在 \refEnv{tcblisting} 之外设置 |listings| 选项
+  （例如在导言区中全局设置），请使用本选项。
+\begin{dispExample}
+\begin{tcblisting}{no listing options}
+All \textit{listings} options removed.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{listing style}{=\meta{style}}{无默认值，初始为 |tcblatex|}
+  是 |listing options={style=...}| 的简写。本键为 \refPkg{listings} 宏包
+  设置一个 \meta{style}，参见 \cite{hoffmann:listings}。
+  对于 \LaTeX，有一个预定义样式 |tcblatex|。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,
+listing style=tcblatex}
+Here, we use the predefined style.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}{listing inputencoding}{=\meta{encoding}}{无默认值，初始为 \texttt{\cs inputencodingname}}
+  为预定义列表样式 |tcblatex| 以及 \mylib{documentation} 程序库中的
+  |tcbdocumentation| 设置输入编码值。
+  若使用了 \refPkg{inputenc} 宏包，则初始值由该宏包推导得出。
+\end{docTcbKey}
+
+\begin{docTcbKey}{listing remove caption}{\colOpt{=true\textbar false}}{默认 |true|，初始 |true|}
+若设为 |true|，会屏蔽 \refPkg{listings} 宏包中部分标题生成代码，
+以避免与 \refPkg{hyperref} 宏包产生不期望的交互而多出垂直间距。
+若设为 |false|，则保持 \refPkg{listings} 宏包代码不变。
+注意，\refEnv{tcblisting} 和 \refCom{tcbinputlisting} 之外的列表
+始终按正常方式处理。通常用户根本不需要使用本键。
+\end{docTcbKey}
+
+\begin{docTcbKey}{every listing line}{=\meta{text}}{无默认值，初始未设置/为空}
+在列表每一行的开头插入一段 \meta{text}。
+注意，这是对 \refPkg{listings} 宏包代码的一种 hack，
+将来可能失效或变得多余。
+\begin{dispExample}
+\newtcblisting{commandshell}{colback=black,colupper=white,colframe=yellow!75!black,
+  listing only,listing options={style=tcblatex,language=sh},
+  every listing line={\textcolor{red}{\small\ttfamily\bfseries root \$> }}}
+
+\begin{commandshell}
+ls -al
+cd /usr/lib
+\end{commandshell}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{every listing line*}{=\meta{text}}{无默认值，初始未设置/为空}
+与 \refKey{/tcb/every listing line} 相同，此外还会按 \meta{text} 的宽度
+增加 \refKey{/tcb/rightupper}。因此本选项必须在几何设置完成之后使用。
+本选项宜与 \refKey{/tcb/hbox} 配合使用。
+
+\begin{dispExample}
+\newtcblisting{commandshell}{colback=black,colupper=white,colframe=yellow!75!black,
+  listing only,listing options={style=tcblatex,language=sh},hbox,
+  every listing line*={\textcolor{red}{\small\ttfamily\bfseries root \$> }}}
+
+\begin{commandshell}
+ls -al
+cd /usr/lib
+\end{commandshell}
+\end{dispExample}
+\end{docTcbKey}
+
+其他选项参见 \zvref{sec:commonlistingkeys}。
+
+\begin{marker}
+关于在 \refEnv{tcolorbox} 内使用 |\lstinline| 的组合示例，
+参见 \refCom{DeclareTotalTCBox}。
+\end{marker}
+
+\clearpage
+\subsection{\mylib{listingsutf8} 程序库的选项键}
+\begin{marker}
+使用 Xe\LaTeX\ 或 Lua\LaTeX\ 时不需要 \mylib{listingsutf8} 程序库
+（反而会带来麻烦）。因此，当\emph{不}使用 pdf\LaTeX\ 时，
+加载本程序库会被自动替换为仅加载 \mylib{listings}。
+\end{marker}
+
+\mylib{listingsutf8} 程序库是 \mylib{listings} 程序库的扩展，
+因此 \zvref{sec:speclistingkeys} 中的所有选项都适用。
+
+\begin{docTcbKey}{listing utf8}{=\meta{one-byte-encoding}}{样式，无默认值，初始为 |latin1|}
+  是同时使用 \refKey{/tcb/listing inputencoding}
+  与 \refPkg{listingsutf8} \cite{oberdiek:listingsutf8} 宏包 UTF-8 支持的简写。
+  本选项仅对程序库变体 \mylib{listingsutf8} 可用。
+  \meta{one-byte-encoding} 取自 \cite{oberdiek:listingsutf8} 中适用的编码之一，
+  例如默认的 |latin1|。\par
+  请注意，这意味着被限制在该特定的 \meta{one-byte-encoding} 上：
+  例如 |latin1| 包含变音符号和其他重音字符，但不包含欧元符号。
+  如果你既想使用 \refPkg{listings} 宏包，又想要\flqq 真正的\frqq\
+  UTF-8 源代码，那么请\emph{不要}使用 \mylib{listingsutf8}，
+  而应使用 \mylib{listings} 并设置
+  \refKey{/tcb/listing inputencoding}|=utf8|，
+  \emph{同时}针对特定的 UTF-8 编码字符手动做相应处理。
+
+\end{docTcbKey}
+
+其他选项参见 \zvref{sec:commonlistingkeys}。
+
+\clearpage
+\subsection{\mylib{minted} 程序库的选项键}
+
+\begin{docTcbKey}{minted language}{=\meta{programming language}}{无默认值，初始为 |latex|}
+设置 |Pygments| \cite{pygments:web} 可识别的 \meta{programming language}。
+\begin{dispExample}
+\begin{tcblisting}{listing engine=minted,minted style=trac,
+  minted language=java,
+  colback=red!5!white,colframe=red!75!black,listing only}
+    public class HelloWorld {
+      // A `Hello World' in Java
+      public static void main(String[] args) {
+        System.out.println("Hello World!");
+      }
+    }
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc updated={2021-12-15}]{minted options}{=\meta{key list}}{无默认值，初始
+    \linebreak 见 \refKey{/tcb/default minted options}}
+  设置排版代码列表时所使用的 \refPkg{minted} \cite{poore:minted} 宏包选项。
+  另见 \refKey{/tcb/minted options app} 与 \refKey{/tcb/minted options pre}。
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\newtcblisting{myjava}{listing engine=minted,
+  minted style=colorful,
+  minted language=java,
+  minted options={fontsize=\small,breaklines,autogobble,linenos,numbersep=3mm},
+  colback=blue!5!white,colframe=blue!75!black,listing only,
+  left=5mm,enhanced,
+  overlay={\begin{tcbclipinterior}\fill[red!20!blue!20!white] (frame.south west)
+    rectangle ([xshift=5mm]frame.north west);\end{tcbclipinterior}}}
+
+\begin{myjava}
+  public class HelloWorld {
+    // A `Hello World' in Java
+    public static void main(String[] args) {
+      System.out.println("Hello World!");
+    }
+  }
+\end{myjava}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}[][doc new={2021-12-15}]{default minted options}{=\meta{key list}}{无默认值，初始
+    |tabsize=2,|\linebreak|fontsize=\textbackslash small,breaklines,autogobble|}
+  设置当\emph{未}使用 \refKey{/tcb/minted options} 时，
+  排版代码列表所使用的 \refPkg{minted} \cite{poore:minted} 宏包选项。
+  其用途是在导言区中更改默认行为。
+  注意，设置 \refKey{/tcb/default minted options} 也会重置 \refKey{/tcb/minted options}。
+  自 |minted| \cite{poore:minted} v2.6 起默认设置了 |stripnl=false|，
+  加入 |stripnl| 可帮助去除首尾空行。
+\begin{dispListing}
+% inside the preamble
+\tcbset{%
+  default minted options={tabsize=4,fontsize=\normalsize},
+}
+\end{dispListing}
+\end{docTcbKey}
+
+
+
+\begin{docTcbKey}[][doc updated=2024-11-07]{minted style}{=\meta{style}}{无默认值，初始未设置}
+设置 |Pygments| \cite{pygments:web} 可识别的 \meta{style}，
+参见 \url{https://pygments.org/styles/}。
+或者，也可以在 \refKey{/tcb/minted options} 中加入 |style=|\meta{style}。
+注意，若文档中所有样式都相同，则在整个文档中只设置一次
+|\usemintedstyle|\marg{style} 更为经济。
+不同样式的示例参见 \refKey{/tcb/minted language} 与 \refKey{/tcb/minted options}。
+
+\begin{marker}
+在 6.4.1 之前的版本中，\refKey{/tcb/minted style} 会应用
+|\usemintedstyle|\marg{style}，从而造成全局样式改变，
+甚至影响直接使用 \refPkg{minted} 的代码。
+现在，\refKey{/tcb/minted style} 仅作用于 |tcolorbox|。
+\end{marker}
+
+\end{docTcbKey}
+
+其他选项参见 \zvref{sec:commonlistingkeys}。
+
+
+
+\clearpage
+\subsection{各程序库的通用选项键}\label{sec:commonlistingkeys}
+对于 \refEnv{tcblisting} 或 \refCom{tcbinputlisting} 中的 \meta{options}，
+可应用以下 |pgf| 键。在这些宏内部不要使用键树路径 |/tcb/|。
+
+\begin{docTcbKey}{listing engine}{=\meta{engine}}{无默认值}
+  设置用于排版代码列表的 \meta{engine}。可选值为
+  \begin{itemize}
+  \item\docValue{listings}：加载了 \mylib{listings} 或 \mylib{listingsutf8} 程序库时；
+  \item\docValue{minted}：加载了 \mylib{minted} 程序库时。
+  \end{itemize}
+\end{docTcbKey}
+
+\begin{docTcbKey}{listing file}{=\meta{file name}}{无默认值，初始为 \cs{jobname.listing}}
+  设置用于保存代码列表的文件名 \meta{file name}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{listing and text}{}{无取值，初始已设置}
+  将环境内容在上部作为代码列表排版，在下部作为编译后的文本排版。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing and text}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{text and listing}{}{无取值}
+  将环境内容在上部作为编译后的文本排版，在下部作为代码列表排版。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,text and listing}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{listing only}{}{无取值}
+  将环境内容作为代码列表排版。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing only}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}{text only}{}{无取值}
+  将环境内容作为编译后的文本排版。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,text only}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+
+\begin{docTcbKey}{comment}{=\meta{text}}{无默认值，初始为空}
+  记录一段以 \meta{text} 为内容的注释。该注释会显示出来，
+  例如配合 \refKey{/tcb/listing and comment} 与 \refKey{/tcb/comment and listing} 使用。
+\begin{dispExample}
+\begin{tcblisting}{comment={This comment is really only a comment},
+  colback=red!5!white,colframe=red!75!black}
+This is a \textbf{tcolorbox}.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-17]{comment only}{}{无取值}
+  用注释文本排版环境内容。
+\begin{dispExample}
+\begin{tcblisting}{comment only,
+  comment={This is a comment.},
+  colback=red!5!white,colframe=red!75!black}
+This is a \textbf{tcolorbox}.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+
+\begin{docTcbKey}{image comment}{=\marg{options}\marg{filename}}{样式，无默认值，初始未设置}
+  以 \meta{filename} 指定的图片作为代码列表的\textit{注释}。
+  该图片通过标准宏 |\includegraphics| 以给定的 \meta{options} 插入。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing side comment,
+  image comment={width=2.5cm}{example-image-a.pdf},center lower}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}[][doc new=2014-11-14]{tcbimage comment}{=\meta{filename}}{样式，无默认值，初始未设置}
+  以 \meta{filename} 指定的图片作为代码列表的\textit{注释}。
+  该图片通过 \refCom{tcbincludegraphics} 宏插入。
+  插入方式可通过 \refKey{/tcb/comment style} 定制。
+  \begin{marker}
+  应用本选项需要 \mylib{skins} 程序库。
+  \end{marker}
+  \medskip
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing side comment,
+  righthand width=3cm,lower separated=false,
+  tcbimage comment={example-image-a.pdf},
+  comment style={size=fbox,colframe=blue,colback=blue!50,sharp corners,
+    drop fuzzy shadow}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2014-11-14]{pdf comment}{\colOpt{=\meta{filename}}}{样式，默认为列表文件，初始未设置}
+  以 \meta{filename} 指定的 PDF 文件作为代码列表的\textit{注释}。
+  该 PDF 通过 \refCom{tcbincludepdf} 在一个 \refEnv{tcbraster} 中插入。
+  插入方式可通过 \refKey{/tcb/comment style} 定制。
+  \begin{marker}
+  应用本选项需要 \mylib{skins} 与 \mylib{raster} 程序库。
+  \end{marker}
+  \medskip
+\begin{dispExample}
+% \tcbuselibrary{skins,raster}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing and comment,
+  righthand width=3cm,lower separated=false,middle=1mm,
+  pdf comment={tcolorbox-example.pdf},
+  comment style={raster columns=3,graphics pages={1,2,3},
+    colframe=blue,drop fuzzy shadow}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+
+
+\begin{docTcbKey}[][doc new=2014-11-14]{pdf extension}{=\meta{extension}}{无默认值，初始为 |pdf|}
+  将 \refKey{/tcb/pdf comment} 的 PDF 文件扩展名设为 \meta{extension}。
+  注意，\meta{extension} 总会覆盖在 \refKey{/tcb/pdf comment} 中
+  实际给出的扩展名。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-14]{comment style}{=\meta{options}}{无默认值，初始为空}
+  为 \refKey{/tcb/tcbimage comment} 和 \refKey{/tcb/pdf comment} 设置 \meta{options}。
+  这些是用于定制图片周围彩色文本框的 \refEnv{tcolorbox} 选项，
+  也包括由 \refKey{/tcb/graphics options} 封装的图片选项，
+  以及用于 \refKey{/tcb/pdf comment} 的 \refEnv{tcbraster} 选项。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{listing and comment}{}{无取值}
+  将环境内容在上部作为代码列表排版，在下部显示给定的注释。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing and comment,
+  comment={This is my comment. It may contain line breaks.\par
+    It can even use the environment content
+    \flqq\ignorespaces\tcbuselistingtext\unskip\frqq}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+\enlargethispage*{10mm}
+\begin{docTcbKey}{comment and listing}{}{无取值}
+  在上部显示给定的注释，在下部将环境内容作为代码列表排版。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,comment and listing,
+comment={This is my comment.}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}{listing side text}{}{样式，无取值}
+将环境内容并排排版：左侧（上部）作为代码列表，右侧（下部）作为编译后的文本。
+这是同时设置 \refKey{/tcb/listing and text} 与 \refKey{/tcb/sidebyside} 的简写。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing side text}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\begin{marker}
+注意，若要取消 \refKey{/tcb/listing side text} 的设置，
+必须额外加入 |sidebyside=false|。
+\end{marker}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{text side listing}{}{样式，无取值}
+将环境内容并排排版：左侧（上部）作为编译后的文本，右侧（下部）作为代码列表。
+这是同时设置 \refKey{/tcb/text and listing} 与 \refKey{/tcb/sidebyside} 的简写。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,text side listing}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{listing outside text}{}{无取值}
+将环境内容并排排版：在 \refEnv{tcolorbox} 内作为代码列表，
+在框外页面右侧作为编译后的文本。
+尽管如此，框外文本仍被视为该 \refEnv{tcolorbox} 的\emph{下部}，
+可用所有下部选项进行格式化。
+空间划分通过 \zvref{sec:sidebyside} 中的并排选项完成。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing outside text}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}{text outside listing}{}{无取值}
+将环境内容并排排版：在 \refEnv{tcolorbox} 内作为代码列表，
+在框外页面左侧作为编译后的文本。
+尽管如此，框外文本仍被视为该 \refEnv{tcolorbox} 的\emph{下部}，
+可用所有下部选项进行格式化。
+空间划分通过 \zvref{sec:sidebyside} 中的并排选项完成。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,text outside listing}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+
+\begin{docTcbKey}{listing side comment}{}{样式，无取值}
+将环境内容并排排版：左侧（上部）作为代码列表，右侧（下部）显示给定的注释。
+这是同时设置 \refKey{/tcb/listing and comment} 与 \refKey{/tcb/sidebyside} 的简写。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing side comment,
+  righthand width=1.5cm,image comment={width=1.5cm}{example-image-a.pdf}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{comment side listing}{}{样式，无取值}
+将环境内容并排排版：左侧（上部）显示给定的注释，右侧（下部）作为代码列表。
+这是同时设置 \refKey{/tcb/comment and listing} 与 \refKey{/tcb/sidebyside} 的简写。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,comment side listing,
+  lefthand width=1.5cm,image comment={width=1.5cm}{example-image-a.pdf}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}{listing outside comment}{}{无取值}
+将环境内容并排排版：在 \refEnv{tcolorbox} 内作为代码列表，
+在框外页面右侧显示给定的注释。
+尽管如此，框外文本仍被视为该 \refEnv{tcolorbox} 的\emph{下部}，
+可用所有下部选项进行格式化。
+空间划分通过 \zvref{sec:sidebyside} 中的并排选项完成。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing outside comment,
+  righthand width=1.5cm,image comment={width=1.5cm}{example-image-a.pdf}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{comment outside listing}{}{无取值}
+将环境内容并排排版：在 \refEnv{tcolorbox} 内作为代码列表，
+在框外页面左侧显示给定的注释。
+尽管如此，框外文本仍被视为该 \refEnv{tcolorbox} 的\emph{下部}，
+可用所有下部选项进行格式化。
+空间划分通过 \zvref{sec:sidebyside} 中的并排选项完成。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,comment outside listing,
+  lefthand width=1.5cm,image comment={width=1.5cm}{example-image-a.pdf}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+
+\begin{docTcbKey}{listing above text}{}{无取值}
+  将环境内容在 \refEnv{tcolorbox} 内作为代码列表排版，
+  并在框外下方作为编译后的文本排版。
+  框外文本被视为该 \refEnv{tcolorbox} 的\emph{下部}，
+  可用所有下部选项进行格式化。
+  框与文本之间的距离由 \refKey{/tcb/middle} 控制。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing above text}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-07]{listing above* text}{}{无取值}
+  与 \refKey{/tcb/listing above text} 大致相同，但框外文本
+  不使用下部选项进行格式化。此外，它不被放入 minipage，
+  可以跨越多页。框与文本之间的距离由 \refKey{/tcb/after} 控制。
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}{text above listing}{}{无取值}
+  将环境内容在 \refEnv{tcolorbox} 内作为代码列表排版，
+  并在框外上方作为编译后的文本排版。
+  框外文本被视为该 \refEnv{tcolorbox} 的\emph{下部}，
+  可用所有下部选项进行格式化。
+  框与文本之间的距离由 \refKey{/tcb/middle} 控制。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,text above listing}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-07]{text above* listing}{}{无取值}
+  与 \refKey{/tcb/text above listing} 大致相同，但框外文本
+  不使用下部选项进行格式化。此外，它不被放入 minipage，
+  可以跨越多页。框与文本之间的距离由 \refKey{/tcb/before} 控制。
+\end{docTcbKey}
+
+
+
+\begin{docTcbKey}{listing above comment}{}{无取值}
+  将环境内容在 \refEnv{tcolorbox} 内作为代码列表排版，
+  并在框外下方显示给定的注释。
+  框外文本被视为该 \refEnv{tcolorbox} 的\emph{下部}，
+  可用所有下部选项进行格式化。
+  框与注释之间的距离由 \refKey{/tcb/middle} 控制。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,listing above comment,
+  center lower,image comment={width=3cm}{example-image-a.pdf}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-07]{listing above* comment}{}{无取值}
+  与 \refKey{/tcb/listing above comment} 大致相同，但框外注释
+  不使用下部选项进行格式化。此外，它不被放入 minipage，
+  可以跨越多页。框与注释之间的距离由 \refKey{/tcb/after} 控制。
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}{comment above listing}{}{无取值}
+  将环境内容在 \refEnv{tcolorbox} 内作为代码列表排版，
+  并在框外上方显示给定的注释。
+  框外文本被视为该 \refEnv{tcolorbox} 的\emph{下部}，
+  可用所有下部选项进行格式化。
+  框与注释之间的距离由 \refKey{/tcb/middle} 控制。
+\begin{dispExample}
+\begin{tcblisting}{colback=red!5!white,colframe=red!75!black,comment above listing,
+  center lower,image comment={width=3cm}{example-image-a.pdf}}
+This is a \LaTeX\ example.
+\end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-07]{comment above* listing}{}{无取值}
+  与 \refKey{/tcb/comment above listing} 大致相同，但框外注释
+  不使用下部选项进行格式化。此外，它不被放入 minipage，
+  可以跨越多页。框与注释之间的距离由 \refKey{/tcb/before} 控制。
+\end{docTcbKey}
+
+
+\clearpage
+\subsection{用于处理和完整文档示例的选项键}\label{sec:proclistingkeys}
+包含 |\documentclass|、|\begin{document}| 和 |\end{document}| 的完整
+\LaTeX\ 文档无法由 \refEnv{tcolorbox} 直接处理，必须单独编译。
+本宏包支持两种方法来处理并展示这样的完整文档示例：
+\begin{itemize}
+\item 与主文档相互独立地准备并编译示例文档。
+  之后可把源文件和生成的 PDF 文件一起插入主文档。
+  这是最经济的方式，因为示例完成后示例文档便无需再改动。
+\item 另一种方式是在编译主文档的同时即时编译示例。
+  这种方式有其魅力，因为可以在主文档内直接编辑示例。
+  但要注意，主文档每编译一次，示例都会被重新编译。
+  此外，示例编译方式的自由度也较小。
+\end{itemize}
+
+对于这两种方法，生成的示例 PDF 文件都可作为
+\refKey{/tcb/pdf comment} 插入。
+
+下面的示例说明第一种方法的用法。
+假定已有文件 |tcolorbox-example.tex| 和 PDF 文件 |tcolorbox-example.pdf|。
+下面的代码分别部分引用这两个文件：
+
+\begin{dispListing}
+% \tcbuselibrary{breakable,skins,raster}
+\tcbinputlisting{
+  enhanced jigsaw,breakable,pad at break*=2mm,height fixed for=first and middle,
+  lower separated=false,
+  leftlower=0pt,rightlower=0pt,middle=0pt,
+  colframe=red!50!black,colback=yellow!10!white,
+  listing and comment,
+  listing file={tcolorbox-example},
+  listing options=
+    {style=tcblatex,texcsstyle=*\color{red!70!black},firstline=20,lastline=85},
+  after upper={\par\bigskip\texttt{\ldots}\par},
+  pdf comment,
+  comment style={drop lifted shadow,graphics pages={1,...,4}},
+}
+\end{dispListing}
+{\tcbusetemp}
+
+
+\clearpage
+
+
+\begin{docTcbKey}[][doc new=2014-11-14]{no process}{}{无默认值}
+  若此前设置过处理命令，本选项将其全部移除。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{process code}{=\meta{code}}{无默认值，初始为空}
+  加入在 \refCom{tcbinputlisting} 和 \refEnv{tcblisting} 期间执行的 \meta{code}。
+  执行所给 \meta{code} 时，代码列表已经写入 \refKey{/tcb/listing file}，
+  但彩色文本框尚未构造。
+  其用途是在显示之前对代码列表做某种处理。
+  处理结果可在 \refKey{/tcb/comment} 中使用。
+  可给出多个 \refKey{/tcb/process code} 选项，按给定顺序依次处理。
+  通常，\meta{code} 通过以下样式加入：
+  \refKey{/tcb/run system command}、\refKey{/tcb/run pdflatex} 等。
+\end{docTcbKey}
+
+\begin{marker}
+要使用后续选项，必须以 |-shell-escape| 权限调用编译器，
+以授权可能有危险的系统调用。请注意这是一个安全风险。
+无论如何，更稳妥的做法是让示例独立于主文档编译，
+然后如前几页所示那样插入主文档。
+\end{marker}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run system command}{=\meta{system command}}{样式，无默认值，初始未设置}
+若文档以 |-shell-escape| 权限编译，则运行 \meta{system command}。
+当前代码列表文件可通过 |\filename@area\filename@base\filename@ext| 访问。
+该 \meta{system command} 会被加入 \refKey{/tcb/process code}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new and updated={2014-11-14}{2016-05-27}]{compilable listing}{}{样式，无默认值}
+  将 \refKey{/tcb/listing file} 设为 |\jobname|\texttt{-listing-}\meta{counter}。
+  \begin{marker}
+  默认的 \refKey{/tcb/listing file} 设置不能用于编译代码列表，
+  因为其基名与 |\jobname| 相同，而插入的 PDF 文件应当唯一。
+  因此，要使用 \refKey{/tcb/run pdflatex} 等，
+  必须把 \refKey{/tcb/listing file} 设为唯一值。
+  可为此使用 \refKey{/tcb/compilable listing}。
+  \end{marker}
+\end{docTcbKey}
+
+\enlargethispage*{5mm}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run pdflatex}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |pdflatex| 编译。
+\begin{itemize}
+\item 主文档必须以 |-shell-escape| 权限编译。
+\item 代码列表的 \refKey{/tcb/listing file} 必须唯一。
+\item 若代码列表需要编译两遍，在选项列表中加入两次 |run pdflatex|。
+\end{itemize}
+
+\begin{dispListing*}{breakable,enhanced,pad at break*=2mm,before upper=,after skip=3mm}
+\begin{tcblisting}{enhanced jigsaw,lower separated=false,
+  leftlower=0pt,rightlower=0pt,
+  colframe=red!50!black,colback=yellow!10!white,
+  listing options={style=tcblatex,texcsstyle=*\color{red!70!black}},
+  listing and comment,
+  pdf comment,freeze pdf,
+  compilable listing,
+  run pdflatex
+}
+\documentclass{beamer}
+\usetheme{Warsaw}
+\begin{document}
+\begin{frame}{Beamer example}
+  \begin{block}{Hello World}
+    \begin{itemize}[<+->]
+      \item One
+      \item Two
+    \end{itemize}
+  \end{block}
+
+  \begin{alertblock}{Integral}
+    \begin{equation}
+      \visible<3->{\int\limits_1^x \frac{1}{t}~dt}
+      \visible<4->{ = \ln(x).}
+    \end{equation}
+  \end{alertblock}
+\end{frame}
+\end{document}
+\end{tcblisting}
+\end{dispListing*}
+{\tcbusetemp}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}[][doc new=2025-05-20]{run pdflatex-dev}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |pdflatex-dev| 编译。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run xelatex}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |xelatex| 编译。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2025-05-20]{run xelatex-dev}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |xelatex-dev| 编译。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run lualatex}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |lualatex| 编译。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2025-05-20]{run lualatex-dev}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |lualatex-dev| 编译。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run makeindex}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |makeindex| 编译。
+更多信息参见 \refPkg{makeindex} 文档。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run bibtex}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |bibtex| 编译。
+更多信息参见 \refPkg{bibtex} 文档。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run biber}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |biber| 编译。
+更多信息参见 \refPkg{biber} 文档。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run arara}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |arara| 编译。
+更多信息参见 \refPkg{arara} 文档。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2025-05-20]{run latexmk}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |latexmk| 编译。
+更多信息参见 \refPkg{latexmk} 文档。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run latex}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |latex| 编译。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2025-05-20]{run latex-dev}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |latex-dev| 编译。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{run dvips}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |dvips| 编译。
+更多信息参见 \refPkg{dvips} 文档。
+\end{docTcbKey}
+
+\clearpage
+\begin{docTcbKey}[][doc new=2014-11-14]{run ps2pdf}{\colOpt{=\meta{arguments}}}{样式，无默认值，初始未设置}
+以给定的 \meta{arguments} 对代码列表执行 |ps2pdf| 编译。
+\end{docTcbKey}
+
+\begin{dispListing*}{breakable,enhanced,pad at break*=2mm,before upper=,after skip=3mm}
+\begin{tcblisting}{enhanced jigsaw,
+  title={PSTricks with pdflatex},fonttitle=\bfseries,
+  colframe=red!50!black,colback=yellow!10!white,
+  listing options={style=tcblatex,texcsstyle=*\color{red!70!black}},
+  lower separated=false,middle=0pt,
+  listing side comment,righthand width=4cm,
+  compilable listing,
+  run latex,run dvips,run ps2pdf,
+  pdf comment,freeze pdf,
+  comment style={raster columns=1,
+    graphics options={viewport=0.5in 7.7in 3.5in 10.5in,clip}},
+}
+\documentclass{article}
+\usepackage{pstricks,multido}
+\begin{document}
+\psset{unit=3}%
+\multido{\nHue=0.01+0.01}{100}{%
+\definecolor{MyColor}{hsb}{\nHue,1,1}%
+\pscircle[linewidth=0.01,linecolor=MyColor]{\nHue}}
+\end{document}
+\end{tcblisting}
+\end{dispListing*}
+{\tcbusetemp}
+
+\clearpage
+
+\begin{marker}
+  对于大多数应用，建议把 \refKey{/tcb/freeze pdf} 作为选项加入，
+  因为只有当所插入 |pdf| 文件的源文件发生变化时，才会刷新该文件。
+\end{marker}
+
+\begin{docTcbKey}[][doc new=2016-07-14]{freeze file}{=\meta{file}}{无默认值，初始未设置}
+  监视某个 \meta{file}，通常是由 \refKey{/tcb/process code}、
+  \refKey{/tcb/run system command}、\refKey{/tcb/run pdflatex} 等产生的最终文件。
+  若当前 \refKey{/tcb/listing file} 的 MD5 校验和未改变
+  且 \meta{file} 已存在，则跳过处理，保留（冻结）该 \meta{file}。
+  通常可方便地使用样式 \refKey{/tcb/freeze pdf}。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2016-07-14]{freeze none}{}{无默认值，初始已设置}
+  不冻结任何文件，始终执行给定的处理命令。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2016-07-14]{freeze extension}{=\meta{text}}{样式，无默认值}
+  以当前 \refKey{/tcb/listing file} 去掉扩展名后再加上 \meta{text}
+  作为新扩展名，调用 \refKey{/tcb/freeze file}。
+\begin{dispListing}
+  ...
+  listing file=myfile.tex,
+  freeze extension=-modified.pdf,    % ->   myfile-modified.pdf   is observed
+  ...
+\end{dispListing}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2016-07-14]{freeze pdf}{}{无取值}
+  以当前 \refKey{/tcb/listing file} 去掉扩展名后再加上 |.pdf|
+  作为新扩展名，调用 \refKey{/tcb/freeze file}。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2016-07-14]{freeze png}{}{无取值}
+  以当前 \refKey{/tcb/listing file} 去掉扩展名后再加上 |.png|
+  作为新扩展名，调用 \refKey{/tcb/freeze file}。
+  示例参见 \refKey{/tcb/run pdflatex} 与 \refKey{/tcb/run ps2pdf}。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2016-07-14]{freeze jpg}{}{无取值}
+  以当前 \refKey{/tcb/listing file} 去掉扩展名后再加上 |.jpg|
+  作为新扩展名，调用 \refKey{/tcb/freeze file}。
+\end{docTcbKey}
+
+
+
+
+\clearpage
+\subsection{创建 \LaTeX\ 教程}\label{sec:latextutorial}
+下面的源代码给出了创建 \LaTeX\ 教程的一个范例。
+下一节将描述 \LaTeX\ 练习的框架。
+所有示例都可以选择是否编号。
+
+首先，为外观定义一些额外的 |tcb| 键。
+为示例定义三个自动编号的环境：
+|texexp|、|texexptitled| 和 |texexptitledspec|。
+
+\begin{itemize}
+\item |texexp| 用于无标题示例；
+\item |texexptitled| 用于带标题的示例；
+\item |texexptitledspec| 用于需要特殊处理的带标题示例。
+\end{itemize}
+
+\inputpreamblelisting{D}
+
+\begin{dispExample}
+\begin{tcblisting}{texexp}
+This is a \LaTeX\ example which displays the text as source code
+and in compiled form.
+\end{tcblisting}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexptitled}{First example with a title line}{firstExample}
+Here, we use Example \ref{firstExample} with a title line.
+\end{texexptitled}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexp}{}
+This is a \LaTeX\ example which displays the text as source code
+and in compiled form.
+\end{texexp}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexp}{text and listing}
+This is a \LaTeX\ example which displays the text as source code
+and in compiled form.
+\end{texexp}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexp}{listing only}
+This is a \LaTeX\ example which displays the text as source code only.
+\end{texexp}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexp}{text only}
+This is a \LaTeX\ example which displays the text in compiled form only.
+\end{texexp}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexptitled}{An Example with a Heading}{heading1}
+This is a \LaTeX\ example with a numbered heading line
+which can be referred to.
+\end{texexptitled}
+Here, we see Example \ref{heading1}.
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexptitled}[listing only]{Another Example with a Heading}{heading2}
+The keys can be used in combination. Here, an example with a heading line
+and source code only is given.
+\end{texexptitled}
+Here, we see Example \ref{heading2}.
+\end{dispExample}
+
+
+\begin{dispListing}
+\begin{texexptitled}[float]{A floating Example with a Heading}{heading3}
+This is another \LaTeX\ example with numbered heading line.
+But now, the box is a floating object.
+\end{texexptitled}
+\end{dispListing}
+\tcbusetemp
+
+\begin{dispExample}
+The floating box of the last example is seen as Example \ref{heading3}
+on page \pageref{heading3}.
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexptitledspec}{Special application}{texexpbox1}
+\begin{lstlisting}[style=tcblatex]
+Some \LaTeX\ source code.
+\end{lstlisting}
+\tcblower
+For special cases, the environment |texexptitledspec| with style
+|example| can be used directly. As one can see, the upper and the lower
+part of the box can be used uncoupled also.
+\end{texexptitledspec}
+\end{dispExample}
+
+
+下面这一系列示例展示如何运用 \refEnv{tcolorbox} 选项来做出各种变化。
+
+\begin{dispExample}
+\begin{texexptitled}{How to use options (1):\par The basic example}{options1}
+\begin{tikzpicture}
+\path[fill=yellow!50!white] (0,0) circle (11mm);
+\path[fill=white] (0,0) circle (9mm);
+\foreach \w/\c in {90/red,210/green,330/blue}
+{\path[shading=ball,ball color=\c] (\w:1cm) circle (7mm);}
+\end{tikzpicture}
+\end{texexptitled}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexptitled}[center lower,enhanced,segmentation hidden,middle=0mm]
+  {How to use options (2):\par The text output is centered and the
+    segmentation line has vanished.}{options2}
+\begin{tikzpicture}
+\path[fill=yellow!50!white] (0,0) circle (11mm);
+\path[fill=white] (0,0) circle (9mm);
+\foreach \w/\c in {90/red,210/green,330/blue}
+{\path[shading=ball,ball color=\c] (\w:1cm) circle (7mm);}
+\end{tikzpicture}
+\end{texexptitled}
+\end{dispExample}
+
+\begin{dispExample}
+\begin{texexptitled}[tikz lower,bicolor,colbacklower=white]
+  {How to use options (3):\par Here, the |tikzpicture| is totally hidden.
+    The |bicolor| skin highlights the output.}{options3}
+\path[fill=yellow!50!white] (0,0) circle (11mm);
+\path[fill=white] (0,0) circle (9mm);
+\foreach \w/\c in {90/red,210/green,330/blue}
+{\path[shading=ball,ball color=\c] (\w:1cm) circle (7mm);}
+\end{texexptitled}
+\end{dispExample}
+
+\begin{dispExample}
+\begin{texexptitled}[center lower,listing side text,righthand width=3.5cm,
+  bicolor,colbacklower=white]
+  {How to use options (4):\par The |bicolor| skin also works with side
+   by side mode}{options4}
+\begin{tikzpicture}
+\path[fill=yellow!50!white] (0,0) circle (11mm);
+\path[fill=white] (0,0) circle (9mm);
+\foreach \w/\c in {90/red,210/green,330/blue}
+{\path[shading=ball,ball color=\c]
+    (\w:1cm) circle (7mm);}
+\end{tikzpicture}
+\end{texexptitled}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexptitled}[center lower,listing outside text,righthand width=3.5cm]
+  {How to use options (5):\par Putting our picture outside is just
+    a matter of one word.}{options5}
+\begin{tikzpicture}
+\path[fill=yellow!50!white] (0,0) circle (11mm);
+\path[fill=white] (0,0) circle (9mm);
+\foreach \w/\c in {90/red,210/green,330/blue}
+{\path[shading=ball,ball color=\c]
+    (\w:1cm) circle (7mm);}
+\end{tikzpicture}
+\end{texexptitled}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexptitled}[center lower,text above listing]
+  {How to use options (6):\par The picture may also be put above
+    the listing box.}{options6}
+\begin{tikzpicture}
+\path[fill=yellow!50!white] (0,0) circle (11mm);
+\path[fill=white] (0,0) circle (9mm);
+\foreach \w/\c in {90/red,210/green,330/blue}
+{\path[shading=ball,ball color=\c]
+    (\w:1cm) circle (7mm);}
+\end{tikzpicture}
+\end{texexptitled}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texexptitled}[beamer,center lower,text outside listing,lefthand width=3.5cm]
+  {How to use options (7):\par Our style is easily transformed into
+    a beamerish one.}{options7}
+\begin{tikzpicture}
+\path[fill=yellow!50!white] (0,0) circle (11mm);
+\path[fill=white] (0,0) circle (9mm);
+\foreach \w/\c in {90/red,210/green,330/blue}
+{\path[shading=ball,ball color=\c]
+    (\w:1cm) circle (7mm);}
+\end{tikzpicture}
+\end{texexptitled}
+\end{dispExample}
+
+
+\clearpage
+\subsection{创建 \LaTeX\ 练习}\label{listing:exercises}
+下面给出创建带解答的 \LaTeX\ 练习的一个范例。
+这些解答会保存到磁盘，供在你选定的位置使用。
+为此，所有用到的练习都会被记录到文件 |\jobname.records| 中以便自动处理，
+而解答内容本身则保存到名为 |solutions| 的子目录中。
+另见 \zvref{sec:recording}。
+
+\begin{itemize}
+\item 在给出第一道练习之前，须调用 \refCom{tcbstartrecording} 开始记录。
+\item 解答作为 \refEnv{tcboutputlisting} 环境的内容给出。
+  注意，在练习内部也可以通过 \refCom{tcbuselistingtext}
+  以编译后的形式使用该内容。
+\item 在给出最后一道练习之后（且在使用解答之前），
+  须调用 \refCom{tcbstoprecording} 停止记录。
+\item 解答通过 \refCom{tcbinputrecords} 载入。
+\end{itemize}
+
+在练习文本中，可能有些文字既需要作为 \LaTeX\ 源代码、
+又需要作为编译后的文本出现。这些部分可用 \refEnv{tcbwritetemp} 保存，
+再由 \refCom{tcbusetemp} 以编译形式使用，
+或由 \refCom{tcbusetemplisting} 以源代码形式使用。
+
+首先，我们为练习和解答建立一个共同样式。
+此外，由于练习和解答需要编号，我们强制使用一个标签 \meta{marker}。
+自动地，用标签 |exe:|\meta{marker} 标记练习，
+用标签 |sol:|\meta{marker} 标记解答。
+
+\begin{dispListing}
+\tcbset{texercisestyle/.style={arc=0.5mm, colframe=blue!25!yellow!90!white,
+  colback=blue!25!yellow!5!white, coltitle=blue!25!yellow!40!black,
+  fonttitle=\small\sffamily\bfseries, fontupper=\small, fontlower=\small,
+  listing options={style=tcblatex,texcsstyle=*\color{red!40!black}},
+}}
+\end{dispListing}
+\tcbusetemp
+
+有了这些准备，我们很快就能创建练习所用的核心环境 |texercise|：
+
+\inputpreamblelisting{E}
+
+\clearpage
+下面的示例演示其用法。
+
+\begin{dispListing}
+\tcbstartrecording
+\end{dispListing}
+\tcbusetemp
+
+
+\begin{dispExample}
+\begin{texercise}{tabular_example}
+\textit{Create the following table:}\par\smallskip%
+\begin{tcboutputlisting}
+\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{3cm}|}\hline
+\multicolumn{4}{|c|}{\bfseries\itshape Das alte Italien}\\\hline
+\multicolumn{2}{|c|}{\bfseries Antike} &
+\multicolumn{2}{c|}{\bfseries Mittelalter}\\\hline
+\multicolumn{1}{|c|}{\itshape Republik}&
+\multicolumn{1}{c|}{\itshape Kaiserreich}&
+\multicolumn{1}{c|}{\itshape Franken}&
+\multicolumn{1}{c|}{\itshape Teilstaaten}\\\hline
+In den Zeiten der r\"{o}mischen Republik standen dem Staat jeweils zwei
+Konsuln vor, deren Machtbefugnisse identisch waren. &
+Das r\"{o}mische Kaiserreich wurde von einem Alleinherrscher, dem Kaiser,
+regiert.
+& In der V\"{o}lkerwanderungszeit \"{u}bernahmen die Goten und sp\"{a}ter die
+Franken die Vorherrschaft.
+& Im sp\"{a}teren Mittelalter regierten F\"{u}rsten einen Fleckenteppich
+von Einzelstaaten.\\\hline
+\end{tabular}
+\end{tcboutputlisting}
+\tcbuselistingtext%
+\end{texercise}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texercise}{macro_oneparam}
+\begin{tcboutputlisting}
+\newcommand{\headingline}[1]{%
+  \begin{center}\Large\bfseries #1\end{center}}
+\end{tcboutputlisting}
+\tcbuselistingtext%
+
+Create a new macro \verb+\headingline+ which produces the
+following output:\par\smallskip
+\begin{tcbwritetemp}
+\headingline{Very important heading}
+\end{tcbwritetemp}
+\tcbusetemplisting\tcbusetemp%
+\end{texercise}
+\end{dispExample}
+
+
+
+\begin{dispExample}
+\begin{texercise}{macro_twoparam}
+\begin{tcboutputlisting}
+\newcommand{\minitable}[2]{%
+  \begin{center}\begin{tabular}{p{10cm}}\hline%
+  \multicolumn{1}{c}{\bfseries#1}\\\hline%
+  #2\\\hline%
+  \end{tabular}\end{center}}
+\end{tcboutputlisting}
+\tcbuselistingtext%
+Create a new macro \verb+\minitable+ which produces the
+following output:\par\smallskip
+\begin{tcbwritetemp}
+\minitable{My heading}{In this tiny tabular, there is only a heading
+  and some text below which has a width of ten centimeters.}
+\end{tcbwritetemp}
+\tcbusetemplisting\par\smallskip\tcbusetemp%
+\end{texercise}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{texercise}{macro_threeparam}
+\begin{tcboutputlisting}
+\newcommand{\synop}[3]{%
+  \begin{tabular}{@{}p{(\linewidth-\tabcolsep*2-\arrayrulewidth)/2}|%
+    p{(\linewidth-\tabcolsep*2-\arrayrulewidth)/2}@{}}\hline
+  \multicolumn{2}{c}{\bfseries #1}\\\hline
+  \multicolumn{1}{c|}{\itshape English}&
+  \multicolumn{1}{c}{\itshape German}\\\hline
+  #2 & #3
+  \end{tabular}}
+\end{tcboutputlisting}
+\tcbuselistingtext%
+Create a new macro \verb+\synop+ which typesets a synoptic text according
+to the following example. Base your macro on a tabular which takes the
+total line width.\par\smallskip
+\begin{tcbwritetemp}
+\synop{Neil Armstrong}%
+{That's one small step for a man, one giant leap for mankind.}%
+{Das ist ein kleiner Schritt f\"{u}r einen Mann,
+   ein riesiger Sprung f\"{u}r die Menschheit.}
+\end{tcbwritetemp}
+\tcbusetemplisting\par\smallskip\tcbusetemp%
+\end{texercise}
+\end{dispExample}
+%\closeoutsol
+
+\begin{dispListing}
+\tcbstoprecording
+\end{dispListing}
+\tcbusetemp
+
+\bigskip
+
+现在，用下面的命令给出所有练习的清单：
+
+\begin{dispListing}
+\tcblistof[\subsection]{exam}{List of Exercises%
+  \label{listofexercises}}
+\end{dispListing}
+\tcbusetemp
+
+\clearpage
+\subsection{所给 \LaTeX\ 练习的解答}
+
+对于每个解答，都会有一个宏 |\processsol| 写入文件 |\jobname.records|。
+现在，我们需要给出该宏的定义，以便使用这些解答。
+
+\begin{dispListing}
+% \usepackage{hyperref} % for phantomlabel
+\newtcbinputlisting{\processsol}[2]{%
+  texercisestyle,
+  listing only,
+  listing file={#1},
+  phantomlabel={sol:#2},%
+  title={Solution for Exercise \ref{exe:#2} on page \pageref{exe:#2}},
+}
+\end{dispListing}
+\tcbusetemp
+
+所有解答通过下面的命令载入：
+
+\begin{dispListing}
+\tcbinputrecords
+\end{dispListing}
+
+这样我们就得到：
+
+\tcbusetemp
+
+
+

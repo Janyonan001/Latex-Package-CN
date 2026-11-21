@@ -1,0 +1,921 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{\mylib{raster} 程序库}\label{sec:raster}%
+\tcbset{external/prefix=external/raster_}%
+该程序库通过宏包选项或在导言区中用以下方式加载：
+\begin{dispListing}
+\tcbuselibrary{raster}
+\end{dispListing}
+
+\subsection{网格的概念}\label{subsec:raster_overview}
+
+\emph{网格}用于以规则方式对齐若干个彩色文本框。
+它可视为 \tikzname\ 的 |matrix| 结构的远亲，
+但在许多方面都有所不同。
+
+原则上，将 |tcolorbox| 放入 \refEnv{tcbraster} 环境时，
+它们会按行、列排列。文本框像把文字加入段落那样被连续地加入网格。
+尤其值得注意的是，换行/换行会自动完成，
+无法提前结束一行。此外，\emph{网格}不限于单页，
+而可以断开跨到任意多页。
+
+\bigskip
+\begin{tcolorbox}[enhanced,size=tight,boxrule=0pt,frame hidden,
+  top=5mm,bottom=5mm,colback=yellow!20!white,
+  borderline={0.4pt}{0pt}{dashed,yellow!50!black},
+  finish={
+  \draw[thick,<->] ([yshift=-1.3cm]frame.north west)-- node[below]{\refKey{/tcb/raster width}}
+    ([yshift=-1.3cm]frame.north east);
+  \draw[thick,<->] ([xshift=5mm,yshift=-5mm]frame.north east)-- node[left,pos=.75]{\refKey{/tcb/raster height}}
+    ([xshift=5mm,yshift=5mm]frame.south east);
+  }]
+  \begin{tcbitemize}[enhanced,fontupper=\tiny,
+    title={框 \#\thetcbrasternum},
+    colframe=red!50!black!30!white,colback=red!10!white!40!white,
+    colupper=black!20!white,
+    raster equal height=rows,
+    raster left skip=5mm,raster right skip=5mm,
+    raster before skip=5mm,raster after skip=5mm,
+    raster row skip=3mm,raster column skip=3mm,
+    ]
+  \tcbitem[finish={%
+    \draw[thick,<->] (frame.west)-- node[below right]{\refKey{/tcb/raster left skip}}+(-0.5,0);
+    \draw[thick,<->] (frame.north)-- node[right]{\refKey{/tcb/raster before skip}} +(0,0.5);
+    \draw[thick,<->] (frame.south)-- node[above]{\refKey{/tcb/raster row skip}} +(0,-0.3);
+    }] \lipsum[1]
+  \tcbitem[finish={
+    \draw[thick,<->] (frame.east)-- node[below left]{\refKey{/tcb/raster right skip}}+(0.5,0);
+    \draw[thick,<->] ([yshift=5mm]frame.south west)-- node[above]{\refKey{/tcb/raster column skip}}+(-0.3,0);
+    }] \lipsum[2]
+  \tcbitem[finish={%
+    \draw[thick,<->] (frame.south)-- node[right]{\refKey{/tcb/raster after skip}} +(0,-0.5);
+    }] \lipsum[3]
+  \tcbitem \lipsum[4]
+  \end{tcbitemize}
+\end{tcolorbox}
+
+\clearpage
+\begin{tcboutputlisting}
+\begin{tcbraster}[raster columns=3,raster rows=3,raster height=\linewidth,
+  enhanced,size=small,sharp corners,arc=8mm,colframe=red!50!black,
+  colback=yellow!10!white,watermark overzoom=1.0,fit algorithm=hybrid* ]
+  \begin{tcolorbox}[rounded corners=northwest,boxrule=0pt,
+    watermark graphics=lichtspiel.jpg]\end{tcolorbox}
+  \tcboxfit{\lipsum[1]}
+  \begin{tcolorbox}[rounded corners=northeast,boxrule=0pt,
+    watermark graphics=goldshade.png]\end{tcolorbox}
+  \tcboxfit{\lipsum[2]}
+  \begin{tcolorbox}[valign=center,halign=center]Nine Boxes.\end{tcolorbox}
+  \tcboxfit{\lipsum[3]}
+  \begin{tcolorbox}[rounded corners=southwest,boxrule=0pt,
+    watermark graphics=goldshade.png]\end{tcolorbox}
+  \tcboxfit{\lipsum[4]}
+  \begin{tcolorbox}[rounded corners=southeast,boxrule=0pt,
+    watermark graphics=lichtspiel.jpg]\end{tcolorbox}
+\end{tcbraster}
+\end{tcboutputlisting}
+
+\tcbinputlisting{base example,listing only,listing style=mydocumentation}
+
+\bigskip
+{\tcbuselistingtext}
+
+\clearpage
+\subsection{程序库的宏}\label{subsec:raster_macros}
+
+\begin{docEnvironment}[doc new and updated={2014-11-10}{2017-02-01}]{tcbraster}{\oarg{options}}
+网格以规则方式（主要是按行和列）排列其所包含的文本框。
+\meta{options} 用于控制网格参数，
+并设置所含文本框的属性。
+\begin{itemize}
+\item \emph{网格}内只允许包含一系列 \refEnv{tcolorbox} 环境
+  或其派生结构。在少量限制下，用 \refCom{tcboxfit} 创建的文本框也可加入。
+  用 \refCom{tcbox} 创建的文本框在此处不太合适，但在一定程度上仍可使用。
+\item 网格内各文本框之间不要加入任何其他内容，空白除外。
+  尤其不要用 |\\| 或 |\par| 来结束一行；换行是自动完成的。
+\item 网格内的文本框自动编号。可在文本框内部使用
+  \docAuxCommand{thetcbrasternum} 访问该编号。
+  \LaTeX\ 计数器 \docCounter{tcbrastercolumn} 保存当前列号，
+  计数器 \docCounter{tcbrasterrow} 保存当前行号，
+  计数器 \docCounter{tcbrasternum} 保存当前文本框编号。
+\end{itemize}
+
+\enlargethispage*{1cm}
+
+\begin{dispExample}
+\begin{tcbraster}[raster columns=3, raster equal height,
+  size=small,colframe=red!50!black,colback=red!10!white,colbacktitle=red!50!white,
+  title={Box \# \thetcbrasternum}]
+  \begin{tcolorbox}First box\end{tcolorbox}
+  \begin{tcolorbox}Second box\end{tcolorbox}
+  \begin{tcolorbox}This is a box\\with a second line\end{tcolorbox}
+  \begin{tcolorbox}Another box\end{tcolorbox}
+  \begin{tcolorbox}A box again\end{tcolorbox}
+\end{tcbraster}
+\end{dispExample}
+
+\begin{dispExample}
+\begin{tcbraster}[raster columns=2, raster equal height=rows,
+  size=small,colframe=red!50!black,colback=red!10!white,colbacktitle=red!50!white,
+  title={Box \# \thetcbrasternum}]
+  \begin{tcolorbox}First box\end{tcolorbox}
+  \begin{tcolorbox}Second box\end{tcolorbox}
+  \begin{tcolorbox}This is a box\\with a second line\end{tcolorbox}
+  \begin{tcolorbox}Another box\end{tcolorbox}
+  \begin{tcolorbox}A box again\end{tcolorbox}
+\end{tcbraster}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\clearpage
+
+\begin{docEnvironment}[doc new=2014-11-10]{tcbitemize}{\oarg{options}}
+这是带有给定 \meta{options} 的 \refEnv{tcbraster} 的一个特例。
+\begin{itemize}
+\item 此处所含的文本框用 \refCom{tcbitem} 创建。
+\item 至少要有一个 \refCom{tcbitem}。
+\item 除 \refCom{tcbitem} 外不能用其他方式向\emph{网格}添加内容。
+\end{itemize}
+这使得语法非常简洁。
+
+\begin{dispExample}
+\begin{tcbitemize}[raster columns=2, raster equal height=rows,
+  size=small,colframe=red!50!black,colback=red!10!white,colbacktitle=red!50!white,
+  title={Box \# \thetcbrasternum}]
+  \tcbitem First box
+  \tcbitem Second box
+  \tcbitem This is a box\\with a second line
+  \tcbitem[colback=yellow,colbacktitle=yellow!50!black] Another box
+  \tcbitem A box again
+\end{tcbitemize}
+\end{dispExample}
+
+\begin{marker}
+\refEnv{tcbitemize} 比 \refEnv{tcbraster} 有更多限制。
+尤其，\refKey{/tcb/capture} 模式必须为 \docValue{minipage}。
+例如，\refKey{/tcb/fit} 无法安全使用。
+若要使用 \refKey{/tcb/fit}，请改用 \refEnv{tcbraster}。
+\end{marker}
+\end{docEnvironment}
+
+
+\begin{docCommand}[doc new=2014-11-10]{tcbitem}{\oarg{options}}
+  在 \refEnv{tcbitemize} 内部使用，以创建一个带有给定
+  \meta{options} 的新 \refEnv{tcolorbox}。
+\end{docCommand}
+
+
+\clearpage
+\begin{docEnvironment}[doc new=2016-02-19]{tcboxedraster}{\oarg{raster options}\marg{box options}}
+  这是一个便捷环境，将一个 \refEnv{tcolorbox} 与一个内嵌的
+  \refEnv{tcbraster} 组合在一起。\meta{box options} 传给外层
+  \refEnv{tcolorbox}，而 \meta{raster options} 传给内嵌的
+  \refEnv{tcbraster}。该环境对"网格套网格"尤其有用。
+
+\begin{dispExample}
+\begin{tcboxedraster}[raster columns=3, raster equal height,
+  size=small,colframe=red!50!black,colback=red!10!white,colbacktitle=red!50!white,
+  title={Box \# \thetcbrasternum}]
+  {colback=yellow!10,fonttitle=\bfseries,title=Boxed Raster}
+  \begin{tcolorbox}First box\end{tcolorbox}
+  \begin{tcolorbox}Second box\end{tcolorbox}
+  \begin{tcolorbox}This is a box\\with a second line\end{tcolorbox}
+  \begin{tcolorbox}Another box\end{tcolorbox}
+  \begin{tcolorbox}A box again\end{tcolorbox}
+\end{tcboxedraster}
+\end{dispExample}
+
+\begin{dispExample}
+% \tcbuselibrary{skins}
+\begin{tcbraster}[raster columns=2, raster equal height,
+  raster every box/.style={size=small,colframe=red!50!black,colback=red!10!white,
+    valign=center,halign=center}]
+  \begin{tcolorbox}One\end{tcolorbox}
+  \begin{tcolorbox}Two\end{tcolorbox}
+    \begin{tcboxedraster}{blankest}
+      \begin{tcolorbox}Three\end{tcolorbox}
+      \begin{tcolorbox}Four\end{tcolorbox}
+      \begin{tcolorbox}Five\end{tcolorbox}
+      \begin{tcolorbox}Six\end{tcolorbox}
+    \end{tcboxedraster}
+    \begin{tcolorbox}Seven\end{tcolorbox}
+\end{tcbraster}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\clearpage
+\begin{docEnvironment}[doc new=2016-04-27]{tcboxeditemize}{\oarg{raster options}\marg{box options}}
+  这是一个便捷环境，将一个 \refEnv{tcolorbox} 与一个内嵌的
+  \refEnv{tcbitemize} 组合在一起。\meta{box options} 传给外层
+  \refEnv{tcolorbox}，而 \meta{raster options} 传给内嵌的
+  \refEnv{tcbitemize}。该环境对"网格套网格"尤其有用。
+
+\begin{dispExample}
+\begin{tcboxeditemize}[raster columns=3, raster equal height,
+  size=small,colframe=red!50!black,colback=red!10!white,colbacktitle=red!50!white,
+  title={Box \# \thetcbrasternum}]
+  {colback=yellow!10,fonttitle=\bfseries,title=Boxed Itemize}
+  \tcbitem First box
+  \tcbitem Second box
+  \tcbitem This is a box\\with a second line
+  \tcbitem Another box
+  \tcbitem A box again
+\end{tcboxeditemize}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\clearpage
+\subsection{程序库的选项键}\label{subsec:raster_options}
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster columns}{=\meta{number}}{无默认值，初始为 |2|}
+  设置\emph{网格}的列\meta{number}。
+\begin{dispExample}
+\begin{tcbitemize}[raster columns=3,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\begin{tcbitemize}[raster columns=4,
+  size=small,colframe=blue!50!black,colback=blue!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster rows}{=\meta{number}}{无默认值，初始为 |2|}
+  设置\emph{网格}的行\meta{number}。
+  注意：这仅在把 \refKey{/tcb/raster height} 设为大于 |0pt| 的值时才有意义。
+  此时，它定义给定高度\emph{内}\emph{每}一高度对应的行数。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster width}{=\meta{length}}{无默认值，初始为 \cs{linewidth}}
+  将网格总宽度设置为给定的 \meta{length}。
+  \refKey{/tcb/raster left skip} 和 \refKey{/tcb/raster right skip} 计入总宽度。
+  注意：这两个间距值不会被本选项改变。
+\begin{dispExample}
+\begin{tcbitemize}[raster width=\linewidth/2,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}[][doc new=2018-11-30]{raster width flush left}{=\meta{length}}{样式，无默认值}
+  将总 \refKey{/tcb/raster width} 设为 \cs{linewidth}，
+  并调整 \refKey{/tcb/raster left skip} 和 \refKey{/tcb/raster right skip}，
+  使网格靠左放置，视觉宽度为给定的 \meta{length}。
+\begin{dispExample}
+\begin{tcbitemize}[raster width flush left=\linewidth/2,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+注意：\refKey{/tcb/raster width} 与 \refKey{/tcb/raster width flush left}
+的结果看起来相同，但在技术层面有别——后者总会填满可用的 \cs{linewidth}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2018-11-30]{raster width center}{=\meta{length}}{样式，无默认值}
+  将总 \refKey{/tcb/raster width} 设为 \cs{linewidth}，
+  并调整 \refKey{/tcb/raster left skip} 和 \refKey{/tcb/raster right skip}，
+  使网格居中放置，视觉宽度为给定的 \meta{length}。
+\begin{dispExample}
+\begin{tcbitemize}[raster width center=\linewidth/2,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2018-11-30]{raster width flush right}{=\meta{length}}{样式，无默认值}
+  将总 \refKey{/tcb/raster width} 设为 \cs{linewidth}，
+  并调整 \refKey{/tcb/raster left skip} 和 \refKey{/tcb/raster right skip}，
+  使网格靠右放置，视觉宽度为给定的 \meta{length}。
+\begin{dispExample}
+\begin{tcbitemize}[raster width flush right=\linewidth/2,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}[][doc new=2014-11-10]{raster height}{=\meta{length}}{无默认值，初始为 |0pt|}
+  将\emph{每} \refKey{/tcb/raster rows} 的网格高度设为给定的 \meta{length}。
+  这会强制所含文本框取相应的高度。
+  \refKey{/tcb/raster before skip} 和 \refKey{/tcb/raster after skip}
+  不计入此计算。若 \meta{length} 设为 |0pt|，则停用本功能。
+\begin{dispExample}
+\begin{tcbitemize}[raster height=4cm, raster rows=2,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem[enhanced,
+    finish={\draw[blue,very thick,<->] (frame.south)
+      -- node[right,pos=.75]{4cm} +(0,4); }]
+    Three
+  \tcbitem Four
+  \tcbitem Five
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new and updated={2014-11-10}{2014-12-16}]{raster before skip}{=\meta{glue}}{无默认值，初始为 |2mm|}
+  在\emph{网格}之前沿纵向插入给定 \meta{glue} 的间距。该间距可被丢弃。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new and updated={2014-11-10}{2014-12-16}]{raster after skip}{=\meta{glue}}{无默认值，初始为 |2mm|}
+  在\emph{网格}之后沿纵向插入给定 \meta{glue} 的间距。该间距可被丢弃。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2015-01-08]{raster equal skip}{=\meta{length}}{样式，无默认值}
+  这是一个快捷方式，用于将
+  \refKey{/tcb/raster before skip}、
+  \refKey{/tcb/raster after skip}、
+  \refKey{/tcb/raster column skip} 和
+  \refKey{/tcb/raster row skip}
+  设为同一个 \meta{length} 值。
+\begin{dispExample}
+\begin{tcbitemize}[raster equal skip=4mm,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster left skip}{=\meta{length}}{无默认值，初始为 |0pt|}
+  在\emph{网格}左侧沿横向插入给定 \meta{length} 的间距。
+\begin{dispExample}
+\begin{tcbitemize}[raster left skip=2cm,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster right skip}{=\meta{length}}{无默认值，初始为 |0pt|}
+  在\emph{网格}右侧沿横向插入给定 \meta{length} 的间距。
+\begin{dispExample}
+\begin{tcbitemize}[raster right skip=2cm,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+\enlargethispage*{1cm}
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster column skip}{=\meta{length}}{无默认值，初始为 |2mm|}
+ 在各列之间沿横向插入给定 \meta{length} 的间距。
+\begin{dispExample}
+\begin{tcbitemize}[raster column skip=2cm,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster row skip}{=\meta{length}}{无默认值，初始为 |2mm|}
+ 在各行之间沿纵向插入给定 \meta{length} 的间距。
+\begin{dispExample}
+\begin{tcbitemize}[raster row skip=0pt,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster halign}{=\meta{alignment}}{无默认值，初始为 \docValue{left}}
+  当\emph{网格}的某行未被完全填满时（通常是最后一行），
+  定义该行中文本框的水平对齐方式。
+
+  \meta{alignment} 的可选取值为：
+  \begin{itemize}
+  \item\docValue{left}：左对齐，
+  \item\docValue{center}：居中对齐，
+  \item\docValue{right}：右对齐。
+  \end{itemize}
+
+\begin{dispExample}
+\begin{tcbitemize}[raster halign=center,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster valign}{=\meta{alignment}}{无默认值，初始为 \docValue{center}}
+  当一行中的文本框高度不等时，定义它们的垂直对齐方式。
+  这会设置 \refKey{/tcb/box align} 选项。
+
+  \meta{alignment} 的可选取值为：
+  \begin{itemize}
+  \item\docValue{top}：顶对齐，
+  \item\docValue{center}：居中对齐，
+  \item\docValue{bottom}：底对齐。
+  \end{itemize}
+
+\begin{dispExample}
+\begin{tcbitemize}[raster valign=top, raster columns=3,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem \Huge One
+  \tcbitem \Large Two
+  \tcbitem Three
+\end{tcbitemize}
+\begin{tcbitemize}[raster valign=center, raster columns=3,
+  size=small,colframe=blue!50!black,colback=blue!10!white]
+  \tcbitem \Huge One
+  \tcbitem \Large Two
+  \tcbitem Three
+\end{tcbitemize}
+\begin{tcbitemize}[raster valign=bottom, raster columns=3,
+  size=small,colframe=green!50!black,colback=green!10!white]
+  \tcbitem \Huge One
+  \tcbitem \Large Two
+  \tcbitem Three
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}[][doc new and updated={2014-11-10}{2017-02-28}]{raster equal height}{=\meta{type}}{默认 \docValue{all}，初始为 \docValue{none}}
+  将所含文本框放入同一个 \refKey{/tcb/equal height group}。
+  等高组的 \meta{id} 自动选取，但也可用
+  \refKey{/tcb/raster equal height group} 手动指定。
+  另见 \refKey{/tcb/minimum for current equal height group}。
+
+  \meta{type} 的可选取值为：
+  \begin{itemize}
+  \item\docValue{none}：不做等高设置，
+  \item\docValue{rows}：一行内的所有文本框设为等高，
+  \item\docValue{all}：网格内所有文本框设为等高。
+  \end{itemize}
+  注意：需编译两次才能看到更改效果。
+
+\begin{dispExample}
+\begin{tcbitemize}[raster equal height=rows,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem \Huge Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\begin{dispExample}
+\begin{tcbitemize}[raster equal height,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem \Huge Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster equal height group}{=\meta{id}}{无默认值}
+  用给定的 \meta{id} 覆盖自动选取的 id。
+  若想用它让本\emph{网格}与另一个网格或文本框共享同一高度，
+  应将 \refKey{/tcb/raster equal height} 设为 \docValue{all}。
+\begin{dispExample}
+\tcbset{size=small,colframe=red!50!black,colback=red!10!white}
+\begin{tcolorbox}[equal height group=raster-manual-id]
+  A single box
+\end{tcolorbox}
+\begin{tcbitemize}[raster equal height,raster equal height group=raster-manual-id]
+  \tcbitem One
+  \tcbitem \Huge Two
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster force size}{\colOpt{=true\textbar false}}{默认 |true|，初始为 |true|}
+  将网格的尺寸计算强制施加到所含文本框上。
+  若设为 \docValue{false}，则可使用各自的设置（效果好坏因人而异）。
+\begin{dispExample}
+\begin{tcbitemize}[raster force size=false, raster halign=center,
+  size=small,colframe=red!50!black,colback=red!10!white]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem[add to width=-3cm] Three
+  \tcbitem[add to width=-3cm] Four
+  \tcbitem[add to width=-3cm] Five
+  \tcbitem[add to width=3cm] Six
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster reset}{}{无取值}
+  将所有网格设置恢复为默认值。
+  注意：\refKey{/tcb/reset} 不会执行本选项。
+  像 \refKey{/tcb/raster odd column} 之类的样式设置
+  不受 \refKey{/tcb/raster reset} 影响。
+\end{docTcbKey}
+
+
+
+\subsection{为特定文本框添加样式}\label{subsec:raster_styles}
+
+可定义以下样式，用以指定\emph{网格}内的某些文本框。
+注意：这类样式定义不会被 \refKey{/tcb/reset} 或
+\refKey{/tcb/raster reset} 清除。各样式按下列顺序生效。
+
+\begin{docTcbKey}[][doc new=2014-11-24]{raster every box}{}{样式}
+该样式用于每一个文本框。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster odd column}{}{样式}
+该样式用于奇数列中的每一个文本框。
+\begin{dispExample}
+\begin{tcbitemize}[size=small,colframe=red!50!black,colback=red!10!white,
+  raster odd column/.style={colframe=blue!50!black,colback=blue!10!white}]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster even column}{}{样式}
+该样式用于偶数列中的每一个文本框。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster column n}{}{样式}
+该样式用于第 |n| 列中的每一个文本框。
+|n| 需替换为具体数字。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster odd row}{}{样式}
+该样式用于奇数行中的每一个文本框。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster even row}{}{样式}
+该样式用于偶数行中的每一个文本框。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster row m}{}{样式}
+该样式用于第 |m| 行中的每一个文本框。
+|m| 需替换为具体数字。
+\begin{dispExample}
+\begin{tcbitemize}[size=small,colframe=red!50!black,colback=red!10!white,
+  raster row 2/.style={colframe=blue!50!black,colback=blue!10!white}]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster odd number}{}{样式}
+该样式用于编号为奇数的每一个文本框。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster even number}{}{样式}
+该样式用于编号为偶数的每一个文本框。
+\begin{dispExample}
+\begin{tcbitemize}[size=small,colframe=red!50!black,colback=red!10!white,
+  raster columns=3,
+  raster even number/.style={colframe=blue!50!black,colback=blue!10!white}]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+  \tcbitem Five
+  \tcbitem Six
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster row m column n}{}{样式}
+该样式用于第 |m| 行、第 |n| 列处的文本框。
+|m| 和 |n| 需替换为具体数字。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-10]{raster number n}{}{样式}
+该样式用于编号为 |n| 的文本框。
+|n| 需替换为具体数字。
+\begin{dispExample}
+\begin{tcbitemize}[size=small,colframe=red!50!black,colback=red!10!white,
+  raster number 4/.style={colframe=blue!50!black,colback=blue!10!white}]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\subsection{合并列或行}\label{subsec:raster_multicolrow}
+
+\begin{docTcbKey}[][doc new=2016-02-19]{raster multicolumn}{=\meta{number}}{无默认值，初始未设置}
+  本选项必须设置在 \refEnv{tcbraster} 内某个 \refEnv{tcolorbox} 的选项列表中，
+  或 \refEnv{tcbitemize} 内某个 \refCom{tcbitem} 的选项列表中。
+  它将同一行中给定 \meta{number} 个文本框合并成一个文本框。
+  合并后的文本框沿用第一个文本框的 \docAuxCommand{thetcbrasternum} 编号。
+  若当前行可用文本框不足，则本选项被忽略并给出警告。
+
+\begin{dispExample}
+\begin{tcbitemize}[raster equal height=rows,raster columns=3,
+  title=\thetcbrasternum,colframe=red!50!black,colback=red!10!white]
+\tcbitem[colframe=blue!50!black,colback=blue!10!white,raster multicolumn=1]
+  multicolumn=1
+\tcbitem
+\tcbitem
+\tcbitem[colframe=blue!50!black,colback=blue!10!white,raster multicolumn=2]
+  multicolumn=2
+\tcbitem
+\tcbitem[colframe=blue!50!black,colback=blue!10!white,raster multicolumn=3]
+  multicolumn=3
+\tcbitem
+\tcbitem[colframe=blue!50!black,colback=blue!10!white,raster multicolumn=2]
+  multicolumn=2
+\end{tcbitemize}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docTcbKey}[][doc new=2016-02-19]{raster multirow}{=\meta{number}}{无默认值，初始未设置}
+  本选项必须设置在 \refEnv{tcbraster} 内某个 \refEnv{tcolorbox} 的选项列表中，
+  或 \refEnv{tcbitemize} 内某个 \refCom{tcbitem} 的选项列表中。
+  本选项并不真正合并文本框，而只是把当前文本框缩放到
+  占据 \meta{number} 行的空间。
+
+  \begin{marker}
+    \refKey{/tcb/raster multirow} 需要先设置 \refKey{/tcb/raster height}。
+    对于未固定 \refKey{/tcb/raster height} 的文本框，
+    如何达到类似效果见下文。
+  \end{marker}
+
+\begin{dispExample}
+\begin{tcbitemize}[raster rows=3,raster columns=3,raster height=6cm,
+  raster every box/.style={colframe=red!50!black,colback=red!10!white}]
+\tcbitem
+\tcbitem
+\tcbitem
+\tcbitem[colframe=blue!50!black,colback=blue!10!white,raster multirow=2]
+  multirow=2
+\tcbitem[raster multicolumn=2,raster multirow=2,blankest]
+  \begin{tcbitemize}[raster rows=2,raster columns=2,raster height=\tcbtextheight]
+  \tcbitem
+  \tcbitem
+  \tcbitem
+  \tcbitem
+  \end{tcbitemize}
+\end{tcbitemize}
+\end{dispExample}
+
+
+\clearpage
+对于未固定 \refKey{/tcb/raster height} 的网格，不能使用
+\refKey{/tcb/raster multirow}。注意，\refCom{tcbtextheight}
+也无法像上一个示例那样使用。
+
+但是，借助 \refKey{/tcb/raster equal height} 与
+\refKey{/tcb/space to} 的组合，仍可造出类似效果：
+
+\begin{dispExample}
+\begin{tcbitemize}[raster columns=3,raster equal height=rows,
+  raster every box/.style={colframe=red!50!black,colback=red!10!white}]
+\tcbitem
+\tcbitem
+\tcbitem
+\tcbitem[colframe=blue!50!black,colback=blue!10!white]
+ \lipsum[2]
+\tcbitem[raster multicolumn=2,blankest,space to=\myspace]
+  \begin{tcbitemize}[raster columns=2]
+  \tcbitem This is a box of the inner raster.
+  \tcbitem
+  \tcbitem[height=\myspace]
+  \tcbitem[height=\myspace]
+  \end{tcbitemize}
+\end{tcbitemize}
+\end{dispExample}
+
+\end{docTcbKey}
+
+
+
+\clearpage
+\subsection{网格中的网格}\label{subsec:raster_insideraster}
+
+不能在一个\emph{网格}中直接再放一个\emph{网格}，因为
+\emph{网格}只能容纳一个\emph{tcolorbox}或由其派生的东西。
+因此，应把一个\emph{网格}放进\emph{网格}中的某个\emph{tcolorbox}里。
+
+此类构造的若干示例可参见 \refEnv{tcboxedraster}、
+\refKey{/tcb/raster multicolumn}、
+\refKey{/tcb/raster multirow}。
+
+
+\subsubsection{网格的设置}
+中间那层 \refEnv{tcolorbox} 可用 \refKey{/tcb/blankest} 设为不可见。
+
+\begin{dispExample}
+\begin{tcbraster}[raster equal height=rows,
+  raster every box/.style={colframe=red!50!black,colback=red!10!white}]
+  \begin{tcolorbox}[blankest]
+    \begin{tcbraster}[raster columns=1]
+      \begin{tcolorbox}One\end{tcolorbox}
+      \begin{tcolorbox}Two\end{tcolorbox}
+    \end{tcbraster}
+  \end{tcolorbox}
+  \begin{tcolorbox}raster+tcolorbox+raster\end{tcolorbox}
+\end{tcbraster}
+\end{dispExample}
+
+\enlargethispage*{1cm}
+\begin{dispExample}
+\begin{tcbraster}[raster equal height=rows,
+  raster every box/.style={colframe=red!50!black,colback=red!10!white}]
+  \begin{tcboxedraster}[raster columns=1]{blankest}
+    \begin{tcolorbox}One\end{tcolorbox}
+    \begin{tcolorbox}Two\end{tcolorbox}
+  \end{tcboxedraster}
+  \begin{tcolorbox}raster+tcboxedraster\end{tcolorbox}
+\end{tcbraster}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{tcbitemize}[raster equal height=rows,
+  raster every box/.style={colframe=red!50!black,colback=red!10!white}]
+  \tcbitem[blankest]
+    \begin{tcbitemize}[raster columns=1]
+      \tcbitem One
+      \tcbitem Two
+    \end{tcbitemize}
+  \tcbitem tcbitemize+tcbitem+tcbitemize
+\end{tcbitemize}
+\end{dispExample}
+
+
+\subsubsection{布置间距}
+若要让交错网格内各文本框的高度相互匹配，
+就必须相应地分配间距。
+
+\begin{itemize}
+\item 对于使用 \refKey{/tcb/raster height} 的定高文本框/网格，
+  可用 \refCom{tcbtextheight} 获取文本框高度。借此可设定更深层
+  文本框/网格的尺寸。
+\item 对于用 \refKey{/tcb/raster equal height} 排版的文本框/网格，
+  可用 \refKey{/tcb/space to} 分配间距。可能需要编译数次，
+  所有间距才能正确分配。
+\end{itemize}
+
+
+\begin{dispExample}
+\begin{tcbitemize}[raster rows=2,raster height=6cm,
+  raster every box/.style={colframe=red!50!black,colback=red!10!white}]
+  \tcbitem[blankest]
+    \begin{tcbitemize}[raster columns=1,raster rows=2,raster height=\tcbtextheight]
+      \tcbitem One
+      \tcbitem Two
+    \end{tcbitemize}
+  \tcbitem This is a fixed height box.
+  \tcbitem Three
+  \tcbitem Four
+\end{tcbitemize}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{tcbitemize}[raster columns=4,raster rows=4,raster height=0.8\linewidth,
+  raster every box/.style={size=small,beamer,
+    colframe=blue!75!yellow,colback=red!75!yellow!20,
+    center title,title=Box}]
+  \tcbitem One
+  \tcbitem Two
+  \tcbitem Three
+  \tcbitem Four
+  \tcbitem[raster multirow=2,blankest]
+    \begin{tcbitemize}[raster columns=1,raster rows=2,raster height=\tcbtextheight]
+      \tcbitem Twelve
+      \tcbitem Eleven
+    \end{tcbitemize}
+  \tcbitem[raster multirow=2,raster multicolumn=2,
+      colframe=red!75!yellow,colback=blue!75!yellow!20]
+    This is an example with fixed height boxes.
+  \tcbitem[raster multirow=2,blankest]
+    \begin{tcbitemize}[raster columns=1,raster rows=2,raster height=\tcbtextheight]
+      \tcbitem Five
+      \tcbitem Six
+    \end{tcbitemize}
+  \tcbitem Ten
+  \tcbitem Nine
+  \tcbitem Eight
+  \tcbitem Seven
+\end{tcbitemize}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{tcbitemize}[raster equal height=rows,
+  raster every box/.style={colframe=red!50!black,colback=red!10!white}]
+  \tcbitem[blankest,space to=\myspace]
+    \begin{tcbitemize}[raster columns=1]
+      \tcbitem One
+      \tcbitem[add to natural height=\myspace]
+        This box will adapt its height.
+    \end{tcbitemize}
+  \tcbitem This is a flexible height box.
+  \tcbitem \lipsum[4]
+  \tcbitem[blankest,space to=\myspace]
+    \begin{tcbitemize}[raster columns=1]
+      \tcbitem One
+      \tcbitem[add to natural height=\myspace]
+        This box will adapt its height.
+    \end{tcbitemize}
+\end{tcbitemize}
+\end{dispExample}
+
+
+
+\begin{dispExample}
+\begin{tcbitemize}[raster equal height=rows,
+  raster every box/.style={colframe=red!50!black,colback=red!10!white}]
+  \tcbitem[blankest,space to=\myspace]
+    \begin{tcbitemize}[raster columns=1]
+      \tcbitem One
+      \tcbitem[add to natural height=\myspace]
+        This box will adapt its height.
+      \tcbitem \lipsum[4]
+    \end{tcbitemize}
+  \tcbitem[blankest,space to=\myspace]
+    \begin{tcbitemize}[raster columns=1]
+      \tcbitem[blankest]\includegraphics[width=\linewidth]{goldshade.png}
+      \tcbitem[add to natural height=\myspace]
+        This box will adapt its height.
+    \end{tcbitemize}
+\end{tcbitemize}
+\end{dispExample}
+
+
+

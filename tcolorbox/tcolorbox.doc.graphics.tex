@@ -1,0 +1,184 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{带框图像文件的插入}\label{sec:includegraphics}%
+\tcbset{external/prefix=external/graphics_}%
+\mylib{skins} 程序库新增了若干命令，用于方便地插入带框的图像文件。
+对于下面的宏和选项，需通过宏包选项或在导言区中加载 \mylib{skins} 程序库：
+\begin{dispListing}
+\tcbuselibrary{skins}
+\end{dispListing}
+
+\mylib{skins} 程序库所有其他选项的文档见 \zvref{sec:skins}。
+
+\subsection{宏}
+
+\begin{docCommand}[doc new and updated={2014-11-14}{2016-07-13}]{tcbincludegraphics}{\oarg{options}\marg{file name}}
+  原则上，本宏使用标准的 |\includegraphics| 插入由 \meta{文件名}指定的图像文件，
+  并把它放进一个 \refEnv{tcolorbox}。
+  \meta{选项}是用于设置该彩色文本框的 |tcolorbox| 键。
+  使用 \refKey{/tcb/graphics options} 可为底层的 |\includegraphics| 指定选项。
+  某些 |tcolorbox| 选项键会被自动设置，即 \refKey{/tcb/enhanced}
+  以及使图像在框内居中的选项。
+
+  所插入图像的尺寸按以下方式确定：
+  \begin{itemize}
+  \item 若指定了 \refKey{/tcb/width} 但未指定固定的 \refKey{/tcb/height}，
+    则图像缩放至填满文本框的内部宽度，文本框高度随图像自适应。
+  \item 若指定了固定的 \refKey{/tcb/height}，则图像缩放至填满
+    文本框固定的内部区域。
+  \item 若指定了 \refKey{/tcb/capture} 捕获模式 \refKey{/tcb/hbox}，
+    则图像仅按所给 |\includegraphics| 选项确定尺寸，文本框随图像自适应。
+  \end{itemize}
+
+\begin{dispExample}
+% \tcbuselibrary{raster}
+\begin{tcbraster}[raster columns=3,raster force size=false,size=fbox,
+    colframe=red!50!black,colback=red!20!black,
+    fonttitle=\bfseries,center title,drop fuzzy shadow]
+  \tcbincludegraphics[title=Normal]{goldshade.png}
+  \tcbincludegraphics[title=Fixed height,height=3cm]{goldshade.png}
+  \tcbincludegraphics[title=hbox mode,hbox,graphics options={width=3cm}]
+    {goldshade.png}
+\end{tcbraster}
+\end{dispExample}
+
+\clearpage
+辅助宏 \docAuxCommand{imagename} 可在 \refCom{tcbincludegraphics} 内部使用，
+用于显示文件名。\docAuxCommand{imagename} 已被部分去记号化，
+允许包含下划线等特殊字符。注意，显示此类字符需要合适的字体。
+%\docAuxCommand{imagepath}%
+
+\begin{dispExample}
+% \tcbuselibrary{raster}
+\begin{tcbraster}[size=fbox,
+    colframe=red!50!black,colback=red!20!black,
+    fonttitle=\bfseries\ttfamily,center title,drop fuzzy shadow]
+  \tcbincludegraphics[title=\imagename]{goldshade.png}
+  \tcbincludegraphics[finish={
+    \node[fill=white,fill opacity=0.5,text opacity=1]
+    at (frame.center) {\bfseries\ttfamily\imagename};}]{blueshade.png}
+\end{tcbraster}
+\end{dispExample}
+\end{docCommand}
+
+\clearpage
+\begin{docCommand}[doc new=2014-11-14]{tcbincludepdf}{\oarg{options}\marg{file name}}
+这是 \refCom{tcbincludegraphics} 的一个扩展版本，允许插入由
+\meta{文件名}指定的整个 PDF 文件。
+每一页都被框进一个由所给 \meta{选项}定制的独立 \refEnv{tcolorbox} 中。
+把这样一系列文本框放进一个 \refEnv{tcbraster} 中对齐是合理的做法。
+
+使用 \refKey{/tcb/graphics pages} 可选择若干页，而非使用整个文件。
+
+辅助宏 \docAuxCommand{imagepage} 可在 \refCom{tcbincludepdf} 内部使用，
+用于显示当前页码。
+\end{docCommand}
+
+
+\begin{dispListing}
+% \tcbuselibrary{raster}
+\begin{tcbraster}[raster columns=3,colframe=blue,colback=white,
+  colbacktitle=blue!50!white,fonttitle=\small\bfseries\ttfamily,
+  left=0pt,right=0pt,top=0pt,bottom=0pt,boxsep=0pt,boxrule=0.6pt,
+  toptitle=1mm,bottomtitle=1mm,drop lifted shadow,center title,
+  graphics pages={1,...,6},title={\imagename\ [\imagepage]}]
+\tcbincludepdf{tcolorbox-example.pdf}
+\end{tcbraster}
+\end{dispListing}
+{\tcbusetemp}
+
+
+\clearpage
+\subsection{选项键}
+
+\begin{docTcbKey}[][doc new and updated={2014-11-14}{2018-03-18}]{graphics options}{=\meta{options}}{无默认值，初始为空}
+  用于 \refCom{tcbincludegraphics} 与 \refCom{tcbincludepdf}，
+  指定 |\includegraphics| 的 \meta{选项}。
+  注意，\meta{选项}会被完全展开。
+
+\begin{dispExample}
+% \tcbuselibrary{raster}
+\begin{tcbraster}[raster columns=3,size=fbox,raster equal height,
+    colframe=red!50!black,colback=red!20!black,drop fuzzy shadow]
+  \tcbincludegraphics{goldshade.png}
+  \newcommand{\myangle}{angle=20}%
+  \tcbincludegraphics[graphics options=\myangle]{goldshade.png}
+  \tcbincludegraphics[graphics options={viewport=0cm 0cm 8cm 4cm,clip}]
+    {goldshade.png}
+\end{tcbraster}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-11-14]{graphics directory}{=\meta{directory}}{无默认值，初始为空}
+  用于 \refCom{tcbincludegraphics} 与 \refCom{tcbincludepdf}，
+  指定图像文件所在的文件系统 \meta{目录}。
+\begin{dispListing}
+\tcbset{
+  graphics directory={.},
+  graphics directory={examples},
+  graphics directory={../../pictures},
+}
+\end{dispListing}
+\smallskip
+\begin{marker}
+\refPkg{graphics} 宏包的 |\graphicspath| 宏优于本选项。
+\refKey{/tcb/graphics directory} 尤其可用于 \refCom{tcbincludepdf}。
+\end{marker}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-14]{graphics pages}{=\meta{selection}}{无默认值，初始为 |1,...,|\cs{pdfpages}}
+  用于 \refCom{tcbincludepdf}，指定要插入的页面 \meta{选择}。
+  最大页码可通过 \docAuxCommand{pdfpages} 访问。
+  \meta{选择}需使用 \tikzname 的 |\foreach| 语法给出。
+\begin{dispListing}
+\tcbset{
+  graphics pages={1,3,7},
+  graphics pages={1,...,10},
+  graphics pages={1,3,...,18},
+  graphics pages={100,...,\pdfpages},
+}
+\end{dispListing}
+\end{docTcbKey}
+
+\clearpage
+
+
+\begin{docTcbKey}[][doc new=2018-03-21]{graphics orientation}{=\meta{orientation}}{无默认值，初始为 |as-is|}
+  用于 \refCom{tcbincludegraphics} 与 \refCom{tcbincludepdf}，
+  保证所插入图像具有某种 \meta{方向}。
+  在处理完图像的其他所有选项之后，可能会旋转结果，使其处于横向或纵向模式。
+
+  \meta{方向}的可选值为：
+  \begin{itemize}
+  \item\docValue{as-is}：不旋转处理后的图像。
+  \item\docValue{landscape}：
+    可能将处理后的图像旋转 90 度，以确保最终宽度不小于最终高度。
+  \item\docValue{landscape*}：
+    可能将处理后的图像旋转 -90 度，以确保最终宽度不小于最终高度。
+  \item\docValue{portrait}：
+    可能将处理后的图像旋转 90 度，以确保最终高度不小于最终宽度。
+  \item\docValue{portrait*}：
+    可能将处理后的图像旋转 -90 度，以确保最终高度不小于最终宽度。
+  \end{itemize}
+
+\begin{dispExample}
+% \tcbuselibrary{raster}
+\begin{tcbraster}[raster columns=6,size=fbox,raster equal height,
+    colframe=red!50!black,colback=red!20!black,drop fuzzy shadow]
+  \tcbincludegraphics{Basilica_5.png}
+  \tcbincludegraphics[graphics orientation=landscape]{Basilica_5.png}
+  \tcbincludegraphics[graphics orientation=portrait]{Basilica_5.png}
+  \tcbincludegraphics[graphics orientation=portrait*]{Basilica_5.png}
+  \tcbincludegraphics[graphics options={viewport=0cm 0cm 2cm 3cm,clip}]
+    {goldshade.png}
+  \tcbincludegraphics[graphics options={viewport=0cm 0cm 2cm 3cm,clip},
+    graphics orientation=landscape]{goldshade.png}
+\end{tcbraster}
+\end{dispExample}
+
+
+\end{docTcbKey}
+
+

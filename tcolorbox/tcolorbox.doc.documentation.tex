@@ -1,0 +1,2064 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{程序库 \mylib{documentation}}\label{sec:documentation}%
+\tcbset{external/prefix=external/documentation_}%
+本程序库的唯一用途是为像本书这样的 \LaTeX\ 宏包文档提供排版支持。
+实际上，其视觉风格沿用 Till Tantau 的 \refPkg{pgf}
+\cite{tantau:tikz_and_pgf} 文档的做法。
+通常，本程序库会与 \refPkg{ltxdoc} 之类的文档类配合使用。
+Denis Bitouz\'e、周宇恺以及其他许多人为本程序库提供了非常宝贵的意见。
+
+该程序库可通过宏包选项加载，或在导言区中使用：
+\begin{dispListing}
+\tcbuselibrary{documentation}
+\end{dispListing}
+这同时会加载程序库 \mylib{skins}（见 \zvref{sec:skins}）、
+\mylib{raster}（见 \zvref{sec:raster}）、
+\mylib{listings}（见 \zvref{sec:listings}），
+以及若干宏包，即
+\refPkg{makeidx}、\refPkg{marginnote}、\refPkg{refcount} 和 \refPkg{hyperref}。
+为显示某些符号，应安装 \refPkg{pifont} 和 \refPkg{marvosym} 宏包，但
+无需显式加载。
+
+\begin{marker}
+只有当 \docAuxCommand*{printindex} \emph{尚未}定义时，才会加载
+\refPkg{makeidx} 宏包。因此，可以在使用 \mylib{documentation} 程序库
+\emph{之前}引入 \refPkg{makeidx} 的替代宏包，例如 \refPkg{imakeidx}。
+\end{marker}
+\begin{marker}
+只有当 \docAuxCommand*{marginnote} \emph{尚未}定义时，才会加载
+\refPkg{marginnote} 宏包。
+\end{marker}
+\begin{marker}
+与其他 |tcolorbox| 选项不同，\mylib{documentation} 的选项设置
+通常不会被 \refKey{/tcb/reset} 重置，也就是说，它们会对
+嵌套的文本框保持其取值。
+\end{marker}
+\begin{marker}
+与 DocStrip 配合使用时，\refKey{/tcb/verbatim ignore percent} 可能会有帮助。
+\end{marker}
+
+为支持 UTF-8 请加载（使用 Xe\LaTeX\ 时忽略此条）：
+\begin{dispListing}
+\tcbuselibrary{listingsutf8,documentation}
+\end{dispListing}
+
+为支持 \refPkg{minted} \cite{poore:minted}，请加载：
+\begin{dispListing}
+\tcbuselibrary{documentation,minted}
+\tcbset{listing engine=minted}
+\end{dispListing}
+
+
+%\clearpage
+%-------------------------------------------------------------------------------
+\subsection{本程序库的宏}
+
+\begin{docEnvironment}[doclang/environment content=command description,doc updated=2020-04-22]
+    {docCommand}{\oarg{options}\marg{name}\marg{parameters}}
+  文档化一个名为 \meta{名称} 的 \LaTeX\ 宏，其中 \meta{名称} 不带反斜杠书写。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该宏接受必填或可选的 \meta{参数}。
+  它会自动编入索引，并可用
+  \refCom{refCom}\marg{名称} 引用。
+\begin{dispExample}
+\begin{docCommand}{foomakedocSubKey}{\marg{name}\marg{key path}}
+  Creates a new environment \meta{name} based on \refEnv{docKey} for the
+  documentation of keys with the given \meta{key path}.
+\end{docCommand}
+\end{dispExample}
+\begin{dispExample}
+\begin{docCommand}[doc no index,color definition=blue]{section}%
+    {\sarg\marg{title}}
+  Starts a section. The star variant is unnumbered.
+\end{docCommand}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\begin{docEnvironment}[doclang/environment content=command description,doc updated=2020-04-22]
+    {docCommand*}{\oarg{options}\marg{name}\marg{parameters}}
+  与 \refEnv{docCommand} 相同，但不生成索引条目。
+\end{docEnvironment}
+
+
+\begin{docEnvironment}[doclang/environment content=command description,doc new=2020-04-22]
+    {docCommands}{\oarg{options}\brackets{\marg{variant1},\marg{variant2},...}}
+  同时文档化若干（相似的）\LaTeX\ 宏变体。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置，对所有变体及文档说明文字均有效。
+  每个变体由一组选项 \meta{variant1}、\meta{variant2} 等来描述。
+  最关键的选项是 \refKey{/tcb/doc name} 和 \refKey{/tcb/doc parameter}。
+\begin{dispExample}
+\begin{docCommands}[
+    doc no index,  %  no index entries for this example
+    doc name      = newtheorem
+  ]
+  {
+    { doc parameter = \sarg\marg{envname} },
+    { doc parameter = \marg{envname}\oarg{numbered within} },
+    { doc parameter = \oarg{numbered like}\marg{envname} }
+  }
+  example
+\end{docCommands}
+\end{dispExample}
+\end{docEnvironment}
+
+
+
+\clearpage
+{\let\xdocEnvironment\docEnvironment
+\let\endxdocEnvironment\enddocEnvironment
+\begin{xdocEnvironment}[doclang/environment content=environment description,doc updated=2020-04-22]
+    {docEnvironment}{\oarg{options}\marg{name}\marg{parameters}}
+  文档化一个名为 \meta{名称} 的 \LaTeX\ 环境。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该环境接受必填或可选的 \meta{参数}。
+  它会自动编入索引，并可用
+  \refCom{refEnv}\marg{名称} 引用。
+\begin{dispExample}
+\begin{docEnvironment}{foocolorbox}{\oarg{options}}
+  This is the main environment to create an accentuated colored text box with
+  rounded corners and, optionally, two parts.
+\end{docEnvironment}
+\end{dispExample}
+\begin{dispExample}
+\begin{docEnvironment}%
+    [doclang/environment content=My content text]%
+    {foocolorbox*}{\oarg{options}}
+  This is the main environment to create an accentuated colored text box with
+  rounded corners and, optionally, two parts.
+\end{docEnvironment}
+\end{dispExample}
+\end{xdocEnvironment}}
+
+{\let\xdocEnvironment\docEnvironment
+\let\endxdocEnvironment\enddocEnvironment
+\begin{xdocEnvironment}[doclang/environment content=environment description,doc updated=2020-04-22]
+    {docEnvironment*}{\oarg{options}\marg{name}\marg{parameters}}
+  与 \refEnv{docEnvironment} 相同，但不生成索引条目。
+\end{xdocEnvironment}}
+
+
+\clearpage
+{\let\xdocEnvironment\docEnvironment
+\let\endxdocEnvironment\enddocEnvironment
+\begin{xdocEnvironment}[doclang/environment content=environment description,doc new=2020-04-22]
+    {docEnvironments}{\oarg{options}\brackets{\marg{variant1},\marg{variant2},...}}
+  同时文档化若干（相似的）\LaTeX\ 环境变体。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置，对所有变体及文档说明文字均有效。
+  每个变体由一组选项 \meta{variant1}、\meta{variant2} 等来描述。
+  最关键的选项是 \refKey{/tcb/doc name} 和 \refKey{/tcb/doc parameter}。
+\begin{dispExample}
+\begin{docEnvironments}[
+    doc no index,   %  no index entries for this example
+    doc parameter oarg marg     = {options}{title},
+    doclang/environment content = box content,
+  ]
+  {
+    {
+      doc name        = redbox,
+      doc description = a red colored box,
+    },
+    {
+      doc name        = greenbox,
+      doc description = a green colored box,
+    },
+    {
+      doc name        = bluebox,
+      doc description = a blue colored box,
+    },
+    {
+      doc name        = custombox,
+      doc parameter   = \oarg{options}\marg{color}\marg{title},
+      doc description = a colored box,
+    },
+  }
+  example
+\end{docEnvironments}
+\end{dispExample}
+\end{xdocEnvironment}}
+
+
+\clearpage
+\begin{docEnvironment}[doclang/environment content=key description,doc updated=2020-04-22]
+    {docKey}{\oarg{key path}\oarg{options}\marg{name}\marg{parameters}\marg{description}}
+  文档化一个名为 \meta{名称} 的键，并可带可选的 \meta{键路径}。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该键接受必填或可选的 \meta{参数}作为取值，并附简短的 \meta{描述}。
+  它会自动编入索引，并可用
+  \refCom{refKey}\marg{名称}。
+\begin{dispExample}
+\begin{docKey}[foo]{footitle}{=\meta{text}}{\tcbdocdescDefaultInitEmpty}
+  Creates a heading line with \meta{text} as content.
+\end{docKey}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\begin{docEnvironment}[doclang/environment content=key description,doc updated=2020-04-22]
+    {docKey*}{\oarg{key path}\oarg{options}\marg{name}\marg{parameters}\marg{description}}
+  与 \refEnv{docKey} 相同，但不生成索引条目。
+\end{docEnvironment}
+
+
+\begin{docEnvironment}[doclang/environment content=key description,doc new=2020-04-22]
+    {docKeys}{\oarg{options}\brackets{\marg{variant1},\marg{variant2},...}}
+  同时文档化若干（相似的）键变体。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置，对所有变体及文档说明文字均有效。
+  每个变体由一组选项 \meta{variant1}、\meta{variant2} 等来描述。
+  最关键的选项是
+  \refKey{/tcb/doc keypath}、\refKey{/tcb/doc name}、\refKey{/tcb/doc parameter}，
+  以及 \refKey{/tcb/doc description}。
+\begin{dispExample}
+\begin{docKeys}[
+    doc no index,   %  no index entries for this example
+    doc keypath           = mykeyroot,
+    doc parameter eq meta = length,
+  ]
+  {
+    {
+      doc name             = width,
+      doc description init = 10cm,
+    },
+    {
+      doc name             = height,
+      doc description init = 7cm,
+    },
+  }
+  example
+\end{docKeys}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\clearpage
+\begin{docCommands}
+  {
+    { doc name = tcbdocdescNoDefaultInit, doc parameter =, doc new=2026-05-26 },
+    { doc name = tcbdocdescInitEmpty },
+    { doc name = tcbdocdescInit, doc parameter = \marg{initial value} },
+    { doc name = tcbdocdescDefault, doc parameter = \marg{default value} },
+    { doc name = tcbdocdescDefaultInitEmpty, doc parameter = \marg{default value} },
+    { doc name = tcbdocdescDefaultInit, doc parameter = \marg{default value}\marg{initial value} },
+  }
+这些宏在输入流中插入标准化的描述文字，专门用于键的文档说明。
+另见 \refKey{/tcb/doc description no default init} 等。
+
+\begin{dispExample}
+\tcbdocdescNoDefaultInit       \par
+\tcbdocdescInitEmpty           \par
+\tcbdocdescInit{a}             \par
+\tcbdocdescDefault{b}          \par
+\tcbdocdescDefaultInitEmpty{c} \par
+\tcbdocdescDefaultInit{e}{e}
+
+\begin{docKey}[foo]{footitle}{=\meta{text}}{\tcbdocdescInitEmpty}
+  Creates a heading line with \meta{text} as content.
+\end{docKey}
+
+\begin{docKey}[foo]{foosize}{\colOpt{=\meta{length}}}{\tcbdocdescDefaultInit{10cm}{3cm}}
+  Sets some size to \meta{length}.
+\end{docKey}
+\end{dispExample}
+\end{docCommands}
+
+
+\clearpage
+\begin{docEnvironment}[doclang/environment content=operation description,
+    doc new and updated={2019-09-18}{2020-04-22}]{docPathOperation}{\oarg{options}\marg{name}\marg{parameters}}
+  文档化一个名为 \meta{名称} 的 \tikzname\ 路径操作。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该 \tikzname\ 路径操作接受必填或可选的 \meta{参数}。
+  它会自动编入索引，并可用
+  \refCom{refPathOperation}\marg{名称} 引用。
+\begin{dispExample}
+\begin{docPathOperation}{fooop}{\oarg{opt}(\meta{name})\colOpt{at(\meta{coord})}}
+  Imaginary path operation for illustration.
+\end{docPathOperation}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\begin{docEnvironment}[doclang/environment content=command description,
+    doc new and updated={2019-09-18}{2020-04-22}]{docPathOperation*}{\oarg{options}\marg{name}\marg{parameters}}
+  与 \refEnv{docPathOperation} 相同，但不生成索引条目。
+\end{docEnvironment}
+
+
+\begin{docEnvironment}[doclang/environment content=command description,
+    doc new={2020-04-22}]{docPathOperations}{\oarg{options}\brackets{\marg{variant1},\marg{variant2},...}}
+  同时文档化若干（相似的）\tikzname\ 路径操作变体。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置，对所有变体及文档说明文字均有效。
+  每个变体由一组选项 \meta{variant1}、\meta{variant2} 等来描述。
+  最关键的选项是 \refKey{/tcb/doc name} 和 \refKey{/tcb/doc parameter}。
+\begin{dispExample}
+\begin{docPathOperations}[
+    doc no index,   %  no index entries for this example
+  ]
+  {
+    {
+      doc name      = rectangle,
+      doc parameter = \meta{corner or cycle},
+    },
+    {
+      doc name      = circle,
+      doc parameter = \oarg{options},
+    },
+    {
+      doc name      = ellipse,
+      doc parameter = \oarg{options},
+    },
+  }
+  example
+\end{docPathOperations}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\clearpage
+\begin{docCommands}[doc parameter oarg marg={options}{name}]
+  {
+    {
+      doc name    = docValue,
+      doc updated = 2020-04-23,
+    },
+    {
+      doc name = docValue*,
+    },
+  }
+  文档化一个名为 \meta{名称} 的取值。通常它是某个键的取值。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该取值会自动编入索引（\refCom{docValue}），
+  而 \refCom{docValue*} 不生成索引条目。
+\begin{dispExample}
+A feasible value for \refKey{/foo/footitle} is \docValue*{foovalue}.
+\end{dispExample}
+\end{docCommands}
+
+
+
+\begin{docCommands}[doc parameter oarg marg={options}{name}]
+  {
+    {
+      doc name    = docAuxCommand,
+      doc updated = 2020-04-23,
+    },
+    {
+      doc name = docAuxCommand*,
+    },
+  }
+  文档化一个名为 \meta{名称} 的辅助或次要 \LaTeX\ 宏，
+  其中 \meta{名称} 不带反斜杠书写。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该宏会自动编入索引（\refCom{docAuxCommand}），
+  而 \refCom{docAuxCommand*} 不生成索引条目。
+\begin{dispExample}
+The macro \docAuxCommand{fooaux} holds some interesting data.
+\end{dispExample}
+\end{docCommands}
+
+
+
+\begin{docCommands}[doc parameter oarg marg={options}{name}]
+  {
+    {
+      doc name    = docAuxEnvironment,
+      doc updated = 2020-04-23,
+    },
+    {
+      doc name = docAuxEnvironment*,
+    },
+  }
+  文档化一个名为 \meta{名称} 的辅助或次要 \LaTeX\ 环境。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该环境会自动编入索引（\refCom{docAuxEnvironment}），
+  而 \refCom{docAuxEnvironment*} 不生成索引条目。
+\begin{dispExample}
+The environment \docAuxEnvironment{fooauxenv} holds some interesting data.
+\end{dispExample}
+\end{docCommands}
+
+
+\begin{docCommands}[doc parameter=\oarg{key path}\oarg{options}\marg{name}]
+  {
+    {
+      doc name    = docAuxKey,
+      doc updated = 2020-04-23,
+    },
+    {
+      doc name = docAuxKey*,
+    },
+  }
+  文档化一个名为 \meta{名称} 的辅助键，并可带可选的 \meta{键路径}。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  它会自动编入索引（\refCom{docAuxKey}），
+  而 \refCom{docAuxKey*} 不生成索引条目。
+\begin{dispExample}
+The key \docAuxKey[foo]{fooaux} holds some interesting data.
+\end{dispExample}
+\end{docCommands}
+
+
+
+\begin{docCommands}[doc parameter oarg marg={options}{name}]
+  {
+    {
+      doc name    = docCounter,
+      doc updated = 2020-04-23,
+    },
+    {
+      doc name = docCounter*,
+    },
+  }
+  文档化一个名为 \meta{名称} 的计数器。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该计数器会自动编入索引（\refCom{docCounter}），
+  而 \refCom{docCounter*} 不生成索引条目。
+\begin{dispExample}
+The counter \docCounter{foocounter} can be used for computation.
+\end{dispExample}
+\end{docCommands}
+
+
+\clearpage
+\begin{docCommands}[doc parameter oarg marg={options}{name}]
+  {
+    {
+      doc name    = docLength,
+      doc updated = 2020-04-23,
+    },
+    {
+      doc name = docLength*,
+    },
+  }
+  文档化一个名为 \meta{名称} 的长度。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该长度会自动编入索引（\refCom{docLength}），
+  而 \refCom{docLength*} 不生成索引条目。
+\begin{dispExample}
+The length \docLength{foolength} can be used for computation.
+\end{dispExample}
+\end{docCommands}
+
+
+\begin{docCommands}[doc parameter oarg marg={options}{name}]
+  {
+    {
+      doc name    = docColor,
+      doc updated = 2020-04-23,
+    },
+    {
+      doc name = docColor*,
+    },
+  }
+  文档化一个名为 \meta{名称} 的颜色。
+  给定的 \meta{选项} 通过 \refCom{tcbset} 设置。
+  该颜色会自动编入索引（\refCom{docColor}），
+  而 \refCom{docColor*} 不生成索引条目。
+\begin{dispExample}
+The color \docColor{foocolor} is available.
+\end{dispExample}
+\end{docCommands}
+
+
+
+\begin{docCommand}{cs}{\marg{name}}
+  源自 \refPkg{ltxdoc} \cite{carlisle:ltxdoc} 的宏，
+  用于排版一个带反斜杠前缀的命令词 \meta{名称}。
+  本程序库会覆盖该原始宏。
+\begin{dispExample}
+This is a \cs{foocommand}.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{meta}{\marg{text}}
+  源自 \refPkg{doc} \cite{mittelbach:doc} 的宏，用于排版元符号 \meta{文本}。
+  本程序库会覆盖该原始宏。
+\begin{dispExample}
+This is a \meta{text}.
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}{marg}{\marg{text}}
+  源自 \refPkg{ltxdoc} \cite{carlisle:ltxdoc} 的宏，
+  用于用花括号将 \meta{文本} 排版为必填参数。
+  本程序库会覆盖该原始宏。
+\begin{dispExample}
+This is a mandatory \marg{argument}.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{oarg}{\marg{text}}
+  源自 \refPkg{ltxdoc} \cite{carlisle:ltxdoc} 的宏，
+  用于用方括号将 \meta{文本} 排版为可选参数。
+  本程序库会覆盖该原始宏。
+\begin{dispExample}
+This is an optional \oarg{argument}.
+\end{dispExample}
+\end{docCommand}
+
+\clearpage
+
+\begin{docCommand}[doc new={2025-05-28}]{pbarg}{\marg{text}}
+  取自 \refPkg{beamer} \cite{tantau:beamer} 文档的宏（改名而来），
+  用于用尖括号将 \meta{文本} 排版为必填参数。
+\begin{dispExample}
+This is a |beamer| \pbarg{argument}.
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}[doc new=2023-02-16]{sarg}{}
+  用于将 \sarg{} 排版为可选星号的宏。
+\begin{dispExample}
+This is an optional \sarg.
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}{brackets}{\marg{text}}
+  用花括号包裹给定的 \meta{文本}。
+\begin{dispExample}
+  Here we use \brackets{some text}.
+\end{dispExample}
+\end{docCommand}
+
+
+{\let\xdispExample\dispExample
+  \let\endxdispExample\enddispExample
+\begin{docEnvironment}[doc updated=2014-10-10]{dispExample}{}
+  创建一个基于 \refEnv{tcolorbox} 的彩色文本框。
+  它在框的上部显示环境内容的源代码，
+  在下部显示编译后的文本。
+  其外观由 \refKey{/tcb/documentation listing style}
+  和样式 \refKey{/tcb/docexample} 控制。
+  可通过重定义该样式来改变外观。
+{
+%\tcbset{before lower app={\tcbset{docexample/.style={docexample original}}}}
+%\tcbset{docexample/.style={docexample original}}%
+\begin{xdispExample}
+\begin{dispExample}
+This is a \LaTeX\ example.
+\end{dispExample}
+\end{xdispExample}
+}
+\end{docEnvironment}}
+
+
+{\let\xdispExample\dispExample
+  \let\endxdispExample\enddispExample
+\begin{docEnvironment}[doc updated=2014-10-10]{dispExample*}{\marg{options}}
+  \refEnv{dispExample} 的带星号版本接受 \refEnv{tcolorbox} \meta{选项}
+  作为参数。这些 \meta{选项} 在 \refKey{/tcb/docexample} 之后执行。
+\begin{xdispExample}
+\begin{dispExample*}{sidebyside}
+This is a \LaTeX\ example.
+\end{dispExample*}
+\end{xdispExample}
+\end{docEnvironment}}
+
+
+\clearpage
+\begin{docEnvironment}{dispListing}{}
+  创建一个基于 \refEnv{tcolorbox} 的彩色文本框。
+  它显示环境内容的源代码。
+  其外观由 \refKey{/tcb/documentation listing style}
+  和样式 \refKey{/tcb/docexample} 控制。
+  可通过重定义该样式来改变外观。
+\begin{dispExample}
+\begin{dispListing}
+This is a \LaTeX\ example.
+\end{dispListing}
+\end{dispExample}
+\end{docEnvironment}
+
+\begin{docEnvironment}{dispListing*}{\marg{options}}
+  \refEnv{dispListing} 的带星号版本接受 \refEnv{tcolorbox} \meta{选项}
+  作为参数。这些 \meta{选项} 在 \refKey{/tcb/docexample} 之后执行。
+\begin{dispExample}
+\begin{dispListing*}{title=My listing}
+This is a \LaTeX\ example.
+\end{dispListing*}
+\end{dispExample}
+\end{docEnvironment}
+
+
+\begin{docEnvironment}{absquote}{}
+  用于将摘要排版为带引号的小字文本。
+\begin{dispExample}
+\begin{absquote}
+|tcolorbox| provides an environment for colored and framed text boxes with a
+heading line. Optionally, such a box can be split in an upper and a lower part.
+\end{absquote}
+\end{dispExample}
+\end{docEnvironment}
+
+\clearpage
+\begin{docCommand}[doc updated=2023-12-01]{tcbmakedocSubKey}{\oarg{options}\marg{name}\marg{key path}}
+  基于 \refEnv{docKey} 创建一个名为 \meta{名称} 的新环境，
+  用于文档化以给定 \meta{键路径} 为根的键。
+  新环境 \meta{名称} 接受与 \refEnv{docKey} 本身相同的参数。
+  给定的 \meta{选项} 会被前置到 \meta{名称} 环境的选项之前。
+  同时还会创建一个带星号的同名环境 \meta{名称}，
+  它与 \meta{名称} 相同但不生成索引条目。
+\begin{dispExample}
+\tcbmakedocSubKey{docFooKey}{foo}
+
+\begin{docFooKey}{foodummy}{=\meta{nothing}}{\tcbdocdescDefaultInitEmpty}
+Some key.
+\end{docFooKey}
+
+\begin{docFooKey*}{foo another dummy}{=\meta{nothing}}{\tcbdocdescDefaultInitEmpty}
+Some key (not indexed).
+\end{docFooKey*}
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}[doc new and updated={2020-04-22}{2023-12-01}]{tcbmakedocSubKeys}{\oarg{options}\marg{name}\marg{key path}}
+  基于 \refEnv{docKeys} 创建一个名为 \meta{名称} 的新环境，
+  用于文档化以给定 \meta{键路径} 为根的键。
+  新环境 \meta{名称} 接受与 \refEnv{docKeys} 本身相同的参数。
+  给定的 \meta{选项} 会被前置到 \meta{名称} 环境的选项之前
+  （示例见 \refKey{/tcb/index key formatter}）。
+\begin{dispExample}
+\tcbmakedocSubKeys{docFooKeys}{foo}
+
+\begin{docFooKeys}[
+    doc parameter eq meta = nothing,
+    doc description init empty,
+  ]
+  {
+    {
+      doc name = foodummy 2,
+    },
+    {
+      doc name = foo another dummy 2,
+      doc no index,
+    }
+  }
+Some description.
+\end{docFooKeys}
+\end{dispExample}
+\end{docCommand}
+
+
+\clearpage
+
+\begin{docCommand}{refCom}{\marg{name}}
+  引用一个已文档化的、名为 \meta{名称} 的 \LaTeX\ 宏，
+  其中 \meta{名称} 不带反斜杠书写。
+  若链接指向同一页，则省略页码引用。
+\begin{dispExample}
+We have created \refCom{foomakedocSubKey} as an example.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{refCom*}{\marg{name}}
+  引用一个已文档化的、名为 \meta{名称} 的 \LaTeX\ 宏，
+  其中 \meta{名称} 不带反斜杠书写。不显示页码引用。
+\begin{dispExample}
+We have created \refCom*{foomakedocSubKey} as an example.
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}{refEnv}{\marg{name}}
+  引用一个已文档化的、名为 \meta{名称} 的 \LaTeX\ 环境。
+  若链接指向同一页，则省略页码引用。
+\begin{dispExample}
+We have created \refEnv{foocolorbox} as an example.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{refEnv*}{\marg{name}}
+  引用一个已文档化的、名为 \meta{名称} 的 \LaTeX\ 环境。
+  不显示页码引用。
+\begin{dispExample}
+We have created \refEnv*{foocolorbox} as an example.
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}{refKey}{\marg{name}}
+  引用一个已文档化的、名为 \meta{名称} 的键，
+  其中 \meta{名称} 是该键的完整路径名。
+  若链接指向同一页，则省略页码引用。
+\begin{dispExample}
+We have created \refKey{/foo/footitle} as an example.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{refKey*}{\marg{name}}
+  引用一个已文档化的、名为 \meta{名称} 的键，
+  其中 \meta{名称} 是该键的完整路径名。不显示页码引用。
+\begin{dispExample}
+We have created \refKey*{/foo/footitle} as an example.
+\end{dispExample}
+\end{docCommand}
+
+\clearpage
+
+\begin{docCommand}[doc new=2019-09-17]{refPathOperation}{\marg{name}}
+  引用一个已文档化的、名为 \meta{名称} 的 \tikzname\ 路径操作。
+  若链接指向同一页，则省略页码引用。
+\begin{dispExample}
+We have created \refPathOperation{fooop} as an example.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}[doc new=2019-09-17]{refPathOperation*}{\marg{name}}
+  引用一个已文档化的、名为 \meta{名称} 的 \tikzname\ 路径操作。
+  不显示页码引用。
+\begin{dispExample}
+We have created \refPathOperation*{fooop} as an example.
+\end{dispExample}
+\end{docCommand}
+
+
+
+\begin{docCommand}[doc updated=2020-02-11]{refAux}{\marg{name}}
+  引用某个辅助环境、键、取值或颜色。
+  若设置了 \refPkg{hyperref} 的 colorlinks，则 \meta{名称} 会按
+  \refKey{/tcb/color hyperlink} 着色，但并不生成真正的链接。
+\begin{dispExample}
+Some pages back, one can see \refAux{/foo/footitle} as an example.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}[doc updated=2020-02-11]{refAuxcs}{\marg{name}}
+  引用某个辅助宏 \meta{名称}，其中 \meta{名称} 不带反斜杠书写。
+  若设置了 \refPkg{hyperref} 的 colorlinks，则 \meta{名称} 会按
+  \refKey{/tcb/color hyperlink} 着色，但并不生成真正的链接。
+\begin{dispExample}
+Some pages back, one can see \refAuxcs{fooaux} as an example.
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}[doc new and updated={2024-09-18}{2024-11-29}]{refPkg}{\oarg{ctanname}\marg{name}}
+  在 \href{https://ctan.org}{CTAN} 上引用宏包 \meta{名称}，
+  并附上超链接 \mbox{|https://ctan.org/pkg/|\meta{名称}}。
+  使用可选参数 \meta{ctanname} 会生成超链接
+  \mbox{|https://ctan.org/pkg/|\meta{ctanname}}。
+  \href{https://ctan.org}{CTAN} 文字的外观可通过
+  \refKey{/tcb/ctan formatter} 定制。
+\begin{dispExample}
+\tcbset{ctan formatter=\texttt}
+Hyperlinks are created with help of the \refPkg{hyperref} package.\par
+The package \refPkg[frankenstein]{dialogue} is part of the
+\refPkg{frankenstein} bundle of packages.
+\end{dispExample}
+\end{docCommand}
+
+
+\clearpage
+
+\begin{docCommand}{colDef}{\marg{text}}
+用命令颜色排印 \meta{文本}，见 \refKey{/tcb/color command}。
+\begin{dispExample}
+This is my \colDef{text}.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{colOpt}{\marg{text}}
+  用选项颜色排印 \meta{文本}，见 \refKey{/tcb/color option}。
+\begin{dispExample}
+This is my \colOpt{text}.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}[doc new=2019-09-18]{colFade}{\marg{text}}
+  用淡化颜色排印 \meta{文本}，见 \refKey{/tcb/color fade}。
+\begin{dispExample}
+This is my \colFade{text}.
+\end{dispExample}
+\end{docCommand}
+
+
+\begin{docCommand}[doc new=2014-09-19]{tcbdocmarginnote}{\oarg{options}\marg{text}}
+  借助 \refPkg{marginnote} 宏包，在页边空白处创建一个带有
+  给定 \meta{文本} 的 |tcolorbox| 注释。该 |tcolorbox| 的样式是预定义的，
+  可通过 \refKey{/tcb/doc marginnote} 及给定的 \meta{选项} 修改。
+\begin{dispExample}
+Some text\tcbdocmarginnote{Note A}
+which is commented by a note inside the margin.
+Alternatively to |\tcbdocmarginnote|, you can always use
+|\marginnote| with a |tcolorbox| directly.\par
+This is further text%
+\tcbdocmarginnote[colframe=blue!50!white,colback=blue!5!white]{Note B}
+with another note.
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}[doc new=2014-09-19]{tcbdocnew}{\marg{date}}
+  辅助宏，用给定的 \meta{日期} 排印 \refKey{/tcb/doclang/new} 文字。
+  可重定义以便定制。
+  \makeatletter\renewcommand*{\tcbdocnew}[1]{\kvtcb@text@new: #1}\makeatother%
+\begin{dispExample*}{sidebyside}
+\tcbdocnew{1981-10-29}.
+% Next one is displayed in the margin:
+\tcbdocmarginnote{\tcbdocnew{1978-02-09}}
+\end{dispExample*}
+\end{docCommand}
+
+\begin{docCommand}[doc new=2014-09-19]{tcbdocupdated}{\marg{date}}
+  辅助宏，用给定的 \meta{日期} 排印 \refKey{/tcb/doclang/updated} 文字。
+  可重定义以便定制。
+  \makeatletter\renewcommand*{\tcbdocupdated}[1]{\kvtcb@text@updated: #1}\makeatother%
+\begin{dispExample*}{sidebyside}
+\tcbdocupdated{2014-09-19}.
+\end{dispExample*}
+\end{docCommand}
+
+
+\clearpage
+%-------------------------------------------------------------------------------
+\subsection{键文档的可选值列表}
+
+\enlargethispage*{10mm}
+\begin{docCommands}[doc parameter=\marg{comma separated list of choices}]
+  {
+    {
+      doc name = docKeyChoices,
+      doc new and updated = {2025-09-25}{2026-05-26},
+    },
+    {
+      doc name = docKeyChoices*,
+    },
+  }
+  在 \refEnv{docKey}、\refEnv{docKey*} 或 \refEnv{docKeys} 的参数列表内部
+  （用于文档化键时），可使用此宏给出一个
+  \meta{逗号分隔的可选值列表}。
+  这些可选值以一个前导 |=| 排印，各取值之间用
+  \refKey{/tcb/doc key choices separator} 作为分隔符。
+  较长的列表会按 \refKey{/tcb/doc head left width} 或
+  \refKey{/tcb/doc head left ratio} 所设定的宽度自动折行。\par
+  带星号的版本用于可选取值，并使用 \refCom{colOpt}。\par
+  可在列表内部用以下标记来标注描述文字中的默认值和/或初始值：
+  \begin{itemize}
+  \item\docValue{default}\texttt{=}\meta{默认值}
+  \item\docValue{init}\texttt{=}\meta{初始值}
+  \item\docValue{defaultinit}\texttt{=}\meta{默认值与初始值}
+  \end{itemize}
+  若使用这些标记，生成的描述文字会覆盖 \refKey{/tcb/doc description}
+  以及 \refEnv{docKey} 等的设置。
+  \begin{marker}
+  \refCom{docKeyChoices} 不应、也不支持在键文档的参数列表之外使用。
+  \end{marker}
+\begin{dispExample}
+\begin{docKey}[foo]{fooexam1}{\docKeyChoices{init=one,two,three}}{}
+  Example for mandatory choices.
+\end{docKey}
+\end{dispExample}
+\begin{dispExample}
+\begin{docKey}[foo]{fooexam2}{\docKeyChoices*{
+  init=zero,default=one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,
+  thirteen,fourteen,fifteen,sixteen,seventeen,eighteen,nineteen,twenty }}{}
+  Example for optional choices.
+\end{docKey}
+\end{dispExample}
+\begin{dispExample}
+\begin{docKey}[foo][doc head left ratio=0.8]{fooexam3}{\docKeyChoices*{
+  zero,one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,
+  thirteen,fourteen,fifteen,sixteen,seventeen,eighteen,nineteen,twenty }}
+    {default \texttt{one},\\ initially \texttt{zero}}
+\end{docKey}
+\end{dispExample}
+\begin{dispExample}
+\begin{docKey}[foo][doc head left ratio=1.0]{fooexam4}{\docKeyChoices*{
+  init=zero,default=one,two,three,four,five,six,seven,eight,
+  \\ nine,ten,eleven,twelve, thirteen,fourteen,fifteen,sixteen,
+  seventeen,eighteen,nineteen,twenty }}{}
+\end{docKey}
+\end{dispExample}
+\end{docCommands}
+
+%\clearpage
+%\enlargethispage*{10mm}
+
+\begin{docTcbKeys}[
+    doc parameter   = {=\meta{comma separated list of choices}},
+    doc description = {样式，无默认值},
+  ]{
+    {
+      doc new         = {2025-09-25},
+      doc name        = doc key choices,
+    },
+    {
+      doc name        = doc key choices*,
+    },
+  }
+  这些选项是分别用 \refCom{docKeyChoices} 或 \refCom{docKeyChoices*}
+  设置 \refKey{/tcb/doc parameter} 的快捷方式，即在 \refEnv{docKeys}
+  的参数列表内部给出一个 \meta{逗号分隔的可选值列表}。\par
+  带星号的版本用于可选取值，并使用 \refCom{colOpt}。
+\begin{dispExample}
+\begin{docKeys}[
+    doc keypath      = foo,
+    doc name         = fooexam5,
+    doc key choices* = {defaultinit=true,false},
+  ]{}
+\end{docKeys}
+\end{dispExample}
+\begin{dispExample}
+\begin{docKeys}[
+    doc keypath     = foo,
+    doc name        = fooexam6,
+    doc key choices = {
+      init=zero,one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,
+      thirteen,fourteen,fifteen,sixteen,seventeen,eighteen,nineteen,twenty },
+    doc head left ratio = 0.6,
+  ]{}
+\end{docKeys}
+\end{dispExample}
+\end{docTcbKeys}
+
+\clearpage
+
+\begin{docTcbKeys}[
+    doc new               = {2025-09-25},
+    doc name              = doc key choices separator,
+    doc parameter eq meta = separator,
+    doc description init  = \textbackslash textbar,
+  ]{}
+  设置用于排印 \refCom{docKeyChoices}、\refKey{/tcb/doc key choices}
+  等的可选值列表时所用的 \meta{分隔符}。
+\begin{dispExample}
+\begin{docKeys}[
+    doc key choices separator = \textbullet,
+    doc keypath      = foo,
+    doc name         = fooexam7,
+    doc key choices* = {defaultinit=true,false,maybe,unlikely},
+  ]{}
+\end{docKeys}
+\end{dispExample}
+\end{docTcbKeys}
+
+
+\begin{docTcbKeys}[
+    doc new               = {2025-09-25},
+    doc name              = doc head left width,
+    doc parameter eq meta = length,
+    doc description init  = 0.7\textbackslash columnwidth,
+  ]{}
+  给定的 \meta{长度} 是一个框的最大宽度，
+  该框由键名、|=| 号和可选值列表组成。另见 \refKey{/tcb/doc head left ratio}。
+\end{docTcbKeys}
+
+
+\begin{docTcbKeys}[
+    doc new               = {2025-09-25},
+    doc name              = doc head left ratio,
+    doc parameter eq meta = number,
+    doc description init  = 0.7,
+  ]{}
+  给定的有理 \meta{数} 应在 |0.0| 到 |1.0| 之间。
+  此选项将 \refKey{/tcb/doc head left width} 设为
+  \texttt{\meta{数}\textbackslash columnwidth}。
+  示例见 \refCom{docKeyChoices} 与 \refKey{/tcb/doc key choices}。
+\end{docTcbKeys}
+
+
+
+\clearpage
+%-------------------------------------------------------------------------------
+\subsection{条目内容选项键}
+
+
+\begin{docTcbKey}[][doc new={2020-04-22}]{doc name}{=\meta{name}}{\tcbdocdescInitEmpty}
+  设置待文档化条目的 \meta{名称}，即命令、环境、键等的 \meta{名称}。
+  对于 \refEnv{docCommand}、\refEnv{docEnvironment} 等，
+  \meta{名称} 由一个必填参数设定，但也可通过 \refKey{/tcb/doc name} 设置。
+  \refKey{/tcb/doc name} 还会将 \meta{名称} 同时设给
+  \refKey{/tcb/doc label}、\refKey{/tcb/doc index}，
+  以及 \refKey{/tcb/doc sort index}。
+\begin{dispExample}
+\begin{docCommands}[
+    doc no index,  %  no index entries for this example
+    doc name      = bfseries,
+  ] {}
+  Font setting to bold face.
+\end{docCommands}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new={2020-04-22}]{doc parameter}{=\meta{parameters}}{\tcbdocdescInitEmpty}
+  设置待文档化条目的 \meta{参数}，即命令、环境、键等的 \meta{参数}。
+  对于 \refEnv{docCommand}、\refEnv{docEnvironment} 等，
+  \meta{参数} 由一个必填选项设定，但也可通过 \refKey{/tcb/doc parameter} 设置。
+\begin{dispExample}
+\begin{docCommands}[
+    doc no index,  %  no index entries for this example
+    doc name      = textbf,
+    doc parameter = \marg{text},
+  ] {}
+  Sets \meta{text} in bold face.
+\end{docCommands}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKeys}[doc description = 样式]
+  {
+    {
+      doc name              = doc parameter marg,
+      doc parameter eq meta = arg1,
+      doc new  = 2026-05-26
+    },
+    {
+      doc name              = doc parameter oarg,
+      doc parameter eq meta = arg1,
+    },
+    {
+      doc name         = doc parameter marg marg,
+      doc parameter eq = \marg{arg1}\marg{arg2},
+    },
+    {
+      doc name         = doc parameter oarg marg,
+      doc parameter eq = \marg{arg1}\marg{arg2},
+    },
+    {
+      doc name         = doc parameter marg oarg,
+      doc parameter eq = \marg{arg1}\marg{arg2},
+    }
+  }
+这些快捷样式将参数 \meta{arg1} 或 \meta{arg1} 与 \meta{arg2}
+设给 \refKey{/tcb/doc parameter}。
+
+\begin{dispExample}
+\begin{docCommands}[
+    doc no index,  %  no index entries for this example
+    doc name           = textbf,
+    doc parameter marg = text,
+  ] {}
+  Sets \meta{text} in bold face.
+\end{docCommands}
+\end{dispExample}
+\end{docTcbKeys}
+
+\clearpage
+
+\begin{docTcbKeys}[doc description = 样式]
+  {
+    {
+      doc name = doc parameter eq,
+      doc parameter eq meta = parameter,
+      doc new  = 2026-05-26
+    },
+    {
+      doc name = doc parameter eq meta,
+      doc parameter eq meta = arg,
+    },
+    {
+      doc name = doc parameter eq marg,
+      doc parameter eq meta = arg,
+    },
+    {
+      doc name = doc parameter eq meta*,
+      doc parameter eq meta = arg,
+    },
+    {
+      doc name = doc parameter eq marg*,
+      doc parameter eq meta = arg,
+    }
+  }
+这些快捷样式将 \refKey{/tcb/doc parameter} 设为 \enquote{\texttt{=}}，
+后接由 \refCom{meta} 或 \refCom{marg} 包裹的 \meta{参数} 或 \meta{arg}。\par
+带星号的版本用于可选取值，并使用 \refCom{colOpt}。
+
+
+\begin{dispExample}
+\begin{docKeys}[
+    doc name              = /foo/footitle,
+    doc parameter eq meta = text,
+    doc description init empty
+  ]{}
+  Creates a heading line with \meta{text} as content.
+\end{docKeys}
+\end{dispExample}
+\end{docTcbKeys}
+
+
+\begin{docTcbKey}[][doc new={2020-04-22}]{doc keypath}{=\meta{key path}}{\tcbdocdescInitEmpty}
+  设置待文档化键的 \meta{键路径}。对于 \refEnv{docKey}
+  和 \refEnv{docKey*}，\meta{键路径} 由专门的选项设定，
+  但也可通过 \refKey{/tcb/doc keypath} 设置。
+\begin{dispExample}
+\begin{docKeys}[
+    doc no index,  %  no index entries for this example
+    doc keypath            = tikz,
+    doc name               = fill,
+    doc parameter eq meta* = color,
+    doc description        = default is scope's color setting,
+  ] {}
+  This option causes the path to be filled.
+\end{docKeys}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKeys}[
+    doc new               = {2023-12-01},
+    doc name              = doc key prefix,
+    doc parameter eq meta = key prefix,
+    doc description init  = |/|,
+  ]{}
+  设置待文档化键的 \meta{键前缀}（根路径）。
+  当 \refKey{/tcb/doc keypath} 非空时，此前缀会被前置到 \refKey{/tcb/doc keypath} 之前。
+  默认的 |/| 设置是为 \refPkg{pgfkeys} 准备的。
+  对于 \refPkg[l3kernel]{l3keys}，将 \refKey{/tcb/doc key prefix} 设为空更为合适，
+  因为其路径以模块名开头、不含 |/|。
+\begin{dispExample}
+\begin{docKeys}[
+    doc no index,  %  no index entries for this example
+    doc key prefix        = ,
+    doc keypath           = tcobox,% module name
+    doc name              = my_l3_key,
+    doc parameter eq meta = some value,
+    doc description       = example,
+  ] {}
+  Documentation of a key using |l3keys|.
+\end{docKeys}
+\end{dispExample}
+\end{docTcbKeys}
+
+
+
+\begin{docTcbKeys}[
+    doc new                = {2023-12-01},
+    doc parameter eq meta* = macro,
+    doc description default init = {\cs{use:n}}{\cs{use:n}},
+  ]{
+    {
+      doc name = index key formatter,
+    },
+    {
+      doc name = index keys formatter,
+    }
+  }
+将 \meta{宏} 设为索引中由
+\refKey{/tcb/doclang/key} 或
+\refKey{/tcb/doclang/keys} 所给文字的格式化器。
+该 \meta{宏} 必须接受一个必填参数（语言文字）。
+其用途是在必要时区分不同种类的键，
+例如区分 \refPkg{pgfkeys} 与 \refPkg[l3kernel]{l3keys}。
+若不带取值使用这些选项，格式化器将恢复为标准行为。
+
+\begin{dispExample}
+% See index of this documentation to recognize the effect
+\newcommand{\myFormatPgfkeysIndex}[1]{#1 (\textsf{pgfkeys})}
+\newcommand{\myFormatExplkeysIndex}[1]{#1 (\textsf{l3keys})}
+
+\tcbmakedocSubKey[
+    index key formatter=\myFormatPgfkeysIndex,
+    index keys formatter=\myFormatPgfkeysIndex
+  ]{docFooPgfkey}{foopgf}
+\tcbmakedocSubKey[
+    doc key prefix=,
+    index key formatter=\myFormatExplkeysIndex,
+    index keys formatter=\myFormatExplkeysIndex
+  ]{docFooExplkey}{fooexpl}
+
+\begin{docFooPgfkey}{foo pgf}{=\meta{name}}{\tcbdocdescInitEmpty}
+  content
+\end{docFooPgfkey}
+
+\begin{docFooExplkey}{foo expl}{=\meta{name}}{\tcbdocdescInitEmpty}
+  content
+\end{docFooExplkey}
+\end{dispExample}
+\end{docTcbKeys}
+
+
+
+\clearpage
+
+\begin{docTcbKey}{doc description}{=\meta{description}}{\tcbdocdescInitEmpty}
+  为 \refEnv{docCommand}、\refEnv{docEnvironment} 或 \refEnv{docPathOperation}
+  设置一段（简短的！）附加 \meta{描述}。
+  对于 \refEnv{docKey}，此描述是必填的。
+\begin{dispExample}
+\begin{docCommand*}[doc description=my description]{myCommandF}{\marg{argument}}
+  This is the documentation of \refCom{myCommandF} which takes one \meta{argument}.
+  \refCom{myCommandF} does some funny things with its \meta{argument}.
+\end{docCommand*}
+\end{dispExample}
+\begin{marker}
+注意：描述 \meta{文本} 若过长，可能与左侧文字重叠。
+可在 \meta{文本} 内部使用换行。
+\end{marker}
+\end{docTcbKey}
+
+\begin{docTcbKeys}[doc description = 样式]
+  {
+    {
+      doc name = doc description no default init,
+      doc new  = 2026-05-26
+    },
+    {
+      doc name = doc description init empty,
+    },
+    {
+      doc name = doc description init,
+      doc parameter = {=\marg{initial value}}
+    },
+    {
+      doc name = doc description default,
+      doc parameter = {=\marg{default value}}
+    },
+    {
+      doc name = doc description default init empty,
+      doc parameter = {=\marg{default value}}
+    },
+    {
+      doc name = doc description default init,
+      doc parameter = {=\marg{default value}\marg{initial value}}
+    }
+  }
+这些样式将标准化的描述文字设给 \refKey{/tcb/doc description}，
+见 \refCom{tcbdocdescNoDefaultInit} 等。
+
+\begin{dispExample}
+\begin{docKeys}[
+    doc name              = /foo/footitle,
+    doc parameter eq meta = text,
+    doc description init empty
+  ]{}
+  Creates a heading line with \meta{text} as content.
+\end{docKeys}
+
+\begin{docKeys}[
+    doc name                     = /foo/foosize,
+    doc parameter eq meta*       = length,
+    doc description default init = {10cm}{3cm}
+  ]{}
+  Sets some size to \meta{length}.
+\end{docKeys}
+\end{dispExample}
+\end{docTcbKeys}
+
+
+\clearpage
+
+\begin{docTcbKey}[][doc new={2019-09-18}]{doc label}{=\meta{text}}{\tcbdocdescNoDefaultInit}
+  若用于 \refEnv{docCommand}、\refEnv{docEnvironment}、\refEnv{docKey} 等的
+  选项列表内部，则用 \meta{文本} 代替定义名称作为标签。
+\begin{dispExample}
+\begin{docPathOperation*}[doc label=pathline]{-{}-}{\meta{coordinate or cycle}}
+  This is the documentation of \refPathOperation{pathline}.
+\end{docPathOperation*}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2020-01-07}]{doc index}{=\meta{text}}{\tcbdocdescNoDefaultInit}
+  若用于 \refEnv{docCommand}、\refEnv{docEnvironment}、\refEnv{docKey} 等的
+  选项列表内部，则用 \meta{文本} 代替定义名称编入索引。
+\begin{dispExample}
+\begin{docPathOperation}[doc index=foo path (horizontal then vertical),
+    doc label=pathline2]{-\textbar}{\meta{coordinate or cycle}}
+  This is the documentation of \refPathOperation{pathline2}.
+\end{docPathOperation}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new={2020-04-23}]{doc sort index}{=\meta{text}}{\tcbdocdescNoDefaultInit}
+  若用于 \refEnv{docCommand}、\refEnv{docEnvironment}、\refEnv{docKey} 等的
+  选项列表内部，则用 \meta{文本} 代替定义名称作为索引的排序键。
+\begin{dispListing}
+\begin{docCommands}[
+    doc name        = l_tcobox_example_tl,
+    doc sort index  = example_tl,  % sorted under e like example
+  ]{}
+\end{docCommands}
+\end{dispListing}
+\end{docTcbKey}
+
+
+\begin{docTcbKeys}[
+    doc name         = doc into index,
+    doc key choices* = {defaultinit=true,false},
+  ]{}
+  若设为 |false|，则不为主要文档环境写入索引条目。
+  使用例如 \refEnv{docCommand*} 代替 \refEnv{docCommand} 也可达到同样效果。
+\end{docTcbKeys}
+
+
+\begin{docTcbKey}[][doc new={2020-04-22}]{doc no index}{}{样式，初始未设置}
+  设置后，不为主要文档环境写入索引条目。
+  这是使用 \refKey{/tcb/doc into index}|=false| 的快捷方式。
+\end{docTcbKey}
+
+\clearpage
+
+
+\begin{docTcbKey}[][doc new=2014-09-19]{doc marginnote}{=\meta{options}}{\tcbdocdescInitEmpty}
+  为 \refCom{tcbdocmarginnote} 命令所显示的文本框设置样式 \meta{选项}。
+\begin{dispExample}
+\tcbset{doc marginnote={colframe=blue!50!white,colback=blue!5!white}}%
+This is some text\tcbdocmarginnote{Note A}
+which is commented by a note inside the margin.
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-09-19]{doc new}{=\meta{date}}{样式，无默认值}
+  在上部文本框部分的开头添加一个页边注释，内容为
+  \enquote{新增：\meta{日期}}。
+  其预期用途是放在 \refEnv{docCommand}、\refEnv{docEnvironment} 等的选项列表内部。
+  \makeatletter\renewcommand*{\tcbdocnew}[1]{\kvtcb@text@new: #1}\makeatother%
+\begin{dispExample}
+\begin{docCommand}[doc new=2000-01-01]{foosomething}{\marg{text}}
+Some command for something.
+\end{docCommand}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-09-19]{doc updated}{=\meta{date}}{样式，无默认值}
+  在上部文本框部分的开头添加一个页边注释，内容为
+  \enquote{更新：\meta{日期}}。见 \refKey{/tcb/doc new}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2014-09-19]{doc new and updated}{=\marg{new date}\marg{update date}}{样式，无默认值}
+  在上部文本框部分的开头添加页边注释，内容为
+  \enquote{新增：\meta{新日期}} 和 \enquote{更新：\meta{更新日期}}。
+  见 \refKey{/tcb/doc new}。
+\end{docTcbKey}
+
+
+
+\clearpage
+%-------------------------------------------------------------------------------
+\subsection{条目定制选项键}
+
+
+\begin{docTcbKey}{doc left}{=\meta{length}}{\tcbdocdescInit{2em}}
+  将 \refEnv{docCommand}、\refEnv{docEnvironment}、\refEnv{docKey} 等的
+  文档说明文字的左侧偏移设为 \meta{长度}。
+\begin{dispExample}
+\begin{docCommand*}[doc left=2cm,doc left indent=-2cm]{myCommandA}{\marg{argument}}
+  This is the documentation of \refCom{myCommandA} which takes one \meta{argument}.
+  \refCom{myCommandA} does some funny things with its \meta{argument}.
+\end{docCommand*}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{doc right}{=\meta{length}}{\tcbdocdescInit{0em}}
+  将 \refEnv{docCommand}、\refEnv{docEnvironment}、\refEnv{docKey} 等的
+  文档说明文字的右侧偏移设为 \meta{长度}。
+\begin{dispExample}
+\begin{docCommand*}[doc right=2cm]{myCommandB}{\marg{argument}}
+  This is the documentation of \refCom{myCommandB} which takes one \meta{argument}.
+  \refCom{myCommandB} does some funny things with its \meta{argument}.
+\end{docCommand*}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{doc left indent}{=\meta{length}}{\tcbdocdescInit{-2em}}
+  将 \refEnv{docCommand}、\refEnv{docEnvironment}、\refEnv{docKey} 等的
+  文档标题行的左侧缩进设为 \meta{长度}。
+\begin{dispExample}
+\begin{docCommand*}[doc left indent=2cm]{myCommandC}{\marg{argument}}
+  This is the documentation of \refCom{myCommandC} which takes one \meta{argument}.
+  \refCom{myCommandC} does some funny things with its \meta{argument}.
+\end{docCommand*}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{doc right indent}{=\meta{length}}{\tcbdocdescInit{0pt}}
+  将 \refEnv{docCommand}、\refEnv{docEnvironment}、\refEnv{docKey} 等的
+  文档标题行的右侧缩进设为 \meta{长度}。
+\begin{dispExample}
+\begin{docCommand*}[doc right indent=-10mm,doc right=10mm,
+    doc description=test value]{myCommandD}{\marg{argument}}
+  This is the documentation of \refCom{myCommandD} which takes one \meta{argument}.
+  \refCom{myCommandD} does some funny things with its \meta{argument}.
+\end{docCommand*}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+主要文档环境 \refEnv{docCommand}、\refEnv{docEnvironment}、\refEnv{docKey} 等的
+标题行，是位于 \refEnv{tcbraster} 内部的 |tcolorbox|。
+可使用以下各键来设置外围 |tcbraster| 及内嵌 |tcolorbox| 的选项。
+
+
+\begin{docTcbKeys}[
+  doc name              = doc raster command,
+  doc parameter eq meta = options,
+  doc description init empty,
+  doc new              = 2020-04-24,
+]{}
+  为 \refEnv{docCommand}、\refEnv{docCommand*} 和 \refEnv{docCommands}
+  的外围 \refEnv{tcbraster} 设置 \meta{选项}。
+
+\begin{dispExample}
+\tcbset{doc raster command={raster before skip=7mm,raster after skip=0mm}}
+
+The is an example text.
+
+\begin{docCommand*}{myCommandI}{\marg{argument}}
+  This is the documentation of \refCom{myCommandI} which takes one \meta{argument}.
+  \refCom{myCommandI} does some funny things with its \meta{argument}.
+\end{docCommand*}
+\end{dispExample}
+
+\end{docTcbKeys}
+
+
+\begin{docTcbKeys}[
+  doc name               = doc raster environment,
+  doc parameter eq meta = options,
+  doc description init empty,
+  doc new         = 2020-04-24,
+]{}
+  为 \refEnv{docEnvironment}、\refEnv{docEnvironment*} 和 \refEnv{docEnvironments}
+  的外围 \refEnv{tcbraster} 设置 \meta{选项}。
+\end{docTcbKeys}
+
+
+\begin{docTcbKeys}[
+  doc name        = doc raster key,
+  doc parameter eq meta = options,
+  doc description init empty,
+  doc new         = 2020-04-24,
+]{}
+  为 \refEnv{docKey}、\refEnv{docKey*} 和 \refEnv{docKeys}
+  的外围 \refEnv{tcbraster} 设置 \meta{选项}。
+\end{docTcbKeys}
+
+
+\begin{docTcbKeys}[
+  doc name        = doc raster path,
+  doc parameter eq meta = options,
+  doc description init empty,
+  doc new         = 2020-04-24,
+]{}
+  为 \refEnv{docPathOperation}、\refEnv{docPathOperation*} 和 \refEnv{docPathOperations}
+  的外围 \refEnv{tcbraster} 设置 \meta{选项}。
+\end{docTcbKeys}
+
+
+\begin{docTcbKeys}[
+  doc name        = doc raster,
+  doc parameter eq meta = options,
+  doc description init empty,
+  doc new         = 2020-04-24,
+]{}
+  为 \refKey{/tcb/doc raster command}、\refKey{/tcb/doc raster environment}、
+  \refKey{/tcb/doc raster key} 和 \refKey{/tcb/doc raster path}
+  设置相同 \meta{选项} 的快捷方式。
+\end{docTcbKeys}
+
+
+\begin{docTcbKey}{doc head command}{=\meta{options}}{\tcbdocdescInitEmpty}
+  为 \refEnv{docCommand}、\refEnv{docCommand*} 和 \refEnv{docCommands}
+  的标题行设置 \meta{选项}。
+\begin{dispExample}
+\tcbset{doc head command={interior style={fill,left color=red!20!white,
+  right color=blue!20!white}}}
+
+\begin{docCommand*}{myCommandE}{\marg{argument}}
+  This is the documentation of \refCom{myCommandE} which takes one \meta{argument}.
+  \refCom{myCommandE} does some funny things with its \meta{argument}.
+\end{docCommand*}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+
+\begin{docTcbKey}{doc head environment}{=\meta{options}}{\tcbdocdescInitEmpty}
+  为 \refEnv{docEnvironment}、\refEnv{docEnvironment*} 和 \refEnv{docEnvironments}
+  的标题行设置 \meta{选项}。
+\begin{dispExample}
+\tcbset{doc head environment={beamer,boxsep=2pt,arc=2pt,colback=green!20!white}}
+
+\begin{docEnvironment*}{myEnvironment}{\marg{argument}}
+  This is the documentation of \refEnv{myEnvironment} which
+  takes one \meta{argument}.
+\end{docEnvironment*}
+\end{dispExample}
+\end{docTcbKey}
+
+\begin{docTcbKey}{doc head key}{=\meta{options}}{\tcbdocdescInitEmpty}
+  为 \refEnv{docKey}、\refEnv{docKey*} 和 \refEnv{docKeys}
+  的标题行设置 \meta{选项}。
+\begin{dispExample}
+\tcbset{doc head key={boxsep=4pt,arc=4pt,boxrule=0.6pt,
+  frame style=fill,interior style=fill,colframe=green!50!black}}
+
+\begin{docKey}[foo]{myKey}{}{no value}
+  This is the documentation of \refKey{/foo/myKey}.
+\end{docKey}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2019-09-18]{doc head path}{=\meta{options}}{\tcbdocdescInitEmpty}
+  为 \refEnv{docPathOperation}、\refEnv{docPathOperation*} 和 \refEnv{docPathOperations}
+  的标题行设置 \meta{选项}。
+\begin{dispExample}
+\tcbset{doc head command={interior style={fill,left color=red!7!white,
+  right color=blue!7!white}}}
+
+\begin{docPathOperation*}{-{}-}{\meta{coordinate or cycle}}
+  This is the documentation of \refPathOperation{-{}-}.
+\end{docPathOperation*}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc updated=2019-09-18]{doc head}{=\meta{options}}{\tcbdocdescInitEmpty}
+  为 \refKey{/tcb/doc head command}、\refKey{/tcb/doc head environment}、
+  \refKey{/tcb/doc head key} 和 \refKey{/tcb/doc head path}
+  设置相同 \meta{选项} 的快捷方式。
+\end{docTcbKey}
+
+
+\clearpage
+
+主要文档环境 \refEnv{docCommand}、\refEnv{docEnvironment}、\refEnv{docKey} 等的
+描述文字以紧凑形式排版，无缩进且 |parskip=0pt|。
+可使用以下各键在描述文字之前（或之后）插入代码，以覆盖此设置。
+
+\begin{docTcbKey}[][doc new=2015-10-09]{before doc body command}{=\meta{code}}{\tcbdocdescInitEmpty}
+  在 \refEnv{docCommand} 和 \refEnv{docCommand*} 的描述文字之前
+  执行 \meta{代码}。
+\begin{dispExample}
+\tcbset{before doc body command={%
+    \setlength{\parindent}{2.5em}%
+    \setlength{\parskip}{1ex plus 0.75ex minus 0.25ex}%
+}}
+
+\begin{docCommand*}{myCommandG}{\marg{argument}}
+  This is the documentation of \refCom{myCommandG} which takes one \meta{argument}.
+  \refCom{myCommandG} does some funny things with its \meta{argument}.
+\end{docCommand*}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2015-10-09]{after doc body command}{=\meta{code}}{\tcbdocdescInitEmpty}
+  在 \refEnv{docCommand} 和 \refEnv{docCommand*} 的描述文字之后
+  执行 \meta{代码}。
+\begin{dispExample}
+\tcbset{after doc body command={%
+    \hfill\nolinebreak[1]\hspace*{\fill}\textcolor{red}{$\diamondsuit$}%
+}}
+
+\begin{docCommand*}{myCommandH}{\marg{argument}}
+  This is the documentation of \refCom{myCommandH} which takes one \meta{argument}.
+  \refCom{myCommandH} does some funny things with its \meta{argument}.
+\end{docCommand*}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2015-10-09]{before doc body environment}{=\meta{code}}{\tcbdocdescInitEmpty}
+  在 \refEnv{docEnvironment} 和 \refEnv{docEnvironment*} 的描述文字之前
+  执行 \meta{代码}。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-10-09]{after doc body environment}{=\meta{code}}{\tcbdocdescInitEmpty}
+  在 \refEnv{docEnvironment} 和 \refEnv{docEnvironment*} 的描述文字之后
+  执行 \meta{代码}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2015-10-09]{before doc body key}{=\meta{code}}{\tcbdocdescInitEmpty}
+  在 \refEnv{docKey} 和 \refEnv{docKey*} 的描述文字之前
+  执行 \meta{代码}。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2015-10-09]{after doc body key}{=\meta{code}}{\tcbdocdescInitEmpty}
+  在 \refEnv{docKey} 和 \refEnv{docKey*} 的描述文字之后
+  执行 \meta{代码}。
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2019-09-18]{before doc body path}{=\meta{code}}{\tcbdocdescInitEmpty}
+  在 \refEnv{docPathOperation} 和 \refEnv{docPathOperation*} 的描述文字之前
+  执行 \meta{代码}。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2019-09-18]{after doc body path}{=\meta{code}}{\tcbdocdescInitEmpty}
+  在 \refEnv{docPathOperation} 和 \refEnv{docPathOperation*} 的描述文字之后
+  执行 \meta{代码}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new and updated={2015-10-09}{2019-09-18}]{before doc body}{=\meta{options}}{\tcbdocdescInitEmpty}
+  为 \refKey{/tcb/before doc body command}、\refKey{/tcb/before doc body environment}、
+  \refKey{/tcb/before doc body key} 和 \refKey{/tcb/before doc body path}
+  设置相同 \meta{选项} 的快捷方式。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new and updated={2015-10-09}{2019-09-18}]{after doc body}{=\meta{options}}{\tcbdocdescInitEmpty}
+  为 \refKey{/tcb/after doc body command}、\refKey{/tcb/after doc body environment}、
+  \refKey{/tcb/after doc body key} 和 \refKey{/tcb/after doc body path}
+  设置相同 \meta{选项} 的快捷方式。
+\end{docTcbKey}
+
+
+\clearpage
+\subsection{通用定制选项键}
+
+\begin{docTcbKey}[][doc updated=2015-03-16]{docexample}{}{样式，无取值}
+  用颜色 |ExampleBack| 和 |ExampleFrame| 设置 \refEnv{dispExample}
+  和 \refEnv{dispListing} 的样式。
+  要改变示例的外观，可重定义此样式。
+\begin{dispListing}
+% Predefined style:
+\tcbset{
+  docexample/.style={colframe=ExampleFrame,colback=ExampleBack,
+    before skip=\medskipamount,after skip=\medskipamount,
+    fontlower=\footnotesize}
+}
+\end{dispListing}
+\end{docTcbKey}
+
+\begin{docTcbKey}{documentation listing options}{=\meta{key list}}{无默认值，\\\hspace*{\fill} 初始为 |样式=tcbdocumentation|}
+  设置来自 \refPkg{listings} 宏包 \cite{hoffmann:listings} 的选项。
+  它们在 \refEnv{dispExample} 和 \refEnv{dispListing} 内部用于排印代码列表。
+  注意：这与用于\enquote{普通}代码列表的 \refKey{/tcb/listing options} 键并不相同。\\
+  仅用于 \refKey{/tcb/listing engine}|=listings|。
+\end{docTcbKey}
+
+\begin{docTcbKey}{documentation listing style}{=\meta{listing style}}{无默认值，初始为 |tcbdocumentation|}
+  是 |documentation listing options={style=...}| 的缩写。
+  此键为 \refPkg{listings} 宏包设置一个 \meta{样式}，见 \cite{hoffmann:listings}。
+  注意：这与用于\enquote{普通}代码列表的 \refKey{/tcb/listing style} 键并不相同。\\
+  仅用于 \refKey{/tcb/listing engine}|=listings|。
+\end{docTcbKey}
+
+\begin{docTcbKey}{documentation minted options}{=\meta{key list}}{无默认值，\\\hspace*{\fill} 初始为 |tabsize=2,fontsize=\textbackslash small|}
+  设置来自 \refPkg{minted} 宏包 \cite{poore:minted} 的选项，
+  在排印代码列表时使用（若启用）。
+  注意：这与用于\enquote{普通}代码列表的 \refKey{/tcb/minted options} 键并不相同。\\
+  仅用于 \refKey{/tcb/listing engine}|=minted|。
+\end{docTcbKey}
+
+\begin{docTcbKey}{documentation minted style}{=\meta{key list}}{无默认值，初始未设置}
+  为 \refPkg{minted} 宏包 \cite{poore:minted} 设置一个
+  |Pygments| \cite{pygments:web} 已知的 \meta{样式}（若启用）。
+  注意：这与用于\enquote{普通}代码列表的 \refKey{/tcb/minted style} 键并不相同。\\
+  仅用于 \refKey{/tcb/listing engine}|=minted|。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2017-04-24]{documentation minted language}{=\meta{programming language}}{无默认值，初始为 |latex|}
+  为 \refPkg{minted} 宏包 \cite{poore:minted} 设置一个
+  |Pygments| \cite{pygments:web} 已知的 \meta{编程语言}（若启用）。
+  注意：这与用于\enquote{普通}代码列表的 \refKey{/tcb/minted language} 键并不相同。\\
+  仅用于 \refKey{/tcb/listing engine}|=minted|。
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2017-04-25]{keywords bold}{\docKeyChoices*{defaultinit=true,false}}{}
+  \refEnv{docEnvironment}、\refEnv{docCommand} 等中所用的关键字
+  （是否）以粗体排印。由于使用等宽字体，对于没有粗体变体的
+  Computer Modern 之类字体，效果可能不可见。
+  注意：对关键字的引用完全不以粗体排印。
+\begin{dispExample*}{sidebyside}
+\LARGE
+\docAuxCommand{fooaux}, \refCom{tcbset}
+
+\tcbset{keywords bold=false}
+\docAuxCommand{fooaux}, \refCom{tcbset}
+\end{dispExample*}
+\end{docTcbKey}
+
+
+\begin{docTcbKeys}
+  {
+    {
+      doc name               = page ref formatter,
+      doc new                = {2024-03-13},
+      doc parameter eq meta* = macro,
+      doc description default init = {\cs{textsuperscript}}{\cs{textsuperscript}},
+    }
+  }
+将 \meta{宏} 设为页码引用（如对 \refEnv{tcolorbox} 的引用）的格式化器。
+默认设置将页码引用置于 |\textsuperscript| 中。
+可改为 |\fakesuperscript|，以应对与 \refPkg{realscripts} 宏包配合时的
+上标问题，或仅用于用户自定义。
+\end{docTcbKeys}
+
+
+\begin{docTcbKeys}
+  {
+    {
+      doc name               = ctan formatter,
+      doc new                = {2024-11-29},
+      doc parameter eq meta* = macro,
+      doc description default init = {\cs{use:n}}{\cs{use:n}},
+    }
+  }
+将 \meta{宏} 设为 \refCom{refPkg} 内部字符串 CTAN 的格式化器。
+该 \meta{宏} 必须接受一个必填参数（字符串 CTAN），通常是某种字体设置。
+\begin{dispExample}
+\tcbset{ctan formatter=\textsf}
+Images are included using the \refPkg{graphicx} package.\par
+\newcommand{\myformatter}[1]{\textbf{\ttfamily\color{red}\TeX-Archive}}
+\tcbset{ctan formatter=\myformatter}
+Draw your own picture with help of the \refPkg{tikz} package.
+\end{dispExample}
+\end{docTcbKeys}
+
+
+
+\begin{docTcbKey}[][doc new=2015-01-09]{index command}{=\meta{macro}}{\tcbdocdescInit{\cs{index}}}
+  用给定的 \meta{宏} 替换内部使用的 \cs{index} 宏。
+  该 \meta{宏} 必须像 \cs{index} 一样接受一个必填参数。
+  此选项与 \refKey{/tcb/index command name} 互斥。
+\begin{dispListing}
+\tcbset{index command=\myindexcommand}
+\end{dispListing}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}[][doc new=2015-01-09]{index command name}{=\meta{name}}{\tcbdocdescNoDefaultInit}
+  用 \mbox{\cs{index}\texttt{[\meta{名称}]}} 替换内部使用的 \cs{index} 宏，
+  即把 \mbox{\cs{index}\texttt{\textbraceleft\ldots\textbraceright}} 替换为
+  \mbox{\cs{index}\texttt{[\meta{名称}]\textbraceleft\ldots\textbraceright}}。
+  此选项意在与 \refPkg{imakeidx} 配合使用，且与 \refKey{/tcb/index command} 互斥。
+\begin{dispListing}
+\tcbset{index command name=mydoc}
+\end{dispListing}
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}{index format}{%
+  \docKeyChoices*{pgfsection,pgfchapter,init=pgf,doc,off}}{}
+  决定所生成索引的基本格式。
+  可用取值为：
+  \begin{itemize}
+  \item\docValue{pgfsection}：索引按 \refPkg{pgf} 文档的格式排版（作为一节）。
+  \item\docValue{pgfchapter}：索引按 \refPkg{pgf} 文档的格式排版（作为一章）。
+  \item\docValue{pgf}：\docValue{pgfsection} 的别名。
+  \item\docValue{doc}：假定索引由 \refPkg{doc} 或
+    \refPkg{ltxdoc} 排版。假定配合 \refPkg{makeindex}
+    使用 |-s gind.ist|。必须\emph{在} |tcolorbox| \emph{之前}
+    加载 \refPkg{hypdoc} 宏包。只有有限的一部分定制可用！
+    此选项一旦使用便不能取消！
+  \item\docValue{off}：索引不由 |tcolorbox| 排版。若索引由其他宏包
+    （如 \refPkg{imakeidx}）排版，则使用此值。
+  \end{itemize}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{index actual}{=\meta{character}}{\tcbdocdescInit{@}}
+  设置自动索引中\enquote{actual}所用的字符。
+\end{docTcbKey}
+
+\begin{docTcbKey}{index quote}{=\meta{character}}{\tcbdocdescInit{|"|}}
+  设置自动索引中\enquote{quote}所用的字符。
+\end{docTcbKey}
+
+\begin{docTcbKey}{index level}{=\meta{character}}{\tcbdocdescInit{!}}
+  设置自动索引中\enquote{level}所用的字符。
+\end{docTcbKey}
+
+\begin{docTcbKey}{index default settings}{}{样式，无取值}
+  为 \refKey{/tcb/index actual}、
+  \refKey{/tcb/index quote} 和
+  \refKey{/tcb/index level} 设置 \refPkg{makeindex} 默认值。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{index german settings}{}{样式，无取值}
+  为德语语文本设置推荐的 \refPkg{makeindex} 取值。
+  这等同于设置以下内容：
+\begin{dispListing}
+\tcbset{index actual={=},index quote={!},index level={>}}
+\end{dispListing}
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{index annotate}{\docKeyChoices*{defaultinit=true,false}}{}
+  若设为 |true|，则索引条目会附加简短描述，
+  这些描述由 \refKey{/tcb/doclang/environment}、\refKey{/tcb/doclang/key}
+  等给出。
+\end{docTcbKey}
+
+\begin{docTcbKey}{index colorize}{\docKeyChoices*{default=true,init=false}}{}
+  若设为 |true|，则索引条目会按
+  \refKey{/tcb/color environment}、\refKey{/tcb/color key}
+  等给出的颜色设置着色。
+\end{docTcbKey}
+
+
+\begin{docTcbKeys}[
+    doc new          = {2022-06-20},
+    doc key choices* = {defaultinit=true,false}
+  ]
+  {
+    {
+      doc name        = index gather colors,
+    },
+    {
+      doc name        = index gather commands,
+    },
+    {
+      doc name        = index gather counters,
+    },
+    {
+      doc name        = index gather environments,
+    },
+    {
+      doc name        = index gather keys,
+    },
+    {
+      doc name        = index gather lengths,
+    },
+    {
+      doc name        = index gather paths,
+    },
+    {
+      doc name        = index gather values,
+    }
+  }
+  若设为 |true|，则创建一个额外的索引分组，把相关条目归集到一起；
+  例如 \refKey{/tcb/index gather counters} 会创建一个索引条目
+  \`Colors'（见 \refKey{/tcb/doclang/colors}），
+  并把所有颜色作为其子条目归入。
+\end{docTcbKeys}
+
+
+\begin{docTcbKeys}[
+    doc new={2022-06-20},
+    doc parameter = {},
+  ]
+  {
+    {
+      doc name        = index gather all,
+      doc description = {样式，初始已设置}
+    },
+    {
+      doc name        = index gather none,
+      doc description = {样式}
+    },
+  }
+  将上面所有 index gather 选项切换为 |true|（全部）或 |false|（无）。
+\end{docTcbKeys}
+
+\clearpage
+
+\begin{docTcbKey}{color command}{=\meta{color}}{\tcbdocdescInit{Definition}}
+  设置宏定义所用的高亮颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}{color environment}{=\meta{color}}{\tcbdocdescInit{Definition}}
+  设置环境定义所用的高亮颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}{color key}{=\meta{color}}{\tcbdocdescInit{Definition}}
+  设置键定义所用的高亮颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2019-09-18}]{color path}{=\meta{color}}{\tcbdocdescInit{Definition}}
+  设置 \tikzname\ 路径操作定义所用的高亮颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}{color value}{=\meta{color}}{\tcbdocdescInit{Definition}}
+  设置取值定义所用的高亮颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2015-01-08}]{color counter}{=\meta{color}}{\tcbdocdescInit{Definition}}
+  设置计数器定义所用的高亮颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new={2015-01-08}]{color length}{=\meta{color}}{\tcbdocdescInit{Definition}}
+  设置长度定义所用的高亮颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}{color color}{=\meta{color}}{\tcbdocdescInit{Definition}}
+  设置颜色定义所用的高亮颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc updated={2019-09-18}]{color definition}{=\meta{color}}{\tcbdocdescInit{Definition}}
+  为 \refKey{/tcb/color command}、\refKey{/tcb/color environment}、
+  \refKey{/tcb/color key}、\refKey{/tcb/color path}、\refKey{/tcb/color value}、
+  \refKey{/tcb/color counter}、\refKey{/tcb/color length}，
+  以及 \refKey{/tcb/color color} 设置高亮颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}{color option}{=\meta{color}}{\tcbdocdescInit{Option}}
+  设置用于可选参数的颜色。
+\end{docTcbKey}
+
+\begin{docTcbKey}{color fade}{=\meta{color}}{\tcbdocdescInit{Fade}}
+  设置用于淡化文字（如 \refEnv{docPathOperation} 中的
+  \colFade{\textbackslash path}）的颜色。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{color hyperlink}{=\meta{color}}{\tcbdocdescInit{Hyperlink}}
+  设置所有超链接的颜色，即全部内部与外部链接。
+\end{docTcbKey}
+
+
+\clearpage
+%-------------------------------------------------------------------------------
+\subsection{语言选项键}
+
+以下各键用于语言相关设置。
+英语为预定义语言。
+
+\begin{docTcbKey}{english language}{}{样式，无取值}
+  将所有语言相关设置设为英语。
+\end{docTcbKey}
+
+\begin{langTcbKey}{color}{=\meta{text}}{\tcbdocdescInit{color}}
+  索引中用于颜色的文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}{colors}{=\meta{text}}{\tcbdocdescInit{Colors}}
+  索引中颜色的标题文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}[][doc new={2022-06-20}]{commands}{=\meta{text}}{\tcbdocdescInit{Commands}}
+  索引中命令的标题文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}[][doc new={2015-01-08}]{counter}{=\meta{text}}{\tcbdocdescInit{counter}}
+  索引中用于计数器的文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}[][doc new={2015-01-08}]{counters}{=\meta{text}}{\tcbdocdescInit{Counters}}
+  索引中计数器的标题文字。
+\end{langTcbKey}
+
+\begin{langTcbKeys}[
+    doc name              = default,
+    doc parameter eq meta = text,
+    doc description init  = default,
+    doc new               = 2026-05-26
+  ]{}
+  用于 \refCom{tcbdocdescDefault} 等的文字。
+\end{langTcbKeys}
+
+\begin{langTcbKey}{environment}{=\meta{text}}{\tcbdocdescInit{environment}}
+  索引中用于环境的文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}{environments}{=\meta{text}}{\tcbdocdescInit{Environments}}
+  索引中环境的标题文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}{environment content}{=\meta{text}}{\tcbdocdescInit{environment content}}
+  在 \refEnv{docEnvironment} 中使用的文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}{index}{=\meta{text}}{\tcbdocdescInit{Index}}
+  索引的标题文字。
+\end{langTcbKey}
+
+\begin{langTcbKeys}[
+    doc name              = initially,
+    doc parameter eq meta = text,
+    doc description init  = initially,
+    doc new               = 2026-05-26
+  ]{}
+  用于 \refCom{tcbdocdescInit} 等的文字。
+\end{langTcbKeys}
+
+\begin{langTcbKeys}[
+    doc name              = initiallyempty,
+    doc parameter eq meta = text,
+    doc description init  = initially empty,
+    doc new               = 2026-05-26
+  ]{}
+  用于 \refCom{tcbdocdescInitEmpty} 等的文字。
+\end{langTcbKeys}
+
+\begin{langTcbKey}{key}{=\meta{text}}{\tcbdocdescInit{key}}
+  索引中用于键的文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}{keys}{=\meta{text}}{\tcbdocdescInit{Keys}}
+  索引中键的标题文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}[][doc new={2015-01-08}]{length}{=\meta{text}}{\tcbdocdescInit{length}}
+  索引中用于长度的文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}[][doc new={2015-01-08}]{lengths}{=\meta{text}}{\tcbdocdescInit{Lengths}}
+  索引中长度的标题文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}[][doc new={2014-09-19}]{new}{=\meta{text}}{\tcbdocdescInit{New}}
+  新增内容的提示文字。
+\end{langTcbKey}
+
+\clearpage
+
+\begin{langTcbKeys}[
+    doc name              = nodefault,
+    doc parameter eq meta = text,
+    doc description init  = no default,
+    doc new               = 2026-05-26
+  ]{}
+  用于 \refCom{tcbdocdescNoDefaultInit} 等的文字。
+\end{langTcbKeys}
+
+\begin{langTcbKeys}[
+    doc name              = noinitially,
+    doc parameter eq meta = text,
+    doc description init  = initially unset,
+    doc new               = 2026-05-26
+  ]{}
+  用于 \refCom{tcbdocdescNoDefaultInit} 等的文字。
+\end{langTcbKeys}
+
+\begin{langTcbKey}[][doc new={2019-09-18}]{path}{=\meta{text}}{\tcbdocdescInit{path operation}}
+  索引中用于路径操作的文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}[][doc new={2019-09-18}]{paths}{=\meta{text}}{\tcbdocdescInit{Path operations}}
+  索引中路径操作的标题文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}{pageshort}{=\meta{text}}{\tcbdocdescInit{P.}}
+  页码引用的简短文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}[][doc new={2014-09-19}]{updated}{=\meta{text}}{\tcbdocdescInit{Updated}}
+  更新内容的提示文字。
+\end{langTcbKey}
+
+
+\begin{langTcbKey}{value}{=\meta{text}}{\tcbdocdescInit{value}}
+  索引中用于取值的文字。
+\end{langTcbKey}
+
+\begin{langTcbKey}{values}{=\meta{text}}{\tcbdocdescInit{Values}}
+  索引中取值的标题文字。
+\end{langTcbKey}
+
+
+
+\subsection{本程序库的预定义颜色}\tcbdocmarginnote{\tcbdocupdated{2019-09-18}}
+以下颜色为预定义颜色。它们在本程序库的某些命令中用作默认颜色。
+
+\def\dispColor#1{\docColor{#1}~\tikz[baseline=1mm]\path[fill=#1,draw] (0,0) rectangle (0.4,0.4);~}
+
+\dispColor{Option},
+\dispColor{Definition},
+\dispColor{ExampleFrame},
+\dispColor{ExampleBack},
+\dispColor{Hyperlink},
+\dispColor{Fade}.
+
+

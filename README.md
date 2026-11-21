@@ -18,3 +18,7 @@
 - mdframed-doc 2013/07/01 1.9b
 - listings 2025/11/14 Version 1.11b
 - tex by topic-cn
+- caption 2023/09/07
+- colortbl 2026/05/01
+- multirow-zh Released 2024/11/12, version v2.9
+- tcolorbox-zh 6.10.0 (2026/05/28)

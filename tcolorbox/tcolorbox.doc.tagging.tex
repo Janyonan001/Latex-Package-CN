@@ -1,0 +1,35 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{标签结构}\label{sec:tagging}%
+\tcbset{external/prefix=external/tagging_}%
+
+本宏包对标签结构（tagging）提供部分兼容支持。
+感谢 Ulrike Fischer，以下内容可以正常工作：
+
+\subsection{已支持的内容}
+
+\begin{itemize}
+\item 采用 \refKey{/tcb/capture} 捕获模式 \docValue{minipage} 的基本
+  |tcolorbox|（这是标准情形）。\par
+  捕获模式 \docValue{hbox} 与 \docValue{fitbox} 暂不支持。
+  \refCom{tcbox} 与 \refCom{tcboxfit} 同理。
+\item 上部与下部。
+\item 文本框的标题。
+\item 由 \refCom{newtcolorbox} 等创建的文本框。
+\item 定理文本框。根据所用的 \refKey{/tcb/theorem style}，
+  标题会被标记为题注（\docValue*{standard}、\docValue*{change standard}、
+  \docValue*{plain apart}、\docValue*{change apart}、\docValue*{margin apart}），
+  或不被标记（其余样式）。
+\item 可断开的 |tcolorbox|。
+\item 各类皮肤，如 \refKey{/tcb/enhanced}、\refKey{/tcb/bicolor} 等。
+\end{itemize}
+
+\subsection{已知局限}
+\begin{itemize}
+\item 标签结构代码会在 |tcolorbox| 前后插入额外的 |\par|。
+  这可能（将会）与 \refKey{/tcb/before} 和 \refKey{/tcb/after} 的设置相互影响。
+  特别是，\refKey{/tcb/nobeforeafter} 将无法按预期工作。
+\item 由于标签结构会引入额外的 |\par|，\refEnv{tcbraster} 不能超过一列。
+\item 带框标题不会被标记。
+\end{itemize}

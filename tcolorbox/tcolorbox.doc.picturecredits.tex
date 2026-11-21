@@ -1,0 +1,33 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{图片致谢}\label{sec:picturecredits}%
+\tcbset{external/prefix=external/picturecredits_}%
+本文档中使用了以下图片。
+
+\DeclareTotalTColorBox{\diabox}{ O{} v  m }
+  { bicolor,fonttitle=\bfseries\ttfamily,adjusted title={#2},center title,
+    colframe=blue!20!black,leftupper=0mm,rightupper=0mm,colback=black!75!white,
+    finish vignette={size=1.5mm},#1}
+  { \tikz\path[fill zoom image={#2}] (0,0) rectangle (\linewidth,4cm);%
+    \tcblower#3}
+
+\begin{tcbraster}[raster equal height]
+\diabox{Basilica_5.png}{
+  \url{http://commons.wikimedia.org/wiki/File:Basilica_5.png}}
+\diabox{lichtspiel.jpg}{
+  由 Thomas F.~Sturm 拍摄。}
+\diabox{crinklepaper.png}{%
+  使用 |GIMP| 创建。\\
+  \url{http://www.gimp.org}}
+\diabox{pink_marble.png}{%
+  使用 |GIMP| 创建。\\
+  \url{http://www.gimp.org}}
+\diabox{blueshade.png}{%
+  使用 |GIMP| 创建。\\
+  \url{http://www.gimp.org}}
+\diabox{goldshade.png}{%
+  使用 |GIMP| 创建。\\
+  \url{http://www.gimp.org}}
+\end{tcbraster}
+

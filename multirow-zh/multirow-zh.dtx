@@ -1,0 +1,2338 @@
+% \iffalse meta-comment
+%
+% Parts of this file, Copyright (C) 1994 by Jerry Leichter
+% Copyright (C) 2016-2024 by Pieter van Oostrum <pieter@vanoostrum.org>
+% -------------------------------------------------------
+%
+% This file may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either version 1.3
+% of this license or (at your option) any later version.
+% The latest version of this license is in:
+%
+%    http://www.latex-project.org/lppl.txt
+%
+% and version 1.3 or later is part of all distributions of LaTeX
+% version 2005/12/01 or later.
+%
+% \fi
+%
+% \iffalse
+%<*driver>
+\ProvidesFile{\jobname.dtx}
+%</driver>
+% This is the variable part of the preamble
+%
+%<multirow|bigstrut>%% Copyright (C) 1994 by Jerry Leichter
+%<bigdelim>%% Copyright (C) 1994 by \O ystein Bache
+%% Copyright (C) 2016-2024 by Pieter van Oostrum <pieter@vanoostrum.org>
+%%
+%
+%    \begin{macrocode}
+%<multirow|bigstrut|bigdelim>\NeedsTeXFormat{LaTeX2e}
+%<multirow>\ProvidesPackage{multirow}%
+%<bigstrut>\ProvidesPackage{bigstrut}
+%<bigdelim>\ProvidesPackage{bigdelim}
+%<multirow|bigstrut|bigdelim>           [2024/11/12 v2.9
+%<multirow>                  Span multiple rows of a table]%
+%<bigstrut>                  Provide larger struts in tabulars]
+%<bigdelim>                  Create big delimiters in tabular or array]
+%    \end{macrocode}
+%
+%<*driver>
+\documentclass[a4paper]{ltxdoc}
+\usepackage[fontset=fandol]{ctex}
+\usepackage{multirow,bigstrut,bigdelim,colortbl}
+\usepackage[table]{xcolor}
+\usepackage{tabulary}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{calc}
+\usepackage{url}
+\usepackage[colorlinks, urlcolor=blue, linktocpage]{hyperref}
+\usepackage{tikz}
+\usepackage{hhline}
+\usepackage{etoolbox}
+\AtBeginEnvironment{macrocode}{\color{red}}
+\newcommand{\minitab}[2][l]{\begin{tabular}{#1}#2\end{tabular}}
+\DisableCrossrefs
+\CodelineIndex
+\RecordChanges
+\IndexPrologue{\section*{索引}%
+  \markboth{索引}{索引}%
+  斜体数字给出条目所在说明的页码；带下划线的数字给出宏定义所在的代码行号；罗马体数字给出条目被使用的代码行号。}
+\GlossaryPrologue{\section*{变更历史}%
+  \markboth{变更历史}{变更历史}}
+\def\generalname{一般}
+\newcommand{\env}[1]{\texttt{#1}}
+\newcommand{\Package}[1]{\textsf{#1}}
+\def\bsbs{\cs{\char`\\}}
+\begin{document}
+  \DeleteShortVerb{\|}
+  \DocInput{\jobname.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \CheckSum{0}
+%
+% \CharacterTable
+%  {Upper-case    \A\B\C\D\E\F\G\H\I\J\K\L\M\N\O\P\Q\R\S\T\U\V\W\X\Y\Z
+%   Lower-case    \a\b\c\d\e\f\g\h\i\j\k\l\m\n\o\p\q\r\s\t\u\v\w\x\y\z
+%   Digits        \0\1\2\3\4\5\6\7\8\9
+%   Exclamation   \!     Double quote  \"     Hash (number) \#
+%   Dollar        \$     Percent       \%     Ampersand     \&
+%   Acute accent  \'     Left paren    \(     Right paren   \)
+%   Asterisk      \*     Plus          \+     Comma         \,
+%   Minus         \-     Point         \.     Solidus       \/
+%   Colon         \:     Semicolon     \;     Less than     \<
+%   Equals        \=     Greater than  \>     Question mark \?
+%   Commercial at \@     Left bracket  \[     Backslash     \\
+%   Right bracket \]     Circumflex    \^     Underscore    \_
+%   Grave accent  \`     Left brace    \{     Vertical bar  \|
+%   Right brace   \}     Tilde         \~}
+%
+% \changes{v1.7}{2016/09/13}{统一所有文件的版本号}
+% \changes{v2.0}{2016/09/27}{发布 v2.0}
+% \changes{v2.3}{2018/08/03}{小缺陷修复}
+% \changes{v2.4}{2018/12/30}{在 \texttt{bigstrut.sty} 中添加 \leavevmode}
+% \changes{v2.4}{2019/01/01}{使 \cs{multirow} 中的 \meta{width} 与 \meta{vmove}
+% 与 \Package{calc} 兼容}
+% \changes{v2.5}{2019/05/31}{解决与 \Package{colortbl} 宏包的冲突}
+%
+% \GetFileInfo{multirow.sty}
+%
+% \DoNotIndex{\#,\$,\%,\&,\@,\\,\{,\},\^,\_,\~,\ }
+% \DoNotIndex{\@ne}
+% \DoNotIndex{\advance,\begingroup,\catcode,\closein}
+% \DoNotIndex{\closeout,\day,\def,\edef,\else,\empty,\endgroup}
+%
+% \title{\Package{multirow}、
+%   \Package{bigstrut} 与
+%   \Package{bigdelim} 宏包}
+% \author{Pieter van Oostrum\thanks{在册的“现行作者”}\\
+%   \O ystein Bache\\
+%   Jerry Leichter\thanks{文档最初由 Robin
+%     Fairbairns 整理}}
+%
+% \date{发布于 \filedate，版本 \fileversion}
+%
+% \maketitle
+%
+% \tableofcontents
+%
+% \section{引言}
+% 这些宏包为标准的 \LaTeX{}
+% \env{tabular} 环境提供了一系列扩展。它们各自的功能如下：
+% \begin{description}
+% \item[\Package{multirow}] 提供一种构造，用于生成跨越表格多行的单元格；
+%
+% \item[\Package{bigstrut}] 生成支撑条，用于（略微）撑开所在的表格行；
+%
+% \item[\Package{bigdelim}] 生成尺寸合适的定界符（如花括号、圆括号或方括号），
+%   放入单个跨行单元中，用以标示其他各行之间的关系；
+%
+% \end{description}
+%
+% \section{2.x 版本的变更}
+% \label{sec:changes-2}
+%
+%\subsection*{版本 2.9}
+%
+% \begin{itemize}
+% \item 文档订正：此前对 \meta{nrows} 取负值时含义的描述有误。
+%
+% \item 使 \texttt{multirow.sty} 与 \texttt{supertabular} 4.2a 或更高版本兼容。
+%
+% \end{itemize}
+%
+%\subsection*{版本 2.8}
+%
+%\begin{itemize}
+%\item 为 \cs{ldelim} 与 \cs{rdelim} 增加可选参数 \meta{vmove}。
+%\end{itemize}
+%
+%\subsection*{版本 2.7}
+%
+%\begin{itemize}
+%\item  将 \cs{@xmultirow} 与 \cs{multirow@setcolwidth} 改为 \cs{long} 定义，以支持多段文本。
+%
+% 参见 \url{https://github.com/pietvo/multirow/issues/1}
+%\end{itemize}
+%
+%\subsection*{版本 2.6}
+%
+% \begin{itemize}
+% \item 使 \texttt{supertabular} 选项与较新版本的 \Package{supertabular} 宏包兼容。
+%
+% \item 当 \cs{@arstrutbox} 未定义时对其初始化，以便在 \env{array} 或 \env{tabular} 之外也能使用大型定界符。
+%
+% \end{itemize}
+%
+%\subsection*{版本 2.5a}
+%
+% \begin{itemize}
+% \item 更新联系方式
+% \end{itemize}
+%
+%\subsection*{版本 2.5}
+%
+% \begin{itemize}
+% \item 解决使用 \texttt{longtable} 选项时与 \Package{colortbl} 宏包的冲突；此前两个宏包都会重定义 \cs{@cline}。
+%
+%
+% \end{itemize}
+%
+%\subsection*{版本 2.4}
+%
+% \begin{itemize}
+% \item 在 \Package{bigstrut} 中添加 \cs{leavevmode}，以强制进入水平模式。
+% \item 使 \cs{multirow} 中的 \meta{width} 与 \meta{vmove} 可与 \Package{calc} 兼容。
+% \end{itemize}
+%
+%\subsection*{版本 2.3}
+%
+% \begin{itemize}
+% \item 在 \texttt{bigdelim.sty} 中，将大括号旁文本所用的 \cs{textrm} 替换为 \cs{textnormal}。
+% \end{itemize}
+%
+%\subsection*{版本 2.2}
+%
+% \begin{itemize}
+% \item 支持 \meta{nrows} 取小数值。
+% \end{itemize}
+%
+%\subsection*{版本 2.0}
+%
+% \begin{itemize}
+% \item \cs{multirow} 现在带有第一个可选参数 \oarg{vpos}。
+% \item \meta{width} 参数可指定为 \texttt{=}，表示使用 \cs{multirow} 所在列的既定宽度。
+%
+% \item 为 \meta{bigstruts} 参数增加可选前缀字母（\texttt{t}、\texttt{b}）（参见第~\ref{sect-refine-bigstrut} 节）。
+%
+% \item 宏包选项 \texttt{debug}。
+% \item 宏包选项 \texttt{longtable}，用于绕过 \Package{longtable} 的一处缺陷。参见第~\ref{sec:use-with-longtable} 节。
+%
+% \item 宏包选项 \texttt{supertabular}，以更好地支持 \Package{supertabular}。参见
+% 第~\ref{sec:use-with-supertabular} 节。
+% \item 改进了某些情形下的定位效果。
+% \item 补充了大量文档。
+% \item 发布版本改以 \texttt{.dtx} 文件为基础组织。
+% \item 与 v1.6 向后兼容。
+% \end{itemize}
+%
+% \section{使用 \Package{multirow}}\label{sec:multirow}
+%
+% \DescribeMacro{\multirow}
+% \cs{multirow} 在 \env{tabular} 或
+% 类似环境中放置一段文本，使其跨越多行。我们把该文本所跨越的行列区块称为跨行区块。通常它只覆盖一列，但与 \cs{multicolumn} 结合使用时可以覆盖更多列。
+%
+%
+%
+% \changes{v2.1}{2016/10/06}{依照《LaTeX 伴侣》，将文档中的 \meta{fixup} 更名为 \meta{vmove}。}
+%
+%
+% 基本语法如下：
+% \begin{quote}
+%   \cmd{\multirow}\oarg{vpos}\marg{nrows}\oarg{bigstruts}\marg{width}\oarg{vmove}\marg{text}
+% \end{quote}
+% 其中：
+% \begin{description}
+% \item[\meta{vpos}] 设定文本在跨行区块中的垂直位置。
+% 默认为 \texttt{[c]}，即文本垂直居中；其他选项有顶部对齐的 \texttt{[t]} 和底部对齐的 \texttt{[b]}。
+%
+% \item[\meta{nrows}] 为跨越的行数。本列的其余各行应留空，否则 \cs{multirow} 生成的内容会覆盖其上。
+%
+% 当 \meta{nrows} 取正值时，跨越的行包括当前行及其下方（\meta{nrows}-1）行；取负值时，包括当前行及其上方（-\meta{nrows}-1）行。\meta{nrows} 允许取小数，以便进行微调。
+%
+%
+%
+%
+%
+% \item[\meta{bigstruts}] 主要在使用了 \Package{bigstrut} 宏包时使用。此时它是所跨越各行中 \cs{bigstrut} 的使用总次数：每个 \cs{bigstrut} 计 2 次，每个 \cs{bigstrut}\oarg{x}（\meta{x} 为 \texttt{t} 或 \texttt{b}）计 1 次。默认为 0。
+%
+%
+%
+%
+%
+% \meta{bigstruts} 参数前还可加前缀字母 \texttt{t}、\texttt{b} 或 \texttt{tb}，以便更精细地控制。详见第~\ref{sect-refine-bigstrut} 节。前缀字母与数字之间可以有一个空格。
+%
+%
+%
+%
+% \item[\meta{width}] 为文本的排版宽度。
+% 特殊取值：\texttt{*} 表示采用文本参数的自然宽度；\texttt{=} 表示采用放置该 \cs{multirow} 条目的列的既定宽度。
+%
+%
+%
+% \item[\meta{vmove}] 是用于微调的长度：文本将在其原本位置之上（之下）再上移（下移，当 \meta{vmove} 为负值时）该长度。
+%
+%
+%
+% \item[\meta{text}] 为该构造的实际文本。若显式指定了宽度，文本将排在该宽度的 \cs{parbox} 中；可使用 \bsbs{} 在任意位置强制换行。
+%
+%
+%
+% 若宽度取 \texttt{*}，文本将在 LR（水平）模式下排版。此时若需要多行条目，可在文本参数中使用 \env{tabular} 或 \env{array} 环境，例如下面的 \env{minitab}。
+%
+%
+%
+%
+% 当 \cs{multirow} 条目位于具有既定宽度的列中时，宽度也可取 \texttt{=}，例如 \texttt{p\{\}} 列、\env{tabularx} 中的 \texttt{X} 列，或 \env{tabulary} 中的 \texttt{L}、\texttt{C}、\texttt{R}、\texttt{J} 列。文本将排在该宽度的 \cs{parbox} 中。
+%
+%
+%
+%
+% 在其他情形下使用“\texttt{=}”会得到奇怪的结果（通常是列宽过大）。
+%
+%
+% \end{description}
+%
+% 从 \Package{multirow} 2.4 版起，若已加载 \Package{calc} 宏包，\meta{width} 与 \meta{vmove} 参数可写成 \Package{calc} 表达式。是否载入 \Package{calc} 由文档作者负责，\Package{multirow} 不会自动载入。
+%
+%
+%
+%
+%
+% 注意：\cs{multirow} 可用于 \env{tabular} 及其大多数派生环境，例如 \env{tabularx}、\env{tabulary}、\env{supertabular}、\env{ltablex}、\env{xtab}、\env{longtable}、\env{tabu}、\env{booktabs} 和 \env{ctable}。其中某些环境在特定情形下需要特别留意，详见下文。
+%
+%
+%
+%
+%
+%
+% \DescribeMacro{\multirowsetup}
+% 在展开 \meta{text} 之前，会先展开 \cs{multirowsetup} 宏，用于设置所需的特殊环境。初始时 \cs{multirowsetup} 仅包含 \cs{raggedright}，可用 \cs{renewcommand} 重新定义。
+%
+%
+%
+%
+% 若要在同一单元格中同时使用 \cs{multirow} 与 \cs{multicolumn}，必须把 \cs{multirow} 放在 \cs{multicolumn} 内部；反过来则行不通。例如：
+% \index{multicolumn=\verb!*+\multicolumn+|usage}
+%
+%
+%
+% \begin{verbatim}
+%    \multicolumn{2}{c}{\multirow{3}{*}{多行多列}}
+% \end{verbatim}
+%
+% \subsection{宏包选项}
+% \label{sec:package-options}
+%
+% \DescribeMacro{multirowdebugtrue}
+% \DescribeMacro{multirowdebugfalse}
+% 定义了以下选项：
+% \begin{description}
+% \item[\texttt{debug}]
+% 该选项会把跨行盒子的相关信息写入日志文件，由 \TeX{} 的 \cs{showbox} 命令完成。注意：即使没有真正的错误，这也会使 \LaTeX{} 认为编译失败。
+%
+%
+%
+% 该选项也可在文档任意位置用 \cs{multirowdebugtrue} 命令开启、用 \cs{multirowdebugfalse} 命令关闭。若此类命令紧跟在某个 \cs{multirow} 之前，则仅对该 \cs{multirow} 条目生效。
+%
+%
+%
+% \item[longtable]
+% \texttt{longtable} 选项重定义 \cs{cline} 宏，以绕过 \Package{longtable} 宏包中的一处缺陷。参见第~\ref{sec:use-with-longtable} 节。
+%
+% \end{description}
+%
+%\subsection{示例}
+%\label{sec:examples}
+%
+% 同时使用 \Package{multirow} 与 \Package{bigstrut} 的例子：
+%
+% \begin{quote}
+% \begin{verbatim}
+% \newcommand{\minitab}[2][l]{\begin{tabular}{#1}#2\end{tabular}}
+% \begin{tabular}{|c|c|}
+% \hline
+% \multirow{4}{1in}{普通文本 g} & 列 g2a\\
+%       & 列 g2b \\
+%       & 列 g2c \\
+%       & 列 g2d \\
+% \hline
+% \multirow{3}[6]*{普通文本 g} & 列 g2a\bigstrut\\\cline{2-2}
+%       & 列 g2b \bigstrut\\\cline{2-2}
+%       & 列 g2c \bigstrut\\
+% \hline
+% \multirow{4}[8]{1in}{普通文本 g，但稍长一些。} &
+%                                    列 g2a\bigstrut\\\cline{2-2}
+%       & 列 g2b \bigstrut\\\cline{2-2}
+%       & 列 g2c \bigstrut\\\cline{2-2}
+%       & 列 g2d \bigstrut\\
+% \hline
+% \multirow{4}*{\minitab[c]{普通\\ g 文本}} & 列 g2a\\
+%       & 列 g2b \\
+%       & 列 g2c \\
+%       & 列 g2d \\
+% \hline
+% \end{tabular}
+% \end{verbatim}
+% \end{quote}
+% 排版结果如下：
+% \begin{quote}
+%   \begin{tabular}{|c|c|}
+%     \hline
+%     \multirow{4}{1in}{普通文本 g} & 列 g2a\\
+%       & 列 g2b \\
+%       & 列 g2c \\
+%       & 列 g2d \\
+%     \hline
+%     \multirow{3}[6]*{普通文本 g} & 列 g2a\bigstrut\\\cline{2-2}
+%       & 列 g2b \bigstrut\\\cline{2-2}
+%       & 列 g2c \bigstrut\\
+%     \hline
+%     \multirow{4}[8]{1in}{普通文本 g，但稍长一些。} &
+%                                        列 g2a\bigstrut\\\cline{2-2}
+%       & 列 g2b \bigstrut\\\cline{2-2}
+%       & 列 g2c \bigstrut\\\cline{2-2}
+%       & 列 g2d \bigstrut\\
+%     \hline
+%     \multirow{4}*{\minitab[c]{普通\\ g 文本}} & 列 g2a\\
+%       & 列 g2b \\
+%       & 列 g2c \\
+%       & 列 g2d \\
+%     \hline
+%   \end{tabular}
+%   \quad
+%   \begin{tabular}{ll}
+%     \multirow{4}{*}{普通情形} & \\
+%       & \\
+%       & \\
+%       & \\
+%     \multirow{3}[6]*{使用 \cs{bigstrut}，\meta{width} 取 \texttt{*}} & \bigstrut\\
+%       & \bigstrut\\
+%       & \bigstrut\\
+%     \multirow{4}[8]{*}{使用 \cs{bigstrut}，\meta{width} 取常规值} & \bigstrut\\
+%       & \bigstrut\\
+%       & \bigstrut\\
+%       & \bigstrut\\
+%     \multirow{4}*{\cs{multirow} 中的多行文本} & \\
+%       & \\
+%       & \\
+%       & \\
+%   \end{tabular}
+%
+% \end{quote}
+% \vspace{1ex}
+% 下面是在 \env{tabulary} 中使用 \texttt{=} 宽度说明符的例子（注意：\texttt{=} 两侧的花括号可以省略）：
+%
+%
+% \begin{quote}
+% \index{extrarowheight=\verb!*+\extrarowheight+|usage}
+% \begin{verbatim}
+% \setlength{\extrarowheight}{2pt}
+% \begin{tabulary}{11cm}{|L|L|L|}
+%   \hline
+%   人人生而自由，在尊严和权利上一律平等。 &
+%      \multirow{2}{=}{人人有资格享受本宣言所载的一切权利和
+%      自由，不分种族、肤色、性别、语言、宗教、
+%      政治或其他见解、国籍或社会出身、财产、
+%      出生或其他身份等任何区别。
+%      }
+%   & 人人有权享有生命、自由和人身安全。 \\
+% \cline{1-1}\cline{3-3}
+%      任何人不得加以奴役；奴隶制和奴隶买卖
+%      均应予以禁止。 &
+%   & 任何人不得加以酷刑，或施以残忍、不人道
+%   或侮辱性的待遇或刑罚。 \\
+% \hline
+% \end{tabulary}
+% \end{verbatim}
+% \end{quote}
+%
+% \begin{quote}
+% \index{extrarowheight=\verb!*+\extrarowheight+|usage}
+% \setlength{\extrarowheight}{2pt}
+% \begin{tabulary}{11cm}{|L|L|L|}
+%   \hline
+%   人人生而自由，在尊严和权利上一律平等。 &
+%      \multirow{2}{=}{人人有资格享受本宣言所载的一切权利和
+%      自由，不分种族、肤色、性别、语言、宗教、
+%      政治或其他见解、国籍或社会出身、财产、
+%      出生或其他身份等任何区别。}
+%
+%   & 人人有权享有生命、自由和人身安全。 \\
+% \cline{1-1}\cline{3-3}
+%      任何人不得加以奴役；奴隶制和奴隶买卖
+%      均应予以禁止。 &
+%   & 任何人不得加以酷刑，或施以残忍、不人道
+%   或侮辱性的待遇或刑罚。 \\
+% \hline
+% \end{tabulary}
+% \end{quote}
+%
+% 关于本例，有几点需要说明：
+% \begin{enumerate}
+% \item  中间一列是 \cs{multirow} 条目。你可能以为它会垂直居中，但实际上并非如此。这是因为 \cs{multirow} 并不知道盒子的高度；它对高度所能做的唯一估计是行数${}\times{}$单行常规高度。它试图在该空间内居中，但本例中该空间偏低，因此文本位于盒子顶部。若要居中，需要给出 \meta{vmove} 参数把它向下平移。
+%
+%
+%
+%
+%
+%
+%
+% \item 我们使用了 2pt 的 \cs{extrarowheight}\footnote{这只有在载入 \Package{array} 宏包时才可用，而 \Package{tabulary} 会自动载入它。}，以在 \cs{hline} 与后续文本之间留出一些间距。但该间距并不作用于 \cs{multirow}，因为它被假定为居中。此时可把 \meta{vpos} 参数取为 \texttt{[t]}，\cs{multirow} 便会作出恰当的定位。
+%
+%
+%
+%
+%
+%
+% \end{enumerate}
+%
+% 下面改用取负值的 \meta{nrows}。
+%
+% \begin{quote}
+% \index{extrarowheight=\verb!*+\extrarowheight+|usage}
+% \begin{verbatim}
+% \setlength{\extrarowheight}{2pt}
+% \begin{tabulary}{11cm}{|L|L|L|}
+%   \hline
+%   人人生而自由，在尊严和权利上一律平等。 &
+%   & 人人有权享有生命、自由和人身安全。 \\
+% \cline{1-1}\cline{3-3}
+%      任何人不得加以奴役；奴隶制和奴隶买卖
+%      均应予以禁止。 &
+%      \multirow{-2}{=}[12mm]{人人有资格享受本宣言所载的一切权利和
+%      自由，不分种族、肤色、性别、语言、宗教、
+%      政治或其他见解、国籍或社会出身、财产、
+%      出生或其他身份等任何区别。
+%      }
+%   & 任何人不得加以酷刑，或施以残忍、不人道
+%   或侮辱性的待遇或刑罚。 \\
+% \hline
+% \end{tabulary}
+% \end{verbatim}
+% \end{quote}
+%
+% \begin{quote}
+% \index{extrarowheight=\verb!*+\extrarowheight+|usage}
+% \setlength{\extrarowheight}{2pt}
+% \begin{tabulary}{11cm}{|L|L|L|}
+%   \hline
+%   人人生而自由，在尊严和权利上一律平等。 &
+%   & 人人有权享有生命、自由和人身安全。 \\
+% \cline{1-1}\cline{3-3}
+%      任何人不得加以奴役；奴隶制和奴隶买卖
+%      均应予以禁止。 &
+%      \multirow{-2}{=}[12mm]{人人有资格享受本宣言所载的一切权利和
+%      自由，不分种族、肤色、性别、语言、宗教、
+%      政治或其他见解、国籍或社会出身、财产、
+%      出生或其他身份等任何区别。}
+%
+%   & 任何人不得加以酷刑，或施以残忍、不人道
+%   或侮辱性的待遇或刑罚。 \\
+% \hline
+% \end{tabulary}
+% \end{quote}
+%
+% 本例中文本会在底部一行附近居中，从而向下超出盒子。因此我们施加了 12mm 的 \meta{vmove}。\meta{vmove} 通常需要反复试验才能确定合适值。
+%
+%
+%
+% \subsection{微调}
+% \label{sec:fine-tuning}
+%
+% 若所跨越的某一行异常高大，或者使用了 \Package{bigstrut} 宏包且 \cs{bigstrut} 在跨越各行的中心线两侧分布不对称，垂直居中可能不准确。此时应使用 \meta{vmove} 参数。有时直接给 \meta{nrows} 取更大的值（包括小数）会更有效。示例参见第~\ref{sec:dealing-with-tall} 节。
+%
+%
+%
+%
+%
+%
+% 要完全处理好下伸字母几乎不可能。文本会先按居中排版，但其基线可能与旁边内容的基线不一致，尤其是旁边内容有下伸字母而 \meta{text} 没有时。这会造成轻微的错位。所能做的，至多是利用 \meta{vmove} 可选参数对 \meta{text} 作最后的微调。
+%
+%
+%
+%
+%
+% （提示：若采用 \texttt{.1ex} 这样的度量单位，那么在改变字号后，\meta{vmove} 很可能仍然适用。）
+%
+%
+%
+% \cs{multirow} 主要是为 \env{tabular}（而非 \env{array}）环境设计的。若某些行中有大型公式，它在 \env{array} 环境中可能效果不佳；此时可用 \meta{vmove} 参数细化结果。
+%
+%
+%
+%
+% 某些情形下，你可能希望跨行条目与其他行单元格的顶部对齐，例如其中有一个大号大写字母时。当使用 \meta{vpos} = \texttt{[t]} 时，对齐的是基线，而这在本例中并不合适。此时可用 \meta{vmove} 参数完成定位，让 \LaTeX{} 计算平移量。例如：
+%
+%
+%
+%
+%
+%
+% \begin{quote}
+% \begin{verbatim}
+% \usepackage{calc}
+% \newlength{\shiftdown}
+% \setlength{\shiftdown}{\heightof{\Huge\bfseries B}-\heightof{f}}
+% . . .
+% \begin{tabular}{cll}
+%   \toprule
+%   \multirow[t]{5}{*}[-\shiftdown]{\Huge\bfseries B}
+%                     & 甲  & 示例文本一    \\
+%                     & 乙  & 示例文本二    \\
+%                     & 丙  & 示例文本三  \\
+%                     & 丁  & 示例文本四 \\
+%   \bottomrule
+% \end{tabular}
+% \end{verbatim}
+% \end{quote}
+%
+% \begin{quote}
+% \newlength{\shiftdown}
+% \setlength{\shiftdown}{\heightof{\Huge\bfseries B}-\heightof{f}}
+% \begin{tabular}{cll}
+%   \toprule
+%   \multirow[t]{5}{*}[-\shiftdown]{\Huge\bfseries B}
+%                     & 甲  & 示例文本一    \\
+%                     & 乙  & 示例文本二       \\
+%                     & 丙  & 示例文本三  \\
+%                     & 丁  & 示例文本四 \\
+%   \bottomrule
+% \end{tabular}
+% \end{quote}
+% 从 \Package{multirow} 2.4 版起，\meta{vmove} 参数也可直接使用表达式 \verb|-\heightof{\Huge|-\verb|\bfseries B}|-\verb|\heightof{f}|，以代替 \verb|-\shiftdown|。
+%
+%
+% \subsection{跨行条目与着色单元格}\label{sec:mult-color-cells}
+%
+% 若将 \cs{multirow} 与 \Package{colortbl} 宏包（或带 \texttt{[table]} 选项的 \Package{xcolor} 宏包）配合使用，而又想给含 \cs{multirow} 的列着色，就需要采取一些预防措施。\Package{colortbl} 的工作方式是逐个单元格着色。因此当 \meta{nrows} 取正值时，\Package{colortbl} 会先给顶部单元格着色，随后 \cs{multirow} 从该单元格开始排版 \meta{nrows} 个单元格，之后 \Package{colortbl} 再给其余单元格着色，从而把该区域的文字遮盖掉。解决办法是把 \cs{multirow} 放在最后一行，并取负的 \meta{nrows} 值。例如：
+% \index{colortbl=\Package{colortbl}|usage}
+%
+% \index{xcolor=\Package{xcolor}|usage}
+%
+%
+%
+%
+%
+%
+%
+%
+%
+% \begin{quote}
+% \begin{verbatim}
+% \begin{tabular}{l>{\columncolor{yellow}}l}
+%   甲甲 & \\
+%   乙乙 & \\
+%   丙丙 & \multirow{-3}*{丁丁}\\
+% \end{tabular}
+% \end{verbatim}
+% \end{quote}
+% 排版结果如下：
+% \begin{quote}
+%   \begin{tabular}{l>{\columncolor{yellow}}l}
+%     甲甲 & \\
+%     乙乙 & \\
+%     丙丙 & \multirow{-3}*{丁丁}\\
+%   \end{tabular}
+% \end{quote}
+%
+% \index{hhline=\Package{hhline}|usage}
+% 当着色的跨行单元格与 \Package{hhline} 宏包配合使用时，着色的跨行单元格中可能出现一些白色条纹。例如：
+%
+%
+% \begin{quote}
+% \begin{verbatim}
+%   \begin{tabular}{|>{\columncolor{red}}c|c|}
+%   \hline
+%   \bfseries 第一列 & \bfseries 第二列\\ \hline
+%   数据一 & 932\\ \hline
+%    & 239\\ \hhline{|~|-|}
+%    & 137\\ \hhline{|~|-|}
+%   \multirow{-3}{*}{更多数据} & 319\\ \hline
+%   末行数据 & 132\\ \hline
+% \end{tabular}
+% \end{verbatim}
+% \end{quote}
+%
+% \begin{quote}
+%   \begin{tabular}{|>{\columncolor{red}}c|c|}
+%   \hline
+%   \bfseries 第一列 & \bfseries 第二列\\ \hline
+%   数据一 & 932\\ \hline
+%    & 239\\ \hhline{|~|-|}
+%    & 137\\ \hhline{|~|-|}
+%   \multirow{-3}{*}{更多数据} & 319\\ \hline
+%   末行数据 & 132\\ \hline
+% \end{tabular}
+% \end{quote}
+%
+% 解决办法是在着色的跨行单元格中，放置颜色相同的水平横线。
+%
+% \begin{quote}
+% \begin{verbatim}
+%   \begin{tabular}{|>{\columncolor{red}}c|c|}
+%   \hline
+%   \bfseries 第一列 & \bfseries 第二列\\ \hline
+%   数据一 & 932\\ \hline
+%    & 239\\ \hhline{|>{\arrayrulecolor{red}}->{\arrayrulecolor{black}}|-|}
+%    & 137\\ \hhline{|>{\arrayrulecolor{red}}->{\arrayrulecolor{black}}|-|}
+%   \multirow{-3}{*}{更多数据} & 319\\ \hline
+%   末行数据 & 132\\ \hline
+% \end{tabular}
+% \end{verbatim}
+% \end{quote}
+%
+% \begin{quote}
+%   \begin{tabular}{|>{\columncolor{red}}c|c|}
+%   \hline
+%   \bfseries 第一列 & \bfseries 第二列\\ \hline
+%   数据一 & 932\\ \hline
+%    & 239\\ \hhline{|>{\arrayrulecolor{red}}->{\arrayrulecolor{black}}|-|}
+%    & 137\\ \hhline{|>{\arrayrulecolor{red}}->{\arrayrulecolor{black}}|-|}
+%   \multirow{-3}{*}{更多数据} & 319\\ \hline
+%   末行数据 & 132\\ \hline
+% \end{tabular}
+% \end{quote}
+%
+% \subsection{细化 \meta{bigstruts} 参数}
+% \label{sect-refine-bigstrut}
+%
+% 只要各行没有“异常”高度，\cs{multirow} 就能根据 \meta{nrows} 与 \meta{bigstruts} 算出所需跨行盒子的高度。但有些情况下这不足以正确定位盒子，尤其是首行顶部和（或）末行底部含有 \cs{bigstrut} 时。此时应向 \cs{multirow} 提供额外信息：在 \meta{bigstruts} 参数前加一个（或两个）字母，指明这两种情况中存在哪一种。
+%
+%
+%
+%
+%
+%
+%
+%
+% 请看下面的例子：\\（这些例子中我们设置了 \verb+\setlength{\bigstrutjot}{10pt}+，以使效果清晰可见）\\[5mm]
+%
+% \begin{minipage}[c]{0.23\linewidth}
+%   \setlength{\bigstrutjot}{10pt}
+%   \begin{tabular}{|c|c|}
+%     \hline
+%     \multirow{3}[1]{*}{跨行} & T \bigstrut[t] \\
+%     \cline{2-2}
+%     &  X \\
+%     \cline{2-2}
+%     &  B \\
+%     \hline
+%   \end{tabular} \\[2mm]
+%   \begin{tabular}{|c|c|}
+%     \hline
+%     \multirow{3}[t 1]{*}{跨行} & T \bigstrut[t] \\
+%     \cline{2-2}
+%     &  X \\
+%     \cline{2-2}
+%     &  B \\
+%     \hline
+%   \end{tabular}
+% \end{minipage}
+% \begin{minipage}[c]{0.75\linewidth}
+% \begin{verbatim}
+%   \begin{tabular}{|c|c|}
+%     \hline
+%     \multirow{3}[1]{*}{Multirow} & T \bigstrut[t] \\
+%     \cline{2-2}
+%     &  X \\
+%     \cline{2-2}
+%     &  B \\
+%     \hline
+%   \end{tabular}
+% \end{verbatim}
+% \end{minipage}
+% \\[5mm]
+% 上例上方盒子中，文本“跨行”本应居中，但由于首行有 \cs{bigstrut[t]}，它略偏下。可以把 \meta{bigstruts} 参数取为“t 1”，表示顶部有一个支撑条来纠正。下方盒子即采用此法，使用了 \verb+\multirow{3}[t 1]{*}{Multirow}+。
+%
+%
+%
+%
+%
+% 第二个例子：\\[5mm]
+% \begin{minipage}{0.23\linewidth}
+%   \setlength{\bigstrutjot}{10pt}
+%   \begin{tabular}{|c|c|}
+%     \hline
+%     & T \\
+%     \cline{2-2}
+%     &  X \\
+%     \cline{2-2}
+%     \multirow[t]{-3}[1]{*}{跨行} &  B \bigstrut[b] \\
+%     \hline
+%   \end{tabular} \\[2mm]
+%   \begin{tabular}{|c|c|}
+%     \hline
+%     & T \\
+%     \cline{2-2}
+%     &  X \\
+%     \cline{2-2}
+%     \multirow[t]{-3}[b 1]{*}{跨行} &  B \bigstrut[b] \\
+%     \hline
+%   \end{tabular}
+% \end{minipage}
+% \begin{minipage}{0.75\linewidth}
+% \begin{verbatim}
+%   \begin{tabular}{|c|c|}
+%     \hline
+%     & T \\
+%     \cline{2-2}
+%     &  X \\
+%     \cline{2-2}
+%     \multirow[t]{-3}[1]{*}{Multirow} &  B \bigstrut[b] \\
+%     \hline
+%   \end{tabular}
+% \end{verbatim}
+% \end{minipage}
+% \\[5mm]
+% 上方盒子中，\verb+\multirow[t]+ 本应与 \texttt{T} 处于同一高度，但它偏高，因为底部有一个 \cs{bigstrut}。可把 \meta{bigstruts} 参数指定为“b 1”来纠正，即使用 \verb+\multirow[t]{-3}[b 1]{*}{Multirow}+。
+%
+%
+%
+%
+% \vspace{5mm}
+% 前缀的可选取值如下：
+% \begin{description}
+% \item[\texttt{t}] 顶部有支撑条，即首行中有 \cs{bigstrut} 或 \cs{bigstrut[t]}。
+%
+% \item[\texttt{b}] 底部有支撑条，即末行中有 \cs{bigstrut} 或 \cs{bigstrut[b]}。
+%
+% \item[\texttt{tb}] 两者都有。注意：不能写成 \texttt{bt}。
+%
+% \end{description}
+% 字母与数字之间的空格可有可无。
+% 请注意，前缀与 \cs{multirow} 位于首行还是末行无关。
+%
+%
+% \subsection{与 \Package{longtable} 配合使用}
+% \label{sec:use-with-longtable}
+%
+% \index{longtable=\env{longtable}|usage}
+% \index{longtabu=\env{longtabu}|usage}
+% 可以在 \env{longtable}（及其派生环境 \env{longtabu}）中使用 \cs{multirow}。但要注意：当跨行条目靠近页面底部时，应避免 longtable 在其中途分页。例如：
+%
+%
+%
+%
+% \noindent
+% \begin{minipage}[t]{0.4\linewidth}
+% \begin{longtable}{|l|l|l|}
+% \ldots & \ldots & \ldots \\
+% \hline
+% 9 月 21 日 & 09:00 & 事件 1 \\
+% \hline
+% 9 月 22 日 & 10:00 & 事件 2 \\
+% \hline
+% \multirow{3}*{9 月 23 日} & 10:00 & 事件 3 \\
+%                         & 12:00 & 事件 4 \\
+%                         & 15:00 & 事件 5 \\
+% \hline
+% 9 月 24 日 & 09:00 & 事件 6 \\
+% \hline
+% \ldots & \ldots & \ldots \\
+% \end{longtable}
+% \end{minipage}
+% \begin{minipage}[t]{0.58\linewidth}
+% \begin{verbatim}
+% \begin{longtable}{|l|l|l|}
+% \ldots & \ldots & \ldots \\
+% \hline
+% 9 月 21 日 & 09:00 & 事件 1 \\
+% \hline
+% 9 月 22 日 & 10:00 & 事件 2 \\
+% \hline
+% \multirow{3}*{9 月 23 日} & 10:00 & 事件 3 \\
+%                         & 12:00 & 事件 4 \\
+%                         & 15:00 & 事件 5 \\
+% \hline
+% 9 月 24 日 & 09:00 & 事件 6 \\
+% \hline
+% \ldots & \ldots & \ldots \\
+% \end{longtable}
+% \end{verbatim}
+% \end{minipage}
+%
+% 本例中，若“9 月 23 日”条目靠近页面底部，应阻止分页发生在该条目中部。做法是把中间各行以 \verb+\\*+ 结尾，而不是 \verb+\\+。
+%
+%
+%
+% \begin{verbatim}
+% \multirow{3}*{9 月 23 日} & 10:00 & 事件 3 \\*
+%                         & 12:00 & 事件 4 \\*
+%                         & 15:00 & 事件 5 \\
+% \end{verbatim}
+%
+% 但 \Package{longtable} 存在一处缺陷：当 \verb+\\*+ 后面紧跟 \cs{cline} 时，它会失效，如下例所示。
+%
+%
+%
+% \begin{verbatim}
+% \multirow{3}*{9 月 23 日} & 10:00 & 事件 3 \\*
+% \cline{2-3}
+%                         & 12:00 & 事件 4 \\*
+% \cline{2-3}
+%                         & 15:00 & 事件 5 \\
+% \end{verbatim}
+%
+% \Package{multirow} 提供了 \texttt{longtable} 宏包选项，它重定义 \cs{cline}，使 \verb+\\*+ 在其后紧跟 \cs{cline} 时也能生效。这段代码来自 David Carlisle。
+%
+%
+%
+% \subsection{与 \Package{supertabular} 配合使用}
+% \label{sec:use-with-supertabular}
+%
+% \index{supertabular=\env{supertabular}|usage}
+% \index{xtab=\env{xtab}|usage}
+% 使用 \Package{supertabular} 宏包（或其增强版 \Package{xtab}）时，同样需要在分页时把跨行的各行保持在一起。遗憾的是，\Package{supertabular} 没有指定“禁止分页”的方式，即 \verb+\\*+ 并不能阻止分页。
+%
+%
+%
+%
+%
+% 因此 \Package{multirow} 提供了 \texttt{supertabular} 宏包选项，它重定义 \env{supertabular} 内部的 \verb+\\*+ 以阻止分页。应当用它来结束跨行区块中的中间各行。但与 \env{longtable} 不同，这并不会使 \env{supertabular} 考虑在 \cs{multirow} 之前分页，因此表格可能变得过长。
+%
+%
+%
+%
+%
+%
+%
+% \DescribeMacro{\STneed}
+% 因此，在指定 \texttt{supertabular} 选项时，\Package{multirow} 还提供了 \cs{STneed} 命令，用于在 \env{supertabular} 中说明本页还需要多少空间；若空间不足，便会在该处分页。例如：
+%
+%
+%
+%
+% \begin{verbatim}
+% \tabletail{\hline}
+% \begin{supertabular}{|l|l|l|}
+% \ldots & \ldots & \ldots \\
+% \hline
+% 9 月 20 日 & 10:00 & 事件 1\\
+% \hline
+% 9 月 21 日 & 10:00 & 事件 2\\
+% \hline
+% 9 月 22 日 & 10:00 & 事件 3\\
+% \hline
+% \STneed {2cm}
+% \multirow{3}*{9 月 23 日} & 10:00 & 事件 4\\*
+% \cline{2-3}
+%                         & 12:00 & 事件 5 \\*
+% \cline{2-3}
+%                         & 15:00 & 事件 6 \\
+% \hline
+%  9 月 24 日 & 09:00 & 事件 7 \\
+% \hline
+% \ldots & \ldots & \ldots \\
+% \end{verbatim}
+%
+% 该取值需要反复试验才能确定合适值；有时把所需空间适当夸大一些反而更好。
+%
+%
+% \subsection{处理过高的条目}
+% \label{sec:dealing-with-tall}
+%
+% 有时某些行会比预期更高。本节给出处理这类情形的一些思路，分两种情况：
+%
+%
+% \begin{enumerate}
+% \item 第一种情况：跨行区块之外存在异常高大的行，此时 \cs{multirow} 的定位可能出错。这是因为 \cs{multirow} 没有各行高度的信息。例如某单元格中输入了大型公式，或在 \texttt{[\{\}]} 列中输入了多行段落。示例：
+%
+%
+%
+%
+%
+%
+% \begin{quote}
+% \begin{verbatim}
+% \begin{tabular}{| l | l | p{4cm} |}
+%   \hline
+%   \multirow{3}*{第 38 周} & 周一 & 全天多雨\\
+%   \cline{2-3}
+%                     & 周二 & 晴间多云\\
+%   \cline{2-3}
+%                     & 周三 & 晴朗多日照；
+%                     但大风会使
+%                     气温下降。 \\
+%   \hline
+% \end{tabular}
+% \end{verbatim}
+%  \end{quote}
+% \begin{quote}
+% \begin{tabular}{| l | l | p{4cm} |}
+%   \hline
+%   \multirow{3}*{第 38 周} & 周一 & 全天多雨\\
+%   \cline{2-3}
+%                     & 周二 & 晴间多云\\
+%   \cline{2-3}
+%                     & 周三 & 晴朗多日照；
+%                     但大风会使
+%                     气温下降。 \\
+%   \hline
+% \end{tabular}
+% \end{quote}
+% 该 \cs{multirow} 位于第二行，因为它指定跨越 3 行。但本例中第二行并非垂直居中位置，因为第三行要高得多。
+%
+%
+%
+% 要纠正这一点，可以使用 \meta{vmove} 参数。但本例中更简单的做法是假定 \cs{multirow} 跨越 6 行（最后一列的总行数），即用 \verb+\multirow{6}+\ldots{}，得到：
+%
+%
+%
+% \begin{quote}
+% \begin{tabular}{| l | l | p{4cm} |}
+%   \hline
+%   \multirow{6}*{第 38 周} & 周一 & 全天多雨\\
+%   \cline{2-3}
+%                     & 周二 & 晴间多云\\
+%   \cline{2-3}
+%                     & 周三 & 晴朗多日照；
+%                     但大风会使
+%                     气温下降。 \\
+%   \hline
+% \end{tabular}
+% \end{quote}
+% \item 第二种情况：\cs{multirow} 条目比周围常规行更高。此时跨行文本会伸出其区块之外。必须把其他行加高，而这是 \cs{multirow} 无法自动完成的。
+%
+%
+%
+%
+% 示例：
+% （请勿将其视为医疗建议；药名均为虚构。）
+% \begin{verbatim}
+% \begin{tabular}{| p{2mm} l | p{5cm} |}
+%  \hline
+%  \multicolumn{2}{|l|}{\textbf{药物与剂量}}
+%                               & \textbf{可能的副作用} \\
+%  \hline
+%  \multicolumn{2}{|l|}{斯皮诺}
+%                      & \multirow{3}={意识模糊、
+%                        幻觉、呼吸急促、
+%                        癫痫（惊厥）；
+%                        胃部不适、烧心；严重恶心、
+%                        呕吐、胃痛或轻度头痛。} \\
+%  \cline{1-2}
+%   & 起始：200 毫克/日 & \\
+%  \cline{1-2}
+%    & 维持：100–400 毫克/日 & \\
+%  \hline
+%  \multicolumn{2}{|l|}{康扎克}
+%                      & \multirow{3}={焦虑；紧张；
+%                       失眠；食欲减退；轻度心动过缓；
+%                       窦房结传导减慢；体重下降；
+%                       光敏；低钠血症；
+%                       性功能障碍（男女均可发生）；可能
+%                       影响糖尿病患者的血糖控制。} \\
+%  \cline{1-2}
+%   & 起始：10 毫克/日 & \\
+%  \cline{1-2}
+%    & 维持：10–40 毫克/日 & \\
+%  \hline
+% \end{tabular}
+% \end{verbatim}
+% \begin{tabular}{| p{2mm} l | p{5cm} |}
+%  \hline
+%  \multicolumn{2}{|l|}{\textbf{药物与剂量}}
+%                               & \textbf{可能的副作用} \\
+%  \hline
+%  \multicolumn{2}{|l|}{斯皮诺}
+%                      & \multirow{3}={意识模糊、
+%                        幻觉、呼吸急促、
+%                        癫痫（惊厥）；
+%                        胃部不适、烧心；严重恶心、
+%                        呕吐、胃痛或轻度头痛。} \\
+%  \cline{1-2}
+%   & 起始：200 毫克/日 & \\
+%  \cline{1-2}
+%    & 维持：100–400 毫克/日 & \\
+%  \hline
+%  \multicolumn{2}{|l|}{康扎克}
+%                      & \multirow{3}={焦虑；紧张；
+%                       失眠；食欲减退；轻度心动过缓；
+%                       窦房结传导减慢；体重下降；
+%                       光敏；低钠血症；
+%                       性功能障碍（男女均可发生）；可能
+%                       影响糖尿病患者的血糖控制。} \\
+%  \cline{1-2}
+%   & 起始：10 毫克/日 & \\
+%  \cline{1-2}
+%    & 维持：10–40 毫克/日 & \\
+%  \hline
+% \end{tabular}
+% \vspace{2cm}
+% 两个 \cs{multirow} 条目都过高：第一个伸入第二个条目区域，第二个则伸出表格之外。
+%
+%
+% 有两种纠正办法：
+% 最简单的办法是添加额外的空行来覆盖重叠空间。第一个条目需补 2 行，第二个需补 4 行。因此在第三条 \verb+\hline+ 之前插入两行 \verb+ & & \\+，在最后一条 \verb+\hline+ 之前插入四行。这样表格就恰好合适：
+%
+%
+%
+%
+% \vspace{5mm}
+% \begin{tabular}{| p{2mm} l | p{5cm} |}
+%   \hline
+%   \multicolumn{2}{|l|}{\textbf{药物与剂量}}
+%                               & \textbf{可能的副作用} \\
+%   \hline
+%  \multicolumn{2}{|l|}{斯皮诺}
+%                      & \multirow{3}={意识模糊、
+%                        幻觉、呼吸急促、
+%                        癫痫（惊厥）；
+%                        胃部不适、烧心；严重恶心、
+%                        呕吐、胃痛或轻度头痛。} \\
+%   \cline{1-2}
+%     & 起始：200 毫克/日 & \\
+%   \cline{1-2}
+%      & 维持：100–400 毫克/日 & \\
+%     & & \\
+%     & & \\
+%   \hline
+%  \multicolumn{2}{|l|}{康扎克}
+%                      & \multirow{3}={焦虑；紧张；
+%                       失眠；食欲减退；轻度心动过缓；
+%                       窦房结传导减慢；体重下降；
+%                       光敏；低钠血症；
+%                       性功能障碍（男女均可发生）；可能
+%                       影响糖尿病患者的血糖控制。} \\
+%   \cline{1-2}
+%     & 起始：10 毫克/日 & \\
+%   \cline{1-2}
+%      & 维持：10–40 毫克/日 & \\
+%     & & \\
+%     & & \\
+%     & & \\
+%     & & \\
+%   \hline
+% \end{tabular}
+%
+% 第二种办法是在垂直方向上撑高常规行，使其与跨行条目相配。本表字号为 10pt，每行总高 12pt。第一个条目需额外 24pt（2 行）；由于该空间要分摊到 3 行，每行 8pt，使行总高达到 20pt。
+%
+%
+%
+%
+%
+% 常规行高 8.4pt、深 3.6pt（合计 12pt）。我们可以在上、下各加 4pt，或任何合计为 8pt 的组合。此处我取高 12pt、深 8pt，用宽度为 0 的 \cs{rule} 实现。
+%
+%
+%
+% \DescribeMacro{\mystrut}
+% \verb+\newcommand{\mystrut}{\rule[-8pt]{0pt}{20pt}}+
+% 并把 \cs{mystrut} 放入前 3 行的每一行。自定义支撑条可以完全掌控版式：例如可以让某些行多占空间，或把全部空间都放在最后一行。
+%
+%
+%
+%
+% 第二个条目需额外 48pt（4 行）。我们在每行使用 \cs{bigstrut}，即每行 16pt；由于一个 \cs{bigstrut} 等于 2\cs{bigstrutjot}，把 \cs{bigstrutjot} 设为 8pt。
+%
+%
+% \Package{booktabs} 会在横线上下增加一些额外垂直空间，因此使用常规 \env{tabular} 环境时支撑条宜略大，而使用 \Package{booktabs} 时宜略小。经试验，\cs{bigstrutjot} 取 \texttt{7pt} 即足够。当然，第二个跨行条目还加上了 \texttt{[tb6]} 的 \meta{bigstruts} 参数。注意：用自定义支撑条无法做到这一点，除非“作弊”。
+%
+%
+%
+%
+%
+%
+%
+%
+% \index{booktabs=\env{booktabs}|usage}
+% 改用 \Package{booktabs} 后，代码如下：
+% \begin{verbatim}
+% \newcommand{\mystrut}{\rule[-8pt]{0pt}{20pt}}
+% \setlength{\bigstrutjot}{7pt}
+% \begin{tabular}{ p{2mm} l  p{5cm} }
+%  \toprule
+%  \multicolumn{2}{l}{\textbf{药物与剂量}}
+%                               & \textbf{可能的副作用} \\
+%  \cmidrule(r){1-2} \cmidrule(l){3-3}
+%  \multicolumn{2}{l}{斯皮诺} \mystrut
+%                      & \multirow{3}={意识模糊、
+%                        幻觉、呼吸急促、
+%                        癫痫（惊厥）；
+%                        胃部不适、烧心；严重恶心、
+%                        呕吐、胃痛或轻度头痛。} \\
+%  \cmidrule(r){1-2}
+%     & 起始：200 毫克/日 \mystrut & \\
+%  \cmidrule(r){1-2}
+%      & 维持：100–400 毫克/日 \mystrut & \\
+%  \midrule
+%  \multicolumn{2}{l}{康扎克} \bigstrut
+%                      & \multirow{3}[tb6]={焦虑；紧张；
+%                       失眠；食欲减退；轻度心动过缓；
+%                       窦房结传导减慢；体重下降；
+%                       光敏；低钠血症；
+%                       性功能障碍（男女均可发生）；可能
+%                       影响糖尿病患者的血糖控制。} \\
+%  \cmidrule(r){1-2}
+%    & 起始：10 毫克/日 \bigstrut & \\
+%  \cmidrule(r){1-2}
+%    & 维持：10–40 毫克/日 \bigstrut  & \\
+%  \bottomrule
+% \end{tabular}
+% \end{verbatim}
+%
+% \newcommand{\mystrut}{\rule[-8pt]{0pt}{20pt}}
+% \setlength{\bigstrutjot}{7pt}
+% \begin{tabular}{ p{2mm} l  p{5cm} }
+%  \toprule
+%  \multicolumn{2}{l}{\textbf{药物与剂量}}
+%                               & \textbf{可能的副作用} \\
+%  \cmidrule(r){1-2} \cmidrule(l){3-3}
+%  \multicolumn{2}{l}{斯皮诺} \mystrut
+%                      & \multirow{3}={意识模糊、
+%                        幻觉、呼吸急促、
+%                        癫痫（惊厥）；
+%                        胃部不适、烧心；严重恶心、
+%                        呕吐、胃痛或轻度头痛。} \\
+%  \cmidrule(r){1-2}
+%     & 起始：200 毫克/日 \mystrut & \\
+%  \cmidrule(r){1-2}
+%      & 维持：100–400 毫克/日 \mystrut & \\
+%  \midrule
+%  \multicolumn{2}{l}{康扎克} \bigstrut
+%                      & \multirow{3}[tb6]={焦虑；紧张；
+%                       失眠；食欲减退；轻度心动过缓；
+%                       窦房结传导减慢；体重下降；
+%                       光敏；低钠血症；
+%                       性功能障碍（男女均可发生）；可能
+%                       影响糖尿病患者的血糖控制。} \\
+%  \cmidrule(r){1-2}
+%    & 起始：10 毫克/日 \bigstrut & \\
+%  \cmidrule(r){1-2}
+%    & 维持：10–40 毫克/日 \bigstrut  & \\
+%  \bottomrule
+% \end{tabular}
+% \end{enumerate}
+%
+% \section{使用 \Package{bigstrut}}
+%
+% \DescribeMacro{\bigstrut}
+% \DescribeMacro{\bigstrutjot}
+% \cs{bigstrut}\oarg{x} 生成一个支撑条（宽度为 0 的横线），比标准 \env{array}/\env{tabular} 支撑条高出、低出或同时高出低出 \cs{bigstrutjot}（默认为 \texttt{2pt}）。把它用在紧邻 \cs{hline} 的表格单元格中，可留出额外一点间距——正如《TeXbook》（第 246 页）所说：“这是一处提升带框表格观感的小细节，可视为质量的标志。”
+%
+%
+%
+%
+%
+%
+% 虽然也可以在 \env{array} 中使用 \cs{bigstrut}，但通常意义不大，因为 \env{array} 本来就通过 \cs{jot} 拉开了间距。
+%
+%
+% \cs{bigstrut[t]} 增加高度；\cs{bigstrut[b]} 增加深度；单独的 \cs{bigstrut} 两者都增加。用法：在 \cs{hline} 紧接\emph{之后}的行用 \cs{bigstrut[t]}；在其紧接\emph{之前}的行用 \cs{bigstrut[b]}；前后都有 \cs{hline} 时用 \cs{bigstrut}。
+%
+%
+%
+%
+%
+% \cs{bigstrut} 之后的空格会被忽略，即使它带有可选参数；其之前的空格一般也会被忽略（通过一次 \cs{unskip}）。
+%
+%
+%
+% \DescribeMacro{\bigstrutjot}
+% 注意：\Package{multirow} 宏包也会使用 \cs{bigstrutjot}。两个宏包同时使用时，先后顺序不限，因为它们都会检查对方是否已定义 \cs{bigstrutjot}。但二者设定的默认值不同：仅使用 \Package{multirow} 时，\cs{bigstrutjot} 设为 \texttt{3pt}；使用 \Package{bigstrut} 时（无论是否同时用 \Package{multirow}），\cs{bigstrutjot} 为 \texttt{2pt}。
+%
+%
+%
+%
+%
+%
+%
+% \section{使用 \Package{bigdelim}}
+%
+% 该宏包用于在同时使用 \Package{multirow} 的 \env{tabular} 或 \env{array} 环境中工作。
+%
+%
+% \DescribeMacro{\ldelim}
+% \DescribeMacro{\rdelim}
+% 用法语法为：
+% \begin{quote}
+%   \cs{ldelim} ( \marg{n}\oarg{vmove}\marg{width}\oarg{text}\\
+%   \cs{rdelim} ) \marg{n}\oarg{vmove}\marg{width}\oarg{text}
+% \end{quote}
+% 这两个命令用在 \env{tabular} 或 \env{array} 的某一列中；它们生成一个大型圆括号、花括号或其他定界符，从所在行起跨越 \meta{n} 行。后续各行对应的单元格必须显式留空。
+%
+%
+%
+%
+%
+% 第一个参数是所用的定界符，例如 \cs{\char`\{}
+% \cs{\char`\}} \texttt{[} \texttt{]} \texttt{(} \texttt{)}\,---\,实际上，凡是能与 \cs{left} 或 \cs{right} 配合使用的符号均可。
+%
+%
+% 示例如下：
+% \begin{quote}
+% \begin{verbatim}
+% \begin{equation}
+%   \begin{array}{ccccccc}
+%     \ldelim({4}{4mm} & x & x & x & x & \rdelim){4}{4mm}  \\
+%     & x & x & x & x &  & i \\
+%     & x & x & x & x &  & j \\
+%     & x & x & x & x &  \\
+%     &   & u & v &   &
+%   \end{array}
+% \end{equation}
+% \end{verbatim}
+% \end{quote}
+%
+% \begin{quote}
+% \begin{equation}
+%   \begin{array}{ccccccc}
+%     \ldelim({4}{4mm} & x & x & x & x & \rdelim){4}{4mm}  \\
+%     & x & x & x & x &  & i \\
+%     & x & x & x & x &  & j \\
+%     & x & x & x & x &  \\
+%     &   & u & v &   &
+%   \end{array}
+% \end{equation}
+% \end{quote}
+%
+% 可选参数 \meta{vmove} 是用于微调的长度：定界符（连同可选的 \meta{text}）将在其原本位置之上（之下）再上移（下移，当 \meta{vmove} 为负值时）该长度。这与 \cs{multirow} 相同，但注意此处 \meta{vmove} 位于 \meta{width} 之前。
+%
+%
+%
+%
+%
+% 使用 \cs{ldelim} 时，可选 \meta{text} 排在 \cs{ldelim} 左侧并居中；使用 \cs{rdelim} 时，则排在 \cs{rdelim} 右侧。\meta{width} 参数是为定界符及其文本预留的空间；与 \Package{multirow} 一样，\meta{width} 可取 \texttt{*}。对比如下：
+%
+%
+%
+%
+%
+% \begin{quote}
+% \begin{minipage}{0.6\linewidth}
+% \begin{verbatim}
+% \begin{tabular}{p{2em}l}
+%   \ldelim\{{3}{*}[类型] & dvi \\
+%                         & ps \\
+%                         & pdf \\
+% \end{tabular}
+% \end{verbatim}
+% \end{minipage}
+% \begin{minipage}{0.35\linewidth}
+% \begin{tabular}{p{2em}l}
+%   \ldelim\{{3}{*}[类型] & dvi \\
+%                             & ps \\
+%                             & pdf \\
+%    \end{tabular}
+%    \\[2ex]
+% \end{minipage}
+%
+% \begin{minipage}{0.6\linewidth}
+% \begin{verbatim}
+% \begin{tabular}{l@{\,}l}
+%   \ldelim\{{3}{*}[类型] & dvi \\
+%                         & ps \\
+%                         & pdf \\
+% \end{tabular}
+% \end{verbatim}
+% \end{minipage}
+% \begin{minipage}{0.35\linewidth}
+%   \begin{tabular}{l@{\,}l}
+%   \ldelim\{{3}{*}[类型] & dvi \\
+%                          & ps \\
+%                          & pdf \\
+%   \end{tabular}
+%   \\[2ex]
+% \end{minipage}
+% \end{quote}
+% 第一个例子中我们“作弊”了：通过使用过窄的列宽，吞掉了一部分列间距，代价是出现“Overfull \cs{hbox}”警告。第二个例子采用正规做法：插入 \verb+@{\,}+，用一个窄间距替换默认列间距。
+%
+%
+%
+%
+%
+% 这些命令也可以在扩展区块的最后一行使用，并取负的 \meta{n} 参数。这在配合 \Package{colortbl} 或 \Package{xcolor} 宏包时很有用（参见第~\ref{sec:multirow} 节中关于 \Package{multirow} 的讨论）。若存在异常高大的行，可能需要增大 \meta{n}（可取小数）。
+%
+% \index{colortbl=\Package{colortbl}|usage}
+%
+% \index{xcolor=\Package{xcolor}|usage}
+%
+%
+%
+%
+% 若有与花括号相交的横线，建议使用 \Package{hhline} 宏包来绘制这些线。
+% \index{hhline=\Package{hhline}|usage}
+%
+%
+% 若用 \verb|@{}| 缩小或消除列间距，并配合 \Package{colortbl} 或 \Package{xcolor} 宏包使用着色背景（命令 \verb|\columncolor|、\verb|\rowcolor|、\verb|\rowcolors| 或 \verb|\cellcolor|），你会发现花括号的一部分被切掉。实际上它是被相邻单元格的颜色覆盖了。示例如下：
+%
+%
+%
+% \index{columncolor=\verb!*+\columncolor+|usage}
+% \index{rowcolor=\verb!*+\rowcolor+|usage}
+% \index{rowcolors=\verb!*+\rowcolors+|usage}
+% \index{cellcolor=\verb!*+\cellcolor+|usage}
+%
+%
+%
+% \begin{quote}
+% \begin{minipage}{0.6\linewidth}
+% \begin{verbatim}
+% \rowcolors{2}{green!25}{green!75}
+% \begin{tabular}{ c @{}c c c }
+%                  & 1 & 2 & 3 \\
+%                  & 4 & 5 & 6 \\
+% \ldelim\{{-3}{*} & 7 & 8 & 9 \\
+% \end{tabular}
+% \end{verbatim}
+% \end{minipage}
+% \begin{minipage}{0.35\linewidth}
+% \rowcolors{2}{green!25}{green!75}
+% \begin{tabular}{ c @{}c c c }
+%                  & 1 & 2 & 3 \\
+%                  & 4 & 5 & 6 \\
+% \ldelim\{{-3}{*} & 7 & 8 & 9 \\
+% \end{tabular}
+%    \\[2ex]
+% \end{minipage}
+% \end{quote}
+%
+% 这并非 \Package{multirow} 或 \Package{bigdelim} 的问题；即使 \verb|@{}| 之前那一列是普通文本，也会出现同样情况。原因是这些着色命令会把颜色扩展到两侧的列间距上，以免出现着色间隙。这些所谓\textit{外延}的大小，每侧为 \verb|\tabcolsep|（使用 \env{array} 时为 \verb|\arraycolsep|）。但使用 \verb|@{}| 时不存在这样的列间距，扩展部分就会覆盖前一列的一部分。
+%
+%
+%
+%
+%
+%
+%
+% 解决办法是在表格列头中用 \verb|\columncolor| 命令把左侧\textit{外延}显式设为 0pt，如 \verb|>{\columncolor{white}[0pt][\tabcolsep]}|。遗憾的是，显式指定颜色 \texttt{white} 会取消该列的透明度，因此该列中未显式着色的单元格也会受影响。若 \env{tabular} 背景为白色，通常不易察觉；但如果背景颜色被改变（例如用 \verb|\pagecolor| 命令），就应使用该背景色而非 \texttt{white}。遗憾的是，目前没有只指定\textit{外延}而不同时指定颜色的命令。
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+% 下面的例子即采用了这一做法。为使表格列头简洁，我们把该定义放入 \verb|\newcolumn| 命令（使用 \Package{array} 宏包）。
+%
+%
+%
+% \begin{quote}
+% \begin{minipage}{0.6\linewidth}
+% \begin{verbatim}
+% \newcolumntype{z}{@{}>{\columncolor{white}[0pt][\tabcolsep]}}
+% \rowcolors{2}{green!25}{green!75}
+% \begin{tabular}{ c zc c c }
+%                  & 1 & 2 & 3 \\
+%                  & 4 & 5 & 6 \\
+% \ldelim\{{-3}{*} & 7 & 8 & 9 \\
+% \end{tabular}
+% \end{verbatim}
+% \end{minipage}
+% \begin{minipage}{0.35\linewidth}
+% \newcolumntype{z}{@{}>{\columncolor{white}[0pt][\tabcolsep]}}
+% \rowcolors{2}{green!25}{green!75}
+% \begin{tabular}{ c zc c c }
+%                  & 1 & 2 & 3 \\
+%                  & 4 & 5 & 6 \\
+% \ldelim\{{-3}{*} & 7 & 8 & 9 \\
+% \end{tabular}
+%    \\[2ex]
+% \end{minipage}
+% \end{quote}
+%
+% 若想把段落型文本作为可选参数，可以把它放入 \cs{parbox}。另一种办法是增加一个额外列，把文本放在该列的 \cs{multirow} 中，如下所示：
+%
+% \begin{quote}
+% \begin{verbatim}
+% \begin{tabular}{l@{}l@{}l}
+%    dvi   & \rdelim\}{3}{1em} & \multirow{3}{4cm}{这些是常用的 \TeX 输出格式，
+%         } \\
+%    ps    & & \\
+%    pdf   & & \\
+% \end{tabular}
+% \end{verbatim}
+% \end{quote}
+% \begin{quote}
+% \begin{tabular}{l@{}l@{}l}
+%    dvi   & \rdelim\}{3}{1em} & \multirow{3}{4cm}{这些是常用的 \TeX{} 输出格式，
+%         } \\
+%    ps   & & \\
+%    pdf   & & \\
+% \end{tabular}
+% \end{quote}
+% 注意，这里使用 \texttt{@\{\}} 消除列间距，使文本紧贴花括号。
+%
+% \section{联系方式}
+%
+% Pieter van Oostrum\\
+% 邮箱：\texttt{pieter@vanoostrum.org}\\
+% 主页：\url{http://pieter.vanoostrum.org}
+% \\[1ex]
+% 源代码位于 Github：\\
+% \url{https://github.com/pietvo/multirow}\\
+% 缺陷报告请提交至：\\
+% \url{https://github.com/pietvo/multirow/issues}
+%
+% \StopEventually{%
+% \PrintChanges
+% \PrintIndex}
+%
+% \section{实现细节}
+%
+%
+%\subsection{\Package{multirow} 宏包}
+%\label{sec:pack-multirow}
+% \iffalse
+%<*multirow>
+% \fi
+%
+% \changes{multirow v1.0}{}{匿名发布，基于一则 Usenet 帖子}
+% \changes{multirow v1.1}{}{使其可在无 \texttt{bigstrut.sty} 的情况下工作（Pieter van Oostrum）}
+% \changes{multirow v1.2}{}{由 Jerry Leichter 为同一目的修改，但采用
+%   不同的方法，以与 \texttt{bigstrut.sty} 正确配合}
+% \changes{multirow v1.2a}{}{由 Pieter van Oostrum 修改：定位时改用 \cs{vskip}
+%   而非 \cs{raise}，避免在调整量较大时把行撑得过高}
+%
+% \changes{multirow v1.3}{}{由 Pieter van Oostrum 修改，使其在 p{} 列中正常工作
+%    （添加了 \cs{leavevmode}）}
+% \changes{multirow v1.4}{}{由 Pieter van Oostrum 修改：检查宽度取 * 的特殊情形。此时使用文本参数的自然宽度，该参数在 LR 模式下处理。}
+%
+%
+%
+% \changes{multirow v1.5}{}{由 Pieter van Oostrum 修改：在 \texttt{\cs{hbox}{\#5}\cs{vfill}} 之后添加了 \texttt{\%}。\\
+%       在 \#5 两侧添加 \cs{strut} 以改善垂直定位。
+%       增加了 \meta{nrows} 取负值时的处理代码。}
+% \changes{multirow v1.6}{2004/05/05}{由 Pieter van Oostrum 修改：在 \texttt{\cs{advance}\cs{multirow@dima}\#4} 之后把一个空格替换为 \cs{relax}}
+%
+%
+% \changes{v1.9a}{2016/09/23}{实现 \texttt{debug} 选项。}
+%
+% \begin{macro}{\ifmultirowdebug}
+% \begin{macro}{\multirowdebugtrue}
+% \begin{macro}{\multirowdebugfalse}
+% 这是一个用于开启/关闭调试（显示生成盒子的内容）的布尔开关。由 \texttt{debug} 宏包选项开启，\cs{newif} 初始将其置为假（关闭）。
+%
+%
+%    \begin{macrocode}
+\newif\ifmultirowdebug
+\DeclareOption{debug}{\multirowdebugtrue}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \changes{v1.9b}{2016/09/24}{实现 \texttt{longtable} 选项。}
+% \changes{v2.5}{2019/05/31}{使 \cs{@cline} 的重定义与 \Package{colortbl} 宏包兼容。}
+%
+% \begin{macro}{\cline}
+% \texttt{longtable} 宏包选项重定义 \cs{cline} 宏，以绕过 \Package{longtable} 中的一处缺陷。参见第~\ref{sec:use-with-longtable} 节\footnote{感谢 David Carlisle，见\href{http://tex.stackexchange.com/questions/52100/longtable-multirow-problem-with-cline-and-nopagebreak\#answer-52101}{他在 stackexchange 上的回答}。}。
+%
+%
+%
+% 首先检查宏 \cs{CT@arc} 是否已定义。若已定义，说明已载入 \Package{colortbl} 宏包。由于 \Package{colortbl} 也会重定义 \cs{@cline}，我们在自身重定义 \cs{@cline} 时必须把这一点考虑在内。
+%
+%
+%
+%    \begin{macrocode}
+\DeclareOption{longtable}{%
+\AtBeginDocument{%
+\@ifundefined{CT@arc}
+{\def\@cline#1-#2\@nil{%
+  \omit
+  \@multicnt#1%
+  \advance\@multispan\m@ne
+  \ifnum\@multicnt=\@ne\@firstofone{&\omit}\fi
+  \@multicnt#2%
+  \advance\@multicnt-#1%
+  \advance\@multispan\@ne
+  \leaders\hrule\@height\arrayrulewidth\hfill
+  \cr
+  \noalign{\nobreak\vskip-\arrayrulewidth}}}
+{\def\@cline#1-#2\@nil{%
+  \omit
+  \@multicnt#1%
+  \advance\@multispan\m@ne
+  \ifnum\@multicnt=\@ne\@firstofone{&\omit}\fi
+  \@multicnt#2%
+  \advance\@multicnt-#1%
+  \advance\@multispan\@ne
+  {\CT@arc@\leaders\hrule\@height\arrayrulewidth\hfill}%
+  \cr
+  \noalign{\nobreak\vskip-\arrayrulewidth}}}
+}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{v1.9b}{2016/09/26}{实现 \texttt{supertabular} 选项与 \cs{STneed} 命令。}
+%
+% \texttt{supertabular} 宏包选项重定义 \env{supertabular} 内部的 \verb+\\*+。该重定义延迟到 \verb+\begin{document}+ 时才执行。
+%
+%
+%
+% \texttt{Supertabular} 4.1f 及更高版本需要调用 \cs{ST@save@lineno} 才能正常工作，但更早版本中不存在该命令，无法使用。因此 \cs{ST@tabularcr} 与 \cs{MRST@cr} 的定义会根据 \cs{ST@save@lineno} 是否定义而有所不同。此外还有一些其他差异，某些中间版本的 \texttt{supertabular} 可能需要更细致的适配，目前暂处理到这一步。
+%
+%
+%
+%
+%
+%
+%    \begin{macrocode}
+\DeclareOption{supertabular}{%
+\AtBeginDocument{%
+%    \end{macrocode}
+% \begin{macro}{\ST@tabularcr}
+% \changes{v2.6}{2020/12/26}{调整定义，以兼容现代版本的 \texttt{supertabular}}
+%
+% 该宏是 \env{supertabular} 内部 \verb+\\+ 的定义。我们检查是否带有 \verb+*+：若有则调用自己的版本，否则调用 \env{supertabular} 的版本。先给出 4.1f 之前旧版 \texttt{supertabular} 所用的版本，再给出新版。
+%
+%
+%
+%
+%    \begin{macrocode}
+\ifx\ST@save@lineno\undefined
+\def\ST@tabularcr{%
+  {\ifnum0=`}\fi
+  \@ifstar{\MRST@xtabularcr}{\ST@xtabularcr}}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\MRST@cr}
+% \cs{MRST@cr} 是 \cs{ST@cr} 的精简副本。它完成 \env{supertabular} 所占空间的全部簿记工作，但不负责分页部分。
+%
+%
+% \changes{v2.9}{2024/11/1}{调整定义，以兼容 \texttt{supertabular} 4.2a 或更高版本。}
+%
+%    \begin{macrocode}
+\def\MRST@cr{%
+  \noalign{%
+    \ifnum\ST@pboxht<\ST@lineht
+      \global\advance\ST@pageleft -\ST@lineht
+      \global\ST@prevht\ST@lineht
+    \else
+      \global\advance\ST@pageleft -\ST@pboxht
+      \global\advance\ST@pageleft -0.1\ST@pboxht
+      \global\advance\ST@pageleft -\ST@stretchht
+      \global\ST@prevht\ST@pboxht
+      \global\ST@pboxht\z@
+    \fi
+    \global\advance\ST@pageleft -\ST@toadd
+    \global\ST@toadd=\z@}}
+\else
+%    \end{macrocode}
+% 以下是较新版本。但在 \texttt{supertabular} 4.2a 及更高版本中，\cs{ST@lineht} 更名为 \cs{ST@rowht}。
+%
+%    \begin{macrocode}
+\def\ST@tabularcr{%
+  {\ifnum0=`}\fi
+  \ST@save@lineno
+  \@ifstar{\MRST@xtabularcr}{\ST@xtabularcr}}
+\ifx\ST@rowht\undefined
+\def\MRST@cr{%
+  \noalign{%
+    \ifnum\ST@pboxht<\ST@lineht
+      \global\advance\ST@pageleft -\ST@lineht
+      \global\ST@prevht\ST@lineht
+    \else
+     \ST@trace@cr\thr@@{Added par box with height \the\ST@pboxht}%
+      \global\advance\ST@pageleft -\ST@pboxht
+      \global\advance\ST@pageleft -0.1\ST@pboxht
+      \global\ST@prevht\ST@pboxht
+      \global\ST@pboxht\z@
+    \fi
+    \global\advance\ST@pageleft -\ST@toadd
+    \global\ST@toadd=\z@
+    \ST@trace@cr\thr@@{Space left for tabular: \the\ST@pageleft}}}
+\else
+%    \end{macrocode}
+% 下面是 4.2a 之后的版本。
+%    \begin{macrocode}
+\def\MRST@cr{%
+  \noalign{%
+    \ifnum\ST@pboxht<\ST@rowht
+      \global\advance\ST@pageleft -\ST@rowht
+      \global\ST@prevht\ST@rowht
+    \else
+     \ST@trace@cr\thr@@{Added par box with height \the\ST@pboxht}%
+      \global\advance\ST@pageleft -\ST@pboxht
+      \global\advance\ST@pageleft -0.1\ST@pboxht
+      \global\ST@prevht\ST@pboxht
+      \global\ST@pboxht\z@
+    \fi
+    \global\advance\ST@pageleft -\ST@toadd
+    \global\ST@toadd=\z@
+    \ST@trace@cr\thr@@{Space left for tabular: \the\ST@pageleft}}}
+\fi
+\fi
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\MRST@xtabularc}
+% \begin{macro}{\MRST@argtabularc}
+% \begin{macro}{\MRST@xargtabularc}
+% \begin{macro}{\MRST@yargtabularc}
+% 以下是 \Package{supertabular} 中相应宏的副本，但它们调用 \cs{MRST@cr} 而非 \cs{ST@cr}。
+%
+%    \begin{macrocode}
+\def\MRST@xtabularcr{%
+  \@ifnextchar[%]
+    {\MRST@argtabularcr}%
+    {\ifnum0=`{\fi}\cr\MRST@cr}}
+\def\MRST@argtabularcr[#1]{%
+  \ifnum0=`{\fi}%
+  \ifdim #1>\z@
+    \unskip\MRST@xargarraycr{#1}
+  \else
+    \MRST@yargarraycr{#1}%
+  \fi}
+\def\MRST@xargarraycr#1{%
+  \@tempdima #1\advance\@tempdima \dp \@arstrutbox
+  \vrule \@height\z@ \@depth\@tempdima \@width\z@ \cr
+  \noalign{\global\ST@toadd=#1}\MRST@cr}
+\def\MRST@yargarraycr#1{%
+  \cr\noalign{\vskip #1\global\MRST@toadd=#1}\MRST@cr}
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\STneed}
+% 该宏可在 \env{supertabular} 中使用，用以说明一个跨行条目需要多少空间。参见第~\ref{sec:use-with-supertabular} 节。
+%
+%    \begin{macrocode}
+\def\STneed#1{\ifdim\ST@pageleft<#1\ST@newpage\ST@next\fi}
+}
+%    \end{macrocode}
+% \end{macro}
+%    \begin{macrocode}
+\ProcessOptions
+%    \end{macrocode}
+%
+% \cs{multirow@colwidth} 是一个长度寄存器，用于实现 \meta{width} 的“\texttt{=}”形式。
+%
+% \changes{v1.9}{2016/09/15}{为 \cs{multirow} 的 \meta{width} 参数实现等号形式的选项。}
+% \begin{macro}{\multirow@colwidth}
+% \cs{multirow@colwidth} 是一个长度寄存器，用于实现 \meta{width} 的“\texttt{=}”形式。
+%    \begin{macrocode}
+\newlength{\multirow@colwidth}
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{v1.9}{2016/09/15}{为 \Package{multirow} 提供独立的临时
+% 寄存器，以便把盒子高度安全地传递给 \Package{bigdelim}。}
+% \changes{v2.2}{2016/11/25}{移除 \cs{multirow@cnta}。}
+% \begin{macro}{\multirow@cntb}
+% \begin{macro}{\multirow@dima}
+%   定义两个计数器和一个长度，供 \cs{multirow} 内部使用。
+%    \begin{macrocode}
+\newcount\multirow@cntb
+\newlength\multirow@dima
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \begin{macro}{\multirow@setcolwidth}
+% 该宏为宽度取“\texttt{=}”的条目计算 \cs{multirow@colwidth}。我们通过检查 \cs{TY@final} 是否定义来判断是否处于 \env{tabulary} 环境中；若否，则 \cs{multirow@colwidth} = \cs{hsize}。\env{tabulary} 会进行两遍排版：第一遍把 \cs{multirow@colwidth} 设为文本在 LR 模式下的尺寸（换行符替换为空格），以使 \env{tabulary} 给出足够空间；第二遍（以 \cs{TY@box} = \cs{TY@box@v} 为标志）则采用 \env{tabulary} 在 \cs{hsize} 中给出的值。该算法并不完美，但在多数情况下足够好用。
+%
+%
+%
+%
+%
+%
+%
+%
+%
+% \changes{v2.7}{2021/01/29}{将 \cs{multirow@setcolwidth} 改为 \cs{long} 定义，以支持多段文本}
+%
+%    \begin{macrocode}
+\long\def\multirow@setcolwidth#1{%
+    \ifx\TY@final\multirow@undefined \multirow@colwidth=\hsize
+    \else
+      \ifx\TY@box\TY@box@v\multirow@colwidth=\hsize
+      \else \setbox0\hbox
+        {\let\\\space\let\newline\space #1}\multirow@colwidth=\wd0
+      \fi
+    \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\multirowsetup}
+% \cs{multirowsetup} 在每个 \cs{multirow} 开始处执行。
+%    \begin{macrocode}
+\newcommand\multirowsetup{\raggedright}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\multirow@vbox}
+% 生成 \cs{vbox}。参数：\\
+% \texttt{\#1} = \meta{vpos}，\texttt{\#2} = 初始化代码（例如设置 \cs{parbox} 的宽度），\texttt{\#3} = 盒子内容。\\
+%
+% 根据 \meta{vpos} 参数，盒子将顶部对齐、垂直居中或底部对齐；这通过在相应位置插入 \cs{vfill} 实现。\\
+%
+%
+% 注意：\cs{relax} 用于防止 \meta{vpos} 参数为空。
+%
+%    \begin{macrocode}
+\long\def\multirow@vbox#1#2#3{\setbox0\vtop to \multirow@dima{#2%
+    \if #1t\relax\else\vfill\fi
+    \multirowsetup #3\if #1b\relax\else\vfill\fi}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\multirow}
+% 生成一个跨越表格多行的条目。\\
+% 首先收集所有参数，并用默认值补齐缺失的可选参数。
+% \changes{v1.8}{2016/09/14}{增加第一个可选参数 \meta{vpos}。}
+%    \begin{macrocode}
+%% \multirow [vpos] {nrows} [bigstruts] {width} [vmove] {text}
+\newcommand\multirow[2][c]{\@multirow[#1]{#2}}
+\def\@multirow[#1]#2{\@ifnextchar[{\@@multirow[#1]#2}{\@@multirow[#1]#2[0]}}
+\def\@@multirow[#1]#2[#3]#4{\@ifnextchar[{\@xmultirow[#1]{#2}[#3]{#4}}%
+                                {\@xmultirow[#1]{#2}[#3]{#4}[0pt]}}
+%    \end{macrocode}
+% \changes{v1.9a}{2016/09/23}{为 \meta{bigstruts} 参数增加可选前缀。}
+% \begin{macro}{\multirow@piii}
+% \begin{macro}{\ifmultirow@prefixt}
+% \begin{macro}{\multirow@prefixttrue}
+% \begin{macro}{\multirow@prefixtfalse}
+% \begin{macro}{\ifmultirow@prefixb}
+% \begin{macro}{\multirow@prefixbtrue}
+% \begin{macro}{\multirow@prefixbfalse}
+% 该宏从 \meta{bigstruts} 参数中分离出 \texttt{t}、\texttt{b} 或 \texttt{tb} 前缀，并把数值赋给 \cs{multirow@cntb}。前缀记录在两个布尔开关 \cs{ifmultirow@prefixt} 与 \cs{ifmultirow@prefixb} 中。
+%
+%
+%
+%    \begin{macrocode}
+\newif\ifmultirow@prefixt
+\newif\ifmultirow@prefixb
+\def\multirow@piii#1#2#3\end{\multirow@prefixtfalse\multirow@prefixbfalse
+  \if t#1\multirow@prefixttrue
+    \if b#2\multirow@prefixbtrue \multirow@cntb=#3%
+    \else \multirow@cntb=#2#3%
+    \fi
+  \else
+    \if b#1\multirow@prefixbtrue \multirow@cntb=#2#3%
+    \else \multirow@cntb=#1#2#3%
+    \fi
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% 这是真正的核心宏。先拆分 \meta{bigstruts} 参数，然后计算跨行盒子的高度。
+%
+% \changes{v2.2}{2016/11/25}{支持 \meta{nrows} 取小数值。}
+% 由于 \meta{nrows}（\verb+#2+）可能为小数，不能用 \cs{ifnum} 判断正负，因此在数字后加上单位（\texttt{pt}）改用 \cs{ifdim}。
+%
+%
+% \changes{v2.4}{2019/01/01}{支持 \meta{width} 与 \meta{vmove} 使用与 \Package{calc} 兼容的表达式。}
+%
+% \changes{v2.7}{2021/01/29}{将 \cs{@xmultirow} 改为 \cs{long} 定义，以支持多段文本}
+%
+%    \begin{macrocode}
+\long\def\@xmultirow[#1]#2[#3]#4[#5]#6{%
+  \expandafter\multirow@piii#3\relax\end%
+  \setlength\multirow@dima{#2\ht\@arstrutbox}%
+  \addtolength\multirow@dima{#2\dp\@arstrutbox}%
+  \ifdim#2pt<\z@\setlength\multirow@dima{-\multirow@dima}\fi
+  \addtolength\multirow@dima{\multirow@cntb\bigstrutjot}%
+%    \end{macrocode}
+% \changes{v1.9a}{2016/09/23}{重做 \cs{vbox} 的计算与定位。}
+% 文本通过调用 \cs{multirow@vbox} 排入 \cs{vbox}。\\
+% 若 \meta{width} 参数为 \texttt{*}，则只把文本放入 \cs{vbox}。
+%    \begin{macrocode}
+  \if*#4\multirow@vbox{#1}{}{\hbox{\strut#6\strut}}%
+%    \end{macrocode}
+% 否则把文本放入 \cs{vbox} 内的 \cs{parbox} 中。\\
+% 若 \meta{width} 参数取“\texttt{=}”，则先计算 \cs{multirow@colwidth}，并将其作为 \cs{parbox} 的宽度。
+%
+%    \begin{macrocode}
+  \else \if=#4\multirow@setcolwidth{#6}%
+    \multirow@vbox{#1}{\setlength\hsize{\multirow@colwidth}\@parboxrestore}{\strut#6\strut\par}%
+%    \end{macrocode}
+% 否则把给定参数用作 \cs{parbox} 的宽度。
+%    \begin{macrocode}
+  \else \multirow@vbox{#1}{\setlength\hsize{#4}\@parboxrestore}{\strut#6\strut\par}%
+  \fi \fi
+%    \end{macrocode}
+% 接下来正确定位 \cs{vbox}。细节见附录；平移量计算的概览见第~\ref{sec:overview} 节。
+%
+%
+%
+% 当 \meta{nrows}${}> 0$ 时：\\
+% 若 \meta{vpos} = \texttt{[t]}，盒子已定位正确（基线位于该行基线上）。但稍后会以盒子顶部（而非基线）作为参考点，因此取盒子高度 h 作为平移量。见图~\ref{fig:top-t}。\\
+%
+%
+%
+%
+% 若 \meta{vpos} = \texttt{[c]}，上移 h1（见图~\ref{fig:top-c}），其中 h1 = \cs{ht}\cs{@arstrutbox} +（\cs{bigstrutjot} \cs{ifmultirow@prefixt}）。\\
+%
+% 若 \meta{vpos} = \texttt{[b]}，上移 h1 + h2（见图~\ref{fig:top-b}），其中 h2 = \cs{dp}\cs{@arstrutbox} +（\cs{bigstrutjot} \cs{ifmultirow@prefixb}）。\\
+%
+% 所需平移量在 \cs{multirow@dima} 中计算。
+%    \begin{macrocode}
+  \ifdim#2pt>\z@
+    \if#1t\relax\setlength\multirow@dima{\ht0}\else
+      \setlength\multirow@dima{\ht\@arstrutbox}%
+      \ifmultirow@prefixt \addtolength\multirow@dima{\bigstrutjot}\fi
+      \if#1b\relax \addtolength\multirow@dima{\dp\@arstrutbox}%
+        \ifmultirow@prefixb \addtolength\multirow@dima{\bigstrutjot}\fi
+      \fi
+    \fi
+%    \end{macrocode}
+% 当 \meta{nrows}${}< 0$ 时：\\
+% 若 \meta{vpos} = \texttt{[t]}，把盒子上移 $\textrm{H} - \textrm{h1} -\textrm{h2} + \textrm{h}$。见图~\ref{fig:bot-t}。\\
+%
+% 若 \meta{vpos} = \texttt{[c]}，把盒子上移 $\textrm{H} - \textrm{h2}$。见图~\ref{fig:bot-c}。\\
+% 若 \meta{vpos} = \texttt{[b]}，把盒子上移 H。见图~\ref{fig:bot-b}。\\
+% H 为 \cs{multirow@dima} 的当前值。
+%    \begin{macrocode}
+  \else
+    \if#1b\relax\else
+      \addtolength\multirow@dima{-\dp\@arstrutbox}%
+      \ifmultirow@prefixb \addtolength\multirow@dima{-\bigstrutjot}\fi
+      \if#1t\relax\addtolength\multirow@dima{-\ht\@arstrutbox}%
+        \ifmultirow@prefixt \addtolength\multirow@dima{-\bigstrutjot}\fi
+        \addtolength\multirow@dima{\ht0}%
+      \fi
+    \fi
+  \fi
+%    \end{macrocode}
+% \changes{v2.1}{2016/10/11}{把最终 \cs{vbox} 的深度设为 0，以防止过高的跨行行把后续行向下推。}
+%
+% 最后加上 \meta{vmove} 参数（\verb+#5+），进入水平模式。然后在盒子上方放置 \cs{vskip} 使其上移，再加入输出。由于该 \cs{vskip}，所得盒子高度为 0；我们把 \cs{vbox} 的深度也设为 0，以免影响当前行的深度。\\
+%
+%
+%
+%
+% 若 \cs{multirowdebug} 为真，则显示该盒子。
+%    \begin{macrocode}
+  \addtolength\multirow@dima{#5}%
+  \leavevmode
+  \setbox0\vtop{\vskip-\multirow@dima\box0\vss}\dp0=\z@
+  \ifmultirowdebug{\showboxdepth=5 \showboxbreadth=10 \showbox0}\fi
+  \box0
+}
+%    \end{macrocode}
+% \end{macro}
+% \begin{macro}{\bigstrutjot}
+% 若尚未定义，则定义 \cs{bigstrutjot}。
+%    \begin{macrocode}
+\@ifundefined{bigstrutjot}{\newdimen\bigstrutjot \bigstrutjot=\jot}{}
+%    \end{macrocode}
+% \end{macro}
+% \iffalse
+%</multirow>
+% \fi
+%
+% \subsection{\Package{bigstrut} 宏包}
+% \label{sec:pack-bigstrut}
+%
+% \iffalse
+%<*bigstrut>
+% \fi
+% \changes{bigstrut v1.0}{1994/05/31}{初始版本}
+% \begin{macro}{\bigstrutjot}
+% 这是一个长度，默认值为 2pt。可用 \cs{setlength} 命令修改。
+%
+%    \begin{macrocode}
+\@ifundefined{bigstrutjot}{\newdimen\bigstrutjot}{}\bigstrutjot=2pt
+%    \end{macrocode}
+% \end{macro}
+%
+% \changes{bigstrut v2.4}{2018/12/30}{在开头增加 \cs{leavevmode}
+% 以强制进入水平模式}
+% \begin{macro}{\bigstrut}
+% 该宏插入一个支柱。根据可选参数的不同，它会在标准 \env{array}/\env{tabular} 支柱的上方和/或下方延伸。
+%
+%    \begin{macrocode}
+\newcommand\bigstrut[1][x]{%
+  \leavevmode\unskip\@tempdima=\ht\@arstrutbox \@tempdimb=\dp\@arstrutbox
+  \ifx #1b\relax \else \advance\@tempdima by \bigstrutjot\fi
+  \ifx #1t\relax \else \advance\@tempdimb by \bigstrutjot\fi
+  \hbox{\vrule \@height\@tempdima \@depth\@tempdimb \@width\z@}\ignorespaces}
+%    \end{macrocode}
+% \end{macro}
+%
+% \iffalse
+%</bigstrut>
+% \fi
+%
+% \subsection{\Package{bigdelim} 宏包}
+% \label{sec:pack-bigdelim}
+% \iffalse
+%<*bigdelim>
+% \fi
+% \changes{bigdelim v0.0}{1994/10/02}{\texttt{bigbrace.sty}，作者 \O ystein Bache}
+% \changes{bigdelim v1.0}{1999/11/05}{初始版本 \texttt{bigdelim.sty}}
+%    \begin{macrocode}
+\RequirePackage{multirow}
+%    \end{macrocode}
+% \begin{macro}{\ldelim}
+% 该宏排版一个左侧定界符。它以合适的参数调用 \cs{multirow}。
+% 定界符的尺寸通过在其旁放置一个高度合适、宽度为零的 \cs{vbox} 来确定；该高度即 \cs{multirow} 已在 \cs{multirow@dima} 中算出的值。
+%
+% 该计算使用 \cs{@arstrutbox} 的尺寸，而后者由 \texttt{tabular} 或 \texttt{array} 环境设置；若尚未设置，则将其初始化为默认值。
+%
+%
+%
+% \changes{bigdelim v2.3}{2018/08/03}{将 \cs{textrm} 替换为 \cs{textnormal}}
+% \changes{bigdelim v2.6}{2020/12/26}{若 \cs{@arstrutbox} 未定义则初始化它}
+% \changes{bigdelim v2.8}{2021/03/15}{增加可选参数 \meta{vmove}}
+%    \begin{macrocode}
+\newcommand\ldelim[2]{\@ifnextchar[{\@ldelim{#1}{#2}}{\@ldelim{#1}{#2}[0pt]}}
+\def\@ldelim#1#2[#3]#4{\@ifnextchar[{\@@ldelim{#1}{#2}{#3}{#4}}{\@@ldelim{#1}{#2}{#3}{#4}[\null]}}
+\def\@@ldelim#1#2#3#4[#5]%
+ {\ifvoid\@arstrutbox\setbox\@arstrutbox\hbox{\strut}\fi
+  \multirow{#2}{#4}[#3]{%
+   \ensuremath
+     {\left.\vcenter{\hsize=0pt\vrule height \multirow@dima width 0pt}%
+     \textnormal{#5}\right#1}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\rdelim}
+% 该宏排版一个右侧定界符。它以合适的参数调用 \cs{multirow}，做法与 \cs{ldelim} 类似。
+%
+% \changes{bigdelim v2.3}{2018/08/03}{将 \cs{textrm} 替换为 \cs{textnormal}}
+% \changes{bigdelim v2.6}{2020/12/26}{若 \cs{@arstrutbox} 未定义则初始化它}
+% \changes{bigdelim v2.8}{2021/03/15}{增加可选参数 \meta{vmove}}
+%    \begin{macrocode}
+\newcommand\rdelim[2]{\@ifnextchar[{\@rdelim{#1}{#2}}{\@rdelim{#1}{#2}[0pt]}}
+\def\@rdelim#1#2[#3]#4{\@ifnextchar[{\@@rdelim{#1}{#2}{#3}{#4}}{\@@rdelim{#1}{#2}{#3}{#4}[\null]}}
+\def\@@rdelim#1#2#3#4[#5]%
+ {\ifvoid\@arstrutbox\setbox\@arstrutbox\hbox{\strut}\fi
+  \multirow{#2}{#4}[#3]{%
+   \ensuremath
+     {\left#1\vcenter{\hsize=0pt\vrule height \multirow@dima width 0pt}%
+       \textnormal{#5}\right.}}}
+%    \end{macrocode}
+% \end{macro}
+% \iffalse
+%</bigdelim>
+% \fi
+%
+% \appendix
+%
+% \section{附录}
+% \label{sec:appendix}
+%
+% \index{vbox=\verb!*+\vbox+|usage}
+%
+% 本节说明 \cs{multirow} 中 \cs{vbox} 的定位方式。
+% 定位方式取决于 \meta{nrows}、\meta{vpos}、
+% \meta{bigstruts} 与 \meta{vmove} 参数。盒子用 \cs{vtop} 构造。
+% \cs{vtop} 的算法见 \emph{The \TeX{}book} 第 81 页。
+%
+% 每种情形都用一幅图说明。图中左列
+% 表示跨行条目所在表格的上下文，即 \meta{nrows} 行；右列是待插入的跨行盒子。基线是内容最初所处的自然位置，之后再上移到目标位置。
+%
+%
+%
+%
+%
+% H 为算出的盒子高度：$\meta{nrows} \times
+% \textrm{一行的自然高度}  + \meta{bigstruts} \times
+% \mathrm{\cs{bigstrutjot}} $。
+%
+% {顶支柱}：若第一行顶部有 \cs{bigstrut}（由 \meta{bigstruts} 参数中的 \texttt{t} 前缀表示），则等于 \cs{bigstrutjot}，否则为 0。
+%
+%
+%
+% {底支柱}：若最后一行底部有 \cs{bigstrut}（由 \meta{bigstruts} 参数中的 \texttt{b} 前缀表示），则等于 \cs{bigstrutjot}，否则为 0。
+%
+%
+%
+% h1 = $\textrm{表格行的高度} + \textrm{顶支柱}$
+%
+% h2 = $\textrm{表格行的深度} + \textrm{底支柱}$
+%
+% 注意：以下描述给出的是不计 \meta{vmove} 时盒子的垂直平移量；无论哪种情形，若给出了 \meta{vmove}，都需再加上它。
+%
+%
+%
+% \subsection{情形 \meta{nrows}${}> 0$}
+%
+% \subsubsection*{\meta{vpos}  = [t]}
+%
+% 此时 \cs{vbox} 中先是文本，后接一个 \cs{vfill}。
+% 这样的 \cs{vbox} 高度等于文本首行的高度（h）。H = 盒子高度 + 盒子深度，这意味着盒子已定位正确。但稍后我们会把盒子放入另一个 \cs{vbox}，其顶部有一个 \cs{vskip}，这会使盒子顶部成为参考点。因此还需再上移距离 h（它很可能与表格行的高度不同），总平移量即为 h。见图~\ref{fig:top-t}。
+%
+%
+%
+%
+%
+%
+%
+%
+% 另一种做法是在此情形省略 \cs{vskip}，从而保持基线不动；但这会使代码不对称，而且在存在非零 \meta{vmove} 时无法工作。因此我们选择在此把平移量设为 h。
+%
+%
+%
+%
+% \begin{figure}[htpb]
+%   \centering
+% \begin{tikzpicture}
+%   \draw (2, -0.5) rectangle (5,4.5);
+%   \foreach \y in {0,...,4} \draw (2, \y) -- (5, \y);
+%   \draw (0, 4.2) node (topstrut) {顶支柱};
+%   \draw[->] (topstrut) -- (2, 4.2);
+%   \draw (0, -0.25) node (botstrut) {底支柱};
+%   \draw[->] (botstrut) -- (2, -0.25);
+%   \draw[<->] (5.3, -0.5) -- (5.3, 4.5);
+%   \draw (5.5, 2) node {H};
+%   \draw (0, 3.3) node (baseline) {基线};
+%   \draw[dashed] (1.7, 3.3) -- (5.9, 3.3);
+%   \draw[<->] (5.5, 3.3) -- (5.5, 4.5);
+%   \draw (5.9, 3.9) node {h1};
+%
+%   \draw (6.5, 4) rectangle (9.5, -1);
+%   \draw[<->] (9.7, -1) -- (9.7, 4);
+%   \draw (10, 1.5) node {H};
+%   \draw[<->] (10, 3.3) -- (10, 4);
+%   \draw (10.3, 3.7) node {h};
+%   \draw[fill=lightgray] (6.6, 1) rectangle (9.4, 3.9);
+%   \draw (8, 0)  node[align=center] {\cs{vfill}};
+%   \draw (8, 2) node[align=center] {文本};
+%   \draw[draw=gray] (6.6, 3) -- (9.4, 3);
+%   \draw[dashed] (6.2, 3.3) -- (9.8, 3.3);
+%   \draw[->, line width=4pt, draw=gray] (8, 3.3) -- (8, 4);
+% \end{tikzpicture}
+% \caption{情形 \meta{nrows}${}> 0$，\meta{vpos} = [t]}
+% \label{fig:top-t}
+% \end{figure}
+%
+% \subsubsection*{\meta{vpos}  = [c]}
+%
+% 此时 \cs{vbox} 中依次为一个 \cs{vfill}、文本和另一个 \cs{vfill}。
+% 这样的 \cs{vbox} 高度为 0，即盒子顶部位于基线上。由于两个盒子尺寸相同（H），把 \cs{vbox} 上移 h1 即可对齐。见图~\ref{fig:top-c}。
+%
+%
+%
+% \begin{figure}[htpb]
+%   \centering
+%\begin{tikzpicture}
+%   \draw (2, -0.5) rectangle (5,4.5);
+%   \foreach \y in {0,...,4} \draw (2, \y) -- (5, \y);
+%   \draw (0, 4.2) node (topstrut) {顶支柱};
+%   \draw[->] (topstrut) -- (2, 4.2);
+%   \draw (0, -0.25) node (botstrut) {底支柱};
+%   \draw[->] (botstrut) -- (2, -0.25);
+%   \draw[<->] (5.3, -0.5) -- (5.3, 4.5);
+%   \draw (5.5, 2) node {H};
+%   \draw (0, 3.3) node (baseline) {基线};
+%   \draw[dashed] (1.7, 3.3) -- (5.9, 3.3);
+%   \draw[<->] (5.5, 3.3) -- (5.5, 4.5);
+%   \draw (5.9, 3.9) node {h1};
+%
+%   \draw (6.5, 3.3) rectangle (9.5, -1.7);
+%   \draw[<->] (9.7, -1.7) -- (9.7, 3.3);
+%   \draw (10, 0.8) node {H};
+%   \draw[fill=lightgray] (6.6, -0.5) rectangle (9.4, 2.1);
+%   \draw (8, 2.7)  node[align=center] {\cs{vfill}};
+%   \draw (8, 0.8) node[align=center] {文本};
+%   \draw (8, -1) node[align=center] {\cs{vfill}};
+%   \draw[->, line width=4pt, draw=gray] (8, 3.3) -- (8, 4.5);
+%   \draw[draw=gray] (6.5, 4.5) -- (9.5, 4.5);
+% \end{tikzpicture}
+% \caption{情形 \meta{nrows}${}> 0$，\meta{vpos} = [c]}
+% \label{fig:top-c}
+% \end{figure}
+%
+% \subsubsection*{\meta{vpos}  = [b]}
+%
+% 此时 \cs{vbox} 中先是一个 \cs{vfill}，后接文本。
+% 由于以文本结尾，盒子还会多出一段等于文本末行深度的深度。
+%
+% 这样的 \cs{vbox} 高度为 0，即盒子顶部位于基线上，但其深度为 H 加上上述深度；换言之，末行文本的基线位于顶部以下 H 处。
+%
+%
+%
+% 由于 \meta{vpos} = \texttt{[b]}，我们希望末行文本的基线平移到表格最后一行的基线，平移量为 h1 + h2。见图~\ref{fig:top-b}。
+%
+%
+%
+% \begin{figure}[htpb]
+%   \centering
+%\begin{tikzpicture}
+%   \draw (2, -0.5) rectangle (5,4.5);
+%   \foreach \y in {0,...,4} \draw (2, \y) -- (5, \y);
+%   \draw (0, 4.2) node (topstrut) {顶支柱};
+%   \draw[->] (topstrut) -- (2, 4.2);
+%   \draw (0, -0.25) node (botstrut) {底支柱};
+%   \draw[->] (botstrut) -- (2, -0.25);
+%   \draw[<->] (5.3, -0.5) -- (5.3, 4.5);
+%   \draw (5.5, 2) node {H};
+%   \draw (0, 3.3) node (baseline) {基线};
+%   \draw[dashed] (1.7, 3.3) -- (5.9, 3.3);
+%   \draw[<->] (5.5, 3.3) -- (5.5, 4.5);
+%   \draw (5.9, 3.9) node {h1};
+%   \draw[<->] (5.5, -0.5) -- (5.5, 0.3);
+%   \draw (5.9, -0.1) node {h2};
+%
+%   \draw (6.5, 3.3) rectangle (9.5, -2.1);
+%   \draw[<->] (9.7, -1.7) -- (9.7, 3.3);
+%   \draw (10, 0.8) node {H};
+%   \draw[fill=lightgray] (6.6, -2) rectangle (9.4, 1);
+%   \draw (8, 2)  node[align=center] {{\cs{vfill}}};
+%   \draw (8, -0.5) node[align=center] {文本};
+%   \draw (0, 0.3) node (baseline) {基线};
+%   \draw[dashed] (6.3, -1.7) -- (10, -1.7);
+%   \draw (3.5, -1.7) node (baseline) {末行文本的基线};
+%   \draw[dashed] (1.7, 0.3) -- (10, 0.3);
+%   \draw[->, line width=4pt, draw=gray] (8.5, -1.7) -- (8.5, 0.3);
+% \end{tikzpicture}
+% \caption{情形 \meta{nrows}${}> 0$，\meta{vpos} = [b]}
+% \label{fig:top-b}
+% \end{figure}
+%
+% \subsection{情形 \meta{nrows}${}<0$}
+%
+% 当跨行条目位于跨行块的最后一行时，\meta{nrows}${}<0$。
+%
+%
+% \subsubsection*{\meta{vpos}  = [t]}
+%
+% 此时 \cs{vbox} 中先是文本，后接一个 \cs{vfill}。
+% 这样的 \cs{vbox} 高度等于文本首行的高度。基线与最后一行的基线对齐。
+%
+% 由于 \meta{vpos} = [t]，我们希望它与第一行的基线对齐，因此需上移 $\textrm{H} - \textrm{h1} - \textrm{h2}$。但稍后盒子高度会被置为 0，所以还必须加上当前高度 h，总平移量为 $\textrm{H} - \textrm{h1} - \textrm{h2} + \textrm{h}$。见图~\ref{fig:bot-t}。
+%
+%
+%
+%
+%
+%
+% \begin{figure}[htpb]
+%   \centering
+% \begin{tikzpicture}
+%   \draw (2, -0.5) rectangle (5,4.5);
+%   \foreach \y in {0,...,4} \draw (2, \y) -- (5, \y);
+%   \draw (0, 4.2) node (topstrut) {顶支柱};
+%   \draw[->] (topstrut) -- (2, 4.2);
+%   \draw (0, -0.25) node (botstrut) {底支柱};
+%   \draw[->] (botstrut) -- (2, -0.25);
+%   \draw[<->] (5.3, -0.5) -- (5.3, 4.5);
+%   \draw (5.5, 2) node {H};
+%   \draw (0, 3.3) node (baseline) {基线};
+%   \draw[dashed] (1.7, 3.3) -- (9, 3.3);
+%   \draw[<->] (5.5, 3.3) -- (5.5, 4.5);
+%   \draw (5.9, 3.9) node {h1};
+%   \draw[<->] (5.5, -0.5) -- (5.5, 0.3);
+%   \draw (5.9, -0.1) node {h2};
+%   \draw (0, 0.3) node (baseline) {基线};
+%   \draw[dashed] (1.7, 0.3) -- (5.9, 0.3);
+%
+%   \draw (6.5, 1) rectangle (9.5, -4);
+%   \draw[<->] (9.7, -4) -- (9.7, 1);
+%   \draw (10, -1.5) node {H};
+%   \draw[<->] (10, 0.3) -- (10, 1);
+%   \draw (10.3, 0.7) node {h};
+%   \draw[fill=lightgray] (6.6, -2) rectangle (9.4, 0.9);
+%   \draw (8, -3)  node[align=center] {\cs{vfill}};
+%   \draw (8, -1) node[align=center] {文本};
+%   \draw[draw=gray] (6.6, 0) -- (9.4, 0);
+%   \draw[dashed] (6.2, 0.3) -- (10.3, 0.3);
+%   \draw[->, line width=4pt, draw=gray] (8, 0.3) -- (8, 3.3);
+% \end{tikzpicture}
+% \caption{情形 \meta{nrows}${} < 0$，\meta{vpos} = [t]}
+% \label{fig:bot-t}
+% \end{figure}
+%
+% \subsubsection*{\meta{vpos}  = [c]}
+%
+% 此时 \cs{vbox} 中依次为一个 \cs{vfill}、文本和另一个 \cs{vfill}。
+% 这样的 \cs{vbox} 高度为 0，即盒子顶部位于基线上。由于两个盒子尺寸相同（H），把 \cs{vbox} 上移 $\textrm{H} - \textrm{h2}$ 即可对齐。见图~\ref{fig:bot-c}。
+%
+%
+%
+%
+% \begin{figure}[htpb]
+% \begin{tikzpicture}
+%   \draw (2, -0.5) rectangle (5,4.5);
+%   \foreach \y in {0,...,4} \draw (2, \y) -- (5, \y);
+%   \draw (0, 4.2) node (topstrut) {顶支柱};
+%   \draw[->] (topstrut) -- (2, 4.2);
+%   \draw (0, -0.25) node (botstrut) {底支柱};
+%   \draw[->] (botstrut) -- (2, -0.25);
+%   \draw[<->] (5.3, -0.5) -- (5.3, 4.5);
+%   \draw (5.5, 2) node {H};
+%   \draw (0, 3.3) node {基线};
+%   \draw[dashed] (1.7, 3.3) -- (5.8, 3.3);
+%   \draw[<->] (5.5, 3.3) -- (5.5, 4.5);
+%   \draw (5.9, 3.9) node {h1};
+%   \draw[<->] (5.5, -0.5) -- (5.5, 0.3);
+%   \draw (5.9, -0.1) node {h2};
+%   \draw (0, 0.3) node {基线};
+%   \draw[dashed] (1.7, 0.3) -- (5.9, 0.3);
+%
+%   \draw (6.5, 0.3) rectangle (9.5, -4.7);
+%   \draw[<->] (9.7, -4.7) -- (9.7, 0.3);
+%   \draw (10, -3.2) node {H};
+%   \draw[fill=lightgray] (6.6, -3.5) rectangle (9.4, -0.9);
+%   \draw (8, -0.3)  node[align=center] {\cs{vfill}};
+%   \draw (8, -2.2) node[align=center] {文本};
+%   \draw (8, -4) node[align=center] {\cs{vfill}};
+%   \draw[->, line width=4pt, draw=gray] (8, 0.3) -- (8, 4.5);
+%   \draw[draw=gray] (6.5, 4.5) -- (9.5, 4.5);
+% \end{tikzpicture}
+% \caption{情形 \meta{nrows}${} < 0$，\meta{vpos} = [c]}
+% \label{fig:bot-c}
+% \end{figure}
+%
+% \subsubsection*{\meta{vpos}  = [b]}
+%
+% \cs{vbox} 中先是一个 \cs{vfill}，后接文本。
+% 由于以文本结尾，盒子还会多出一段等于文本末行深度的深度。
+%
+% 这样的 \cs{vbox} 高度为 0，即盒子顶部位于基线上，但其深度为 H 加上上述深度；换言之，末行文本的基线位于顶部以下 H 处。
+%
+%
+%
+% 由于 \meta{vpos} = \texttt{[b]}，我们希望末行文本的基线平移到表格最后一行的基线，平移量为 H。见图~\ref{fig:bot-b}。
+%
+%
+%
+% \begin{figure}[htpb]
+% \begin{tikzpicture}
+%   \draw (2, -0.5) rectangle (5,4.5);
+%   \foreach \y in {0,...,4} \draw (2, \y) -- (5, \y);
+%   \draw (0, 4.2) node (topstrut) {顶支柱};
+%   \draw[->] (topstrut) -- (2, 4.2);
+%   \draw (0, -0.25) node (botstrut) {底支柱};
+%   \draw[->] (botstrut) -- (2, -0.25);
+%   \draw[<->] (5.3, -0.5) -- (5.3, 4.5);
+%   \draw (5.5, 2) node {H};
+%   \draw (0, 3.3) node {基线};
+%   \draw[dashed] (1.7, 3.3) -- (5.8, 3.3);
+%   \draw[<->] (5.5, 3.3) -- (5.5, 4.5);
+%   \draw (5.9, 3.9) node {h1};
+%   \draw[<->] (5.5, -0.5) -- (5.5, 0.3);
+%   \draw (5.9, -0.1) node {h2};
+%   \draw (0, 0.3) node {基线};
+%   \draw[dashed] (1.7, 0.3) -- (5.9, 0.3);
+%
+%   \draw (6.5, 0.3) rectangle (9.5, -5.1);
+%   \draw[<->] (9.7, -4.7) -- (9.7, 0.3);
+%   \draw (10, -3.2) node {H};
+%   \draw[fill=lightgray] (6.6, -5) rectangle (9.4, -2);
+%   \draw (8, -1)  node[align=center] {{\cs{vfill}}};
+%   \draw (8, -3.5) node[align=center] {文本};
+%   \draw (0, 0.3) node (baseline) {基线};
+%   \draw[dashed] (1.7, 0.3) -- (10, 0.3);
+%   \draw[dashed] (6.3, -4.7) -- (10, -4.7);
+%   \draw (3.5, -4.7) node {末行文本的基线};
+%   \draw[->, line width=4pt, draw=gray] (8.5, -4.7) -- (8.5, 0.3);
+% \end{tikzpicture}
+% \caption{情形 \meta{nrows}${} < 0$，\meta{vpos} = [b]}
+% \label{fig:bot-b}
+% \end{figure}
+%
+% \subsection{概览}
+% \label{sec:overview}
+%
+% \begin{tabular}{| l | l | l |}
+%     \hline
+%   \meta{vpos} & \meta{nrows} > 0  & \meta{nrows} < 0 \\
+%   \hline
+%   \texttt{[t]}  & h            &  $\textrm{H} - \textrm{h1} -\textrm{h2} + \textrm{h}$  \\
+%   \texttt{[c]}  & h1          &  $\textrm{H} - \textrm{h2}$ \\
+%   \texttt{[b]}  & h1 + h2 &   H \\
+%   \hline
+%                    &  x          &   $\textrm{H} - \textrm{h1} -\textrm{h2} + x$ \\
+% \hline
+%   \end{tabular}
+%
+% \Finale
+\endinput

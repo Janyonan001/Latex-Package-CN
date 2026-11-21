@@ -1,0 +1,1595 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{程序库 \mylib{skins}——皮肤目录}\label{sec:skincatalog}%
+\tcbset{external/prefix=external/skincatalog_}%
+程序库 \mylib{skins} 提供了一组可供选择的皮肤目录，说明如下。
+该程序库需通过宏包选项或在导言区中加载：
+\begin{dispListing}
+\tcbuselibrary{skins}
+\end{dispListing}
+
+有关 \mylib{skins} 程序库其他选项的说明，见 \zvref{sec:skins}。
+
+\begin{itemize}
+\item 原则上，皮肤通过为 \refKey{/tcb/skin} 选择一个值来应用，例如 \docValue*{enhanced}。
+  由于可断开文本框的各个片段应具有不同外观，
+  因此为可断开文本框分别设置了独立的皮肤，另见 \zvref{subsec:breaksequence}。
+  由同一基础皮肤派生出来的、用于可断开文本框的皮肤，下文称为一个皮肤家族。
+\item 除了为 \refKey{/tcb/skin} 赋值之外，还可使用同名的选项，它们是快捷方式，
+  有时还会一并改变某些几何或样式设置。这些才是供普通用户使用的选项。
+  通常，选用下列选项之一即可选定一种皮肤：
+  \begin{itemize}
+  \item \refKey{/tcb/standard}
+  \item \refKey{/tcb/standard jigsaw}
+  \item \refKey{/tcb/enhanced}
+  \item \refKey{/tcb/enhanced jigsaw}
+  \item \refKey{/tcb/enhanced standard}
+  \item \refKey{/tcb/enhanced standard jigsaw}
+  \item \refKey{/tcb/bicolor}
+  \item \refKey{/tcb/tile}
+  \item \refKey{/tcb/beamer}
+  \item \refKey{/tcb/widget}
+  \item \refKey{/tcb/empty}
+  \item \refKey{/tcb/spartan}
+  \item \refKey{/tcb/draft}
+  \end{itemize}
+  此外，还有一些特殊用途：
+  \begin{itemize}
+  \item \refKey{/tcb/marker}
+  \item \refKey{/tcb/blank}
+  \item \refKey{/tcb/blanker}
+  \item \refKey{/tcb/blankest}
+  \end{itemize}
+\end{itemize}
+
+
+
+\clearpage
+
+下面的示例使用辅助宏 \docAuxCommand{skinExampleSet} 来展示皮肤效果。
+请注意，\docAuxCommand{skinExampleSet} 并非宏包的一部分，
+而只是为本文档定义的。
+
+\begin{dispListing}
+\NewDocumentCommand{\skinExampleSet}{m}{%
+  \begin{tcbraster}[raster equal height,raster columns=3,
+      colback=LightGreen,colframe=DarkGreen,colbacktitle=LimeGreen!75!DarkGreen,
+      #1,
+      left=1mm,right=1mm,top=1mm,bottom=1mm,middle=1mm,
+      sidebyside gap=4mm]
+    \begin{tcolorbox}
+      This is my content.
+    \end{tcolorbox}
+    \begin{tcolorbox}
+      This is my content.
+      \tcblower
+      More content.
+    \end{tcolorbox}
+    \begin{tcolorbox}[sidebyside]
+      My content.
+      \tcblower
+      More content.
+    \end{tcolorbox}
+    \begin{tcolorbox}[adjusted title=My title]
+      This is my content.
+    \end{tcolorbox}
+    \begin{tcolorbox}[adjusted title=My title]
+      This is my content.
+      \tcblower
+      More content.
+    \end{tcolorbox}
+    \begin{tcolorbox}[adjusted title=My title,sidebyside]
+      My content.
+      \tcblower
+      More content.
+    \end{tcolorbox}
+  \end{tcbraster}
+}
+\end{dispListing}
+\tcbusetemp
+
+
+\clearpage
+\tcbset{skintable/.style={colframe=red!50!yellow!50!black,
+  colback=red!50!yellow!5!white,coltitle=red!50!yellow!3!white,
+  fonttitle=\bfseries,before=\par\smallskip,
+  title=皮肤 \enquote{\texttt{#1}} 的环境与引擎}}
+
+\subsection{皮肤家族 \enquote{standard}}\label{subsec:skinstandard}
+\begin{marker}请注意，选项键 \refKey{/tcb/frame style}、
+  \refKey{/tcb/interior style}、
+  \refKey{/tcb/segmentation style} 和
+  \refKey{/tcb/title style} 不适用于 standard 皮肤。
+  此外，水印（见 \zvref{subsec:watermarks}）
+  也不能用于 standard 皮肤。
+\end{marker}
+
+\begin{docSkin}{standard}
+  这是核心宏包的标准皮肤。所有绘制引擎均设为 |standard| 类型。
+  绘制基于 \refPkg{pgf} 命令，不需要 \refPkg{tikz} 宏包。
+\begin{tcolorbox}[skintable=standard]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |standard|\\
+    \refKey{/tcb/interior titled engine}: \> |standard|\\ 
+    \refKey{/tcb/interior engine}:        \> |standard|\\
+    \refKey{/tcb/segmentation engine}:    \> |standard|\\
+    \refKey{/tcb/title engine}:           \> |standard|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{docTcbKey}{standard}{}{样式，无取值}
+  这是设置 |skin=standard| 的简写。
+\end{docTcbKey}
+
+\begin{dispExample}
+\skinExampleSet{standard}
+\end{dispExample}
+
+\clearpage
+
+\begin{docSkin}{standard jigsaw}
+  这是核心宏包的标准拼图皮肤。它与 \refSkin{standard} 皮肤的区别在于其边框引擎，
+  见 \zvref{subsec:skinjigsaw}。
+\begin{tcolorbox}[skintable=standard jigsaw]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |standardjigsaw|\\
+    \refKey{/tcb/interior titled engine}: \> |standard|\\ 
+    \refKey{/tcb/interior engine}:        \> |standard|\\
+    \refKey{/tcb/segmentation engine}:    \> |standard|\\
+    \refKey{/tcb/title engine}:           \> |standard|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{docTcbKey}{standard jigsaw}{}{样式，无取值}
+  这是设置 |skin=standard jigsaw| 的简写。
+\end{docTcbKey}
+
+\begin{dispExample*}{segmentation style={preaction={fill=white},pattern=checkerboard,pattern color=gray!40}}
+\skinExampleSet{standard jigsaw,
+  opacityframe=0.5,opacityback=0.5,opacitybacktitle=0.5,
+}
+\end{dispExample*}
+
+
+\clearpage
+\subsection{皮肤家族 \enquote{enhanced}}
+\begin{marker}
+如果你喜欢 |tcolorbox| 的标准外观，但又希望拥有一些\enquote{增强}特性，
+那么 |enhanced| 皮肤正是你想要的。
+\end{marker}
+
+\begin{docSkin}{enhanced}
+  该皮肤把核心宏包的绘制命令转换为 \tikzname\ 路径命令。因此，它允许对这些路径
+  使用所有 \tikzname\ 高级选项，相比 \refSkin{standard} 皮肤更加灵活。
+  代价是编译时间会稍长。这些 \tikzname\ 路径选项可通过下列选项键给出：
+  \refKey{/tcb/frame style}、
+  \refKey{/tcb/interior style}、
+  \refKey{/tcb/segmentation style} 和
+  \refKey{/tcb/title style}。
+\begin{tcolorbox}[skintable=enhanced]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |path|\\
+    \refKey{/tcb/interior titled engine}: \> |path|\\ 
+    \refKey{/tcb/interior engine}:        \> |path|\\
+    \refKey{/tcb/segmentation engine}:    \> |path|\\
+    \refKey{/tcb/title engine}:           \> |path|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{docTcbKey}{enhanced}{}{样式，无取值}
+  这是设置 |skin=enhanced| 的简写。
+\end{docTcbKey}
+
+\begin{dispExample}
+\skinExampleSet{enhanced}
+\end{dispExample}
+
+\clearpage
+
+\begin{dispExample}
+% \usetikzlibrary{shadings}         % preamble
+\tcbset{skin=enhanced,fonttitle=\bfseries,
+  frame style={upper left=blue,upper right=red,lower left=yellow,lower right=green},
+  interior style={white,opacity=0.5},
+  segmentation style={black,solid,opacity=0.2,line width=1pt}}
+
+\begin{tcolorbox}[title=Nice box in rainbow colors]
+  With the \enquote{enhanced} skin, it is quite easy to produce fancy looking effects.
+  \tcblower
+  Note that this is still a \texttt{tcolorbox}.
+\end{tcolorbox}
+\end{dispExample}
+
+
+\begin{dispExample}
+% \usetikzlibrary{decorations.pathmorphing} % preamble
+\tcbset{skin=enhanced,fonttitle=\bfseries,boxrule=1mm,
+  frame style={draw=FireBrick,fill=Salmon},drop fuzzy shadow,
+  interior style={draw=FireBrick,top color=Salmon!10,bottom color=Salmon!20},
+  segmentation style={draw=FireBrick,solid,decorate,
+        decoration={coil,aspect=0,segment length=10.1mm}}}
+
+\begin{tcblisting}{title=A listing box with shadow and some specials}
+Of course, skins can be used for listings also.
+\begin{equation}
+  \int\limits_1^2 \frac{1}{x}~dx = \ln(2).
+\end{equation}
+\end{tcblisting}
+\end{dispExample}
+
+
+\clearpage
+
+
+\begin{docTcbKey}{enhanced standard}{}{样式，无取值}
+  本样式为所有文本框（包括不可断开的文本框以及\emph{断开序列}中的每一段）
+  统一设置未断开框所用的 \refSkin{enhanced} 皮肤。因此，它是
+  \refSkin{standard} 皮肤的另一种变体，见 \zvref{subsec:breaksequence}。
+\end{docTcbKey}
+
+
+\begin{docTcbKey}{blank}{}{样式，初始未设置}
+  本样式基于 \refSkin{enhanced} 皮肤。所有绘制操作均被隐藏，
+  所有边距均设为 |0pt|。要关闭绘制引擎，见 \refKey{/tcb/blanker}。
+\begin{dispExample}
+\begin{tcolorbox}[blank,watermark text=A blank box]
+\lipsum[1]
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+\begin{docCommand}{tcbline}{}
+  有时候，一条线就是一条线。使用 \refCom{tcblower} 可以把文本框内容分成两个功能单元。
+  |\tcbline| 只画一条线，其外观类似于上下部分之间的分隔线。
+  此外，|\tcbline| 可以使用不止一次。
+  |\tcbline| 始终使用 |path| 绘制引擎，因此可以应用 \refKey{/tcb/segmentation style}。
+
+\begin{dispExample}
+\tcbset{enhanced,colframe=blue!50!black,colback=white}
+
+\begin{tcolorbox}[colupper=red!50!black,collower=green!50!black]
+\lipsum[1]
+\tcbline
+\lipsum[2]
+\tcblower
+\lipsum[3]
+\tcbline
+\lipsum[4]
+\end{tcolorbox}
+\end{dispExample}
+\end{docCommand}
+
+\begin{docCommand}{tcbline*}{}
+  与 \refCom{tcbline} 相同，但在可断开文本框中，若发生页面/框断开，
+  \refCom{tcbline*} 会被移除；在文本框末尾也会被移除。
+\end{docCommand}
+
+\clearpage
+\begin{docSkin}{enhancedfirst}
+这是 \refSkin{enhanced} 的一个变体，用作 \refSkin{enhanced} 断开序列的\emph{首}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=enhancedfirst]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathfirst|\\
+    \refKey{/tcb/interior titled engine}: \> |pathfirst|\\ 
+    \refKey{/tcb/interior engine}:        \> |pathfirst|\\
+    \refKey{/tcb/segmentation engine}:    \> |path|\\
+    \refKey{/tcb/title engine}:           \> |pathfirst|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{skin=enhancedfirst}
+\end{dispExample}
+
+\medskip
+
+%\clearpage
+\begin{docSkin}{enhancedmiddle}
+这是 \refSkin{enhanced} 的一个变体，用作 \refSkin{enhanced} 断开序列的\emph{中间}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=enhancedmiddle]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathmiddle|\\
+    \refKey{/tcb/interior titled engine}: \> |pathmiddle|\\ 
+    \refKey{/tcb/interior engine}:        \> |pathmiddle|\\
+    \refKey{/tcb/segmentation engine}:    \> |path|\\
+    \refKey{/tcb/title engine}:           \> |pathmiddle|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{skin=enhancedmiddle}
+\end{dispExample}
+
+
+\clearpage
+\begin{docSkin}{enhancedlast}
+这是 \refSkin{enhanced} 的一个变体，用作 \refSkin{enhanced} 断开序列的\emph{末}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=enhancedlast]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathlast|\\
+    \refKey{/tcb/interior titled engine}: \> |pathlast|\\ 
+    \refKey{/tcb/interior engine}:        \> |pathlast|\\
+    \refKey{/tcb/segmentation engine}:    \> |path|\\
+    \refKey{/tcb/title engine}:           \> |pathlast|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{dispExample}
+\skinExampleSet{skin=enhancedlast}
+\end{dispExample}
+
+\clearpage
+
+\begin{docSkin}{enhanced jigsaw}
+  这是 \refSkin{enhanced} 皮肤的拼图变体。区别在于其边框引擎，
+  见 \zvref{subsec:skinjigsaw}。
+\begin{tcolorbox}[skintable=enhanced jigsaw]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathjigsaw|\\
+    \refKey{/tcb/interior titled engine}: \> |path|\\ 
+    \refKey{/tcb/interior engine}:        \> |path|\\
+    \refKey{/tcb/segmentation engine}:    \> |path|\\
+    \refKey{/tcb/title engine}:           \> |path|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{docTcbKey}{enhanced jigsaw}{}{样式，无取值}
+  这是设置 |skin=enhanced jigsaw| 的简写。
+\end{docTcbKey}
+
+
+\begin{dispExample*}{segmentation style={preaction={fill=white},pattern=checkerboard,pattern color=gray!40}}
+\skinExampleSet{enhanced jigsaw,
+  opacityframe=0.5,opacityback=0.5,opacitybacktitle=0.5,
+}
+\end{dispExample*}
+
+
+\begin{docTcbKey}[][doc new=2017-07-01]{enhanced standard jigsaw}{}{样式，无取值}
+  本样式为所有文本框（包括不可断开的文本框以及\emph{断开序列}中的每一段）
+  统一设置未断开框所用的 \refSkin{enhanced jigsaw} 皮肤。因此，它是
+  \refSkin{standard} 皮肤的另一种变体，见 \zvref{subsec:breaksequence}。
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docSkin}{enhancedfirst jigsaw}
+  这是 \refSkin{enhancedfirst} 皮肤的拼图变体。区别在于其边框引擎，
+  见 \zvref{subsec:skinjigsaw}。
+\begin{tcolorbox}[skintable=enhancedfirst jigsaw]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathfirstjigsaw|\\
+    \refKey{/tcb/interior titled engine}: \> |pathfirst|\\ 
+    \refKey{/tcb/interior engine}:        \> |pathfirst|\\
+    \refKey{/tcb/segmentation engine}:    \> |path|\\
+    \refKey{/tcb/title engine}:           \> |pathfirst|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample*}{segmentation style={preaction={fill=white},pattern=checkerboard,pattern color=gray!40}}
+\skinExampleSet{skin=enhancedfirst jigsaw,
+  opacityframe=0.5,opacityback=0.5,opacitybacktitle=0.5,
+}
+\end{dispExample*}
+
+
+\clearpage
+\begin{docSkin}{enhancedmiddle jigsaw}
+  这是 \refSkin{enhancedmiddle} 皮肤的拼图变体。区别在于其边框引擎，
+  见 \zvref{subsec:skinjigsaw}。
+\begin{tcolorbox}[skintable=enhancedmiddle jigsaw]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathmiddlejigsaw|\\
+    \refKey{/tcb/interior titled engine}: \> |pathmiddle|\\ 
+    \refKey{/tcb/interior engine}:        \> |pathmiddle|\\
+    \refKey{/tcb/segmentation engine}:    \> |path|\\
+    \refKey{/tcb/title engine}:           \> |pathmiddle|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample*}{segmentation style={preaction={fill=white},pattern=checkerboard,pattern color=gray!40}}
+\skinExampleSet{skin=enhancedmiddle jigsaw,
+  opacityframe=0.5,opacityback=0.5,opacitybacktitle=0.5,
+}
+\end{dispExample*}
+
+
+\begin{docTcbKey}{marker}{}{样式，无取值}
+  本样式基于 \refSkin{enhancedmiddle jigsaw} 皮肤。
+  它旨在像荧光笔一样用作视觉标记。
+\begin{dispExample}
+\begin{tcolorbox}[marker]
+\lipsum[2]
+\end{tcolorbox}
+\end{dispExample}
+\end{docTcbKey}
+
+\clearpage
+
+\begin{dispListing*}{before upper={本示例展示如何基于 \refSkin{enhancedmiddle} 创建若干
+  \emph{文本标记} 环境。\par\medskip}}
+\tcbset{textmarker/.style={%
+    skin=enhancedmiddle jigsaw,breakable,parbox=false,
+    boxrule=0mm,leftrule=5mm,rightrule=5mm,boxsep=0mm,arc=0mm,outer arc=0mm,
+    left=3mm,right=3mm,top=1mm,bottom=1mm,toptitle=1mm,bottomtitle=1mm,oversize}}
+
+\newtcolorbox{yellow}{textmarker,colback=yellow!5!white,colframe=yellow}
+\newtcolorbox{orange}{textmarker,colback=DarkOrange!5!white,
+                        colframe=DarkOrange!75!yellow}
+\newtcolorbox{red}{textmarker,colback=red!5!white,colframe=red}
+\newtcolorbox{blue}{textmarker,colback=DeepSkyBlue!5!white,colframe=DeepSkyBlue}
+\newtcolorbox{green}{textmarker,colback=Chartreuse!5!white,colframe=Chartreuse}
+\newtcolorbox{rainbow}{textmarker,interior hidden,
+  frame style={top color=blue,bottom color=red,middle color=green}}
+
+\begin{yellow}
+  \lipsum[1-3]
+\end{yellow}
+
+\begin{orange}
+  \lipsum[4]
+\end{orange}
+
+\begin{red}
+  \lipsum[5]
+\end{red}
+
+\begin{green}
+  \lipsum[6]
+\end{green}
+
+\begin{blue}
+  \lipsum[7]
+\end{blue}
+
+\begin{rainbow}
+  \lipsum[8]
+\end{rainbow}
+\end{dispListing*}
+{\tcbusetemp}
+
+
+\clearpage
+\begin{docSkin}{enhancedlast jigsaw}
+  这是 \refSkin{enhancedlast} 皮肤的拼图变体。区别在于其边框引擎，
+  见 \zvref{subsec:skinjigsaw}。
+\begin{tcolorbox}[skintable=enhancedlast]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathlastjigsaw|\\
+    \refKey{/tcb/interior titled engine}: \> |pathlast|\\ 
+    \refKey{/tcb/interior engine}:        \> |pathlast|\\
+    \refKey{/tcb/segmentation engine}:    \> |path|\\
+    \refKey{/tcb/title engine}:           \> |pathlast|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample*}{segmentation style={preaction={fill=white},pattern=checkerboard,pattern color=gray!40}}
+\skinExampleSet{skin=enhancedlast jigsaw,
+  opacityframe=0.5,opacityback=0.5,opacitybacktitle=0.5,
+}
+\end{dispExample*}
+
+
+
+\clearpage
+\subsection{皮肤家族 \enquote{bicolor}}
+\begin{docSkin}{bicolor}
+  该皮肤与 \refSkin{standard} 和 \refSkin{enhanced} 皮肤十分相似。
+  但它不用分隔线，而是用不同颜色填充或用不同样式绘制文本框的可选下部。
+\begin{tcolorbox}[skintable=bicolor]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |path|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |path|
+  \end{tabbing}
+\end{tcolorbox}
+  \begin{itemize}
+  \item 该皮肤最基本的用法是用 \refKey{/tcb/colbacklower} 设置下部的背景色，
+    其余选项与 \refSkin{standard} 皮肤相同。
+\begin{dispExample}
+\begin{tcolorbox}[skin=bicolor,title=The title,
+    colframe=FireBrick!75!black,colback=Salmon!50!white,colbacklower=Salmon]
+  The upper part.
+  \tcblower
+  The lower part.
+\end{tcolorbox}
+\end{dispExample}
+  \item 更高级的用法是像 \refSkin{enhanced} 皮肤那样应用 \refKey{/tcb/frame style}
+    和 \refKey{/tcb/interior style}。也可以使用 \refKey{/tcb/segmentation style}，
+    但它会作用于整个下部。
+\begin{dispExample}
+\begin{tcolorbox}[skin=bicolor,title=The title,
+    frame style={top color=FireBrick,
+                 bottom color=FireBrick!15!white,draw=black},
+    interior style={left color=Salmon,right color=Salmon!50!white},
+    segmentation style={right color=Salmon,left color=Salmon!50!white}]
+  The upper part.
+  \tcblower
+  The lower part.
+\end{tcolorbox}
+\end{dispExample}
+  \end{itemize}
+\end{docSkin}
+
+\clearpage
+
+\begin{docTcbKey}{bicolor}{}{样式，无取值}
+  这是设置 |skin=bicolor| 的简写。
+\end{docTcbKey}
+
+
+\begin{dispExample}
+\skinExampleSet{bicolor,
+  colbacklower=LimeGreen!75!LightGreen,
+}
+\end{dispExample}
+
+\clearpage
+
+
+\begin{marker}
+  下列选项 \refKey{/tcb/colbacklower} 和 \refKey{/tcb/opacitybacklower}
+  在 \refKey{/tcb/segmentation style} 之前执行，也就是说，
+  \refKey{/tcb/segmentation style} 会覆盖它们。
+\end{marker}
+
+\begin{docTcbKey}{colbacklower}{=\meta{color}}{无默认值，初始 \texttt{black!15!white}}
+  设置下部的背景 \meta{颜色}。是否使用该值取决于所用皮肤。
+\end{docTcbKey}
+
+\begin{dispExample}
+\tcbset{gitexample/.style={listing and comment,comment={#1},
+  skin=bicolor,boxrule=1mm,fonttitle=\bfseries,coltitle=black,
+  frame style={draw=black,left color=Gold,right color=Goldenrod!50!Gold},
+  colback=black,colbacklower=Goldenrod!75!Gold,
+  colupper=white,collower=black,
+  listing options={language={bash},aboveskip=0pt,belowskip=0pt,nolol,
+  basicstyle=\ttfamily\bfseries,extendedchars=true}}}
+
+\begin{tcblisting}{title={Snapshot of the staging area},
+  gitexample={The option `-a' automatically stages all tracked and modified
+              files before the commit.\par
+              This can be combined with the message option `-m'
+              as seen in the third line.}}
+git commit
+git commit -a
+git commit -am 'changes to my example'
+\end{tcblisting}
+\end{dispExample}
+
+\smallskip
+
+\begin{docTcbKey}[][doc new=2021-05-21]{opacitybacklower}{=\meta{fraction}}{无默认值，初始 \texttt{1.0}}
+  将下部的背景不透明度设为所给 \meta{比例}。
+  是否使用该值取决于所用皮肤。
+\end{docTcbKey}
+
+\begin{dispExample}
+\begin{tcolorbox}[bicolor,
+  frame style={preaction={fill=blue!50!black},
+    pattern=checkerboard,pattern color=blue!50!gray},
+  fonttitle=\bfseries, overlaplower=0mm,
+  colback=blue!10, colbacklower=white, opacitybacklower=0.65,
+  title={Example for a semilucent lower part}]
+This is the upper part.
+\tcblower
+And that is the lower part.
+\end{tcolorbox}
+\end{dispExample}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2022-01-11]{overlaplower}{=\meta{length}}{无默认值，初始 \texttt{0.1mm}}
+  对于皮肤家族 \enquote{bicolor}、\enquote{tile} 和 \enquote{beamer}，
+  下部背景的绘制方式与上部背景不同。若上下部背景之间的距离为 |0pt|，
+  某些预览器会在上下部之间显示一条细的边框色线。为避免这一瑕疵，
+  下部会以 \meta{长度} 的重叠量绘制在上部之上。\par
+  该值可根据特殊需要调整。例如，半透明下部最好使用 |0pt|，
+  见 \refKey{/tcb/opacitybacklower}。要使用更大的值，另见 \refCom{tcboverlaplower}。
+\end{docTcbKey}
+
+
+\begin{docCommand}[doc new=2022-01-11]{tcboverlaplower}{}
+  该宏保存由 \refKey{/tcb/overlaplower} 设置的长度值。
+  可用于上下部分隔处的精细定位，应视为\emph{只读}。
+
+\begin{dispExample}
+\begin{tcolorbox}[bicolor, sharp corners,
+    colframe=blue!50!black, colback=blue!10, colbacklower=red!10,
+    top=5mm, bottom=2mm, middle=3.5mm, overlaplower=1.5mm,
+    underlay={
+      \node[minimum width=1cm,minimum height=0.5cm,outer sep=auto,
+        anchor=north east,fill=white] at (interior.north east)
+        {\itshape\small upper};
+      \node[minimum width=1cm,minimum height=0.5cm,outer sep=auto,
+        anchor=north east,fill=white]
+        at ([yshift=\tcboverlaplower]segmentation.east)
+        {\itshape\small lower};
+    }
+  ]
+This is the upper part.
+\tcblower
+And that is the lower part.
+\end{tcolorbox}
+\end{dispExample}
+
+\end{docCommand}
+
+
+
+\clearpage
+
+\begin{docSkin}{bicolorfirst}
+这是 \refSkin{bicolor} 的一个变体，用作 \refSkin{bicolor} 断开序列的\emph{首}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=bicolorfirst]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathfirst|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathfirst|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{dispExample}
+\skinExampleSet{skin=bicolorfirst,
+  colbacklower=LimeGreen!75!LightGreen,
+}
+\end{dispExample}
+
+
+\clearpage
+
+\begin{docSkin}{bicolormiddle}
+这是 \refSkin{bicolor} 的一个变体，用作 \refSkin{bicolor} 断开序列的\emph{中间}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=bicolormiddle]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathmiddle|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathmiddle|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{skin=bicolormiddle,
+  colbacklower=LimeGreen!75!LightGreen,
+}
+\end{dispExample}
+
+
+\clearpage
+\begin{docSkin}{bicolorlast}
+这是 \refSkin{bicolor} 的一个变体，用作 \refSkin{bicolor} 断开序列的\emph{末}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=bicolorlast]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathlast|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathlast|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{skin=bicolorlast,
+  colbacklower=LimeGreen!75!LightGreen,
+}
+\end{dispExample}
+
+
+\clearpage
+
+\begin{docSkin}[doc new=2021-05-21]{bicolor jigsaw}
+  这是 \refSkin{bicolor} 皮肤的拼图变体。区别在于其边框引擎，
+  见 \zvref{subsec:skinjigsaw}。
+\begin{tcolorbox}[skintable=bicolor jigsaw]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathjigsaw|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |path|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{docTcbKey}{bicolor jigsaw}{}{样式，无取值}
+  这是设置 |skin=enhanced jigsaw| 的简写。
+\end{docTcbKey}
+
+
+\begin{dispExample*}{segmentation style={preaction={fill=white},pattern=checkerboard,pattern color=gray!40}}
+\skinExampleSet{bicolor jigsaw,
+  colbacklower=LimeGreen!75!LightGreen,
+  opacityframe=0.5,opacityback=0.5,opacitybacktitle=0.5,
+  opacitybacklower=0.5,
+}
+\end{dispExample*}
+
+
+\clearpage
+
+
+\begin{docSkin}[doc new=2021-05-21]{bicolorfirst jigsaw}
+  这是 \refSkin{bicolorfirst} 皮肤的拼图变体。区别在于其边框引擎，
+  见 \zvref{subsec:skinjigsaw}。
+\begin{tcolorbox}[skintable=bicolorfirst jigsaw]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathfirstjigsaw|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathfirst|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{dispExample*}{segmentation style={preaction={fill=white},pattern=checkerboard,pattern color=gray!40}}
+\skinExampleSet{skin=bicolorfirst jigsaw,
+  colbacklower=LimeGreen!75!LightGreen,
+  opacityframe=0.5,opacityback=0.5,opacitybacktitle=0.5,
+  opacitybacklower=0.5,
+}
+\end{dispExample*}
+
+
+
+\clearpage
+
+\begin{docSkin}[doc new=2021-05-21]{bicolormiddle jigsaw}
+  这是 \refSkin{bicolormiddle} 皮肤的拼图变体。区别在于其边框引擎，
+  见 \zvref{subsec:skinjigsaw}。
+\begin{tcolorbox}[skintable=bicolormiddle jigsaw]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathmiddlejigsaw|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathmiddle|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample*}{segmentation style={preaction={fill=white},pattern=checkerboard,pattern color=gray!40}}
+\skinExampleSet{skin=bicolormiddle jigsaw,
+  colbacklower=LimeGreen!75!LightGreen,
+  opacityframe=0.5,opacityback=0.5,opacitybacktitle=0.5,
+  opacitybacklower=0.5,
+}
+\end{dispExample*}
+
+
+\clearpage
+\begin{docSkin}[doc new=2021-05-21]{bicolorlast jigsaw}
+  这是 \refSkin{bicolorlast} 皮肤的拼图变体。区别在于其边框引擎，
+  见 \zvref{subsec:skinjigsaw}。
+\begin{tcolorbox}[skintable=bicolorlast jigsaw]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathlastjigsaw|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathlast|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample*}{segmentation style={preaction={fill=white},pattern=checkerboard,pattern color=gray!40}}
+\skinExampleSet{skin=bicolorlast jigsaw,
+  colbacklower=LimeGreen!75!LightGreen,
+  opacityframe=0.5,opacityback=0.5,opacitybacktitle=0.5,
+  opacitybacklower=0.5,
+}
+\end{dispExample*}
+
+
+
+\clearpage
+\subsection{皮肤家族 \enquote{tile}}
+\begin{docSkin}[doc new=2016-02-25]{tile}
+  该皮肤是 \refSkin{bicolor} 皮肤的一个变体。特别地，文本框的可选下部
+  由 \refKey{/tcb/colbacklower} 着色。与 \refSkin{bicolor} 的主要区别在于
+  \refSkin{tile} 没有边框。
+\begin{tcolorbox}[skintable=tile]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |empty|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |path|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{docTcbKey}[][doc new=2016-02-25]{tile}{}{样式，初始\\
+  |skin=tile,boxrule=0pt,sharp corners,title filled,fonttitle=\textbackslash bfseries|
+}
+  本键应用 |skin=tile|，此外还会改变几何尺寸和一些样式选项。
+\end{docTcbKey}
+
+
+\begin{dispExample}
+\skinExampleSet{tile,
+  colbacklower=LimeGreen!75!LightGreen,
+}
+\end{dispExample}
+
+
+\clearpage
+\begin{docSkin}[doc new=2016-02-25]{tilefirst}
+这是 \refSkin{tile} 的一个变体，用作 \refSkin{tile} 断开序列的\emph{首}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=tilefirst]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |empty|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathfirst|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{dispExample}
+\skinExampleSet{skin=tilefirst,
+  colbacklower=LimeGreen!75!LightGreen,
+  boxrule=0pt,
+}
+\end{dispExample}
+
+
+\clearpage
+\begin{docSkin}[doc new=2016-02-25]{tilemiddle}
+这是 \refSkin{tile} 的一个变体，用作 \refSkin{tile} 断开序列的\emph{中间}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=tilemiddle]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |empty|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathmiddle|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{skin=tilemiddle,
+  colbacklower=LimeGreen!75!LightGreen,
+  boxrule=0pt,
+}
+\end{dispExample}
+
+
+\clearpage
+\begin{docSkin}[doc new=2016-02-25]{tilelast}
+这是 \refSkin{tile} 的一个变体，用作 \refSkin{tile} 断开序列的\emph{末}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=tilelast]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |empty|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathlast|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{skin=tilelast,
+  colbacklower=LimeGreen!75!LightGreen,
+  boxrule=0pt,
+}
+\end{dispExample}
+
+
+
+\clearpage
+\subsection{皮肤家族 \enquote{beamer}}
+
+\begin{docSkin}{beamer}
+  该皮肤模仿 \refPkg{beamer} 文档类中常见的文本框，因此称为 \enquote{beamer}。
+  它使用核心宏包的常规颜色，但略微加深了一点。\par
+  设计该皮肤的初衷是在 \refPkg{beamer} 文档类之外使用具有\enquote{beamer风格}的文本框；
+  不过，你也可能想在 |beamer| 幻灯片中用 |tcolorbox| 作为块。为此可参见
+  \refPkg{beamertheme-tcolorbox} 宏包，它提供了一个 |beamer| 内部主题，
+  用 |tcolorbox| 重现标准的 |beamer| 块。
+\begin{tcolorbox}[skintable=beamer]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |path|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |path|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+
+\begin{docTcbKey}{beamer}{}{样式，初始\\
+  |skin=beamer,boxrule=0mm,titlerule=1mm,toptitle=0.5mm,|\\
+  |arc=2mm,fonttitle=\textbackslash bfseries,drop fuzzy shadow|
+}
+  本键应用 |skin=beamer|，此外还会改变几何尺寸和一些样式选项。
+\end{docTcbKey}
+
+
+
+\begin{dispExample}
+\skinExampleSet{beamer,title filled=false}
+\end{dispExample}
+
+
+
+\begin{dispExample}
+\begin{tcolorbox}[beamer,colback=Salmon!50!white,colframe=FireBrick!75!black,
+  adjusted title=A colored box with the \enquote{beamer} skin]
+This box looks like a box provided by the \texttt{beamer} class.
+\end{tcolorbox}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{tcolorbox}[beamer,colframe=blue,colback=black,
+  watermark graphics=lichtspiel.jpg,
+  coltext=white,watermark opacity=0.75,watermark stretch=1.0,
+  title=Beamer Box with background picture]
+\lipsum[1]
+\end{tcolorbox}
+\end{dispExample}
+
+
+\begin{dispExample}
+\newtcolorbox{myblock}[2][]{%
+  beamer,breakable,colback=LightBlue,colframe=DarkBlue,#1,title={#2}}%
+
+\begin{myblock}{Beamerish \texttt{block}: \texttt{myblock}}
+\lipsum[1]
+\end{myblock}
+\end{dispExample}
+
+
+\clearpage
+\begin{docSkin}{beamerfirst}
+这是 \refSkin{beamer} 的一个变体，用作 \refSkin{beamer} 断开序列的\emph{首}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=beamerfirst]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathfirst|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathfirst|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{beamer,title filled=false,skin=beamerfirst}
+\end{dispExample}
+
+
+\medskip
+
+\begin{docSkin}{beamermiddle}
+这是 \refSkin{beamer} 的一个变体，用作 \refSkin{beamer} 断开序列的\emph{中间}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=beamermiddle]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathmiddle|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathmiddle|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{beamer,title filled=false,skin=beamermiddle}
+\end{dispExample}
+
+
+\clearpage
+\begin{docSkin}{beamerlast}
+这是 \refSkin{beamer} 的一个变体，用作 \refSkin{beamer} 断开序列的\emph{末}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=beamerlast]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathlast|\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> |pathlast|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{dispExample}
+\skinExampleSet{beamer,title filled=false,skin=beamerlast}
+\end{dispExample}
+
+
+
+\clearpage
+\subsection{皮肤家族 \enquote{widget}}
+\begin{docSkin}{widget}
+  该皮肤使用核心宏包的常规颜色，但略微加深了一点。
+  如有需要，可通过 \refKey{/tcb/frame style}、
+  \refKey{/tcb/interior style} 和 \refKey{/tcb/segmentation style}
+  控制该皮肤的外观。
+\begin{tcolorbox}[skintable=widget]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |path|\\
+    \refKey{/tcb/interior titled engine}: \> |path|\\ 
+    \refKey{/tcb/interior engine}:        \> |path|\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> \emph{special}
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{docTcbKey}[][doc updated={2020-09-23}]{widget}{}{样式，初始\\
+  |skin=widget,arc=0.5mm,fonttitle=\bfseries,titlerule=0mm|
+}
+  本键应用 |skin=widget|，此外还会改变几何尺寸和一些样式选项。
+\end{docTcbKey}
+
+
+\begin{dispExample}
+\skinExampleSet{widget}
+\end{dispExample}
+
+
+\begin{dispExample}
+\begin{tcolorbox}[widget,colback=Salmon!50!white,colframe=FireBrick!75!black,
+  adjusted title=A colored box with the \enquote{widget} skin]
+This is my content.
+\end{tcolorbox}
+\end{dispExample}
+
+\clearpage
+
+\begin{docSkin}{widgetfirst}
+这是 \refSkin{widget} 的一个变体，用作 \refSkin{widget} 断开序列的\emph{首}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=widgetfirst]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathfirst|\\
+    \refKey{/tcb/interior titled engine}: \> |pathfirst|\\ 
+    \refKey{/tcb/interior engine}:        \> |pathfirst|\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> \emph{special}
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{widget,skin=widgetfirst}
+\end{dispExample}
+
+\medskip
+
+\begin{docSkin}{widgetmiddle}
+这是 \refSkin{widget} 的一个变体，用作 \refSkin{widget} 断开序列的\emph{中间}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=widgetmiddle]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathmiddle|\\
+    \refKey{/tcb/interior titled engine}: \> |pathmiddle|\\ 
+    \refKey{/tcb/interior engine}:        \> |pathmiddle|\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> \emph{special}
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{dispExample}
+\skinExampleSet{widget,skin=widgetmiddle}
+\end{dispExample}
+
+
+\clearpage
+\begin{docSkin}{widgetlast}
+这是 \refSkin{widget} 的一个变体，用作 \refSkin{widget} 断开序列的\emph{末}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=widgetlast]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |pathlast|\\
+    \refKey{/tcb/interior titled engine}: \> |pathlast|\\ 
+    \refKey{/tcb/interior engine}:        \> |pathlast|\\
+    \refKey{/tcb/segmentation engine}:    \> \emph{special}\\
+    \refKey{/tcb/title engine}:           \> \emph{special}
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{widget,skin=widgetlast}
+\end{dispExample}
+
+
+\clearpage
+\subsection{皮肤家族 \enquote{empty}}
+
+\begin{docSkin}{empty}
+  该皮肤把所有引擎都设为 |empty|，即完全不绘制任何东西。
+  因此，该皮肤是你自己从头创建全新样式的良好起点。
+\begin{tcolorbox}[skintable=empty]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |empty|\\
+    \refKey{/tcb/interior titled engine}: \> |empty|\\ 
+    \refKey{/tcb/interior engine}:        \> |empty|\\
+    \refKey{/tcb/segmentation engine}:    \> |empty|\\
+    \refKey{/tcb/title engine}:           \> |empty|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{marker}
+  请注意，应用皮肤时文字颜色保持不变。
+  由于默认标题颜色是白色，若不用 \refKey{/tcb/coltitle} 设为其他颜色，
+  采用 \docValue*{empty} 皮肤的文本框标题会变得不可见。
+\end{marker}
+
+
+\begin{docTcbKey}{empty}{}{样式，无取值}
+  这是设置 |skin=empty| 的简写。
+\end{docTcbKey}
+
+
+\begin{dispExample}
+\skinExampleSet{empty,
+  coltitle=Navy,borderline={2pt}{0pt}{black!10!white},
+}
+\end{dispExample}
+
+
+\clearpage
+\begin{docTcbKey}{blanker}{}{样式，初始未设置}
+  本样式基于 \refSkin{empty} 皮肤。所有引擎均设为 empty，
+  所有边距均设为 |0pt|。与 \refKey{/tcb/blank} 不同，除几何节点外，
+  图形路径不会被构建。
+\begin{dispExample}
+\begin{tcolorbox}[blanker,watermark text=A blank box]
+\lipsum[1]
+\end{tcolorbox}
+\end{dispExample}
+
+\begin{dispExample}
+% \tcbuselibrary{fitting}
+\newtcboxfit{\mybox}[1]{blanker,width=4cm,height=7cm,top=4pt,
+  watermark text=#1}
+
+\begin{tabular}{|c|c|c|}\hline
+A & B & C\\\hline
+\mybox{A}{\lipsum[1]} & \mybox{B}{\lipsum[2]} & \mybox{C}{\lipsum[3]}\\\hline
+\end{tabular}
+\end{dispExample}
+\end{docTcbKey}
+
+
+
+\clearpage
+\begin{docTcbKey}{blankest}{}{样式，初始未设置}
+  本样式在 \refKey{/tcb/blanker} 的基础上扩展。
+  所有引擎均设为 empty，所有边距均设为 |0pt|。
+  与 \refKey{/tcb/blanker} 不同，标题、阴影、底层装饰、
+  覆盖层、收尾装饰和边线也都被移除。
+
+\begin{dispExample}
+% \tcbuselibrary{raster}
+\begin{tcbraster}[raster columns=3,raster equal height,
+    title=Box \thetcbrasternum,
+    enhanced,size=small,colframe=red!50!black,colback=red!10!white,
+    coltitle=yellow!85!black,
+    drop fuzzy shadow,watermark text={Box \thetcbrasternum},
+    borderline={.25mm}{-0.5mm}{green!40!black},
+    finish={\begin{tcbclipframe}\draw[blue,opacity=0.1,line width=1cm]
+      (frame.south west) -- (frame.north east);\end{tcbclipframe}},
+    ]
+  \begin{tcolorbox}\lipsum[4]\end{tcolorbox}
+  \begin{tcolorbox}[blanker]\lipsum[4]\end{tcolorbox}
+  \begin{tcolorbox}[blankest]\lipsum[4]\end{tcolorbox}
+\end{tcbraster}
+\end{dispExample}
+\end{docTcbKey}
+
+
+\clearpage
+\begin{docSkin}{emptyfirst}
+这是 \refSkin{empty} 的一个变体，用作 \refSkin{empty} 断开序列的\emph{首}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=emptyfirst]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |empty|\\
+    \refKey{/tcb/interior titled engine}: \> |empty|\\ 
+    \refKey{/tcb/interior engine}:        \> |empty|\\
+    \refKey{/tcb/segmentation engine}:    \> |empty|\\
+    \refKey{/tcb/title engine}:           \> |empty|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{skin=emptyfirst,
+  coltitle=Navy,borderline={2pt}{0pt}{black!10!white},
+}
+\end{dispExample}
+
+
+\clearpage
+
+\begin{docSkin}{emptymiddle}
+这是 \refSkin{empty} 的一个变体，用作 \refSkin{empty} 断开序列的\emph{中间}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=emptymiddle]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |empty|\\
+    \refKey{/tcb/interior titled engine}: \> |empty|\\ 
+    \refKey{/tcb/interior engine}:        \> |empty|\\
+    \refKey{/tcb/segmentation engine}:    \> |empty|\\
+    \refKey{/tcb/title engine}:           \> |empty|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{dispExample}
+\skinExampleSet{skin=emptymiddle,
+  coltitle=Navy,borderline={2pt}{0pt}{black!10!white},
+}
+\end{dispExample}
+
+
+\clearpage
+\begin{docSkin}{emptylast}
+这是 \refSkin{empty} 的一个变体，用作 \refSkin{empty} 断开序列的\emph{末}段。
+不过，该皮肤也可以独立使用。
+\begin{tcolorbox}[skintable=emptylast]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |empty|\\
+    \refKey{/tcb/interior titled engine}: \> |empty|\\ 
+    \refKey{/tcb/interior engine}:        \> |empty|\\
+    \refKey{/tcb/segmentation engine}:    \> |empty|\\
+    \refKey{/tcb/title engine}:           \> |empty|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{dispExample}
+\skinExampleSet{skin=emptylast,
+  coltitle=Navy,borderline={2pt}{0pt}{black!10!white},
+}
+\end{dispExample}
+
+\clearpage
+\begin{dispListing*}{breakable,phantomlabel=freeboxexample,before upper={本示例展示
+一个可断开的自定义文本框。这里我们定义一个环境 |freebox|。
+第一次使用 |freebox| 产生一个未断开的 |tcolorbox|。
+该文本框由 \refKey{/tcb/frame code}
+和 \refKey{/tcb/interior code} 给出的代码绘制。\par
+第二次使用 |freebox| 时，它被断成若干段，
+各段由 \refKey{/tcb/skin first is subskin of}、
+\refKey{/tcb/skin middle is subskin of} 和
+\refKey{/tcb/skin last is subskin of} 给出的代码绘制。
+\par\bigskip
+}}
+% Preamble:
+%\usepackage{lipsum}
+%\tcbuselibrary{skins,breakable}
+\tikzset{coltria/.style={fill=red!15!white}}
+
+\newtcolorbox{freebox}[1][]{empty,
+  breakable,height fixed for=first and middle,
+  leftrule=5mm,left=2mm,
+  frame style={fill,top color=red!75!black,bottom color=red!75!black,middle color=red},
+  colback=yellow!50!white,
+  watermark color=red!50!yellow!75!white,
+  watermark text on=unbroken is unbroken box,
+  watermark text on=first is first part,
+  watermark text on=middle is middle part,
+  watermark text on=last is last part,
+  % code for unbroken boxes:
+  frame code={\path[tcb fill frame] (frame.south west)--(frame.north west)
+    --([xshift=-5mm]frame.north east)--([yshift=-5mm]frame.north east)
+    --([yshift=5mm]frame.south east)--([xshift=-5mm]frame.south east)--cycle; },
+  interior code={\path[tcb fill interior] (interior.south west)--(interior.north west)
+    --([xshift=-4.8mm]interior.north east)--([yshift=-4.8mm]interior.north east)
+    --([yshift=4.8mm]interior.south east)--([xshift=-4.8mm]interior.south east)
+    --cycle; },
+  % code for the first part of a break sequence:
+  skin first is subskin of={emptyfirst}{%
+    frame code={\path[tcb fill frame] (frame.south west)--(frame.north west)
+      --([xshift=-5mm]frame.north east)--([yshift=-5mm]frame.north east)
+      --(frame.south east)--cycle;
+      \path[coltria] ([xshift=2.5mm,yshift=1mm]frame.south west) -- +(120:2mm)
+      -- +(60:2mm)-- cycle; },
+    interior code={\path[tcb fill interior] (interior.south west|-frame.south)
+      --(interior.north west)--([xshift=-4.8mm]interior.north east)
+      --([yshift=-4.8mm]interior.north east)--(interior.south east|-frame.south)
+      --cycle; },
+  },%
+  % code for the middle part of a break sequence:
+  skin middle is subskin of={emptymiddle}{%
+    frame code={\path[tcb fill frame] (frame.south west)--(frame.north west)
+      --(frame.north east)--(frame.south east)--cycle;
+      \path[coltria] ([xshift=2.5mm,yshift=-1mm]frame.north west) -- +(240:2mm)
+        -- +(300:2mm) -- cycle;
+      \path[coltria] ([xshift=2.5mm,yshift=1mm]frame.south west) -- +(120:2mm)
+        -- +(60:2mm) -- cycle;
+      },
+    interior code={\path[tcb fill interior] (interior.south west|-frame.south)
+      --(interior.north west|-frame.north)--(interior.north east|-frame.north)
+      --(interior.south east|-frame.south)--cycle; },
+    },
+  % code for the last part of a break sequence:
+  skin last is subskin of={emptylast}{%
+    frame code={\path[tcb fill frame] (frame.south west)--(frame.north west)
+      --(frame.north east)--([yshift=5mm]frame.south east)
+      --([xshift=-5mm]frame.south east)--cycle;
+      \path[coltria] ([xshift=2.5mm,yshift=-1mm]frame.north west) -- +(240:2mm)
+      -- +(300:2mm) -- cycle;
+      },
+    interior code={\path[tcb fill interior] (interior.south west)
+      --(interior.north west|-frame.north)--(interior.north east|-frame.north)
+      --([yshift=4.8mm]interior.south east)--([xshift=-4.8mm]interior.south east)
+      --cycle; },
+    },
+  #1}
+
+\begin{freebox}
+\lipsum[1]
+\end{freebox}
+
+\begin{freebox}
+\lipsum[1-12]
+\end{freebox}
+\end{dispListing*}
+{\tcbusetemp}
+
+
+\clearpage
+
+\subsection{皮肤 \enquote{spartan}}\label{subsec:spartan}
+
+\begin{docSkin}{spartan}
+  该皮肤相当\ldots\,简朴。它不支持圆角、覆盖层、阴影、边线和收尾装饰。
+  唯一的例外是底层装饰。用这种皮肤做不出很花哨的效果，但编译非常快。
+  因此，|spartan| 皮肤被用于草稿模式，见 \zvref{subsec:draftmode}。
+  不过，它也可以当作普通皮肤使用。
+
+\begin{tcolorbox}[skintable=spartan]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |spartan|\\
+    \refKey{/tcb/interior titled engine}: \> |spartan|\\ 
+    \refKey{/tcb/interior engine}:        \> |spartan|\\
+    \refKey{/tcb/segmentation engine}:    \> |spartan|\\
+    \refKey{/tcb/title engine}:           \> |spartan|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+
+\begin{docTcbKey}{spartan}{}{样式，无取值}
+  这是设置 |skin=spartan| 的简写。
+\end{docTcbKey}
+
+
+\begin{dispExample}
+\skinExampleSet{spartan}
+\end{dispExample}
+
+
+\clearpage
+
+\subsection{皮肤 \enquote{draft}}\label{subsec:draft}
+
+\begin{docSkin}{draft}
+  该皮肤用于在为 |tcolorbox| 起草新的几何设置时使用。
+\begin{tcolorbox}[skintable=draft]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> \emph{special}\\
+    \refKey{/tcb/interior titled engine}: \> \emph{special}\\ 
+    \refKey{/tcb/interior engine}:        \> \emph{special}\\
+    \refKey{/tcb/segmentation engine}:    \> |path|\\
+    \refKey{/tcb/title engine}:           \> |path|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{docTcbKey}{draft}{}{样式，无取值}
+  这是设置 |skin=draft| 的简写。
+\end{docTcbKey}
+
+
+\begin{dispExample}
+\skinExampleSet{draft}
+\end{dispExample}
+
+
+
+\begin{dispExample}
+\vspace*{3mm}
+\begin{tcolorbox}[draft,title=A colored box with the \enquote{draft} skin]
+\lipsum[1-3]
+\tcblower
+\lipsum[4-6]
+\end{tcolorbox}
+\end{dispExample}
+
+
+
+\clearpage
+\subsection{皮肤家族 \enquote{freelance}}
+\begin{marker}
+这个 \enquote{freelance} 皮肤家族自 |tcolorbox| 3.00 起已弃用。
+它不再是必需的，因为 \refKey{/tcb/frame code}、
+\refKey{/tcb/interior code}、
+\refKey{/tcb/interior titled code} 和
+\refKey{/tcb/title code} 现在可应用于任何皮肤。从这个意义上说，
+现在一切都已变成\emph{自由}的了。\par
+对于 \refKey{/tcb/freelance} 的用户：旧代码应仍能继续工作。
+在某些情况下，可断开的 freelance 文本框可能会有例外。
+对于新代码，在你过去会使用 \refKey{/tcb/freelance} 的地方，
+请改用 \refKey{/tcb/empty} 或 \refKey{/tcb/enhanced}。
+\end{marker}
+
+\begin{docSkin}{freelance}
+  该皮肤让 |tcolorbox| 的外观完全自由。
+  所有绘制引擎均设为 |freelance| 类型；它们使用 \refPkg{tikz} 宏包，
+  并计算 \refKey{/tcb/geometry nodes}。
+  %This skin is useful for boxes which should differ much from the normal
+  %appearance. Note that this difference has to be programmed by the user.
+  %The drawing code can be given
+  %with the following option keys. As default value, the code from the |standard|
+  %skin is set.
+\begin{tcolorbox}[skintable=freelance]
+  \begin{tabbing}
+    \refKey{/tcb/interior titled engine}: \=\kill
+    \refKey{/tcb/frame engine}:           \> |freelance|\\
+    \refKey{/tcb/interior titled engine}: \> |freelance|\\ 
+    \refKey{/tcb/interior engine}:        \> |freelance|\\
+    \refKey{/tcb/segmentation engine}:    \> |freelance|\\
+    \refKey{/tcb/title engine}:           \> |freelance|
+  \end{tabbing}
+\end{tcolorbox}
+\end{docSkin}
+
+\begin{docTcbKey}{freelance}{}{样式，无取值}
+  这是设置 |skin=freelance| 的简写。
+\end{docTcbKey}
+
+\begin{docSkin}{freelancefirst}
+  该皮肤与 \refSkin{freelance} 相同，只是断开序列不同，
+  见 \zvref{subsec:breaksequence}。
+  %It is used as first part of the
+  %break sequence of \refSkin{freelance}. \refKey{/tcb/extend freelancefirst}
+  %can be used to customize this part.
+\end{docSkin}
+
+\begin{docSkin}{freelancemiddle}
+  该皮肤与 \refSkin{freelance} 相同，只是断开序列不同，
+  见 \zvref{subsec:breaksequence}。
+  %It is used as middle part of the
+  %break sequence of \refSkin{freelance}. \refKey{/tcb/extend freelancemiddle}
+  %can be used to customize this part.
+\end{docSkin}
+
+\begin{docSkin}{freelancelast}
+  该皮肤与 \refSkin{freelance} 相同，只是断开序列不同，
+  见 \zvref{subsec:breaksequence}。
+  %It is used as last part of the
+  %break sequence of \refSkin{freelance}. \refKey{/tcb/extend freelancelast}
+  %can be used to customize this part.
+\end{docSkin}
+
+
+\begin{docTcbKey}{extend freelance}{=\meta{options}}{无默认值，初始为空}
+把 \meta{选项} 添加到 \refSkin{freelance} 的皮肤定义中。
+\end{docTcbKey}
+
+\begin{docTcbKey}{extend freelancefirst}{=\meta{options}}{无默认值，初始为空}
+把 \meta{选项} 添加到 \refSkin{freelancefirst} 的皮肤定义中，
+后者用作 \refSkin{freelance} 断开序列的首段。本键的替代选项见
+\refKey{/tcb/skin first is subskin of}。
+\end{docTcbKey}
+
+\begin{docTcbKey}{extend freelancemiddle}{=\meta{options}}{无默认值，初始为空}
+把 \meta{选项} 添加到 \refSkin{freelancemiddle} 的皮肤定义中，
+后者用作 \refSkin{freelance} 断开序列的中间段。本键的替代选项见
+\refKey{/tcb/skin middle is subskin of}。
+\end{docTcbKey}
+
+\enlargethispage*{1cm}
+
+\begin{docTcbKey}{extend freelancelast}{=\meta{options}}{无默认值，初始为空}
+把 \meta{选项} 添加到 \refSkin{freelancelast} 的皮肤定义中，
+后者用作 \refSkin{freelance} 断开序列的末段。本键的替代选项见
+\refKey{/tcb/skin last is subskin of}。
+\end{docTcbKey}
+
+
+

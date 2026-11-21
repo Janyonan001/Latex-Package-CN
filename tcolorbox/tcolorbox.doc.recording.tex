@@ -1,0 +1,192 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{记录}\label{sec:recording}%
+\tcbset{external/prefix=external/recording_}%
+本宏包提供了若干宏和选项，用于在编译期间进行\emph{记录}。
+这是通过 \LaTeX\ 文件操作实现的：把某些数据保存到文件中，供后续使用。
+主要应用场景见 \zvref{sec:recording-exercises}，其中记录了示例解答的信息，
+并在 \zvref{sec:recording-solutions} 中再次读入。
+
+\subsection{宏}\label{sec:recording-makros}
+\begin{docCommand}[doc new=2014-11-28]{tcbstartrecording}{\oarg{file name}}
+  打开由 \meta{文件名}指定的文件，用于写入记录。
+  默认文件名为 |\jobname.records|。
+  应用示例见 \zvref{sec:recording-exercises}。
+  \begin{marker}
+  在某些情况下，缺失可选参数可能导致解析问题。
+  若发生这种情况（或仅作预防），请使用
+\begin{dispListing}
+\tcbstartrecording\relax
+\end{dispListing}
+  或
+\begin{dispListing}
+\tcbstartrecording[\jobname.records]
+\end{dispListing}
+  \end{marker}
+\end{docCommand}
+
+\begin{docCommand}[doc new=2014-11-28]{tcbrecord}{\marg{content}}
+  把任意 \meta{内容}记录到记录文件中。
+  \refCom{tcbrecord} 以 |\immediate\write| 实现。
+  须先调用 \refCom{tcbstartrecording}；否则 \refCom{tcbrecord} 会被静默忽略。
+\begin{dispListing}
+\tcbrecord{\string\solution{\thetcbcounter}{solutions/exercise-\thetcbcounter.tex}}
+\end{dispListing}
+\end{docCommand}
+
+\begin{docCommand}[doc new=2014-11-28]{tcbstoprecording}{}
+  关闭此前由 \refCom{tcbstartrecording} 打开的当前记录文件。
+\end{docCommand}
+
+\begin{docCommand}[doc new=2014-11-28]{tcbinputrecords}{\oarg{file name}}
+  打开由 \meta{文件名}指定的文件，通过 |\input| 读取其中的记录。
+  默认文件名是上一次用于保存的记录文件名。
+  须先调用 \refCom{tcbstoprecording}。
+\end{docCommand}
+
+
+\subsection{选项}\label{sec:recording-options}
+\begin{docTcbKey}[][doc new=2014-11-28]{record}{=\meta{content}}{样式，无默认值}
+  把任意 \meta{内容}记录到记录文件中，见 \refCom{tcbrecord}。
+  本键可多次使用，以写入多行。
+  \begin{dispListing}
+  record={\string\solution{\thetcbcounter}{solutions/exercise-\thetcbcounter.tex}}
+  \end{dispListing}
+\end{docTcbKey}
+
+\begin{docTcbKey}[][doc new=2014-11-28]{no recording}{}{}
+  在当前分组内禁用 \refCom{tcbrecord} 与 \refKey{/tcb/record}。
+\end{docTcbKey}
+
+
+\clearpage
+\subsection{示例：练习题}\label{sec:recording-exercises}
+下面的应用示例创建练习题及其对应解答。
+每一对都生成在单个 |tcolorbox| 内，其中解答位于 \refCom{tcblower} 之后。
+对于每个示例，解答部分通过 \refKey{/tcb/savelowerto} 保存到文件，
+并通过 \refKey{/tcb/record} 记录此次保存。为展示其可能性，
+第二道练习题没有解答。最后，解答在 \zvref{sec:recording-solutions} 中被读入。
+
+\inputpreamblelisting{L}
+
+\begin{dispListing*}{breakable,before upper=}
+\tcbstartrecording\relax
+
+\begin{exercise}
+  Compute the derivative of the following function:
+  \begin{equation*}
+    f(x)=\sin((\sin x)^2)
+  \end{equation*}
+\tcblower
+  The derivative is:
+  \begin{align*}
+    f'(x) &= \left( \sin((\sin x)^2) \right)'
+    =\cos((\sin x)^2) 2\sin x \cos x.
+  \end{align*}
+\end{exercise}
+
+\begin{exercise}[no solution]
+  It holds:
+  \begin{equation*}
+    \frac{d}{dx}\left(\ln|x|\right) = \frac{1}{x}.
+  \end{equation*}
+\end{exercise}
+
+\begin{exercise}
+  Compute the derivative of the following function:
+  \begin{equation*}
+    f(x)=(\sin(\sin x))^2
+  \end{equation*}
+\tcblower
+  The derivative is:
+  \begin{align*}
+    f'(x) &= \left( (\sin(\sin x))^2 \right)'
+    =2\sin(\sin x)\cos(\sin x)\cos x.
+  \end{align*}
+\end{exercise}
+
+\begin{exercise}
+  Compute the derivative of the following function:
+  \begin{equation*}
+    f(x)=\sqrt{x^3-6x^2+2x}
+  \end{equation*}
+\tcblower
+  The derivative is:
+  \begin{align*}
+    f'(x) &= \left( \sqrt{x^3-6x^2+2x} \right)'
+    = \frac{3x^2-12x+2}{2\sqrt{x^3-6x^2+2x}}.
+  \end{align*}
+\end{exercise}
+
+\begin{exercise}
+  Compute the derivative of the following function:
+  \begin{equation*}
+    f(x)=\left(\frac{2+3x}{1-2x}\right)^3
+  \end{equation*}
+\tcblower
+  The derivative is:
+  \begin{align*}
+    f'(x) &= \left( \left(\frac{2+3x}{1-2x}\right)^3 \right)'
+    = 3 \left(\frac{2+3x}{1-2x}\right)^2 \frac{(1-2x)3-(2+3x)(-2)}{(1-2x)^2}
+    = \frac{21(2+3x)^2}{(1-2x)^4}.
+  \end{align*}
+\end{exercise}
+
+\begin{exercise}
+  Compute the derivative of the following function:
+  \begin{equation*}
+    f(x)=\frac{\cos x}{(\tan 2x)^2}
+  \end{equation*}
+\tcblower
+  The derivative is:
+  \begin{align*}
+    f'(x) &= \left( \frac{\cos x}{(\tan 2x)^2} \right)'
+    = \left( \frac{\cos x (\cos 2x)^2}{(\sin 2x)^2} \right)'\\
+    &= \frac{(\sin 2x)^2 [(-\sin x)(\cos 2x)^2+(\cos x)4\cos 2x (-\sin 2x)]
+       - \cos x (\cos 2x)^2 4\sin 2x \cos 2x}{(\sin 2x)^4}\\
+    &= -\frac{\cos(2x) [\sin x \sin 2x \cos 2x+ 4\cos x(\sin 2x)^2
+       + 4 \cos x (\cos 2x)^2]}{(\sin 2x)^3}\\
+    &= -\frac{\cos(2x) [\sin x \sin 2x \cos 2x+ 4\cos x]}{(\sin 2x)^3}.
+  \end{align*}
+\end{exercise}
+
+\begin{exercise}
+  Compute the derivative of the following function:
+  \begin{equation*}
+    f(x)=\cos((2x^2+3)^3)
+  \end{equation*}
+\tcblower
+  The derivative is:
+  \begin{align*}
+    f'(x) &= \left( \cos((2x^2+3)^3) \right)'
+    =-\sin((2x^2+3)^3) 3(2x^2+3)^2 2\cdot 2x\\
+    &=-12x(2x^2+3)^2\sin((2x^2+3)^3).
+  \end{align*}
+\end{exercise}
+
+\begin{exercise}
+  Compute the derivative of the following function:
+  \begin{equation*}
+    f(x)=(x^2+1)\sqrt{x^4+1}
+  \end{equation*}
+\tcblower
+  The derivative is:
+  \begin{align*}
+    f'(x) &= \left( (x^2+1)\sqrt{x^4+1} \right)'
+    = 2x\sqrt{x^4+1} + \frac{2x^3(x^2+1)}{\sqrt{x^4+1}}.
+  \end{align*}
+\end{exercise}
+
+\tcbstoprecording
+\end{dispListing*}
+\tcbusetemp
+
+\subsection{示例：解答}\label{sec:recording-solutions}
+此处承接 \zvref{sec:recording-exercises} 给出的示例。
+现在读入已保存并记录的解答。
+
+\begin{dispListing*}{breakable,before upper=}
+\tcbinputrecords
+\end{dispListing*}
+\tcbusetemp

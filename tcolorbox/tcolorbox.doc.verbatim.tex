@@ -1,0 +1,151 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{逐字文本的保存与读取}\label{sec:verbatim}%
+\tcbset{external/prefix=external/verbatim_}%
+以下宏是对已知宏包 \refPkg{moreverb} 与 \refPkg{verbatim} 中原有宏的小幅修改版本。
+它们会在 |tcolorbox| 环境内部被隐式使用，但也可在外部使用。
+\enlargethispage*{1.5cm}
+
+\begin{docEnvironment}{tcbverbatimwrite}{\marg{file name}}
+  将 \meta{环境内容}保存到由 \meta{文件名}指定的文件中。
+  环境内部的 \TeX\ 宏不会被展开。
+\begin{dispExample}
+\begin{tcbverbatimwrite}{\jobname_verbexp.tex}
+  This text is saved \textit{as is}.
+\end{tcbverbatimwrite}
+
+Now, we are using the file:\par
+\input{\jobname_verbexp.tex}
+\end{dispExample}
+
+本环境可在自定义环境内部使用。注意，在环境定义内部，
+必须使用 |\tcbverbatimwrite| 而非 |\begin{tcbverbatimwrite}|，
+并使用 |\endtcbverbatimwrite| 而非 |\end{tcbverbatimwrite}|。
+\begin{dispExample}
+\newenvironment{myverbatim}{%
+  \begingroup\tcbverbatimwrite{\jobname_myverb.tex}}%
+  {\endtcbverbatimwrite\endgroup}
+
+\begin{myverbatim}
+  This is the text which is saved by my own environment.
+\end{myverbatim}
+
+Now, we are using the file:\par
+\input{\jobname_myverb.tex}
+\end{dispExample}
+\end{docEnvironment}
+
+\begin{docEnvironment}{tcbwritetemp}{}
+  功能与 \refEnv{tcbverbatimwrite} 相同，但使用 \refKey{/tcb/tempfile}
+  键的值作为文件名。
+\begin{dispExample}
+\begin{tcbwritetemp}
+  This text is saved \textit{as is}.
+\end{tcbwritetemp}
+
+Now, we are using the file:\par
+\tcbusetemp
+\end{dispExample}
+\end{docEnvironment}
+
+
+\begin{docCommand}{tcbusetemp}{}
+  读取由 \refEnv{tcbwritetemp} 保存的当前临时文件。
+\end{docCommand}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2017-07-05]{verbatim ignore percent}{\colOpt{=true\textbar false}}{默认 |true|，初始为 |false|}
+  若将本选项设为 |true|，则对于 \refEnv{tcbverbatimwrite} 以及所有基于
+  \refEnv{tcbverbatimwrite} 构建的宏和环境（例如 \refEnv{tcbwritetemp}、
+  \refEnv{tcblisting} 或 \refEnv{dispExample}），百分号 \% 会被静默忽略。\par
+  本选项可用于创造一些特殊效果，但主要面向使用 DocStrip 编写文档的场合。
+  本选项的诞生受到了 Yudai Nakata 的启发。
+  注意，本选项不会被 \refKey{/tcb/reset} 重置。
+\begin{dispExample*}{sidebyside}
+Normal usage:
+\begin{tcbwritetemp}
+%\begin{center}\bfseries
+This is my text.
+%\end{center}
+\end{tcbwritetemp}
+
+\tcbusetemp
+
+\tcbset{verbatim ignore percent}
+\bigskip Option applied:
+\begin{tcbwritetemp}
+%\begin{center}\bfseries
+This is my text.
+%\end{center}
+\end{tcbwritetemp}
+
+\tcbusetemp
+\end{dispExample*}
+
+\begin{marker}
+注意，\emph{每个}百分号都会被移除，包括已转义的百分号。
+\end{marker}
+
+\begin{dispExample*}{sidebyside}
+% \tcbuselibrary{listings}
+\def\percent{\%}
+
+\begin{tcblisting}{title=Normal}
+%\begin{center}\bfseries
+This is my 5\percent\ text
+and this is my 10\% text.
+%\end{center}
+\end{tcblisting}
+
+\begin{tcblisting}{
+  title=Option applied,
+  verbatim ignore percent}
+%\begin{center}\bfseries
+This is my 5\percent\ text
+and this is my 10\% text.
+%\end{center}
+\end{tcblisting}
+\end{dispExample*}
+
+\end{docTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2023-02-10]{verbatim ignore indention at end}{\colOpt{=true\textbar false}}{默认 |true|，初始为 |true|}
+  若将本选项设为 |true|，则同一行上位于 |\end{tcbverbatimwrite}| 之前的
+  空格与制表符会被忽略。所有基于 \refEnv{tcbverbatimwrite} 的环境同理。
+  若同一行上 |\end{tcbverbatimwrite}| 之前还有其他内容，则会写出全部内容。\par
+  若将本选项设为 |false|，则会写出 |\end{tcbverbatimwrite}| 之前的一切内容。
+  这是 6.0.0 版本之前的默认行为。\par
+  \refKey{/tcb/verbatim ignore indention at end} 的设计初衷是让环境可以缩进。
+  本选项的诞生受到了 Yukai Chou 的启发。
+
+\begin{dispExample}
+% \tcbuselibrary{minted}
+\texttt{verbatim ignore indention at end=false}
+
+    \begin{tcblisting}{listing engine=minted, listing only,
+                       verbatim ignore indention at end=false}
+      int a;
+    \end{tcblisting}
+
+    \begin{tcblisting}{listing engine=minted, listing only,
+                       verbatim ignore indention at end=false}
+      int a;
+      int b;  \end{tcblisting}
+
+\texttt{verbatim ignore indention at end=true}
+
+    \begin{tcblisting}{listing engine=minted, listing only,
+                       verbatim ignore indention at end}
+      int a;
+    \end{tcblisting}
+
+    \begin{tcblisting}{listing engine=minted, listing only,
+                       verbatim ignore indention at end}
+      int a;
+      int b;  \end{tcblisting}
+\end{dispExample}
+\end{docTcbKey}

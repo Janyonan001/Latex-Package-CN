@@ -1,0 +1,602 @@
+% !TeX root = tcolorbox.tex
+% include file of tcolorbox.tex (manual of the LaTeX package tcolorbox)
+\clearpage
+\section{程序库 \mylib{poster}}\label{sec:poster}%
+\tcbset{external/prefix=external/poster_}%
+
+本程序库的主要用途是支持用 |tcolorbox| 创建单页海报。
+
+\refEnv{tcbposter} 是一个 |tikzpicture|，
+其中可使用 \refCom{posterbox} 命令以按列排布的方式放置 |tcolorbox|。
+这一基本概念或多或少借鉴自出色的 \refPkg{baposter} 宏包。
+
+\mylib{raster} 程序库（见 \zvref{sec:raster}）也能生成外观相近的结果，
+根据实际项目情况，它可能更为合适。
+\begin{itemize}
+\item \mylib{raster} 程序库采用流式布局概念，就像常规的文本流。
+  文本流（文本框流）是一条近乎无尽的带状流，被折成若干行（和段落），
+  行再被分到各页。\mylib{raster} 将文本框调整为合适的尺寸，
+  以便令人舒适地填满各行与各页。
+\item \mylib{poster} 程序库支持在页面内相当自由地放置文本框。
+  基本上，文本框的放置方式如同在 |tikzpicture| 中放置 |node|。
+  与 \mylib{raster} 不同，这是一个\emph{单}页，而不是页面流。
+  海报被划分为若干列和行。系统会在一定程度上引导你使用列（或跨列）
+  来定位和调整尺寸，而行的放置则完全是可选的。
+\end{itemize}
+本程序库的创建源于 Ignasi 的提议。
+
+\begin{marker}
+在一个 |tikzpicture| 内部不应再嵌套 |tikzpicture|。
+\mylib{poster} 程序库打破了这一规则。请注意：主 |tikzpicture|
+与嵌入在各 |tcolorbox| 内部的 |tikzpicture| 之间可能会产生一些
+不希望出现的相互影响。
+\end{marker}
+
+该程序库可通过宏包选项加载，或在导言区中使用：
+\begin{dispListing}
+\tcbuselibrary{poster}
+\end{dispListing}
+这同时会加载以下程序库：
+\mylib{skins}（见 \zvref{sec:skins}）、
+\mylib{breakable}（见 \zvref{sec:breakable}）、
+\mylib{magazine}（见 \zvref{sec:magazine}）以及
+\mylib{fitting}（见 \zvref{sec:fitting}）。
+
+
+%--------------------------
+\subsection{概览}\label{subsec:poster_overview}
+
+
+\begin{tcolorbox}[base example,hyperurl={tcolorbox-tutorial-poster.pdf},title=点击查看教程]
+若想全面了解 \mylib{poster} 程序库及其功能，
+请参阅 |tcolorbox| 文档中的\textbf{海报教程}，它是 |tcolorbox| 文档的一部分：\par
+\texttt{tcolorbox-tutorial-poster.pdf}
+\end{tcolorbox}
+
+
+
+\clearpage
+%--------------------------
+\subsection{主海报环境}\label{subsec:poster_environment}
+
+\begin{docEnvironment}[doc new=2017-07-03]{tcbposter}{\oarg{options}}
+  该环境创建一个 |tikzpicture|，并根据给定的 \meta{选项} 设置相应的附加参数。
+  基本上，使用 \refCom{posterbox} 和 \refEnv{posterboxenv}
+  将 |tcolorbox| 作为节点放入该环境，也可以使用额外的 \tikzname\ 代码。
+  作为 \meta{选项}，可以使用所有 |/tcb/posterset/| 下的键，即：
+\begin{itemize}
+\item\refKey{/tcb/posterset/poster}：海报设置，如列、行、尺寸……
+\item\refKey{/tcb/posterset/coverage} 与 \refKey{/tcb/posterset/no coverage}：
+  用于设置环绕外围的 |tcolorbox| 的背景和边距。
+\item\refKey{/tcb/posterset/boxes}：海报中所用各 |tcolorbox| 的样式。
+\item\refKey{/tcb/posterset/fontsize}：所用字体的缩放。
+\end{itemize}
+
+\begin{exdispExample}{tcbposter}
+  \begin{tcbposter}[
+    poster = {showframe,height=10cm,spacing=2mm},
+    boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+  ]
+  \posterbox{name=A,column=3,row=2}{My first box}
+  \posterbox[adjusted title=Second box]
+            {name=B,column=2,span=2,below=A}{My second box}
+  \posterbox[adjusted title=Third box]
+            {name=C,column=2,between=B and bottom}{My third box}
+  \end{tcbposter}
+\end{exdispExample}
+\end{docEnvironment}
+
+\clearpage
+  在 \refEnv{tcbposter} 内部，预定义了若干 \tikzname\ 节点。
+  这些节点共享同一个 \refKey{/tcb/poster/prefix}，默认为 |TCBPOSTER@|。
+  此前缀用于区分海报节点与任何内嵌 |tikzpicture| 环境中的局部节点。
+  使用 \refCom{posterbox} 及其放置选项时你永远用不到此前缀，
+  但如果你想用纯 \tikzname\ 代码引用某个预定义节点，则会用到它。
+  预定义节点（不显示前缀）如下：
+  \begin{itemize}
+  \item|poster|：定义海报的包围盒（不含 coverage 外围框）。
+  \item|top|：顶部位置加行间距
+  \item|bottom|：底部位置减行间距
+  \item|middle|：垂直方向居中位置
+  \item|col1|、|col2|、\ldots：第 1 列、第 2 列……的包围盒
+  \item|row1|、|row2|、\ldots：第 1 行、第 2 行……的包围盒
+  \end{itemize}
+  其余节点通过 \refKey{/tcb/posterloc/name} 选项定义。
+
+  \begin{marker}
+  切勿在一个 \refEnv{tcbposter} 内部再使用 \refEnv{tcbposter}。
+  但若你执意如此，请为内嵌的海报使用不同的 \refKey{/tcb/poster/prefix}，
+  否则必然会一团糟。
+  \end{marker}
+
+  \refEnv{tcbposter} 内部还有若干属性，可能对高级代码有用
+  （初读时可跳过以下内容）：
+  \begin{itemize}
+  \item\docAuxCommand{tcbposterwidth}：海报的宽度（不含边距）。
+  \item\docAuxCommand{tcbposterheight}：海报的高度（不含边距）。
+  \item\docAuxCommand{tcbpostercolspacing}：列间距。
+  \item\docAuxCommand{tcbposterrowspacing}：行间距。
+  \item\docAuxCommand{tcbpostercolumns}：列数。
+  \item\docAuxCommand{tcbposterrows}：行数。
+  \item\docAuxCommand{tcbpostercolwidth}：单列宽度。
+  \item\docAuxCommand{tcbposterrowheight}：单行高度。
+  \end{itemize}
+
+\medskip
+\begin{docCommand}[doc new=2017-07-03]{tcbposterset}{\marg{options}}
+  为当前 \TeX\ 分组内此后的每个 \refEnv{tcbposter} 设置选项。
+  例如，可用以下方式为整篇文档定义行列数：
+\begin{dispListing}
+\tcbposterset{poster={columns=2,rows=3}}
+\end{dispListing}
+  所有可用选项见 \refEnv{tcbposter}。
+\end{docCommand}
+
+
+\clearpage
+%--------------------------
+\subsection{海报设置}\label{subsec:poster_settings}
+
+\begin{postersetTcbKey}[][doc new=2017-07-03]{poster}{=\marg{option list}}{样式，无默认值}
+  此选项可在 \refEnv{tcbposter} 内部及 \refCom{tcbposterset} 中使用，
+  用于设置给定的海报 \meta{选项列表}，例如：
+\begin{dispListing}
+\tcbposterset{poster={width=20cm,height=15cm}}
+\end{dispListing}
+  关于 \meta{选项列表}，参见以下各键。
+\end{postersetTcbKey}
+
+
+\begin{posterTcbKey}[][doc new=2017-07-03]{columns}{=\meta{number}}{无默认值，初始 |3|}
+  设置 \refEnv{tcbposter} 的列 \meta{数}。
+\begin{exdispExample}{columns}
+  \begin{tcbposter}[
+    poster = {showframe,columns=5,rows=2,spacing=1mm,height=4cm},
+  ]
+  \end{tcbposter}
+\end{exdispExample}
+\end{posterTcbKey}
+
+\begin{posterTcbKey}[][doc new=2017-07-03]{rows}{=\meta{number}}{无默认值，初始 |4|}
+  设置 \refEnv{tcbposter} 的行 \meta{数}。
+\end{posterTcbKey}
+
+
+\begin{posterTcbKey}[][doc new=2017-07-03]{colspacing}{=\meta{length}}{无默认值，初始 |4mm|}
+  将 \meta{长度} 设为列间距。
+\end{posterTcbKey}
+
+\begin{posterTcbKey}[][doc new=2017-07-03]{rowspacing}{=\meta{length}}{无默认值，初始 |4mm|}
+  将 \meta{长度} 设为行间距。
+\end{posterTcbKey}
+
+\begin{posterTcbKey}[][doc new=2017-07-03]{spacing}{=\meta{length}}{样式，无默认值，初始 |4mm|}
+  将 \meta{长度} 设为列与行的间距。
+\end{posterTcbKey}
+
+
+\begin{posterTcbKey}[][doc new=2017-07-03]{showframe}{\colOpt{=true\textbar false}}{默认 |true|，初始 |false|}
+  在海报创建过程中显示红色辅助网格，作为视觉参考。
+  同时显示每个 \refKey{/tcb/posterloc/name}。
+\end{posterTcbKey}
+
+
+\begin{posterTcbKey}[][doc new=2017-07-03]{width}{=\meta{length}}{无默认值，初始 \cs{linewidth}}
+  将 \meta{长度} 设为海报宽度。对于常规海报，无需手动设置此项。
+  尤其是，当使用了 \refKey{/tcb/posterset/coverage} 时，
+  请改用 |coverage={width=|\meta{长度}|}| 来更改整体宽度。
+\end{posterTcbKey}
+
+\enlargethispage*{1cm}
+
+\begin{posterTcbKey}[][doc new=2017-07-03]{height}{=\meta{length}}{无默认值，初始未设置}
+  将 \meta{长度} 设为海报高度。对于常规海报，无需手动设置此项，
+  而会自动设为合适的值。若使用了 \refKey{/tcb/posterset/coverage}，
+  则 |coverage={height=|\meta{长度}|}| 与 |poster={height=|\meta{长度}|}|
+  二选一即可。
+\end{posterTcbKey}
+
+
+\begin{posterTcbKey}[][doc new=2017-07-03]{prefix}{=\meta{name}}{无默认值，初始 |TCBPOSTER@|}
+  \meta{名称} 被设为前缀，用于 \mylib{poster} 程序库自动生成的
+  所有 \tikzname\ 节点。这包括像 |top|、|bottom| 等预定义节点，
+  以及用 \refKey{/tcb/posterloc/name} 定义的节点。
+  另见 \zvref{subsec:poster_environment}。对于常规海报，此值可保持默认。
+\end{posterTcbKey}
+
+
+%--------------------------
+\subsection{外围覆盖框}\label{subsec:poster_coverage}
+
+\begin{postersetTcbKey}[][doc new=2017-07-03]{coverage}{=\marg{option list}}{样式，无默认值}
+  此选项可在 \refEnv{tcbposter} 内部及 \refCom{tcbposterset} 中使用，
+  为海报添加一个可选的外围框，即一个套用给定 \meta{选项列表} 的
+  环绕 |tcolorbox|。在此可设置海报的边距和背景。
+  \emph{外围框} 带有若干适合此用途的默认 |tcolorbox| 设置：
+\begin{dispListing}
+enhanced, frame hidden, sharp corners, boxsep=0pt, boxrule=0pt,
+top=4mm, bottom=4mm, left=4mm, right=4mm,
+toptitle=2mm, bottomtitle=2mm, colback=white
+\end{dispListing}
+
+\meta{选项列表} 可包含任意 |tcolorbox| 选项。
+
+\begin{exdispExample}{coverage}
+\begin{tcbposter}[
+  poster   = {showframe,spacing=1mm},
+  coverage = {height=5cm,
+              interior style={top color=yellow,bottom color=yellow!50!red},
+              watermark text={My Poster},watermark color=white,
+             },
+]
+\end{tcbposter}
+\end{exdispExample}
+
+\begin{itemize}
+\item 对于常规海报，使用 \refKey{/tcb/spread} 选项
+  可让海报外围框占满整个页面。
+\item 海报边距可通过 \refKey{/tcb/left}、\refKey{/tcb/right}、
+  \refKey{/tcb/top}、\refKey{/tcb/bottom} 调整。
+\item 海报背景可通过 \refKey{/tcb/colback}、
+  \refKey{/tcb/interior style}、\refKey{/tcb/interior style image} 等更改。
+\item 请勿将 \refKey{/tcb/poster/width} 与 \refKey{/tcb/poster/height}
+  与\emph{外围框} 同时使用。注意：你可以在\emph{外围框} 的
+  \meta{选项列表} 内使用 \refKey{/tcb/width} 和 \refKey{/tcb/height}。
+  另外，当使用了 \refKey{/tcb/spread} 时，这也并非必要。
+\end{itemize}
+\end{postersetTcbKey}
+
+
+\begin{postersetTcbKey}[][doc new=2017-07-03]{no coverage}{}{样式，无取值，初始已设置}
+  完全移除外围的 |tcolorbox|。
+\end{postersetTcbKey}
+
+\clearpage
+%--------------------------
+\subsection{通用文本框设置}\label{subsec:poster_boxsettings}
+
+
+\begin{postersetTcbKey}[][doc new=2017-07-03]{boxes}{=\marg{option list}}{样式，无默认值}
+  此选项可在 \refEnv{tcbposter} 内部及 \refCom{tcbposterset} 中使用，
+  用于设置海报内各 |tcolorbox| 的样式。
+  \meta{选项列表} 可包含任意 |tcolorbox| 选项，
+  但此处文本框尺寸选项预计用处不大，因为尺寸由放置选项决定。
+
+\begin{exdispExample}{boxes}
+\begin{tcbposter}[
+  poster   = {spacing=2mm,columns=3,rows=2},
+  coverage = {height=5cm,
+              interior style={top color=yellow,bottom color=yellow!50!red},
+             },
+  boxes    = {sharp corners=downhill,arc=3mm,boxrule=1mm,
+              colback=white,colframe=cyan,
+              title style={left color=black,right color=cyan},
+              fonttitle=\bfseries}
+]
+  \posterbox[adjusted title=First]{column=1,row=1,span=2}{First box}
+  \posterbox[adjusted title=Second]{column=1,row=2,span=2}{Second box}
+  \posterbox[adjusted title=Third]{column=3,row=1,rowspan=2}{Third box}
+\end{tcbposter}
+\end{exdispExample}
+
+\end{postersetTcbKey}
+
+
+%--------------------------
+\subsection{字体缩放}\label{subsec:poster_fontsize}
+
+\begin{postersetTcbKey}[][doc new=2017-07-03]{fontsize}{=\meta{length}}{样式，无默认值，初始未设置}
+  此选项可在 \refEnv{tcbposter} 内部及 \refCom{tcbposterset} 中使用。
+  它借助 \refKey{/tcb/fit basedim} 和 \refKey{/tcb/fit fontsize macros}
+  将 |\normalsize| 重定义为 \meta{长度}，并相应地重定义 |\small|、|\large|
+  等其他标准字号宏。\par
+  这需要像 \refPkg[lm]{lmodern} 这样可自由缩放的字体族才能生效。
+  若未使用 \refKey{/tcb/posterset/fontsize}，
+  则这些标准字号宏不会有任何改动。
+
+\begin{dispListing}
+\begin{tcbposter}[
+  poster   = {spacing=2mm,columns=3,rows=2},
+  coverage = {height=5cm,
+              interior style={top color=yellow,bottom color=yellow!50!red},
+             },
+  fontsize = 15pt,   % <--- \normalsize is now 15pt
+]
+...
+\end{dispListing}
+\end{postersetTcbKey}
+
+
+\clearpage
+%--------------------------
+\subsection{文本框放置}\label{subsec:poster_boxplacement}
+
+\begin{docCommand}[doc new=2017-07-03]{posterbox}{\oarg{options}\marg{placement}\marg{box content}}
+  在 \refEnv{tcbposter} 环境内部，此命令将一个带有附加
+  |tcolorbox| \meta{选项} 和给定 \meta{文本框内容} 的 |tcolorbox|
+  放置到由 \meta{放置方式} 决定的位置。
+  所有 \meta{放置方式} 选项见下文。
+  注意：\meta{文本框内容} 不能包含 \emph{verbatim}（原样抄录）材料，
+  见 \refEnv{posterboxenv}。
+\begin{exdispExample}{posterbox}
+\begin{tcbposter}[
+  poster = {showframe,height=4cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox[title=My title]{name=A,column=2,row=2}{My first box}
+\end{tcbposter}
+\end{exdispExample}
+\end{docCommand}
+
+\begin{docEnvironment}[doc new=2017-07-03]{posterboxenv}{\oarg{options}\marg{placement}}
+  这是 \refCom{posterbox} 的环境版本，即在 \refEnv{tcbposter}
+  环境内部，它将一个带有附加 |tcolorbox| \meta{选项} 和给定
+  \meta{环境内容} 的 |tcolorbox| 放置到由 \meta{放置方式} 决定的位置。
+  与 \refCom{posterbox} 不同，\meta{环境内容} 允许包含 \emph{verbatim} 材料。
+  注意：\refCom{posterbox} 的实现比 \refEnv{posterboxenv} 的实现更高效。
+
+\enlargethispage*{1cm}
+\begin{exdispExample}{posterboxenv}
+\begin{tcbposter}[
+  poster = {showframe,height=4cm,spacing=2mm,rows=2},
+  boxes  = {size=small,beamer,
+            colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\begin{posterboxenv}[title=My title]{name=A,column=2,between=top and bottom}
+  My first box.
+  \begin{tcblisting}{size=small,colback=yellow!10}
+My \textbf{first}
+poster listing.
+  \end{tcblisting}
+\end{posterboxenv}
+\end{tcbposter}
+\end{exdispExample}
+
+\end{docEnvironment}
+
+
+\clearpage
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{name}{=\meta{name}}{无默认值，初始 |@|}
+  将 \meta{名称} 设为当前 \refCom{posterbox} 或 \refEnv{posterboxenv} 的引用名。
+  一个 \tikzname\ 形状名会由 \refKey{/tcb/poster/prefix} 与 \meta{名称}
+  自动组合而成。
+\begin{exdispExample}{name}
+\begin{tcbposter}[
+  poster = {showframe,height=2.5cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{name=A,column=2,row=2}{My first box}
+\node[below right=4mm,fill=yellow] (X) at (TCBPOSTER@poster.north west) {Example A};
+\draw[blue,very thick,->] (X) |- (TCBPOSTER@A);
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{column}{=\meta{number}}{无默认值，初始 |1|}
+  将文本框放置到 \meta{数字} 所指定的列。
+  若 \refKey{/tcb/posterloc/span} 不为 |1|，
+  则文本框沿第 \meta{数字} 列的左侧对齐。
+\begin{exdispExample}{column}
+\begin{tcbposter}[
+  poster = {showframe,height=2.5cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{row=1,column=2,span=2}{First box}
+\posterbox{row=2,column=2,span=0.8}{Second box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+\enlargethispage*{1cm}
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{column*}{=\meta{number}}{无默认值，初始未设置}
+  将文本框放置到 \meta{数字} 所指定的列。
+  若 \refKey{/tcb/posterloc/span} 不为 |1|，
+  则文本框沿第 \meta{数字} 列的右侧对齐。
+\begin{exdispExample}{columnstar}
+\begin{tcbposter}[
+  poster = {showframe,height=2.5cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{row=1,column*=2,span=2}{First box}
+\posterbox{row=2,column*=2,span=0.8}{Second box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+
+\clearpage
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{span}{=\meta{number}}{无默认值，初始 |1|}
+  将当前文本框的宽度设为跨越 \meta{数字} 列。
+  \meta{数字} 也可取实数，如 |0.5| 或 |1.7|。
+  示例见 \refKey{/tcb/posterloc/column} 与 \refKey{/tcb/posterloc/column*}。
+\end{posterlocTcbKey}
+
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{row}{=\meta{number}}{无默认值，初始未设置}
+  若使用此选项，文本框将放置到 \meta{数字} 所指定的行。
+  同时，高度会按 \refKey{/tcb/posterloc/rowspan} 设为固定值。
+\begin{exdispExample}{row}
+\begin{tcbposter}[
+  poster = {showframe,height=2.5cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{row=1,column=1}{First box}
+\posterbox{row=1,column=2,rowspan=2}{Second box}
+\posterbox[natural height]{row=1,column=3}{Third box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{rowspan}{=\meta{number}}{无默认值，初始 |1|}
+  将当前文本框的高度设为跨越 \meta{数字} 行。
+  \meta{数字} 也可取实数，如 |0.5| 或 |1.7|。
+\begin{exdispExample}{rowspan}
+\begin{tcbposter}[
+  poster = {showframe,height=2.5cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{row=1,column=1,rowspan=0.9}{First box}
+\posterbox{row=1,column=2,rowspan=1.5}{Second box}
+\posterbox{row=1,column=3,rowspan=2}{Third box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{fixed height}{}{无取值，初始 |0pt|}
+  将当前文本框的高度设为跨越 \refKey{/tcb/posterloc/rowspan}
+  所指定的行数。当未使用 \refKey{/tcb/posterloc/row}
+  而使用了其他高度放置选项时，可使用此选项。
+\end{posterlocTcbKey}
+
+
+\clearpage
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{below}{=\meta{name}}{无默认值，初始 |top|}
+  将文本框放置到另一个名为给定 \meta{名称} 的文本框下方。
+  \meta{名称} 也可以是预定义节点，见 \zvref{subsec:poster_environment}。
+\begin{exdispExample}{below}
+\begin{tcbposter}[
+  poster = {showframe,height=3cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{name=A,column=1,below=top}{First box}
+\posterbox{name=B,column=1,below=A}{Second box}
+\posterbox{name=C,column=2,below=B}{Third box}
+\posterbox{name=D,column=3,below=row1}{Fourth box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{above}{=\meta{name}}{无默认值，初始未设置}
+  将文本框放置到另一个名为给定 \meta{名称} 的文本框上方。
+  \meta{名称} 也可以是预定义节点，见 \zvref{subsec:poster_environment}。
+\begin{exdispExample}{above}
+\begin{tcbposter}[
+  poster = {showframe,height=3cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{name=A,column=1,above=bottom}{First box}
+\posterbox{name=B,column=1,above=A}{Second box}
+\posterbox{name=C,column=2,above=B}{Third box}
+\posterbox{name=D,column=3,above=row2}{Fourth box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+
+\clearpage
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{at}{=\meta{name}}{无默认值，初始未设置}
+  将文本框放置到名为给定 \meta{名称} 的位置。
+  这很可能是一个预定义节点，见 \zvref{subsec:poster_environment}。
+\begin{exdispExample}{at}
+\begin{tcbposter}[
+  poster = {showframe,height=3cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{name=A,column=1,at=middle}{First box}
+\posterbox{name=B,column=2,at=row1}{Second box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{between}{=\meta{name1} and \meta{name2}}{无默认值，初始未设置}
+  将文本框放置在文本框 \meta{name1} 之下、另一文本框 \meta{name2} 之上。
+  \meta{name1} 与 \meta{name2} 也可以是预定义节点，
+  见 \zvref{subsec:poster_environment}。
+\begin{exdispExample}{between}
+\begin{tcbposter}[
+  poster = {showframe,height=3cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{name=A,column=1,below=top}{First box}
+\posterbox{name=B,column=1,between=A and bottom}{Second box}
+\posterbox{name=C,column=2,above=bottom}{Third box}
+\posterbox{name=D,column=2,between=top and C,span=2}{Fourth box}
+\posterbox{name=E,column=3,between=D and bottom}{Fifth box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+
+\clearpage
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{sequence}{=\meta{sequence}}{无默认值，初始未设置}
+  将当前文本框拆分为若干子文本框。这些子文本框按照给定的
+  \meta{放置序列} 依次放置。\meta{序列} 的可用语法为：\par\medskip
+  \meta{a 列} |between| \meta{名称 a1} |and| \meta{名称 a2} |then|\\
+  \meta{b 列} |between| \meta{名称 b1} |and| \meta{名称 b2} |then|\\
+  \meta{c 列} |between| \meta{名称 c1} |and| \meta{名称 c2} |then|\ldots\par\medskip
+  显然，这会将第一个子文本框放置在 \meta{a 列} 中、
+  \meta{名称 a1} 与 \meta{名称 a2} 之间；
+  第二个子文本框放置在 \meta{b 列} 中、
+  \meta{名称 b1} 与 \meta{名称 b2} 之间，依此类推。
+
+\begin{exdispExample}{sequence}
+\begin{tcbposter}[
+  poster = {showframe,height=6cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox[adjusted title=A]{name=A,column=1,below=top,span=2}{First box}
+\posterbox{name=B,column=2,above=bottom,span=2}{Second box}
+\posterbox[adjusted title=C,colframe=red!50!black,colback=red!50]{
+  name=C, sequence=1 between A and bottom then
+                   2 between A and B then
+                   3 between top and B
+  }{\lipsum[2]}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+\clearpage
+
+\begin{docTcbKey}[][doc new=2017-07-03]{placeholder}{}{样式，无取值}
+  若 \refKey{/tcb/posterloc/sequence} 的文本框内容太短，
+  无法填满所有预留的子框，多余的空框将以 \refKey{/tcb/placeholder} 样式绘制。
+  如果你希望空框什么都不绘制，可将此样式重定义为
+  \refKey{/tcb/blankest}，例如。
+\begin{exdispExample}{placeholder}
+\begin{tcbposter}[
+  poster = {showframe,height=2.5cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{name=A,column=1,below=top,span=2}{First box}
+\posterbox[colframe=red!50!black,colback=red!50]{
+  name=B, sequence=1 between A and bottom then
+                   2 between A and bottom then
+                   3 between top and bottom
+  }{Second box followed by placeholder boxes}
+\end{tcbposter}
+\end{exdispExample}
+\end{docTcbKey}
+
+
+
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{xshift}{=\meta{length}}{无默认值，初始 |0pt|}
+  将文本框水平移动 \meta{长度}。
+\begin{exdispExample}{xshift}
+\begin{tcbposter}[
+  poster = {showframe,height=3cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{name=A,column=1,row=1,xshift=6mm}{First box}
+\posterbox{name=B,column=2,row=2,xshift=-6mm}{Second box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+\clearpage
+
+\begin{posterlocTcbKey}[][doc new=2017-07-03]{yshift}{=\meta{length}}{无默认值，初始 |0pt|}
+  将文本框垂直移动 \meta{长度}。
+\begin{exdispExample}{yshift}
+\begin{tcbposter}[
+  poster = {showframe,height=3cm,spacing=2mm,rows=2},
+  boxes  = {beamer,colframe=blue!50!black,colback=blue!50,colupper=yellow!50},
+]
+\posterbox{name=A,column=1,row=1,yshift=-4mm}{First box}
+\posterbox{name=B,column=2,row=2,yshift=4mm}{Second box}
+\end{tcbposter}
+\end{exdispExample}
+\end{posterlocTcbKey}
+
+

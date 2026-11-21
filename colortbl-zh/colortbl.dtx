@@ -1,0 +1,1541 @@
+% \iffalse
+%%
+%% 源文件：`colortbl.dtx'。
+%% 版权所有 1996 1998 1999 2012 2018 2020 2022 2024 2026 David Carlisle
+%%
+%% 本文件可依照 LPPL 条款进行分发。
+%% 详情见 readme。
+%%
+%
+%<*dtx>
+          \ProvidesFile{colortbl.dtx}
+%</dtx>
+%<package>\NeedsTeXFormat{LaTeX2e}[1995/06/01]
+%<package>\ProvidesPackage{colortbl}
+%<driver>\ProvidesFile{colortbl.drv}
+% \fi
+%         \ProvidesFile{colortbl.dtx}
+          [2026/05/01 v1.0l 彩色表格列支持 (DPC)]
+%
+% \iffalse
+%<*driver>
+\documentclass{ltxdoc}
+\usepackage{ctex}
+\setCJKmainfont{Source Han Serif SC}
+\setCJKsansfont{Source Han Sans SC}
+\setCJKmonofont{Source Han Sans SC}
+\usepackage
+%  [debugshow]
+  {colortbl}
+\usepackage{dcolumn,longtable,hhline}
+\setlongtables% 以防使用的是旧版本 longtable。
+\NewCommandCopy\csorig\cs
+\RenewDocumentCommand\cs{m}{\csorig{\detokenize{#1}}}
+\begin{document}
+\DeleteShortVerb{\|}
+\MakeShortVerb{\"}
+\DocInput{colortbl.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \GetFileInfo{colortbl.dtx}
+% \title{\textsf{colortbl} 宏包\thanks{本文件
+%         版本号为 \fileversion，最后
+%         修订于 \filedate。}}
+%         \author{David Carlisle%\thanks
+%         {问题反馈请提交至
+%         \texttt{https://github.com/davidcarlisle/dpctex/issues}}}
+% \date{\filedate}
+%
+%  \maketitle
+%
+%
+% \begin{abstract}
+% 本宏包实现了一套灵活的机制，可为表格中指定列的后方添加彩色
+% 底纹。本宏包依赖 \textsf{array} 与 \textsf{color} 宏包。
+% \end{abstract}
+%
+% \changes{v0.1}{1996/09/20}{初稿}
+% \changes{v0.1a}{1996/09/21}{开始以 doc 格式编写文档}
+% \changes{v0.1b}{1996/09/22}
+%     {新方案：重定义 \cs{@classz}，而不仅仅是
+%      简单地用 \cs{newcolumntype} 定义。}
+% \changes{v0.1c}{1996/09/24}
+%     {使伸出量参数成为可选参数（S. Rahtz 建议）。}
+% \changes{v0.1d}{1996/10/05}
+%     {新增 \cs{rowcolor}，以满足 S. Rahtz 的需求。}
+% \changes{v0.1d}{1996/10/05}
+%     {增加对 \cs{hline}、\cs{hhline} 与 \cs{longtable} 的支持，
+%      进一步满足 S. Rahtz 的需求。}
+% \changes{v0.1e}{1996/10/06}
+%     {小幅整理。}
+% \changes{v0.1f}{1996/10/10}
+%     {改进 \cs{hhline}，并支持嵌套结构}
+% \changes{v0.1f}{1996/10/12}
+%     {0.1f 为首个公开发布版本，曾漏掉一个百分号……}
+% \changes{v0.1i}{1999/03/24}
+%     {采用 LPPL 协议}
+% \changes{v0.1j}{2001/02/13}{\cs{cellcolor}（Donald Arseneau 提供）}
+% \changes{v1.0c}{2018/05/02}{配合新版 array 代码更新}
+% \changes{v1.0d}{2018/12/22}{配合更新后的 array 代码再次更新}
+% \changes{v1.0e}{2020/01/04}{配合更新后的 hhline 更新}
+% \changes{v1.0f}{2022/06/20}{将 \cs{rowcolors} 代码从 xcolor 迁入}
+%
+% \section{引言}
+%
+% 本宏包用于给表格上色（即在列内容后方添加彩色底纹）。在这一点上，
+% 它与 Timothy Van Zandt 的 \textsf{colortab} 宏包有许多相似之处；
+% 但二者的内部实现大不相同，此外 \textsf{colortab}
+% 还能配合 \LaTeX\ 之外其他排版格式的表格结构使用。
+% 本宏包则要求使用 \LaTeX（及其 \textsf{color} 与
+% \textsf{array} 宏包）。
+%
+% 首先给出一个标准的 \textsf{tabular} 表格，以便对照。
+% \begin{center}
+%\begin{minipage}{.75\textwidth}
+%\begin{verbatim}
+% \begin{tabular}{|l|c|}
+%  一&二\\
+%  三&四
+%  \end{tabular}
+%\end{verbatim}
+%\end{minipage}
+% {\bfseries
+%  \begin{tabular}{|l|c|}
+%  一&二\\
+%  三&四
+%  \end{tabular}}
+% \end{center}
+%
+% \section{\cs{columncolor} 命令}
+%
+% 下面的示例展示了本宏包所引入的
+% "\columncolor" 命令的各种用法。所有示例都保留了由 "|" 指定的竖线，
+% 以便更清楚地看出各列的位置；尽管在实际使用中，你可能并不希望同时出现彩色
+% 底纹 \emph{和} 竖线。
+%
+% 本宏包提供 "\columncolor" 命令，它应当（只）在 ">" 列格式说明符的
+% 参数中使用，用于在指定列后方添加彩色底纹。它既可用于 \textsf{array}
+% 或 \textsf{tabular} 的主"导言区"参数中，也可用于
+% "\multicolumn" 格式说明中。
+%
+% 基本格式为：\\
+% "\columncolor"\oarg{颜色模式}\marg{颜色}
+%                          \oarg{左侧伸出量}\oarg{右侧伸出量}
+%
+% 第一个参数（若使用可选参数则为前两个）是标准的 \textsf{color}
+% 宏包参数，与 "\color" 所用的相同。
+%
+% 最后两个参数控制底纹超出该列最宽内容的距离。
+% 若省略 \emph{右侧伸出量} 参数，则默认取
+% \emph{左侧伸出量} 的值；若两者都省略，则默认为
+%  "\tabcolsep"（在 \textsf{tabular} 中）或 "\arraycolsep"
+% （在 \textsf{array} 中）。
+%
+% 若两个伸出量都设为 "0pt"，效果如下：
+% \begin{center}
+%\begin{minipage}{.75\textwidth}
+%\begin{verbatim}
+%|>{\columncolor[gray]{.8}[0pt]}l|
+%>{\color{white}%
+%  \columncolor[gray]{.2}[0pt]}l|
+%\end{verbatim}
+%\end{minipage}
+% {\bfseries
+% \begin{tabular}{%
+%   |>{\columncolor[gray]{.8}[0pt]}l|
+%   >{\color{white}%
+%     \columncolor[gray]{.2}[0pt]}l|
+%   }
+% 一&二\\
+%  三&四
+%  \end{tabular}}
+% \end{center}
+% 采用默认伸出量 "\tabcolsep" 时产生如下效果：
+%\begin{center}
+%\begin{minipage}{.75\textwidth}
+%\begin{verbatim}
+%|>{\columncolor[gray]{.8}}l|
+%>{\color{white}%
+%  \columncolor[gray]{.2}}l|
+%\end{verbatim}
+%\end{minipage}
+% {\bfseries
+% \begin{tabular}{%
+%   |>{\columncolor[gray]{.8}}l|
+%   >{\color{white}%
+%     \columncolor[gray]{.2}}l|
+%   }
+% 一&二\\
+%  三&四
+%  \end{tabular}}
+% \end{center}
+% 你或许想要介于这两种极端之间的效果。
+% 取值 ".5\tabcolsep" 时产生如下效果
+% \begin{center}
+%\begin{minipage}{.75\textwidth}
+%\begin{verbatim}
+%|>{\columncolor[gray]{.8}[.5\tabcolsep]}l|
+% >{\color{white}%
+%   \columncolor[gray]{.2}[.5\tabcolsep]}l|
+%\end{verbatim}
+%\end{minipage}
+% {\bfseries
+% \begin{tabular}{%
+%   |>{\columncolor[gray]{.8}[.5\tabcolsep]}l|
+%   >{\color{white}\columncolor[gray]{.2}[.5\tabcolsep]}l|
+%   }
+% 一&二\\
+%  三&四
+%  \end{tabular}}
+% \end{center}
+%
+%
+% 本宏包应能与大多数兼容 \textsf{array} 宏包语法的其他宏包配合使用。
+% 如下例所示，它尤其可以与 \textsf{longtable} 和 \textsf{dcolumn}
+% 协同工作。
+%\errorcontextlines10
+% \newcolumntype{A}{%^^A
+%    >{\color{white}\columncolor{red}[.5\tabcolsep]%^^A
+%       \raggedright}%
+%    p{2cm}}
+% \newcolumntype{B}{%^^A
+%    >{\columncolor{blue}[.5\tabcolsep]%^^A
+%      \color{yellow}\raggedright}
+%    p{3cm}}
+% \newcolumntype{E}{%^^A
+%    >{\large\bfseries
+%      \columncolor{cyan}[.5\tabcolsep]}c}
+% \newcolumntype{F}{%^^A
+%     >{\color{white}
+%       \columncolor{magenta}[.5\tabcolsep]}c}
+% \newcolumntype{G}{%^^A
+%    >{\columncolor[gray]{0.8}[.5\tabcolsep][\tabcolsep]}l}
+% \newcolumntype{H}{>{\columncolor[gray]{0.8}}l}
+%
+%
+%^^A 3.3（如下方 verbatim 文本所用）效果最佳，
+%^^A 但需要 1996 年 6 月版本的 dcolumn，因此这里使用 -1。
+% \newcolumntype{C}{%
+%     >{\columncolor{yellow}[.5\tabcolsep]}%
+%       D{.}{\cdot}{-1}}
+% \newcolumntype{I}{%^^A
+%     >{\columncolor[gray]{0.8}[\tabcolsep][.5\tabcolsep]}%^^A
+%                  D{.}{\cdot}{-1}}
+%
+% \setlength\minrowclearance{2pt}
+% 开始之前先留出一点间距："\setlength\minrowclearance{2pt}"
+%
+% \begin{longtable}{ABC}
+% \multicolumn{3}{E}{长表格示例}\\
+% \multicolumn{2}{F}{前两列}&
+% \multicolumn{1}{F}{第三列}\\
+% \multicolumn{2}{F}{p 类型}&
+% \multicolumn{1}{F}{D 类型（\textsf{dcolumn}）}\endfirsthead
+% \multicolumn{3}{E}{长表格示例（续）}\\
+% \multicolumn{2}{F}{前两列}&
+% \multicolumn{1}{F}{第三列}\\
+% \multicolumn{2}{F}{p 类型}&
+% \multicolumn{1}{F}{D 类型（\textsf{dcolumn}）}\endhead
+% \multicolumn{3}{E}{续\ldots}\endfoot
+% \multicolumn{3}{E}{结束}\endlastfoot
+%  P 列&另一列&12.34\\
+% \multicolumn{1}{G}{合计}&
+% \multicolumn{1}{H}{（错误）}&
+% \multicolumn{1}{I}{100.6}\\
+%  第一列中的一段较长文字&乙&1.2\\
+%  甲&第二列中的一段较长文字&1.345\\
+% \multicolumn{1}{G}{合计}&
+% \multicolumn{1}{H}{（错误）}&
+% \multicolumn{1}{I}{100.6}\\
+%  甲&乙&1.345\\
+%  请注意，所有列中的彩色横线都会伸展，以容纳某一列中的大尺寸内容。&乙&1.345\\
+%  甲&乙&100\\
+%  甲&视所使用的驱动程序不同，你可能会看到难看的空隙或线条，
+%   这是用于生成不同形状的"色块"相互作用不佳所致。你可以指定更大的伸出量，
+% 或在行间的 "\noalign" 中加入一些负间距，使相邻的同色底纹衔接起来。&12.4\\
+%  甲&乙&45.3\\
+% \end{longtable}
+%
+% 本例的配色品味欠佳，但色彩相当丰富！
+% 可查阅源文件 "colortbl.dtx" 查看示例的完整代码；
+% 该例使用了下列列类型。
+%\begin{verbatim}
+% \newcolumntype{A}{%
+%    >{\color{white}\columncolor{red}[.5\tabcolsep]%
+%       \raggedright}%
+%    p{2cm}}
+% \newcolumntype{B}{%
+%    >{\columncolor{blue}[.5\tabcolsep]%
+%      \color{yellow}\raggedright}
+%    p{3cm}}
+% \newcolumntype{C}{%
+%     >{\columncolor{yellow}[.5\tabcolsep]}%
+%       D{.}{\cdot}{3.3}}
+% \newcolumntype{E}{%
+%    >{\large\bfseries
+%      \columncolor{cyan}[.5\tabcolsep]}c}
+% \newcolumntype{F}{%
+%     >{\color{white}
+%       \columncolor{magenta}[.5\tabcolsep]}c}
+% \newcolumntype{G}{%
+%     >{\columncolor[gray]{0.8}[.5\tabcolsep][\tabcolsep]}l}
+% \newcolumntype{H}{>{\columncolor[gray]{0.8}}l}
+% \newcolumntype{I}{%
+%     >{\columncolor[gray]{0.8}[\tabcolsep][.5\tabcolsep]}%
+%                    D{.}{\cdot}{3.3}}
+%\end{verbatim}
+%
+% \section{对 \textsf{tabular*} 使用“伸出量”参数}
+%
+% 上述内容对 \textsf{tabular} 来说都不成问题，但 \textsf{tabular*} 又如何呢？
+%
+% 这里的问题要棘手得多。虽然本宏包用于插入"可伸展"彩色底纹的
+% \TeX "\leader" 机制与 \emph{胶状间距}颇为相似，但在
+% \textsf{tabular*}（以及 \textsf{longtable}）各列之间插入的
+% "\tabskip" 胶状间距必须是"真正的胶状间距"，而不能是"引线（leaders）"。
+%
+% 在一定限度内，这里也可以使用伸出量选项。以上面第一个表格示例为例。
+% 若使用宽度设为 3\,cm 的 \textsf{tabular*}，并采用如下导言区设置：
+% \begin{center}
+%\begin{minipage}{.6\textwidth}
+%\begin{verbatim}
+%\begin{tabular*}{3cm}{%
+%@{\extracolsep{\fill}}
+%>{\columncolor[gray]{.8}[0pt][20mm]}l
+%>{\columncolor[gray]{.8}[5mm][0pt]}l
+%@{}}
+%\end{verbatim}
+%\end{minipage}
+% {\bfseries
+% \begin{tabular*}{3cm}{%
+% @{\extracolsep{\fill}}
+% >{\columncolor[gray]{.8}[0pt][20mm]}l
+% >{\columncolor[gray]{.8}[5mm][0pt]}l
+% @{}%
+%   }
+% 一&二\\
+%  三&四
+%  \end{tabular*}}
+% \end{center}
+%
+% 把指定宽度改为 4\,cm 仍然可行，但不要得寸进尺用到 5\,cm\ldots
+% \begin{center}
+% \bfseries
+% \begin{tabular*}{4cm}{%
+% @{\extracolsep{\fill}}
+% >{\columncolor[gray]{.8}[0pt][20mm]}l
+% >{\columncolor[gray]{.8}[5mm][0pt]}l
+% @{}%
+%   }
+% 一&二\\
+%  三&四
+%  \end{tabular*}\hfill
+% \begin{tabular*}{5cm}{%
+% @{\extracolsep{\fill}}
+% >{\columncolor[gray]{.8}[0pt][20mm]}l
+% >{\columncolor[gray]{.8}[5mm][0pt]}l
+% @{}%
+%   }
+% 一&二\\
+%  三&四
+%  \end{tabular*}
+% \end{center}
+%
+% \section{\cs{rowcolor} 命令}
+%
+% 如上所示，借助在一行的每个条目里使用 "\multicolumn" 命令，
+% 可以改变指定行的颜色。但若你的表格主要需要按
+% \emph{行} 来着色，就会觉得这种方式相当不便。为此，
+% 本宏包引入了一套新机制 "\rowcolor"\footnote{代价是本宏包内部复杂度有所增加}。
+%
+% "\rowcolor" 的参数形式与 "\columncolor" 相同。它必须用于一行的
+% \emph{起始}处。若未使用可选的伸出量参数，则伸出量默认取该列
+% 任意 "\columncolor" 命令中指定的伸出量，否则取
+% "\tabcolsep"（在 \textsf{array} 中为 "\arraycolsep"）。
+%
+% 若某个表格条目同时处于表格导言区所指定 "\columncolor" 的作用范围、
+% 以及当前行开头 "\rowcolor" 的作用范围内，则 "\rowcolor" 指定的颜色生效。
+% "\multicolumn" 命令中也可包含 ">{\rowcolor"\ldots，它将同时覆盖
+% 当前行与当前列的默认颜色。
+% \begin{center}
+%\begin{minipage}{.75\textwidth}
+%\begin{verbatim}
+% \begin{tabular}{|l|c|}
+%  \rowcolor[gray]{.9}
+%  一&二\\
+%  \rowcolor[gray]{.5}
+%  三&四
+%  \end{tabular}
+%\end{verbatim}
+%\end{minipage}
+% {\bfseries
+%  \begin{tabular}{|l|c|}
+%  \rowcolor[gray]{.9}
+%  一&二\\
+%  \rowcolor[gray]{.5}
+%  三&四
+%  \end{tabular}}
+% \end{center}
+%
+% \section{\cs{rowcolors} 命令}
+% \cs{rowcolors} 命令及其文档源自 Dr.\ Uwe Kern 编写的 \textsf{xcolor} 宏包。
+%
+% \DescribeMacro\rowcolors
+%   \oarg{命令}\marg{行号}\marg{奇数行颜色}\marg{偶数行颜色}\\
+% \DescribeMacro{\rowcolors*}
+%   \oarg{命令}\marg{行号}\marg{奇数行颜色}\marg{偶数行颜色}\\
+% 这两个命令之一必须在表格开始 \emph{之前} 执行。
+% \meta{行号} 给出第一行的行号，从该行起按 \meta{奇数行颜色} 与 \meta{偶数行颜色} 的方案着色。
+% 每个颜色参数也可以留空（即不着色）。
+% 在带星号的版本中，当 \emph{rowcolors 状态} 未激活时（见下文），\meta{命令} 会被忽略；而在不带星号的版本中，\meta{命令} 会应用于表格的每一行。
+% 这类可选命令可以是 "\hline" 或 "\noalign"\marg{内容}。
+%
+% \DescribeMacro\showrowcolors
+% \DescribeMacro\hiderowcolors
+% \emph{rowcolors 状态} 默认处于激活（即使用着色方案）状态，也可由 "\showrowcolors" 激活；命令 "\hiderowcolors" 可将其置为未激活（即忽略着色方案）。
+% \DescribeMacro\rownum
+% 计数器 "\rownum"（即 \LaTeX 计数器 "rownum"）
+% 可在此类表格内部用于获取当前行号。
+%
+% 目前，"rownum" 计数器仅在使用 "\rowcolors" 的表格中递增。
+%
+% \begin{center}
+% \begin{minipage}{\textwidth}
+% \begin{verbatim}
+% \rowcolors[\hline]{3}{green}{yellow} \arrayrulecolor{red}
+% \begin{tabular}{ll}
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \arrayrulecolor{black}
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \rowcolor{blue}
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \hiderowcolors
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \showrowcolors
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \multicolumn{1}%
+%  {>{\columncolor{red}}l}{测试} & 第 \therownum 行\\
+% \end{tabular}
+% \end{verbatim}
+% \end{minipage}
+% \hskip-.5\textwidth
+% \rowcolors[\hline]{3}{green}{yellow} \arrayrulecolor{red}
+% \begin{tabular}{ll}
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \arrayrulecolor{black}
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \rowcolor{cyan}
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \hiderowcolors
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \showrowcolors
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \multicolumn{1}%
+%  {>{\columncolor{magenta}}l}{测试} & 第 \therownum 行\\
+% \end{tabular}
+% \qquad
+% \rowcolors*[\hline]{3}{green}{yellow}\arrayrulecolor{red}
+% \begin{tabular}{ll}
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \arrayrulecolor{black}
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \rowcolor{blue}
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \hiderowcolors
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \showrowcolors
+% 测试 & 第 \therownum 行\\
+% 测试 & 第 \therownum 行\\
+% \multicolumn{1}%
+%  {>{\columncolor{red}}l}{测试} & 第 \therownum 行\\
+% \end{tabular}
+% \arrayrulecolor{black}
+% \end{center}
+%
+% \section{\cs{cellcolor} 命令}
+%
+% 若要为表格的单个单元格设置背景色，可以让该单元格以
+% "\multicolumn"\nolinebreak[3]"{1}"\nolinebreak[3]"{>{\rowcolor"\ldots 开头
+% （若当前未生效行色，则用 "\columncolor"），但这种做法存在若干缺陷：
+% 1)~它会妨碍单元格内的数据触发起着色；\
+% 2)~对齐格式说明必须从 tabular 头部复制过来，容易出错，对 "p{}" 列尤其如此；\
+% 3)~"\multicolumn{1}" 完全是多余之举。\
+% 因此便有了 \cs{cellcolor} 命令：其用法与
+% \cs{columncolor}、\cs{rowcolor} 类似，但会覆盖后两者；
+% \cs{cellcolor} 可放置于其所作用的表格单元格内的任意位置。
+%
+% \section{给表格线条上色}
+%
+% 这么说，你还想要给表格线条上色？
+%
+% 竖线无需任何特殊命令即可上色：在原本使用 "|" 的地方，改用如下
+% 写法即可："!{\color{green}\vline}"。"||" 之间的间距通常留为白色。
+% 若也想给这部分上色，既可增大前一列的伸出量（增至
+% "\tabcolsep" + "\arrayrulewidth" + "\doublerulesep"），
+% 也可移除两条线之间的胶状间距，代之以所需粗细的彩色线条。于是：
+%\begin{verbatim}
+%!{\color{green}\vline}
+%@{\color{yellow}\vrule width \doublerulesep}
+%!{\color{green}\vline}
+%\end{verbatim}
+% 所得间距应与 "||" 相同，但色彩更丰富。
+%
+% 不过给 "\hline" 和 "\cline" 上色要稍微复杂一些，因此
+% 本宏包提供了额外命令（这些命令同样适用于竖线）。
+%
+% \section{\cs{arrayrulecolor}}
+% "\arrayrulecolor" 的参数与 "\color" 相同；它是一个
+% 全局性声明，作用于其后表格中所有的横线与
+% 竖线。它可置于任意表格之外，也可置于一行的开头，
+% 或表格导言区的 ">" 格式说明中。
+% 但需注意：若在表格中途给出，它只影响
+% 此后指定的线条；导言区中已指定的竖线将保持其原有颜色。
+%
+% \section{\cs{doublerulesepcolor}}
+% 给线条上好色之后，你多半会希望 "||" 或 "\hline\hline"
+% 形成的空隙中填入白色以外的颜色。
+% "\doublerulesepcolor" 的用法与 "\arrayrulecolor" 完全相同。
+% 需要重点注意：一旦使用本命令，
+% \textsf{longtable} 在分页处将不会"丢弃"
+% "\hline\hline" 之间的间距。（\TeX 内置了
+% 丢弃间距的能力，但当 "\doublerulesep" 生效后所用的
+% 彩色"间距"实际上是与外侧两条线颜色不同的第三条线，
+% 而线条要丢弃起来要困难得多。）
+%
+% \begin{center}
+% \setlength\arrayrulewidth{2pt}\arrayrulecolor{blue}
+% \setlength\doublerulesep{2pt}\doublerulesepcolor{yellow}
+%
+%\begin{minipage}{.75\textwidth}
+%\begin{verbatim}
+%\setlength\arrayrulewidth{2pt}\arrayrulecolor{blue}
+%\setlength\doublerulesep{2pt}\doublerulesepcolor{yellow}
+% \begin{tabular}{||l||c||}
+%  \hline\hline
+% 一&二\\
+%  三&四\\
+%  \hline\hline
+% \end{tabular}
+%\end{verbatim}
+%\end{minipage}
+% {\bfseries
+%  \begin{tabular}{|l||c||}
+%  \hline\hline
+% 一&二\\
+%  三&四\\
+%  \hline\hline
+%  \end{tabular}}
+% \end{center}
+%
+% \section{\cs{hhline} 的更多趣味用法}
+% 上述命令可与 \textsf{hhline} 宏包的 "\hhline" 配合使用；
+% 此外，若在加载本宏包的同时还加载了 \textsf{hhline}，则会增加一种新用法。
+% 你可以用 ">{"\ldots"}" 添加声明，作用于紧随其后的 "-" 或 "=" 列线。
+% 尤其是可以在该参数中给出 "\arrayrulecolor" 与
+% "\doublerulesepcolor" 声明。
+%
+% 大多数排版规范都会告诫不要在表格中过度使用线条。
+% 我真不敢想象它们会如何看待下面这个彩虹示例：
+% \begin{center}
+% \setlength\arrayrulewidth{5pt}
+% \setlength\doublerulesep{5pt}
+% \renewcommand{\arraystretch}{2}
+% \definecolor{orange}{cmyk}{0,0.61,0.87,0}
+% \definecolor{indigo}{cmyk}{0.8,0.9,0,0}
+% \definecolor{violet}{cmyk}{0.6,0.9,0,0}
+% \newcommand\rainbowline[1]{%^^A
+% \hhline{%^^A
+%   >{\arrayrulecolor   {red}\doublerulesepcolor[rgb]{.3,.3,1}}%^^A
+%   |#1:=%^^A
+%   >{\arrayrulecolor{orange}\doublerulesepcolor[rgb]{.4,.4,1}}%^^A
+%   =%^^A
+%   >{\arrayrulecolor{yellow}\doublerulesepcolor[rgb]{.5,.5,1}}%^^A
+%   =%^^A
+%   >{\arrayrulecolor {green}\doublerulesepcolor[rgb]{.6,.6,1}}%^^A
+%   =%^^A
+%   >{\arrayrulecolor  {blue}\doublerulesepcolor[rgb]{.7,.7,1}}%^^A
+%   =%^^A
+%   >{\arrayrulecolor{indigo}\doublerulesepcolor[rgb]{.8,.8,1}}%^^A
+%   =%^^A
+%   >{\arrayrulecolor{violet}\doublerulesepcolor[rgb]{.9,.9,1}}%^^A
+%   =:#1|%^^A
+%   }}
+% \arrayrulecolor{red}
+% \doublerulesepcolor[rgb]{.3,.3,1}
+% \begin{tabular}{||*7{>{\columncolor[gray]{.9}}c}||}
+% \rainbowline{t}%^^A
+% \arrayrulecolor{violet}\doublerulesepcolor[rgb]{.9,.9,1}
+% 红&橙&黄&绿&蓝&靛&
+% \multicolumn{1}{>{\columncolor[gray]{.9}}c||}{紫}\\
+% \rainbowline{}%^^A
+% 1&2&3&4&5&6&
+% \multicolumn{1}{>{\columncolor[gray]{.9}}c||}{7}\\
+% \rainbowline{b}%^^A
+% \end{tabular}
+% \end{center}
+%\begin{verbatim}
+% \newcommand\rainbowline[1]{%
+% \hhline{%
+%   >{\arrayrulecolor   {red}\doublerulesepcolor[rgb]{.3,.3,1}}%
+%   |#1:=%
+%   >{\arrayrulecolor{orange}\doublerulesepcolor[rgb]{.4,.4,1}}%
+%   =%
+%   >{\arrayrulecolor{yellow}\doublerulesepcolor[rgb]{.5,.5,1}}%
+%   =%
+%   >{\arrayrulecolor {green}\doublerulesepcolor[rgb]{.6,.6,1}}%
+%   =%
+%   >{\arrayrulecolor  {blue}\doublerulesepcolor[rgb]{.7,.7,1}}%
+%   =%
+%   >{\arrayrulecolor{indigo}\doublerulesepcolor[rgb]{.8,.8,1}}%
+%   =%
+%   >{\arrayrulecolor{violet}\doublerulesepcolor[rgb]{.9,.9,1}}%
+%   =:#1|%
+%   }}
+% \arrayrulecolor{red}
+% \doublerulesepcolor[rgb]{.3,.3,1}%
+% \begin{tabular}{||*7{>{\columncolor[gray]{.9}}c}||}
+% \rainbowline{t}%
+% \arrayrulecolor{violet}\doublerulesepcolor[rgb]{.9,.9,1}
+% 红&橙&黄&绿&蓝&靛&
+% \multicolumn{1}{>{\columncolor[gray]{.9}}c||}{紫}\\
+% \rainbowline{}%
+% 1&2&3&4&5&6&
+% \multicolumn{1}{>{\columncolor[gray]{.9}}c||}{7}\\
+% \rainbowline{b}%
+% \end{tabular}
+%\end{verbatim}
+%
+% \section{\cs{cline} 稍显遗憾的用法}
+% 若使用 "\arrayrulecolor"，"\cline" 产生的线条也会被着色，
+% 但你未必能察觉，因为它会被下一行的彩色底纹盖住。
+% 这是 "\cline" 的一个"特性"。使用本宏包时，建议在
+% "\hhline" 参数中使用 "-" 线型，而非 "\cline"。
+%
+% \section{\cs{minrowclearance} 命令}
+%
+% 由于本宏包必须把每个条目装入盒子并测量尺寸，才能确定线条应画多宽，
+% 我便顺便加入了下面这个功能。表格中"较大"的条目可能会碰到上方的
+% "\hline" 或本样式所定义彩色底纹的顶边。
+% 最好充分增大 "\extrarowsep" 或 "\arraystretch"
+% 以避免这种情况，因为这样可以保持表格行距均匀。不过有时你只是想
+% 让 \LaTeX 在大条目上方插入一点额外间距，
+% 这时可将长度 "\minrowclearance" 设为一个较小的值。
+% （大写字母的高度加上该值不应超过表格行的常规高度，
+% 否则会导致表格间距极不均匀。）
+%
+% Donald Arseneau 的 \textsf{tabls} 宏包提供了类似的
+% "\tablinesep"。为与 \textsf{tabls} 兼容，我本打算给它取相同的名字，
+% 但二者实现方式差别很大，行为可能也不同，因此暂时沿用新名称。
+%
+% \StopEventually{}
+%
+% \section{源码}
+%    \begin{macrocode}
+%<*package>
+%    \end{macrocode}
+%
+% 所有图形类宏包用来包含调试代码的一种笨拙权宜写法。
+%    \begin{macrocode}
+\edef\@tempa{%
+  \noexpand\AtEndOfPackage{%
+    \catcode`\noexpand\^^A\the\catcode`\^^A\relax}}
+\@tempa
+\catcode`\^^A=\catcode`\%
+\DeclareOption{debugshow}{\catcode`\^^A=9 }
+%    \end{macrocode}
+%
+% 其余所有选项均由 \textsf{color} 宏包处理。
+%    \begin{macrocode}
+\DeclareOption*{\PassOptionsToPackage\CurrentOption{color}}
+\ProcessOptions
+%    \end{macrocode}
+%
+% 下面两个宏包是必需的，因此现在就加载。实际上 Mark Wooding 的
+% \textsf{mdwtab} 宏包或许可以替代 \textsf{array}，
+% 但目前我假定使用的是 \textsf{array} 宏包的内部结构，因此……
+%    \begin{macrocode}
+\RequirePackage{array,color}
+%    \end{macrocode}
+%
+%
+% \begin{macro}{\@classz}
+% 先为新版 \textsf{array} 宏包代码定义占位。
+%    \begin{macrocode}
+\ifx\do@row@strut\@undefined\let\do@row@strut\relax\fi
+%    \end{macrocode}
+%
+% "\@classz" 是 \textsf{array} 宏包中处理
+% 基本列类型的主要函数：它为每个列
+% 格式说明符 `"clrpmb"' 插入相应代码。其他类则处理其余导言区
+% 记号，如 `"@"' 或 `">"'.
+%    \begin{macrocode}
+\def\@classz{\@classx
+   \@tempcnta \count@
+   \prepnext@tok
+%    \end{macrocode}
+% 此时，背景底纹的颜色说明应已位于该列 > 格式说明符的代码中。它被
+% 保存在 "\toks\@temptokena" 里，但 \textsf{array} 插入它的时机太晚
+% （对 "c" 列尚可，对 "p" 列则不行），因此需要手动从该
+% 记号寄存器中取出颜色相关内容，再插入到条目周围。
+%
+% 这当然是一种糟糕的权宜之计。真正需要的是一种能在正确位置插入内容的新
+% 列类型（有点像 "!"，但不带其所产生的间距）。\textsf{array} 的
+% "\newcolumntype" 命令只能添加"二等"列类型。
+% 我自己的 \textsf{blkarray} 或
+% Mark Wooding 的 \textsf{mdwtab} 中对 "\newcolumntype" 的重写允许
+% 声明新的"一等"列类型，但目前仍沿用 \textsf{array}。这意味着我们
+% 必须在寄存器被错误清空之前把其中内容取出来。
+%    \begin{macrocode}
+\expandafter\CT@extract\the\toks\@tempcnta\columncolor!\@nil
+%    \end{macrocode}
+% 将条目存入一个盒子（按惯例使用双重分组以保证颜色安全）。
+%    \begin{macrocode}
+   \@addtopreamble{%
+    \setbox\z@\hbox\bgroup\bgroup
+%    \end{macrocode}
+% \changes{v1.0a}{2012/02/13}{为嵌套使用重置 \cs{everycr}（见测试 ct2）}
+%    \begin{macrocode}
+      \CT@everycr{}%
+      \ifcase \@chnum
+%    \end{macrocode}
+% "c" 列代码：过去两侧各使用 1fil 胶状间距，是 "l"、"r" 列的两倍。
+% 现将其改为总共使用 1fill；同时把伸缩阶数从 1fil 提高到 1fill，
+% 以避免人们在表格条目中加入可伸缩胶状间距。
+%    \begin{macrocode}
+      \hskip\stretch{.5}\kern\z@
+      \d@llarbegin
+      \insert@column
+      \d@llarend\do@row@strut\hskip\stretch{.5}\or
+%    \end{macrocode}
+% "l" 与 "r" 列同前，但使用 fill 胶状间距。
+%    \begin{macrocode}
+      \d@llarbegin \insert@column \d@llarend\do@row@strut \hfill
+   \or
+      \hfill\kern\z@ \d@llarbegin \insert@column \d@llarend\do@row@strut
+   \or
+%    \end{macrocode}
+% "m"、"p"、"b" 列同前，但需考虑 array 宏包的更新。
+% \changes{v1.0k}{2024/10/29}{使用 \cs{insert@pcolumn} 以支持标签化（tagging）}
+%    \begin{macrocode}
+      \ifx\ar@align@mcell\@undefined
+        $\vcenter
+         \@startpbox{\@nextchar}\insert@pcolumn \@endpbox $
+      \else
+        \setbox\ar@mcellbox\vbox
+          \@startpbox{\@nextchar}\insert@pcolumn \@endpbox
+        \ar@align@mcell
+        \do@row@strut
+      \fi
+   \or
+     \vtop \@startpbox{\@nextchar}\insert@pcolumn \@endpbox\do@row@strut
+   \or
+     \vbox \@startpbox{\@nextchar}\insert@pcolumn \@endpbox\do@row@strut
+  \fi
+%    \end{macrocode}
+% 结束盒子寄存器的赋值。
+%    \begin{macrocode}
+ \egroup\egroup
+%    \end{macrocode}
+% \changes{v0.1d}{1996/10/05}
+%   {新增 \cs{CT@row@color} 以支持 \cs{rowcolor}}
+% 下面是主要的新增内容。
+%    \begin{macrocode}
+\begingroup
+%    \end{macrocode}
+% 初始化颜色命令与伸出量。
+%    \begin{macrocode}
+  \CT@setup
+%    \end{macrocode}
+% 执行由 "\columncolor" 命令产生的代码。
+%    \begin{macrocode}
+  \CT@column@color
+%    \end{macrocode}
+% 执行 "\rowcolor" 产生的代码（因此它优先于
+% "\columncolor"）。
+%    \begin{macrocode}
+  \CT@row@color
+%    \end{macrocode}
+% 执行 "\cellcolor" 产生的代码（因此它优先于
+% "\columncolor" 与 "\rowcolor" 两者）。
+%    \begin{macrocode}
+  \CT@cell@color
+%    \end{macrocode}
+% 除非前面三个命令之一请求了颜色，否则它为 "\relax"；
+% 若已请求，则为 "\CT@@do@color"，用于插入
+% 相应颜色的 "\leaders"。
+%    \begin{macrocode}
+  \CT@do@color
+\endgroup
+%    \end{macrocode}
+% 这一部分与颜色无关：既然反正要把条目装入盒子并测量，顺便检查一下高度，
+% 以免大条目碰到横线（或彩色底纹的顶边）。
+%    \begin{macrocode}
+        \@tempdima\ht\z@
+        \advance\@tempdima\minrowclearance
+        \vrule\@height\@tempdima\@width\z@
+%    \end{macrocode}
+% 保持装盒状态会更安全，但拆盒可带来一定灵活性。不过总伸缩量应为有限值
+% 或 fil（后者会被忽略）。其中可以有 fill 胶状间距（不会被忽略），
+% 但其 \emph{总量应为 0fill}。若该盒子贡献了 fill 胶状间距，
+% 引线将无法铺满条目的整个宽度。对于 "\multicolumn" 条目，该盒子
+% 实际上还可能贡献 \emph{收缩} 胶状间距，此时该条目的彩色底纹会过宽。
+% 只能听之任之了。
+%    \begin{macrocode}
+        \unhbox\z@}%
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+  \prepnext@tok}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@setup}
+% 初始化伸出量长度与颜色命令。
+%    \begin{macrocode}
+\def\CT@setup{%
+  \@tempdimb\col@sep
+  \@tempdimc\col@sep
+  \def\CT@color{%
+    \global\let\CT@do@color\CT@@do@color
+    \color}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@@do@color}
+% 本宏包的核心：添加彩色底纹。
+%
+% 插入一条指定颜色的引线，其自然宽度为
+% 条目宽度加上指定伸出量及 1fill 伸缩量。
+% 两侧以负 kern 包围，使总自然宽度不受伸出量影响。
+%    \begin{macrocode}
+\def\CT@@do@color{%
+  \global\let\CT@do@color\relax
+        \@tempdima\wd\z@
+        \advance\@tempdima\@tempdimb
+        \advance\@tempdima\@tempdimc
+        \kern-\@tempdimb
+        \leaders\vrule
+%    \end{macrocode}
+% 为便于用 xdvi（不支持颜色）快速调试，限制线条的尺寸，
+% 以便同时看清文字。
+%    \begin{macrocode}
+^^A                     \@height\p@\@depth\p@
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+                \hskip\@tempdima\@plus  1fill
+        \kern-\@tempdimc
+%    \end{macrocode}
+% 再加入胶状间距，恰好抵消上述引线。
+%    \begin{macrocode}
+        \hskip-\wd\z@ \@plus -1fill }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@extract}
+% \changes{v1.0f}{2022/06/20}{防止活动字符干扰}
+% 下面是提取 "\columncolor" 命令的代码。
+%    \begin{macrocode}
+\def\CT@extract#1\columncolor#2#3\@nil{%
+  \if!\noexpand#2%
+%    \end{macrocode}
+% "!" 是插入末尾的伪记号。
+%    \begin{macrocode}
+    \let\CT@column@color\@empty
+  \else
+%    \end{macrocode}
+% 是否存在可选参数
+%    \begin{macrocode}
+    \if[\noexpand#2%
+      \CT@extractb{#1}#3\@nil
+    \else
+%    \end{macrocode}
+% 无可选参数
+%    \begin{macrocode}
+      \def\CT@column@color{%
+        \CT@color{#2}}%
+      \CT@extractd{#1}#3\@nil
+    \fi
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@extractb}
+% 定义 "\CT@column@color" 以加入相应颜色，并保存
+% 伸出量长度。最后重建保存的 ">" 记号，
+% 但不含颜色说明。
+% 首先取出颜色说明（含可选参数）。
+%    \begin{macrocode}
+\def\CT@extractb#1#2]#3{%
+  \def\CT@column@color{%
+    \CT@color[#2]{#3}}%
+  \CT@extractd{#1}}%
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@extractd}
+% 接下来查找左侧伸出量（默认为 "\col@sep"）。
+%    \begin{macrocode}
+\def\CT@extractd#1{\@testopt{\CT@extracte{#1}}\col@sep}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@extracte}
+% 右侧伸出量同理（默认为左侧伸出量）。
+%    \begin{macrocode}
+\def\CT@extracte#1[#2]{\@testopt{\CT@extractf{#1}[#2]}{#2}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@extractf}
+% 把伸出量信息加入 "\CT@do@color"，以便稍后执行。
+%    \begin{macrocode}
+{\catcode`\!\active
+\gdef\CT@extractf#1[#2][#3]#4\columncolor#5\@nil{%
+  \@tempdimb#2\relax
+  \@tempdimc#3\relax
+  \edef!{\string!}%
+  \edef\CT@column@color{%
+    \CT@column@color
+    \@tempdimb\the\@tempdimb\@tempdimc\the\@tempdimc\relax}%
+  \toks\@tempcnta{#1#4}}}%
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\CT@everycr}
+% 借用 "\everypar" 初始化行颜色
+% \changes{v1.0l}{2026-05-01}{若可用则使用新版 array 钩子，修复标签化项目 issue 379}
+%    \begin{macrocode}
+\let\CT@everycr\everycr
+\IfPackageAtLeastTF{array}{2026/02/24}
+ {
+  \typeout{new hooks used!!} 
+  \AddToHook{tbl/row/end}{\global\let\CT@row@color\relax}
+  \AddToHook{tbl/row/init}{\@rowc@lors}
+ }
+ {
+  \newtoks\everycr
+  \CT@everycr{\noalign{\global\let\CT@row@color\relax}\the\everycr}
+ }
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@start}
+% \changes{v0.1f}{1996/10/10}
+%     {支持 \cs{rowcolor} 嵌套使用（Denis Girou 提议）}
+%
+%    \begin{macrocode}
+\def\CT@start{%
+  \let\CT@arc@save\CT@arc@
+  \let\CT@drsc@save\CT@drsc@
+  \let\CT@row@color@save\CT@row@color
+  \let\CT@cell@color@save\CT@cell@color
+  \global\let\CT@cell@color\relax}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@end}
+%    \begin{macrocode}
+\def\CT@end{%
+  \global\let\CT@arc@\CT@arc@save
+  \global\let\CT@drsc@\CT@drsc@save
+  \global\let\CT@row@color\CT@row@color@save
+  \global\let\CT@cell@color\CT@cell@color@save}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\shortstack}
+% "\shortstack"
+%    \begin{macrocode}
+\gdef\@ishortstack#1{%
+  \CT@start\ialign{\mb@l {##}\unskip\mb@r\cr #1\crcr}\CT@end\egroup}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@tabarray}
+% \textsf{array} 与 \textsf{tabular}（为 \textsf{delarray} 延迟处理）
+%    \begin{macrocode}
+\AtBeginDocument{%
+  \expandafter\def\expandafter\@tabarray\expandafter{%
+    \expandafter\CT@start\@tabarray}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\endarray}
+% \changes{v1.0b}{2012/21/06}{重新插入 \cs{@arrayright} 以匹配 \textsf{array} 定义，供 \textsf{delarray} 使用}
+% \changes{v1.0h}{2024/05/26}{不假定已存在 \cs{endarray} 定义，以兼容标签化代码}
+%    \begin{macrocode}
+\expandafter\def\expandafter\endarray\expandafter{\endarray\CT@end}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\multicolumn}
+% "\multicolumn"
+% \changes{v1.0a}{2012/02/13}{将 \cs{multicolumn} 改为带 \texttt{\string\long} 性质的定义（见测试 ct1）}
+% \changes{v1.0g}{2024/02/20}{在现有定义上追加，修复 dpctex 47}
+% 修补 "\multicolumn" 以恢复颜色设置。采用这种写法是为了
+% 兼容不同年代版本的 \textsf{array} 宏包。
+%    \begin{macrocode}
+\def\@tempa#1\@arstrut#2\relax{
+  \long\def\multicolumn##1##2##3{%
+    #1%
+%    \end{macrocode}
+% \changes{v1.0a}{2012/02/13}{不重置 \cs{CT@row@color}（见测试 ct3）}
+%   \let\CT@row@color\relax
+%    \begin{macrocode}
+   \let\CT@cell@color\relax
+   \let\CT@column@color\relax
+   \let\CT@do@color\relax
+   \@arstrut
+   #2}}
+\expandafter\@tempa\multicolumn{#1}{#2}{#3}\relax
+\let\@temp\relax
+%    \end{macrocode}
+% \end{macro}
+%
+%
+% \begin{macro}{\@classvi}
+% 彩色线条与线条间距。
+%    \begin{macrocode}
+\def\@classvi{\ifcase \@lastchclass
+      \@acol \or
+      \ifx\CT@drsc@\relax
+        \@addtopreamble{\hskip\doublerulesep}%
+      \else
+        \@addtopreamble{{\CT@drsc@\vrule\@width\doublerulesep}}%
+      \fi\or
+      \@acol \or
+      \@classvii
+      \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\doublerulesepcolor}
+%    \begin{macrocode}
+\def\doublerulesepcolor#1#{\CT@drs{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@drs}
+%    \begin{macrocode}
+\def\CT@drs#1#2{%
+ \ifdim\baselineskip=\z@\noalign\fi
+  {\gdef\CT@drsc@{\color#1{#2}}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@drsc@}
+%    \begin{macrocode}
+\let\CT@drsc@\relax
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\arrayrulecolor}
+%    \begin{macrocode}
+\def\arrayrulecolor#1#{\CT@arc{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@arc}
+%    \begin{macrocode}
+\def\CT@arc#1#2{%
+  \ifdim\baselineskip=\z@\noalign\fi
+  {\gdef\CT@arc@{\color#1{#2}}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@arc@}
+%    \begin{macrocode}
+\let\CT@arc@\relax
+%    \end{macrocode}
+% \end{macro}
+%
+% hline 横线
+%
+% \begin{macro}{\@arrayrule}
+%    \begin{macrocode}
+\def\@arrayrule{\@addtopreamble {{\CT@arc@\vline}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\hline}
+%    \begin{macrocode}
+\def\hline{%
+  \noalign{\ifnum0=`}\fi
+              \let\hskip\vskip
+               \let\vrule\hrule
+               \let\@width\@height
+  {\CT@arc@\vline}%
+  \futurelet
+   \reserved@a\@xhline}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@xhline}
+%    \begin{macrocode}
+\def\@xhline{\ifx\reserved@a\hline
+               {\ifx\CT@drsc@\relax
+                  \vskip
+               \else
+                  \CT@drsc@\hrule\@height
+               \fi
+               \doublerulesep}%
+             \fi
+      \ifnum0=`{\fi}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\cline}
+% "\cline" 实际上无法正常工作，因为它位于彩色底纹之后；
+% 但至少让它颜色正确（就你能看到的部分而言）。
+% \changes{v1.0l}{2026-05-01}{添加标签化插口与行命令，修复标签化项目 issue 1331}
+%    \begin{macrocode}
+\def\@cline#1-#2\@nil{%
+  \omit
+  \@multicnt#1%
+  \advance\@multispan\m@ne
+  \ifnum\@multicnt=\@ne\@firstofone{&\omit}\fi
+  \@multicnt#2%
+  \advance\@multicnt-#1%
+  \advance\@multispan\@ne
+  \UseTaggingSocket{tbl/leaders/begin}%
+  {\CT@arc@\leaders\hrule\@height\arrayrulewidth\hfill}%
+  \UseTaggingSocket{tbl/leaders/end}%
+  \CT@tbl@gdecr@row@count
+  \cr
+  \noalign{\vskip-\arrayrulewidth}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\minrowclearance}
+% 行高调整长度。
+%    \begin{macrocode}
+\newlength\minrowclearance
+\minrowclearance=0pt
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@mkpream}
+% \begin{macro}{\@mkpreamarray}
+% 在展开导言区时，\textsf{array} 会把记号经过一次
+% "\edef" 处理。它认为此时已完全可控，因此没有使用 "\protect" 保护。
+% 由于上面的重定义加入了 "\color"，我需要把它
+% 也加入免保护命令清单。
+%    \begin{macrocode}
+\let\@mkpreamarray\@mkpream
+\def\@mkpream{%
+     \let\CT@setup\relax
+     \let\CT@color\relax
+     \let\CT@do@color\relax
+     \let\color\relax
+     \let\CT@column@color\relax
+     \let\CT@row@color\relax
+     \let\CT@cell@color\relax
+     \@mkpreamarray}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\CT@do@color}
+% 出于类似原因，需将其设为不可展开
+%    \begin{macrocode}
+\let\CT@do@color\relax
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\rowcolor}
+% \changes{v0.1f}{1996/10/10}
+%     {加入 \cs{noalign}（Denis Girou）}
+%    \begin{macrocode}
+\def\rowcolor{%
+  \noalign{\ifnum0=`}\fi
+  \global\let\CT@do@color\CT@@do@color
+  \@ifnextchar[\CT@rowa\CT@rowb}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@rowa}
+%    \begin{macrocode}
+\def\CT@rowa[#1]#2{%
+  \gdef\CT@row@color{\CT@color[#1]{#2}}%
+  \CT@rowc}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@rowb}
+%    \begin{macrocode}
+\def\CT@rowb#1{%
+  \gdef\CT@row@color{\CT@color{#1}}%
+  \CT@rowc}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@rowc}
+%    \begin{macrocode}
+\def\CT@rowc{%
+  \@ifnextchar[\CT@rowd{\ifnum`{=0\fi}}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@rowd}
+%    \begin{macrocode}
+\def\CT@rowd[#1]{\@testopt{\CT@rowe[#1]}{#1}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\CT@rowe}
+% \changes{v0.1h}{1998/05/06}
+%   {修正 \cs{ifnum} 中的笔误（Robin F.）}
+%    \begin{macrocode}
+\def\CT@rowe[#1][#2]{%
+  \@tempdimb#1%
+  \@tempdimc#2%
+  \xdef\CT@row@color{%
+    \expandafter\noexpand\CT@row@color
+    \@tempdimb\the\@tempdimb
+    \@tempdimc\the\@tempdimc
+    \relax}%
+  \ifnum0=`{\fi}}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\@ifxempty}
+%   \marg{参数}\marg{空}\marg{非空}\\
+% 不展开地测试参数 \marg{参数} 是否为空，并据此执行相应代码；\marg{参数} 不得以记号 "\XC@@" 开头。
+% 也可在 "\edef" 内部使用。
+%    \begin{macrocode}
+\def\@ifxempty#1{\@@ifxempty#1\@@ifxempty\XC@@}
+\def\@@ifxempty#1#2\XC@@
+ {\ifx#1\@@ifxempty
+  \expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\rowcolors}
+% \begin{macro}{\rowcolors*}
+%   \oarg{命令}\marg{行号}\marg{奇数行颜色}\marg{偶数行颜色}\\
+% 为下一个 tabular 环境定义交替颜色。
+% 从第 \meta{行号} 行起，奇数行与偶数行分别使用各自的颜色。
+% 颜色参数也可留空（即不着色）。
+% 可选命令可以是 "hline" 或 "noalign"\marg{内容}。
+%
+% 在带星号的版本中，当 rowcolors 状态未激活时（见下文），
+% \meta{命令} 会被忽略；而在不带星号的
+% 版本中，\meta{命令} 会应用于表格的每一行。
+%    \begin{macrocode}
+ \def\rowcolors
+  {\@ifstar{\@rowcmdfalse\rowc@lors}{\@rowcmdtrue\rowc@lors}}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+ \def\rowc@lors{\@testopt{\rowc@l@rs}{}}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+ \def\rowc@l@rs[#1]#2#3#4%
+  {\global\rownum=\z@
+   \global\@rowcolorstrue
+   \@ifxempty{#3}%
+     {\def\@oddrowcolor{\@norowcolor}}%
+     {\def\@oddrowcolor{\gdef\CT@row@color{\CT@color{#3}}}}%
+   \@ifxempty{#4}%
+     {\def\@evenrowcolor{\@norowcolor}}%
+     {\def\@evenrowcolor{\gdef\CT@row@color{\CT@color{#4}}}}%
+   \if@rowcmd
+     \def\@rowcolors
+      {#1\if@rowcolors
+         \noalign{\relax\ifnum\rownum<#2\@norowcolor\else
+                  \ifodd\rownum\@oddrowcolor\else\@evenrowcolor\fi\fi}%
+       \fi}%
+   \else
+     \def\@rowcolors
+      {\if@rowcolors
+         \ifnum\rownum<#2\noalign{\@norowcolor}\else
+         #1\noalign{\ifodd\rownum\@oddrowcolor\else\@evenrowcolor\fi}\fi
+       \fi}%
+   \fi
+   \CT@everycr{\@rowc@lors\the\everycr}%
+   \ignorespaces}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+ \def\@rowc@lors{\noalign{\global\advance\rownum\@ne}\@rowcolors}
+ \let\@rowcolors\@empty
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\showrowcolors}
+% \begin{macro}{\hiderowcolors}
+% 打开/关闭着色模式。
+%    \begin{macrocode}
+ \def\showrowcolors{\noalign{\global\@rowcolorstrue}\@rowcolors}
+ \def\hiderowcolors{\noalign{\global\@rowcolorsfalse\@norowcolor}}
+ \def\@norowcolor{\global\let\CT@row@color\relax}
+ \@norowcolor
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\if@rowcolors}
+% \begin{macro}{\if@rowcmd}
+%    \begin{macrocode}
+ \newif\if@rowcolors
+ \newif\if@rowcmd
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+% \begin{macro}{\rownum}
+% \begin{macro}{\c@rownum}
+% 预留一个计数器寄存器。同时将其别名化为 \LaTeX 计数器
+% （但不通过 "\newcounter" 定义，因为它不应进入重置清单。）
+%    \begin{macrocode}
+ \@ifundefined{rownum}{%
+    \@ifundefined{c@rownum}%
+       {\newcount\rownum\let\c@rownum\rownum}%
+       {\let\rownum\c@rownum}%
+     }%
+    {\let\c@rownum\rownum}
+ \providecommand\therownum{\arabic{rownum}}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+%
+%
+% \begin{macro}{\cellcolor}
+% "\cellcolor" 仅将指定颜色应用于自身所在的表格单元格。
+% 它被定义为健壮（robust）命令，但没有使用 "\DeclareRobustCommand" 或
+% "\newcommand{}[][]"，因为这两种形式在别处并未使用，且
+% 在 \emph{极} 旧版本的 \LaTeX 中无法工作。
+%    \begin{macrocode}
+\edef\cellcolor{\noexpand\protect
+  \expandafter\noexpand\csname cellcolor \endcsname}
+\@namedef{cellcolor }{%
+  \@ifnextchar[{\CT@cellc\@firstofone}{\CT@cellc\@gobble[]}%
+}
+\def\CT@cellc#1[#2]#3{%
+  \expandafter\gdef\expandafter\CT@cell@color\expandafter{%
+    \expandafter\CT@color#1{[#2]}{#3}%
+    \global\let\CT@cell@color\relax
+}}
+\global\let\CT@cell@color\relax
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\DC@endright}
+% \textsf{dcolumn} 支持。"D" 列有时会在内部通过压缩所给胶状间距，
+% 把 "c" 列转换为 "r" 列。这对本宏包不利，因此重新定义它：在
+% 一侧加入负间距、另一侧加入正间距，使总增量为零。
+%    \begin{macrocode}
+\AtBeginDocument{%
+  \def\@tempa{$\hfil\egroup\box\z@\box\tw@}%
+  \ifx\@tempa\DC@endright
+%    \end{macrocode}
+%
+% 新版 \textsf{dcolumn}：只想在 "D{.}{.}{3}" 情形下做此调整，
+% 而不涉及新的 "D{.}{.}{3.3}" 形式。
+% 此时 "\hfill" 已插入，因此需要去掉相当于 1fill 的伸缩量。
+%    \begin{macrocode}
+    \def\DC@endright{%
+      $\hfil\egroup
+    \ifx\DC@rl\bgroup
+      \hskip\stretch{-.5}\box\z@\box\tw@\hskip\stretch{-.5}%
+    \else
+      \box\z@\box\tw@
+    \fi}%
+  \else
+    \def\@tempa{$\hfil\egroup\hfill\box\z@\box\tw@}%
+    \ifx\@tempa\DC@endright
+%    \end{macrocode}
+%
+% 旧版 \textsf{dcolumn} 代码。
+%    \begin{macrocode}
+      \def\DC@endright{%
+        $\hfil\egroup%
+        \hskip\stretch{.5}\box\z@\box\tw@\hskip\stretch{-.5}}%
+    \fi
+  \fi}
+%    \end{macrocode}
+% \end{macro}
+%
+% hhline 支持（几乎把整个宏包又重复了一遍，唉）。
+% \changes{v1.0a}{2012/02/13}{若干改进（见测试 ct4）}
+%    \begin{macrocode}
+\AtBeginDocument{%
+  \ifx\hhline\@undefined\else
+\def\HH@box#1#2{\vbox{{%
+  \ifx\CT@drsc@\relax\else
+    \global\dimen\thr@@\tw@\arrayrulewidth
+    \global\advance\dimen\thr@@\doublerulesep
+    {\CT@drsc@
+     \hrule \@height\dimen\thr@@
+     \vskip-\dimen\thr@@}%
+  \fi
+  \CT@arc@
+  \hrule \@height \arrayrulewidth \@width #1
+  \vskip\doublerulesep
+  \hrule \@height \arrayrulewidth \@width #2}}}
+%    \end{macrocode}
+%\changes{v1.0l}{2026-05-01}{减少行计数，修复标签化项目 issue 66}
+%    \begin{macrocode}
+\def\HH@loop{%
+  \ifx\@tempb`\def\next##1{%
+      \the\toks@\CT@tbl@gdecr@row@count\cr}\else\let\next\HH@let
+  \ifx\@tempb|\if@tempswa
+          \ifx\CT@drsc@\relax
+           \HH@add{\hskip\doublerulesep}%
+          \else
+           \HH@add{{\CT@drsc@\vrule\@width\doublerulesep}}%
+           \fi
+          \fi\@tempswatrue
+          \HH@add{{\CT@arc@\vline}}\else
+  \ifx\@tempb:\if@tempswa
+          \ifx\CT@drsc@\relax
+           \HH@add{\hskip\doublerulesep}%
+          \else
+           \HH@add{{\CT@drsc@\vrule\@width\doublerulesep}}%
+           \fi
+              \fi\@tempswatrue
+      \HH@add{\@tempc\HH@box\arrayrulewidth\arrayrulewidth\@tempc}\else
+  \ifx\@tempb##\if@tempswa\HH@add{\hskip\doublerulesep}\fi\@tempswatrue
+         \HH@add{{\CT@arc@\vline\copy\@ne\@tempc\vline}}\else
+  \ifx\@tempb~\@tempswafalse
+           \if@firstamp\@firstampfalse\else\HH@add{&\omit}\fi
+              \ifx\CT@drsc@\relax
+                \HH@add{\hfil}\else
+                 \HH@add{{%
+                   \CT@drsc@\leaders\hrule\@height\HH@height\hfil}}%
+               \fi
+                 \else
+  \ifx\@tempb-\@tempswafalse
+           \gdef\HH@height{\arrayrulewidth}%
+           \if@firstamp\@firstampfalse\else\HH@add{&\omit}\fi
+              \HH@add{{%
+                \CT@arc@\leaders\hrule\@height\arrayrulewidth\hfil}}%
+                           \else
+  \ifx\@tempb=\@tempswafalse
+       \gdef\HH@height{\dimen\thr@@}%
+       \if@firstamp\@firstampfalse\else\HH@add{&\omit}\fi
+       \HH@add
+          {\rlap{\copy\@ne}\leaders\copy\@ne\hfil\llap{\copy\@ne}}\else
+%    \end{macrocode}
+% \changes{v0.1f}{1996/10/10}
+%     {移除 \cs{hhline} 中 t、b 的退格处理}
+% 停止对 "t"、"b" 的退格处理，它会破坏底层颜色。
+%    \begin{macrocode}
+  \ifx\@tempb t\HH@add{%
+    \def\HH@height{\dimen\thr@@}%
+    \HH@box\doublerulesep\z@}\@tempswafalse\else
+  \ifx\@tempb b\HH@add{%
+    \def\HH@height{\dimen\thr@@}%
+    \HH@box\z@\doublerulesep}\@tempswafalse\else
+  \ifx\@tempb>\def\next##1##2{%
+     \HH@add{%
+      {\baselineskip\p@\relax
+       ##2%
+      \global\setbox\@ne\HH@box\doublerulesep\doublerulesep}}%
+       \HH@let!}\else
+  \ifx\@tempb\@sptoken\let\next\HH@spacelet\else
+  \PackageWarning{hhline}%
+      {\meaning\@tempb\space ignored in \noexpand\hhline argument%
+       \MessageBreak}%
+  \fi\fi\fi\fi\fi\fi\fi\fi\fi\fi\fi
+  \next}
+\lowercase{\def\HH@spacelet} {\futurelet\@tempb \HH@loop}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\fi}
+%    \end{macrocode}
+%
+%
+% longtable 支持。
+% \changes{v1.0i}{2024/07/06}{longtable 横线的标签化代码调整}
+%    \begin{macrocode}
+\ExplSyntaxOn
+%    \end{macrocode}
+%
+% \cs{tbl_gdecr_row_count:} 的一个副本
+%    \begin{macrocode}
+\let\CT@tbl@gdecr@row@count\tbl_gdecr_row_count:
+%    \end{macrocode}
+% 若未启用标签化，则提供标签化支持的占位定义。
+%    \begin{macrocode}
+\cs_if_exist:NF\tag_mc_begin:n{
+  \cs_new:Npn\tag_mc_begin:n#1{}
+  \cs_new:Npn\tag_mc_end:{}
+}
+%    \end{macrocode}
+%
+% \changes{v1.0j}{2024/07/08}
+%                {避免使用内部变量 \cs{g__tbl_row_int}}
+%    \begin{macrocode}
+\AtBeginDocument{
+    \def\LT@@hline{%
+      \ifx\LT@next\hline
+        \global\let\LT@next\@gobble
+        \ifx\CT@drsc@\relax
+          \gdef\CT@LT@sep{%
+            \noalign{\penalty-\@medpenalty\vskip\doublerulesep}}%
+        \else
+          \gdef\CT@LT@sep{%
+            \multispan\LT@cols{%
+              \tag_mc_begin:n{artifact}
+              \CT@drsc@\leaders\hrule\@height\doublerulesep\hfill
+              \tag_mc_end: \tbl_gdecr_row_count:
+            }\cr}%
+        \fi
+      \else
+        \global\let\LT@next\empty
+        \gdef\CT@LT@sep{%
+          \noalign{\penalty-\@lowpenalty\vskip-\arrayrulewidth}}%
+      \fi
+      \ifnum0=`{\fi}%
+      \multispan\LT@cols
+       {\tag_mc_begin:n{artifact}
+        \CT@arc@\leaders\hrule\@height\arrayrulewidth\hfill
+        \tag_mc_end: \tbl_gdecr_row_count:
+       }\cr
+      \CT@LT@sep
+      \multispan\LT@cols
+       {\tag_mc_begin:n{artifact}
+        \CT@arc@\leaders\hrule\@height\arrayrulewidth\hfill
+        \tag_mc_end: \tbl_gdecr_row_count:
+       }\cr
+      \noalign{\penalty\@M}%
+      \LT@next}
+    }
+\ExplSyntaxOff
+%    \end{macrocode}
+%
+%
+%    \begin{macrocode}
+%</package>
+%    \end{macrocode}
+%
+% \Finale
+%
