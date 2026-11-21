@@ -39,6 +39,17 @@
 %  },
 %  %uncompress,
 %}
+
+% ========== 编译方法 ============
+% xelatex -shell-escape -interaction=nonstopmode tcolorbox.tex
+% biber tcolorbo
+% xelatex -shell-escape -interaction=nonstopmode tcolorbox.tex
+% xelatex -shell-escape -interaction=nonstopmode tcolorbox.tex
+% makeindex tcolorbox.idx
+% xelatex -shell-escape -interaction=nonstopmode tcolorbox.tex
+% xelatex -shell-escape -interaction=nonstopmode tcolorbox.tex
+% ========== 按以上方式编译 ===================
+%
 \PassOptionsToPackage{bookmarks,raiselinks,pageanchor,hyperindex,colorlinks,pdfusetitle,pdfpagelabels}{hyperref}
 \documentclass[a4paper,11pt]{ltxdoc}
 

@@ -1,5 +1,5 @@
 @echo off
-cd /d "D:\DoubaoWork-Data\tcolorbox"
+cd /d "D:\GItHub\Latex-Package-CN\tcolorbox"
 
 echo === Pass 1: xelatex ===
 xelatex -shell-escape -interaction=nonstopmode tcolorbox.tex
